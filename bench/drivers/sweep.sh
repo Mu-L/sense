@@ -50,6 +50,11 @@ echo "[sweep] repos:  $REPOS"
 for m in $MODELS; do
   # Re-resolve RESULTS_DIR to this model's own root so models never overwrite.
   unset RESULTS_DIR; export BENCH_MODEL="$m"; source "$BENCH_DIR/lib/bench-paths.sh"
+  # Provider-level serialization: hold this model's subscription for the whole
+  # sweep so a concurrent sweep on the SAME provider (e.g. two Ollama-Cloud ids)
+  # waits its turn instead of sharing the rolling token window. Different providers
+  # run fully parallel; a no-op when pacing is off.
+  pace_provider_lock_acquire "$(provider_of "$m")"
   # Work queue over the planned repos. A repo currently being benched by ANOTHER
   # session (its per-repo lock is held) is DEFERRED to the back of the queue and
   # retried later, so two sessions on the same tool divide the repos instead of
@@ -116,6 +121,8 @@ for m in $MODELS; do
     # less-drained window. The opus dispatch (paced=0) is unaffected.
     [ "$paced" = 1 ] && pace_sleep "$OPENCODE_PACE_SECONDS" "between repos (after $r/$m)"
   done
+  # This model's repos are done; free the provider for a waiting same-provider sweep.
+  pace_provider_lock_release
 done
 echo "[sweep] complete $(date +%H:%M:%S)"
 # Refresh the vertical's cross-model matrix (verticals/<name>/results/report.md|json).

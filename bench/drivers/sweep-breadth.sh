@@ -49,6 +49,7 @@
 set -uo pipefail
 BENCH_DIR="$(cd "$(dirname "$0")/.." && pwd)"; cd "$BENCH_DIR/.."
 VERTICAL="${VERTICAL-ruby-rails}"; source "$BENCH_DIR/lib/bench-paths.sh"
+source "$BENCH_DIR/lib/throttle-pacing.sh"   # provider_of + the per-provider lock
 
 MODEL="${MODELS:?set MODELS to ONE model id, e.g. MODELS=gpt-5.6}"
 # Never hardcode a judge default here: exporting one OVERRIDES the pin in
@@ -60,9 +61,20 @@ PASS="${PASS:-both}"                # 1 | 2 | both
 WINBAR="${WINBAR:-0.50}"            # close-call threshold (mirrors pergroup VERDICT)
 SKIP_BIG="${SKIP_BIG:-0}"          # defer the cost-outlier repos (only if the cap forces it)
 
-# Smallest-first by indexed-symbol count (bench/index-state.json) so that under a
-# weekly cap the most cells land before the big repos at the tail. Overridable.
-REPOS="${REPOS:-raix langchainrb lobsters ruby_llm llm.rb solidus redmine chatwoot forem mastodon rails discourse gitlabhq}"
+# Default repo order. ruby-rails keeps its hand-tuned smallest-first list (so under
+# a weekly cap the most cells land before the big repos at the tail); every OTHER
+# vertical reads its own verticals/<v>/repos.txt membership (list it smallest-first
+# there for the same benefit). Always overridable with REPOS=.
+RAILS_ORDER="raix langchainrb lobsters ruby_llm llm.rb solidus redmine chatwoot forem mastodon rails discourse gitlabhq"
+repos_default() {
+  local f="$BENCH_DIR/verticals/${VERTICAL:-ruby-rails}/repos.txt"
+  if [ "${VERTICAL:-ruby-rails}" != ruby-rails ] && [ -f "$f" ]; then
+    grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$f" | tr '\n' ' '
+  else
+    echo "$RAILS_ORDER"
+  fi
+}
+REPOS="${REPOS:-$(repos_default)}"
 # Cost outliers held back by SKIP_BIG=1 (178k + the framework): only when a cap forces it.
 HUGE="${HUGE_REPOS:-gitlabhq rails}"
 # Repos that get the runaway guard (mid-big; the huge ones keep their harness
@@ -85,6 +97,13 @@ esac
 modelroot="$RESULTS_DIR/$(echo "$MODEL" | tr '/:' '__')"
 echo "[breadth] model=$MODEL harness=$HARNESS judge=$JUDGE pass=$PASS root=$modelroot skip_big=$SKIP_BIG"
 echo "[breadth] order: $REPOS"
+
+# Provider-level serialization: hold this model's subscription for the WHOLE
+# breadth sweep (both passes), so launching one sweep-breadth per LLM in parallel
+# runs different providers at once but never two ids of the SAME provider together
+# (which would truncate each other on the rolling window). Blocks until free;
+# no-op when pacing is off. Released on normal end and via the EXIT trap.
+pace_provider_lock_acquire "$(provider_of "$MODEL")"
 
 # ---- helpers --------------------------------------------------------------
 ERR_FLAGS='codex_session_failed\|provider_cap_error\|empty_final_answer\|opencode_session_failed\|stalled_midrun\|hard_cap_timeout'
@@ -187,5 +206,6 @@ case "$PASS" in
   *)    echo "PASS must be 1|2|both" >&2; exit 1 ;;
 esac
 
+pace_provider_lock_release   # free the subscription for a waiting same-provider sweep
 bash bench/drivers/report-matrix.sh >/dev/null 2>&1 || echo "[warn] matrix refresh failed" >&2
 echo "[breadth] done. Read: RESULTS_DIR=$modelroot python3 bench/lib/pergroup.py <repo>; bash bench/drivers/report-matrix.sh"

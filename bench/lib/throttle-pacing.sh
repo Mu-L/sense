@@ -120,7 +120,7 @@ pace_lock_try_acquire() {
   [ -n "${BENCH_PACE_LOCK_HELD:-}" ] && [ "$BENCH_PACE_LOCK_HELD" = "$lock" ] && return 0
   if _pace_lock_grab "$lock"; then
     export BENCH_PACE_LOCK_HELD="$lock"
-    trap 'pace_lock_release' EXIT
+    trap 'pace_locks_release_all' EXIT
     return 0
   fi
   return 1
@@ -142,6 +142,56 @@ pace_lock_release() {
   rmdir "$BENCH_PACE_LOCK_HELD" 2>/dev/null || rm -rf "$BENCH_PACE_LOCK_HELD" 2>/dev/null
   BENCH_PACE_LOCK_HELD=""
 }
+
+# provider_of <model-id> - the subscription a model bills against, used as the
+# provider-lock key so two ids on the SAME provider serialize (never bench
+# concurrently) while different providers stay parallel. Mirrors the dispatch
+# case in sweep.sh / runs-variance.sh; an unknown id gets its own key (its
+# sanitized self) so we never serialize two things we cannot prove share a sub.
+provider_of() {
+  case "$1" in
+    kimi-for-coding/*|moonshotai/*|moonshotai-cn/*)   echo kimi ;;
+    zai-coding-plan/*|zhipuai-coding-plan/*)          echo zhipuai ;;
+    minimax-coding-plan/*|minimax-cn-coding-plan/*)   echo minimax ;;
+    alibaba-coding-plan/*|alibaba-coding-plan-cn/*)   echo alibaba ;;
+    *:cloud|ollama-cloud/*|ollama/*)                  echo ollama-cloud ;;
+    gpt-*|o3*|o4*|codex:*)                            echo openai ;;
+    claude-*)                                         echo anthropic ;;
+    *)                                                echo "$1" ;;
+  esac
+}
+
+# Provider-level serialization: at most ONE active bench per subscription. The
+# per-repo lock above lets two ids on the SAME provider run different repos at
+# once (so they share the rolling token window and can truncate each other); this
+# lock blocks a whole sweep so two same-provider ids (e.g. two Ollama-Cloud ids)
+# never bench concurrently. Different providers still run fully parallel. Tracked
+# in its OWN held-var so it coexists with the per-repo lock (BENCH_PACE_LOCK_HELD),
+# which is exported to child runners; the provider lock is a sweep-parent concern
+# only and is never exported.
+#   pace_provider_lock_acquire <key> - block (30s poll) until the provider is free
+#   pace_provider_lock_release       - drop the held provider lock
+#   pace_locks_release_all           - EXIT cleanup for both locks (each a no-op
+#                                      when its lock is not held)
+pace_provider_lock_acquire() {
+  pacing_on || return 0
+  local key="${1:?provider key}" lock holder
+  lock="$(pace_lock_path "provider-$key")"
+  [ -n "${BENCH_PACE_PROVIDER_LOCK_HELD:-}" ] && [ "$BENCH_PACE_PROVIDER_LOCK_HELD" = "$lock" ] && return 0
+  until _pace_lock_grab "$lock"; do
+    holder="$(cat "$lock/pid" 2>/dev/null || echo '')"
+    echo "[pace] provider '$key' busy in another sweep (pid ${holder:-?}); waiting 30s..." >&2
+    sleep 30
+  done
+  BENCH_PACE_PROVIDER_LOCK_HELD="$lock"
+  trap 'pace_locks_release_all' EXIT
+}
+pace_provider_lock_release() {
+  [ -n "${BENCH_PACE_PROVIDER_LOCK_HELD:-}" ] || return 0
+  rmdir "$BENCH_PACE_PROVIDER_LOCK_HELD" 2>/dev/null || rm -rf "$BENCH_PACE_PROVIDER_LOCK_HELD" 2>/dev/null
+  BENCH_PACE_PROVIDER_LOCK_HELD=""
+}
+pace_locks_release_all() { pace_lock_release; pace_provider_lock_release; }
 
 # pace_order_tools <arms...> — echo the arms one per line in run order. With
 # BENCH_SENSE_FIRST=1 the heavier sense arm goes first (into the fresher window);
