@@ -310,7 +310,10 @@ PY
     if [[ -n "$survey_sid" ]]; then
       echo "[codex]   survey turn (post-scoring artifact)" >&2
       survey_raw="$out/survey-raw.jsonl"
-      survey_args=(exec resume "$survey_sid" --json -C "$repo_dir" -s "$SANDBOX" -m "$MODEL"
+      # NB: `codex exec resume` has no -C/--cd flag (unlike `codex exec`); the
+      # working root comes from the `cd "$repo_dir"` in the invocation below.
+      # Passing -C here fails with "unexpected argument '-C'" and errors the turn.
+      survey_args=(exec resume "$survey_sid" --json -s "$SANDBOX" -m "$MODEL"
                    --skip-git-repo-check --ignore-user-config
                    -c 'approval_policy="never"'
                    -c 'shell_environment_policy.inherit=all'
