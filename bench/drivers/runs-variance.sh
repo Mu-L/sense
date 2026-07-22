@@ -34,6 +34,11 @@ RUNS="${RUNS:-2}"   # RUNS=2 is the campaign cost cap for all vertical benches (
 START_RUN="${START_RUN:-1}"
 KEEP_RUNS="${KEEP_RUNS:-0}"
 LAST_RUN=$((START_RUN + RUNS - 1))
+
+# True if a cell dir holds any scored run (real transcript+score, not a failed
+# .log stub). Guards the per-repo wipe below: destroying scored data must be an
+# explicit act (FORCE_WIPE=1), never a silent side effect of a resume sweep.
+has_scored() { for s in "$1"/run-*/scored.json; do [ -e "$s" ] && return 0; done; return 1; }
 # Per-repo run-spread report, across models. Lives in the tracked bench tree (the
 # vertical base, not a model root) alongside the per-model reports + matrix.
 OUT="$RESULTS_DIR/variance/$REPO.md"
@@ -62,7 +67,17 @@ for m in $MODELS; do
   echo "[run ] $REPO / $m  x$RUNS  start $(date +%H:%M:%S)"
   # Re-resolve RESULTS_DIR to this model's own root so models never overwrite.
   unset RESULTS_DIR; export BENCH_MODEL="$m"; source "$BENCH_DIR/lib/bench-paths.sh"
-  [ "$KEEP_RUNS" = 1 ] || rm -rf "$RESULTS_DIR/baseline/$REPO" "$RESULTS_DIR/sense/$REPO"
+  if [ "$KEEP_RUNS" != 1 ]; then
+    # Safety gate: a KEEP_RUNS=0 sweep would rm -rf a cell's valid transcripts +
+    # scored.json before re-running; if that re-run then fails, the data is lost
+    # for good. Refuse to wipe a cell that still holds scored runs unless the
+    # operator explicitly opts in.
+    if [ "${FORCE_WIPE:-0}" != 1 ] && { has_scored "$RESULTS_DIR/baseline/$REPO" || has_scored "$RESULTS_DIR/sense/$REPO"; }; then
+      echo "[variance] REFUSING to wipe $m/$REPO: it holds scored runs. Re-run with FORCE_WIPE=1 to replace, or KEEP_RUNS=1 to append." >&2
+      continue
+    fi
+    rm -rf "$RESULTS_DIR/baseline/$REPO" "$RESULTS_DIR/sense/$REPO"
+  fi
   ok=1
   # Dispatch by model id (mirrors sweep.sh). bench-sense-local takes --runs and
   # writes run-N itself; the cloud/codex runners are single-run, so we invoke them
