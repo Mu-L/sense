@@ -1,77 +1,543 @@
 {
   "vertical": "results",
   "models": {
-    "claude-opus-4-8": {
+    "claude-fable-5": {
       "consul": {
-        "baseline_overall": 0.65385,
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.0,
         "sense_overall": 1.0,
-        "overall_delta": 0.34614999999999996,
+        "overall_delta": 1.0,
         "deps_delta": null,
         "baseline_metrics": {
-          "wall_time_seconds": 423.45000000000005,
-          "token_total_billed": 24576.0,
-          "token_cache_read": 1811857.5,
-          "token_output": 23863.5
+          "wall_time_seconds": 659.7,
+          "token_total_billed": 34656.0,
+          "token_cache_read": 4042068.0,
+          "token_output": 34538.0
         },
         "sense_metrics": {
-          "wall_time_seconds": 283.2,
-          "token_total_billed": 24084.5,
-          "token_cache_read": 1063442.5,
-          "token_output": 24053.0
+          "wall_time_seconds": 409.5,
+          "token_total_billed": 31818.0,
+          "token_cache_read": 1143423.0,
+          "token_output": 31786.0
         }
       },
       "dolt": {
-        "baseline_overall": 0.5,
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.0,
         "sense_overall": 1.0,
-        "overall_delta": 0.5,
+        "overall_delta": 1.0,
         "deps_delta": null,
         "baseline_metrics": {
-          "wall_time_seconds": 298.45000000000005,
-          "token_total_billed": 15043.5,
-          "token_cache_read": 1806873.0,
-          "token_output": 14646.0
+          "wall_time_seconds": 479.6,
+          "token_total_billed": 21422.0,
+          "token_cache_read": 1185420.0,
+          "token_output": 21377.0
         },
         "sense_metrics": {
-          "wall_time_seconds": 281.95,
-          "token_total_billed": 15874.5,
-          "token_cache_read": 1013378.5,
-          "token_output": 15845.0
+          "wall_time_seconds": 345.6,
+          "token_total_billed": 31483.0,
+          "token_cache_read": 1258837.0,
+          "token_output": 31448.0
         }
       },
       "nomad": {
-        "baseline_overall": 0.6,
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.5333,
         "sense_overall": 1.0,
-        "overall_delta": 0.4,
+        "overall_delta": 0.4667,
         "deps_delta": null,
         "baseline_metrics": {
-          "wall_time_seconds": 425.4,
-          "token_total_billed": 23764.5,
-          "token_cache_read": 1454965.0,
-          "token_output": 23712.0
+          "wall_time_seconds": 455.2,
+          "token_total_billed": 35934.0,
+          "token_cache_read": 1927398.0,
+          "token_output": 35863.0
         },
         "sense_metrics": {
-          "wall_time_seconds": 299.5,
-          "token_total_billed": 29124.5,
-          "token_cache_read": 952269.0,
-          "token_output": 26137.5
+          "wall_time_seconds": 341.6,
+          "token_total_billed": 27777.0,
+          "token_cache_read": 964826.0,
+          "token_output": 27751.0
         }
       },
       "pebble": {
-        "baseline_overall": 0.42855,
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.5714,
         "sense_overall": 1.0,
-        "overall_delta": 0.57145,
-        "deps_delta": 0.6666666666666667,
+        "overall_delta": 0.4286,
+        "deps_delta": 0.5,
         "baseline_metrics": {
-          "wall_time_seconds": 299.2,
-          "token_total_billed": 16554.0,
-          "token_cache_read": 2410069.5,
-          "token_output": 16465.0
+          "wall_time_seconds": 478.2,
+          "token_total_billed": 32581.0,
+          "token_cache_read": 1390424.0,
+          "token_output": 32529.0
         },
         "sense_metrics": {
-          "wall_time_seconds": 257.65,
-          "token_total_billed": 18530.0,
-          "token_cache_read": 1126036.0,
-          "token_output": 18492.0
+          "wall_time_seconds": 379.7,
+          "token_total_billed": 27634.0,
+          "token_cache_read": 1226988.0,
+          "token_output": 27596.0
+        }
+      }
+    },
+    "claude-opus-4-8": {
+      "consul": {
+        "runs": [
+          2,
+          2
+        ],
+        "baseline_overall": 0.46155,
+        "sense_overall": 1.0,
+        "overall_delta": 0.53845,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 322.6,
+          "token_total_billed": 23376.0,
+          "token_cache_read": 1094254.0,
+          "token_output": 23327.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 289.95,
+          "token_total_billed": 23799.5,
+          "token_cache_read": 520980.0,
+          "token_output": 23780.0
+        }
+      },
+      "dolt": {
+        "runs": [
+          2,
+          2
+        ],
+        "baseline_overall": 0.29164999999999996,
+        "sense_overall": 1.0,
+        "overall_delta": 0.70835,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 299.65,
+          "token_total_billed": 16492.0,
+          "token_cache_read": 1284382.0,
+          "token_output": 16442.5
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 279.5,
+          "token_total_billed": 13739.0,
+          "token_cache_read": 333350.0,
+          "token_output": 13726.0
+        }
+      },
+      "nomad": {
+        "runs": [
+          2,
+          2
+        ],
+        "baseline_overall": 0.4333,
+        "sense_overall": 1.0,
+        "overall_delta": 0.5667,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 323.4,
+          "token_total_billed": 24196.0,
+          "token_cache_read": 977060.0,
+          "token_output": 24151.5
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 269.9,
+          "token_total_billed": 22095.0,
+          "token_cache_read": 542516.0,
+          "token_output": 22076.0
+        }
+      },
+      "pebble": {
+        "runs": [
+          2,
+          2
+        ],
+        "baseline_overall": 0.0,
+        "sense_overall": 1.0,
+        "overall_delta": 1.0,
+        "deps_delta": 1.0,
+        "baseline_metrics": {
+          "wall_time_seconds": 299.7,
+          "token_total_billed": 17178.5,
+          "token_cache_read": 1856951.0,
+          "token_output": 17102.5
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 257.6,
+          "token_total_billed": 20003.5,
+          "token_cache_read": 663011.5,
+          "token_output": 19979.0
+        }
+      }
+    },
+    "glm-5.2_cloud": {
+      "consul": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.5385,
+        "sense_overall": 1.0,
+        "overall_delta": 0.4615,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 551.0,
+          "token_total_billed": 9413820.0,
+          "token_cache_read": 0.0,
+          "token_output": 26648.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 340.0,
+          "token_total_billed": 585959.0,
+          "token_cache_read": 0.0,
+          "token_output": 18597.0
+        }
+      },
+      "dolt": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.3333,
+        "sense_overall": 1.0,
+        "overall_delta": 0.6667000000000001,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 391.0,
+          "token_total_billed": 6880853.0,
+          "token_cache_read": 0.0,
+          "token_output": 20309.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 251.0,
+          "token_total_billed": 1169201.0,
+          "token_cache_read": 0.0,
+          "token_output": 19432.0
+        }
+      },
+      "nomad": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.5333,
+        "sense_overall": 1.0,
+        "overall_delta": 0.4667,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 472.0,
+          "token_total_billed": 3751740.0,
+          "token_cache_read": 0.0,
+          "token_output": 17216.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 785.0,
+          "token_total_billed": 4610778.0,
+          "token_cache_read": 0.0,
+          "token_output": 22738.0
+        }
+      },
+      "pebble": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.5714,
+        "sense_overall": 1.0,
+        "overall_delta": 0.4286,
+        "deps_delta": 0.5,
+        "baseline_metrics": {
+          "wall_time_seconds": 221.0,
+          "token_total_billed": 2874066.0,
+          "token_cache_read": 0.0,
+          "token_output": 17349.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 534.0,
+          "token_total_billed": 1025135.0,
+          "token_cache_read": 0.0,
+          "token_output": 15299.0
+        }
+      }
+    },
+    "gpt-5.5": {
+      "consul": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.5385,
+        "sense_overall": 1.0,
+        "overall_delta": 0.4615,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 252.0,
+          "token_total_billed": 213961.0,
+          "token_cache_read": 1475456.0,
+          "token_output": 12241.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 380.0,
+          "token_total_billed": 110032.0,
+          "token_cache_read": 1587456.0,
+          "token_output": 16314.0
+        }
+      },
+      "dolt": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.5833,
+        "sense_overall": 1.0,
+        "overall_delta": 0.41669999999999996,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 289.0,
+          "token_total_billed": 142426.0,
+          "token_cache_read": 727808.0,
+          "token_output": 14201.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 232.0,
+          "token_total_billed": 136143.0,
+          "token_cache_read": 509056.0,
+          "token_output": 10854.0
+        }
+      },
+      "nomad": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.5333,
+        "sense_overall": 1.0,
+        "overall_delta": 0.4667,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 290.0,
+          "token_total_billed": 179588.0,
+          "token_cache_read": 923136.0,
+          "token_output": 14759.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 319.0,
+          "token_total_billed": 134730.0,
+          "token_cache_read": 1157632.0,
+          "token_output": 15364.0
+        }
+      },
+      "pebble": {
+        "runs": [
+          2,
+          2
+        ],
+        "baseline_overall": 0.64285,
+        "sense_overall": 1.0,
+        "overall_delta": 0.35714999999999997,
+        "deps_delta": 0.41666666666666674,
+        "baseline_metrics": {
+          "wall_time_seconds": 263.0,
+          "token_total_billed": 207196.0,
+          "token_cache_read": 2182080.0,
+          "token_output": 12229.5
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 274.0,
+          "token_total_billed": 131084.5,
+          "token_cache_read": 1425344.0,
+          "token_output": 13216.0
+        }
+      }
+    },
+    "kimi-for-coding_k3": {
+      "consul": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.6154,
+        "sense_overall": 1.0,
+        "overall_delta": 0.38460000000000005,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 1574.0,
+          "token_total_billed": 110818.0,
+          "token_cache_read": 2111232.0,
+          "token_output": 27894.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 672.0,
+          "token_total_billed": 76113.0,
+          "token_cache_read": 864000.0,
+          "token_output": 15954.0
+        }
+      },
+      "dolt": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.25,
+        "sense_overall": 1.0,
+        "overall_delta": 0.75,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 1464.0,
+          "token_total_billed": 87773.0,
+          "token_cache_read": 1469184.0,
+          "token_output": 19365.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 682.0,
+          "token_total_billed": 81165.0,
+          "token_cache_read": 471296.0,
+          "token_output": 16368.0
+        }
+      },
+      "nomad": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.2667,
+        "sense_overall": 1.0,
+        "overall_delta": 0.7333000000000001,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 812.0,
+          "token_total_billed": 68549.0,
+          "token_cache_read": 775680.0,
+          "token_output": 17190.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 866.0,
+          "token_total_billed": 60656.0,
+          "token_cache_read": 538880.0,
+          "token_output": 15006.0
+        }
+      },
+      "pebble": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.5714,
+        "sense_overall": 1.0,
+        "overall_delta": 0.4286,
+        "deps_delta": 0.5,
+        "baseline_metrics": {
+          "wall_time_seconds": 943.0,
+          "token_total_billed": 121832.0,
+          "token_cache_read": 1979392.0,
+          "token_output": 21169.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 993.0,
+          "token_total_billed": 93979.0,
+          "token_cache_read": 1405184.0,
+          "token_output": 21775.0
+        }
+      }
+    },
+    "ollama-cloud_mistral-large-3_675b": {
+      "consul": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.1538,
+        "sense_overall": 0.0769,
+        "overall_delta": -0.0769,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 511.0,
+          "token_total_billed": 2549250.0,
+          "token_cache_read": 0.0,
+          "token_output": 7562.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 354.0,
+          "token_total_billed": 191416.0,
+          "token_cache_read": 0.0,
+          "token_output": 4718.0
+        }
+      },
+      "dolt": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.1667,
+        "sense_overall": 0.1667,
+        "overall_delta": 0.0,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 261.0,
+          "token_total_billed": 461717.0,
+          "token_cache_read": 0.0,
+          "token_output": 11846.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 494.0,
+          "token_total_billed": 814237.0,
+          "token_cache_read": 0.0,
+          "token_output": 6164.0
+        }
+      },
+      "nomad": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.3333,
+        "sense_overall": 0.9333,
+        "overall_delta": 0.6000000000000001,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 893.0,
+          "token_total_billed": 457486.0,
+          "token_cache_read": 0.0,
+          "token_output": 8122.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 414.0,
+          "token_total_billed": 474552.0,
+          "token_cache_read": 0.0,
+          "token_output": 6903.0
+        }
+      },
+      "pebble": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.1429,
+        "sense_overall": 1.0,
+        "overall_delta": 0.8571,
+        "deps_delta": 1.0,
+        "baseline_metrics": {
+          "wall_time_seconds": 381.0,
+          "token_total_billed": 1610975.0,
+          "token_cache_read": 0.0,
+          "token_output": 4151.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 151.0,
+          "token_total_billed": 352919.0,
+          "token_cache_read": 0.0,
+          "token_output": 6055.0
         }
       }
     }
