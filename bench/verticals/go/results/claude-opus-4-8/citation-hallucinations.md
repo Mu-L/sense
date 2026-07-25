@@ -6,69 +6,54 @@ Reported for transparency; not folded into the headline score.
 
 ## baseline
 
-### baseline/consul  — 278/279 grounded
-
-**Unresolved**
-- `internal/multicluster/.../v1compat/controller.go:82` — file not found at internal/multicluster/.../v1compat/controller.go
-
-### baseline/pebble  — 41/42 grounded
-
-**Unresolved**
-- `.../merging_iter.go:335` — file not found at .../merging_iter.go
+_No ungrounded citations._
 
 ## sense
 
-### sense/consul  — 171/191 grounded
+### sense/dolt  - 180/217 grounded
 
 **Unresolved**
-- `.../peerstream/server.go:36` — file not found at .../peerstream/server.go
-- `.../peerstream/server.go:37` — file not found at .../peerstream/server.go
-- `.../peerstream/server.go:40` — file not found at .../peerstream/server.go
-- `.../peerstream/subscription_manager.go:46` — file not found at .../peerstream/subscription_manager.go
-- `.../peerstream/subscription_view.go:27` — file not found at .../peerstream/subscription_view.go
-- `.../connectca/server.go:29` — file not found at .../connectca/server.go
-- `.../dataplane/server.go:24` — file not found at .../dataplane/server.go
-- `.../serverdiscovery/server.go:22` — file not found at .../serverdiscovery/server.go
-- `.../configentry/server.go:35` — file not found at .../configentry/server.go
-- `.../acl/server.go:20` — file not found at .../acl/server.go
-- `.../resource/server_ce.go:39` — file not found at .../resource/server_ce.go
-- `.../resource/server.go:46` — file not found at .../resource/server.go
-- `.../v1compat/controller.go:82` — file not found at .../v1compat/controller.go
-- `.../subscription_manager.go:46` — file not found at .../subscription_manager.go
-- `.../stream_resources.go:345` — file not found at .../stream_resources.go
-- `.../subscription_view.go:27` — file not found at .../subscription_view.go
-- `.../subscription_view.go:78` — file not found at .../subscription_view.go
-- `.../configentry/server.go:38` — file not found at .../configentry/server.go
-- `.../subscribe/subscribe.go:24` — file not found at .../subscribe/subscribe.go
-- `.../acl/server.go:23` — file not found at .../acl/server.go
+- `.../column_diff_table.go:42` - file not found at .../column_diff_table.go
+- `.../commit_ancestors_table.go:32` - file not found at .../commit_ancestors_table.go
+- `.../commit_diff_table.go:40` - file not found at .../commit_diff_table.go
+- `.../commits_table.go:35` - file not found at .../commits_table.go
+- `.../diff_iter.go:394` - file not found at .../diff_iter.go
+- `.../diff_table.go:58` - file not found at .../diff_table.go
+- `.../log_table.go:38` - file not found at .../log_table.go
+- `.../remotes_table.go:41` - file not found at .../remotes_table.go
+- `.../schema_conflicts_table.go:35` - file not found at .../schema_conflicts_table.go
+- `.../stashes_table.go:34` - file not found at .../stashes_table.go
+- `.../status_ignored_table.go:35` - file not found at .../status_ignored_table.go
+- `.../status_table.go:35` - file not found at .../status_table.go
+- `.../table_of_tables_in_conflict.go:30` - file not found at .../table_of_tables_in_conflict.go
+- `.../tags_table.go:34` - file not found at .../tags_table.go
+- `.../unscoped_diff_table.go:47` - file not found at .../unscoped_diff_table.go
+- `.../backups_table.go:30` - file not found at .../backups_table.go
+- `.../branch_activity_table.go:33` - file not found at .../branch_activity_table.go
+- `.../branches_table.go:53` - file not found at .../branches_table.go
+- `.../conflicts_tables_prolly.go:85` - file not found at .../conflicts_tables_prolly.go
+- `.../commits_table.go:141` - file not found at .../commits_table.go
+- `.../log_table.go:408` - file not found at .../log_table.go
+- `.../diff_table.go:722` - file not found at .../diff_table.go
+- `.../conflicts_tables_prolly.go:620` - file not found at .../conflicts_tables_prolly.go
+- `.../conflicts_tables_root_objects.go:42` - file not found at .../conflicts_tables_root_objects.go
+- `.../constraint_violations_prolly.go:127` - file not found at .../constraint_violations_prolly.go
+- `.../docs_table.go:39` - file not found at .../docs_table.go
+- `.../tests_table.go:37` - file not found at .../tests_table.go
+- `.../user_space_system_table.go:40` - file not found at .../user_space_system_table.go
+- `.../dtablefunctions/dolt_log.go:571` - file not found at .../dtablefunctions/dolt_log.go
+- `.../statspro/controller.go:68` - file not found at .../statspro/controller.go
+- `.../statspro/stats_kv.go:211` - file not found at .../statspro/stats_kv.go
+- `.../merge/violations_fk.go:197` - file not found at .../merge/violations_fk.go
+- `.../clusterdb/cluster_status_table.go:60` - file not found at .../clusterdb/cluster_status_table.go
+- `.../clusterdb/database.go:36` - file not found at .../clusterdb/database.go
+- `.../commitgraph/commitgraph.go:89` - file not found at .../commitgraph/commitgraph.go
+- `.../sqle/cluster/commithook.go:36` - file not found at .../sqle/cluster/commithook.go
+- `.../sqle/cluster/dialprovider.go:35` - file not found at .../sqle/cluster/dialprovider.go
 
-### sense/consul  — 172/194 grounded
-
-**Unresolved**
-- `agent/consul/agent.go:1667` — file not found at agent/consul/agent.go
-- `/connectca/server.go:31` — file not found at /connectca/server.go
-- `/peerstream/server.go:37` — file not found at /peerstream/server.go
-- `/subscription_manager.go:50` — file not found at /subscription_manager.go
-- `/subscription_view.go:28` — file not found at /subscription_view.go
-- `/configentry/server.go:37` — file not found at /configentry/server.go
-- `/connectca/server.go:32` — file not found at /connectca/server.go
-- `/resource/server_ce.go:37` — file not found at /resource/server_ce.go
-- `/v1compat/controller.go:81` — file not found at /v1compat/controller.go
-- `/register.go:11` — file not found at /register.go
-- `/configentry/server.go:35` — file not found at /configentry/server.go
-- `/subscribe/subscribe.go:24` — file not found at /subscribe/subscribe.go
-- `/connectca/server.go:28` — file not found at /connectca/server.go
-- `/dataplane/server.go:24` — file not found at /dataplane/server.go
-- `/serverdiscovery/server.go:22` — file not found at /serverdiscovery/server.go
-- `/acl/server.go:20` — file not found at /acl/server.go
-- `/dataplane/server.go:26` — file not found at /dataplane/server.go
-- `/serverdiscovery/server.go:24` — file not found at /serverdiscovery/server.go
-- `/peerstream/server.go:41` — file not found at /peerstream/server.go
-- `/resource/server_ce.go:35` — file not found at /resource/server_ce.go
-- `/peerstream/subscription_manager.go:50` — file not found at /peerstream/subscription_manager.go
-- `/peerstream/subscription_view.go:28` — file not found at /peerstream/subscription_view.go
-
-### sense/dolt  — 302/303 grounded
+### sense/pebble  - 52/55 grounded
 
 **Unresolved**
-- `go/.../dolt_procedures_history_table.go:115` — file not found at go/.../dolt_procedures_history_table.go
+- `.../interleaving_iter.go:226` - file not found at .../interleaving_iter.go
+- `.../keyspan/iter.go:83` - file not found at .../keyspan/iter.go
+- `.../interleaving_iter.go:103` - file not found at .../interleaving_iter.go
