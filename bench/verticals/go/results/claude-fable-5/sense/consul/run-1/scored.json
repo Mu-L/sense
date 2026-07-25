@@ -1,0 +1,1920 @@
+{
+  "scenario": "consul - audit what retains the cluster server before a lifecycle rework",
+  "repo": "consul",
+  "adoption_score": 0.5333,
+  "keyword_coverage": 1.0,
+  "step_avg_score": 1.0,
+  "efficiency": 0.0734,
+  "completeness": 0.9643,
+  "tool_fluency": 0.2222,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 249,
+    "grounded": 247,
+    "unresolved": 2,
+    "hallucinated": 0,
+    "rate": 0.992,
+    "examples": {
+      "grounded": [
+        "agent/consul/server.go:169 (line 169 in agent/consul/server.go (file has 2025 lines))",
+        "agent/agent.go:249 (line 249 in agent/agent.go (file has 4818 lines))",
+        "agent/consul/server.go:467 (line 467 in agent/consul/server.go (file has 2025 lines))",
+        "agent/agent.go:704 (line 704 in agent/agent.go (file has 4818 lines))",
+        "server.go:525 (line 525 in server.go (file has 2025 lines) [via agent/consul/server.go])"
+      ],
+      "unresolved": [
+        "shim.go:28 (file not found at shim.go)",
+        "shim.go:24 (file not found at shim.go)"
+      ],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "agent/consul/server.go",
+        "locator": "169",
+        "status": "grounded",
+        "reason": "line 169 in agent/consul/server.go (file has 2025 lines)"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "249",
+        "status": "grounded",
+        "reason": "line 249 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "agent/consul/server.go",
+        "locator": "467",
+        "status": "grounded",
+        "reason": "line 467 in agent/consul/server.go (file has 2025 lines)"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "704",
+        "status": "grounded",
+        "reason": "line 704 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "server.go",
+        "locator": "525",
+        "status": "grounded",
+        "reason": "line 525 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "527",
+        "status": "grounded",
+        "reason": "line 527 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "573",
+        "status": "grounded",
+        "reason": "line 573 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "631",
+        "status": "grounded",
+        "reason": "line 631 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "645",
+        "status": "grounded",
+        "reason": "line 645 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "917",
+        "status": "grounded",
+        "reason": "line 917 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "664",
+        "status": "grounded",
+        "reason": "line 664 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "761",
+        "status": "grounded",
+        "reason": "line 761 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "783",
+        "status": "grounded",
+        "reason": "line 783 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "786",
+        "status": "grounded",
+        "reason": "line 786 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "791",
+        "status": "grounded",
+        "reason": "line 791 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "37",
+        "status": "grounded",
+        "reason": "line 37 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "826",
+        "status": "grounded",
+        "reason": "line 826 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "878",
+        "status": "grounded",
+        "reason": "line 878 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "709",
+        "status": "grounded",
+        "reason": "line 709 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "agent.go",
+        "locator": "719",
+        "status": "grounded",
+        "reason": "line 719 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "agent.go",
+        "locator": "762",
+        "status": "grounded",
+        "reason": "line 762 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "agent.go",
+        "locator": "799",
+        "status": "grounded",
+        "reason": "line 799 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "agent.go",
+        "locator": "875",
+        "status": "grounded",
+        "reason": "line 875 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "agent.go",
+        "locator": "946",
+        "status": "grounded",
+        "reason": "line 946 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "1789",
+        "status": "grounded",
+        "reason": "line 1789 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "agent/consul/server.go",
+        "locator": "1241",
+        "status": "grounded",
+        "reason": "line 1241 in agent/consul/server.go (file has 2025 lines)"
+      },
+      {
+        "file": "agent/consul/server.go",
+        "locator": "1330",
+        "status": "grounded",
+        "reason": "line 1330 in agent/consul/server.go (file has 2025 lines)"
+      },
+      {
+        "file": "server.go",
+        "locator": "1308",
+        "status": "grounded",
+        "reason": "line 1308 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "237",
+        "status": "grounded",
+        "reason": "line 237 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "agent/consul/server.go",
+        "locator": "318",
+        "status": "grounded",
+        "reason": "line 318 in agent/consul/server.go (file has 2025 lines)"
+      },
+      {
+        "file": "rpc.go",
+        "locator": "123",
+        "status": "grounded",
+        "reason": "line 123 in rpc.go (file has 1165 lines) [via agent/consul/rpc.go]"
+      },
+      {
+        "file": "rpc.go",
+        "locator": "157",
+        "status": "grounded",
+        "reason": "line 157 in rpc.go (file has 1165 lines) [via agent/consul/rpc.go]"
+      },
+      {
+        "file": "agent/consul/server.go",
+        "locator": "323",
+        "status": "grounded",
+        "reason": "line 323 in agent/consul/server.go (file has 2025 lines)"
+      },
+      {
+        "file": "agent/consul/rate/handler.go",
+        "locator": "164",
+        "status": "grounded",
+        "reason": "line 164 in agent/consul/rate/handler.go (file has 528 lines)"
+      },
+      {
+        "file": "agent/consul/server.go",
+        "locator": "320",
+        "status": "grounded",
+        "reason": "line 320 in agent/consul/server.go (file has 2025 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/rpc.go",
+        "locator": "819",
+        "status": "grounded",
+        "reason": "line 819 in agent/consul/rpc.go (file has 1165 lines)"
+      },
+      {
+        "file": "rpc.go",
+        "locator": "759",
+        "status": "grounded",
+        "reason": "line 759 in rpc.go (file has 1165 lines) [via agent/consul/rpc.go]"
+      },
+      {
+        "file": "agent/consul/rpc.go",
+        "locator": "914",
+        "status": "grounded",
+        "reason": "line 914 in agent/consul/rpc.go (file has 1165 lines)"
+      },
+      {
+        "file": "rpc.go",
+        "locator": "926",
+        "status": "grounded",
+        "reason": "line 926 in rpc.go (file has 1165 lines) [via agent/consul/rpc.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "165",
+        "status": "grounded",
+        "reason": "line 165 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "174",
+        "status": "grounded",
+        "reason": "line 174 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "279",
+        "status": "grounded",
+        "reason": "line 279 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "319",
+        "status": "grounded",
+        "reason": "line 319 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "agent/consul/server_grpc.go",
+        "locator": "232",
+        "status": "grounded",
+        "reason": "line 232 in agent/consul/server_grpc.go (file has 542 lines)"
+      },
+      {
+        "file": "agent/consul/peering_backend.go",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in agent/consul/peering_backend.go (file has 354 lines)"
+      },
+      {
+        "file": "agent/consul/server_grpc.go",
+        "locator": "418",
+        "status": "grounded",
+        "reason": "line 418 in agent/consul/server_grpc.go (file has 542 lines)"
+      },
+      {
+        "file": "agent/rpc/peering/service.go",
+        "locator": "88",
+        "status": "grounded",
+        "reason": "line 88 in agent/rpc/peering/service.go (file has 1163 lines)"
+      },
+      {
+        "file": "agent/consul/acl_endpoint.go",
+        "locator": "108",
+        "status": "grounded",
+        "reason": "line 108 in agent/consul/acl_endpoint.go (file has 2221 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/catalog_endpoint.go",
+        "locator": "79",
+        "status": "grounded",
+        "reason": "line 79 in agent/consul/catalog_endpoint.go (file has 1189 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/coordinate_endpoint.go",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in agent/consul/coordinate_endpoint.go (file has 276 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/config_endpoint.go",
+        "locator": "26",
+        "status": "grounded",
+        "reason": "line 26 in agent/consul/config_endpoint.go (file has 571 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/connect_ca_endpoint.go",
+        "locator": "47",
+        "status": "grounded",
+        "reason": "line 47 in agent/consul/connect_ca_endpoint.go (file has 213 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/federation_state_endpoint.go",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in agent/consul/federation_state_endpoint.go (file has 219 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "14",
+        "status": "grounded",
+        "reason": "line 14 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/discovery_chain_endpoint.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in agent/consul/discovery_chain_endpoint.go (file has 101 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "15",
+        "status": "grounded",
+        "reason": "line 15 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/health_endpoint.go",
+        "locator": "24",
+        "status": "grounded",
+        "reason": "line 24 in agent/consul/health_endpoint.go (file has 416 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/intention_endpoint.go",
+        "locator": "43",
+        "status": "grounded",
+        "reason": "line 43 in agent/consul/intention_endpoint.go (file has 818 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/internal_endpoint.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in agent/consul/internal_endpoint.go (file has 987 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "18",
+        "status": "grounded",
+        "reason": "line 18 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/kvs_endpoint.go",
+        "locator": "32",
+        "status": "grounded",
+        "reason": "line 32 in agent/consul/kvs_endpoint.go (file has 310 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/operator_endpoint.go",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in agent/consul/operator_endpoint.go (file has 12 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/prepared_query_endpoint.go",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in agent/consul/prepared_query_endpoint.go (file has 876 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/session_endpoint.go",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in agent/consul/session_endpoint.go (file has 321 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/status_endpoint.go",
+        "locator": "15",
+        "status": "grounded",
+        "reason": "line 15 in agent/consul/status_endpoint.go (file has 85 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/txn_endpoint.go",
+        "locator": "33",
+        "status": "grounded",
+        "reason": "line 33 in agent/consul/txn_endpoint.go (file has 448 lines)"
+      },
+      {
+        "file": "server_register.go",
+        "locator": "24",
+        "status": "grounded",
+        "reason": "line 24 in server_register.go (file has 25 lines) [via agent/consul/server_register.go]"
+      },
+      {
+        "file": "agent/consul/auto_encrypt_endpoint.go",
+        "locator": "18",
+        "status": "grounded",
+        "reason": "line 18 in agent/consul/auto_encrypt_endpoint.go (file has 65 lines)"
+      },
+      {
+        "file": "server.go",
+        "locator": "1182",
+        "status": "grounded",
+        "reason": "line 1182 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "agent/consul/auto_config_endpoint.go",
+        "locator": "152",
+        "status": "grounded",
+        "reason": "line 152 in agent/consul/auto_config_endpoint.go (file has 428 lines)"
+      },
+      {
+        "file": "auto_config_backend.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in auto_config_backend.go (file has 106 lines) [via agent/consul/auto_config_backend.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "1203",
+        "status": "grounded",
+        "reason": "line 1203 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "agent/consul/prepared_query_endpoint.go",
+        "locator": "701",
+        "status": "grounded",
+        "reason": "line 701 in agent/consul/prepared_query_endpoint.go (file has 876 lines)"
+      },
+      {
+        "file": "agent/consul/prepared_query_endpoint.go",
+        "locator": "687",
+        "status": "grounded",
+        "reason": "line 687 in agent/consul/prepared_query_endpoint.go (file has 876 lines)"
+      },
+      {
+        "file": "agent/consul/acl.go",
+        "locator": "278",
+        "status": "grounded",
+        "reason": "line 278 in agent/consul/acl.go (file has 1194 lines)"
+      },
+      {
+        "file": "acl.go",
+        "locator": "160",
+        "status": "grounded",
+        "reason": "line 160 in acl.go (file has 2021 lines) [via agent/structs/acl.go]"
+      },
+      {
+        "file": "acl_server.go",
+        "locator": "110",
+        "status": "grounded",
+        "reason": "line 110 in acl_server.go (file has 248 lines) [via agent/consul/acl_server.go]"
+      },
+      {
+        "file": "agent/consul/leader_connect_ca.go",
+        "locator": "60",
+        "status": "grounded",
+        "reason": "line 60 in agent/consul/leader_connect_ca.go (file has 1706 lines)"
+      },
+      {
+        "file": "leader_connect_ca.go",
+        "locator": "90",
+        "status": "grounded",
+        "reason": "line 90 in leader_connect_ca.go (file has 1706 lines) [via agent/consul/leader_connect_ca.go]"
+      },
+      {
+        "file": "agent/connect/ca/provider_consul.go",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in agent/connect/ca/provider_consul.go (file has 682 lines)"
+      },
+      {
+        "file": "leader_connect_ca.go",
+        "locator": "462",
+        "status": "grounded",
+        "reason": "line 462 in leader_connect_ca.go (file has 1706 lines) [via agent/consul/leader_connect_ca.go]"
+      },
+      {
+        "file": "agent/consul/gateway_locator.go",
+        "locator": "44",
+        "status": "grounded",
+        "reason": "line 44 in agent/consul/gateway_locator.go (file has 469 lines)"
+      },
+      {
+        "file": "agent/consul/autopilot.go",
+        "locator": "36",
+        "status": "grounded",
+        "reason": "line 36 in agent/consul/autopilot.go (file has 185 lines)"
+      },
+      {
+        "file": "autopilot.go",
+        "locator": "81",
+        "status": "grounded",
+        "reason": "line 81 in autopilot.go (file has 185 lines) [via agent/consul/autopilot.go]"
+      },
+      {
+        "file": "autopilot.go",
+        "locator": "91",
+        "status": "grounded",
+        "reason": "line 91 in autopilot.go (file has 185 lines) [via agent/consul/autopilot.go]"
+      },
+      {
+        "file": "autopilot.go",
+        "locator": "100",
+        "status": "grounded",
+        "reason": "line 100 in autopilot.go (file has 185 lines) [via agent/consul/autopilot.go]"
+      },
+      {
+        "file": "agent/consul/rate/handler.go",
+        "locator": "168",
+        "status": "grounded",
+        "reason": "line 168 in agent/consul/rate/handler.go (file has 528 lines)"
+      },
+      {
+        "file": "handler.go",
+        "locator": "337",
+        "status": "grounded",
+        "reason": "line 337 in handler.go (file has 528 lines) [via agent/consul/rate/handler.go]"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "708",
+        "status": "grounded",
+        "reason": "line 708 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "agent/consul/replication.go",
+        "locator": "201",
+        "status": "grounded",
+        "reason": "line 201 in agent/consul/replication.go (file has 359 lines)"
+      },
+      {
+        "file": "server.go",
+        "locator": "592",
+        "status": "grounded",
+        "reason": "line 592 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "agent/consul/federation_state_replication.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in agent/consul/federation_state_replication.go (file has 217 lines)"
+      },
+      {
+        "file": "server.go",
+        "locator": "606",
+        "status": "grounded",
+        "reason": "line 606 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "replication.go",
+        "locator": "246",
+        "status": "grounded",
+        "reason": "line 246 in replication.go (file has 674 lines) [via agent/grpc-external/services/peerstream/replication.go]"
+      },
+      {
+        "file": "agent/consul/leader_metrics.go",
+        "locator": "127",
+        "status": "grounded",
+        "reason": "line 127 in agent/consul/leader_metrics.go (file has 288 lines)"
+      },
+      {
+        "file": "leader_metrics.go",
+        "locator": "48",
+        "status": "grounded",
+        "reason": "line 48 in leader_metrics.go (file has 288 lines) [via agent/consul/leader_metrics.go]"
+      },
+      {
+        "file": "agent/consul/peering_backend.go",
+        "locator": "33",
+        "status": "grounded",
+        "reason": "line 33 in agent/consul/peering_backend.go (file has 354 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "232",
+        "status": "grounded",
+        "reason": "line 232 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "421",
+        "status": "grounded",
+        "reason": "line 421 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "agent/consul/operator_backend.go",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in agent/consul/operator_backend.go (file has 45 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "445",
+        "status": "grounded",
+        "reason": "line 445 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/consul/configentry_backend.go",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in agent/consul/configentry_backend.go (file has 31 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "529",
+        "status": "grounded",
+        "reason": "line 529 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/consul/subscribe_backend.go",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in agent/consul/subscribe_backend.go (file has 38 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "466",
+        "status": "grounded",
+        "reason": "line 466 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/consul/tenancy_bridge.go",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in agent/consul/tenancy_bridge.go (file has 17 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "344",
+        "status": "grounded",
+        "reason": "line 344 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/consul/v2_config_entry_exports_shim.go",
+        "locator": "24",
+        "status": "grounded",
+        "reason": "line 24 in agent/consul/v2_config_entry_exports_shim.go (file has 169 lines)"
+      },
+      {
+        "file": "server.go",
+        "locator": "879",
+        "status": "grounded",
+        "reason": "line 879 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "shim.go",
+        "locator": "28",
+        "status": "unresolved",
+        "reason": "file not found at shim.go"
+      },
+      {
+        "file": "agent/consul/raft_handle.go",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in agent/consul/raft_handle.go (file has 83 lines)"
+      },
+      {
+        "file": "agent/consul/usagemetrics/usagemetrics.go",
+        "locator": "130",
+        "status": "grounded",
+        "reason": "line 130 in agent/consul/usagemetrics/usagemetrics.go (file has 384 lines)"
+      },
+      {
+        "file": "agent/consul/server_overview.go",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in agent/consul/server_overview.go (file has 192 lines)"
+      },
+      {
+        "file": "agent/consul/reporting/reporting.go",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in agent/consul/reporting/reporting.go (file has 101 lines)"
+      },
+      {
+        "file": "agent/grpc-external/services/acl/server.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in agent/grpc-external/services/acl/server.go (file has 91 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "357",
+        "status": "grounded",
+        "reason": "line 357 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/grpc-external/services/connectca/server.go",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in agent/grpc-external/services/connectca/server.go (file has 69 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "480",
+        "status": "grounded",
+        "reason": "line 480 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "484",
+        "status": "grounded",
+        "reason": "line 484 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/grpc-external/services/dataplane/server.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in agent/grpc-external/services/dataplane/server.go (file has 49 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "499",
+        "status": "grounded",
+        "reason": "line 499 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/grpc-external/services/configentry/server.go",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in agent/grpc-external/services/configentry/server.go (file has 202 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "534",
+        "status": "grounded",
+        "reason": "line 534 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "419",
+        "status": "grounded",
+        "reason": "line 419 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "433",
+        "status": "grounded",
+        "reason": "line 433 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "422",
+        "status": "grounded",
+        "reason": "line 422 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/grpc-external/services/peerstream/server.go",
+        "locator": "36",
+        "status": "grounded",
+        "reason": "line 36 in agent/grpc-external/services/peerstream/server.go (file has 131 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "387",
+        "status": "grounded",
+        "reason": "line 387 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "388",
+        "status": "grounded",
+        "reason": "line 388 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "393",
+        "status": "grounded",
+        "reason": "line 393 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/grpc-external/services/peerstream/subscription_manager.go",
+        "locator": "46",
+        "status": "grounded",
+        "reason": "line 46 in agent/grpc-external/services/peerstream/subscription_manager.go (file has 976 lines)"
+      },
+      {
+        "file": "agent/grpc-external/services/peerstream/subscription_view.go",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in agent/grpc-external/services/peerstream/subscription_view.go (file has 159 lines)"
+      },
+      {
+        "file": "agent/submatview/local_materializer.go",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in agent/submatview/local_materializer.go (file has 150 lines)"
+      },
+      {
+        "file": "subscription_view.go",
+        "locator": "78",
+        "status": "grounded",
+        "reason": "line 78 in subscription_view.go (file has 159 lines) [via agent/grpc-external/services/peerstream/subscription_view.go]"
+      },
+      {
+        "file": "agent/rpc/operator/service.go",
+        "locator": "70",
+        "status": "grounded",
+        "reason": "line 70 in agent/rpc/operator/service.go (file has 107 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "447",
+        "status": "grounded",
+        "reason": "line 447 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "agent/grpc-internal/services/subscribe/subscribe.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in agent/grpc-internal/services/subscribe/subscribe.go (file has 131 lines)"
+      },
+      {
+        "file": "agent/grpc-external/services/resource/server_ce.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in agent/grpc-external/services/resource/server_ce.go (file has 45 lines)"
+      },
+      {
+        "file": "agent/grpc-external/services/serverdiscovery/server.go",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in agent/grpc-external/services/serverdiscovery/server.go (file has 42 lines)"
+      },
+      {
+        "file": "server_grpc.go",
+        "locator": "513",
+        "status": "grounded",
+        "reason": "line 513 in server_grpc.go (file has 542 lines) [via agent/consul/server_grpc.go]"
+      },
+      {
+        "file": "internal/storage/raft/backend.go",
+        "locator": "80",
+        "status": "grounded",
+        "reason": "line 80 in internal/storage/raft/backend.go (file has 390 lines)"
+      },
+      {
+        "file": "internal/storage/raft/forwarding.go",
+        "locator": "115",
+        "status": "grounded",
+        "reason": "line 115 in internal/storage/raft/forwarding.go (file has 268 lines)"
+      },
+      {
+        "file": "internal/multicluster/internal/controllers/register.go",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in internal/multicluster/internal/controllers/register.go (file has 17 lines)"
+      },
+      {
+        "file": "internal/multicluster/internal/controllers/v1compat/controller.go",
+        "locator": "81",
+        "status": "grounded",
+        "reason": "line 81 in internal/multicluster/internal/controllers/v1compat/controller.go (file has 419 lines)"
+      },
+      {
+        "file": "agent.go",
+        "locator": "153",
+        "status": "grounded",
+        "reason": "line 153 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "agent.go",
+        "locator": "709",
+        "status": "grounded",
+        "reason": "line 709 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "agent/local/state.go",
+        "locator": "179",
+        "status": "grounded",
+        "reason": "line 179 in agent/local/state.go (file has 1657 lines)"
+      },
+      {
+        "file": "state.go",
+        "locator": "164",
+        "status": "grounded",
+        "reason": "line 164 in state.go (file has 1657 lines) [via agent/local/state.go]"
+      },
+      {
+        "file": "agent/consul/servercert/manager.go",
+        "locator": "96",
+        "status": "grounded",
+        "reason": "line 96 in agent/consul/servercert/manager.go (file has 272 lines)"
+      },
+      {
+        "file": "agent/proxycfg-sources/catalog/config_source.go",
+        "locator": "26",
+        "status": "grounded",
+        "reason": "line 26 in agent/proxycfg-sources/catalog/config_source.go (file has 309 lines)"
+      },
+      {
+        "file": "config.go",
+        "locator": "278",
+        "status": "grounded",
+        "reason": "line 278 in config.go (file has 1194 lines) [via tlsutil/config.go]"
+      },
+      {
+        "file": "agent.go",
+        "locator": "955",
+        "status": "grounded",
+        "reason": "line 955 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "969",
+        "status": "grounded",
+        "reason": "line 969 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "4653",
+        "status": "grounded",
+        "reason": "line 4653 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "agent/proxycfg-glue/config_entry.go",
+        "locator": "44",
+        "status": "grounded",
+        "reason": "line 44 in agent/proxycfg-glue/config_entry.go (file has 148 lines)"
+      },
+      {
+        "file": "config_entry.go",
+        "locator": "99",
+        "status": "grounded",
+        "reason": "line 99 in config_entry.go (file has 2254 lines) [via agent/consul/state/config_entry.go]"
+      },
+      {
+        "file": "discovery_chain.go",
+        "locator": "37",
+        "status": "grounded",
+        "reason": "line 37 in discovery_chain.go (file has 496 lines) [via agent/structs/discovery_chain.go]"
+      },
+      {
+        "file": "federation_state_list_mesh_gateways.go",
+        "locator": "33",
+        "status": "grounded",
+        "reason": "line 33 in federation_state_list_mesh_gateways.go (file has 70 lines) [via agent/proxycfg-glue/federation_state_list_mesh_gateways.go]"
+      },
+      {
+        "file": "health.go",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in health.go (file has 400 lines) [via api/health.go]"
+      },
+      {
+        "file": "health.go",
+        "locator": "63",
+        "status": "grounded",
+        "reason": "line 63 in health.go (file has 400 lines) [via api/health.go]"
+      },
+      {
+        "file": "health_blocking.go",
+        "locator": "46",
+        "status": "grounded",
+        "reason": "line 46 in health_blocking.go (file has 176 lines) [via agent/proxycfg-glue/health_blocking.go]"
+      },
+      {
+        "file": "intentions.go",
+        "locator": "75",
+        "status": "grounded",
+        "reason": "line 75 in intentions.go (file has 104 lines) [via agent/proxycfg-glue/intentions.go]"
+      },
+      {
+        "file": "internal_service_dump.go",
+        "locator": "56",
+        "status": "grounded",
+        "reason": "line 56 in internal_service_dump.go (file has 104 lines) [via agent/proxycfg-glue/internal_service_dump.go]"
+      },
+      {
+        "file": "peering_list.go",
+        "locator": "33",
+        "status": "grounded",
+        "reason": "line 33 in peering_list.go (file has 61 lines) [via agent/proxycfg-glue/peering_list.go]"
+      },
+      {
+        "file": "exported_peered_services.go",
+        "locator": "33",
+        "status": "grounded",
+        "reason": "line 33 in exported_peered_services.go (file has 62 lines) [via agent/proxycfg-glue/exported_peered_services.go]"
+      },
+      {
+        "file": "peered_upstreams.go",
+        "locator": "32",
+        "status": "grounded",
+        "reason": "line 32 in peered_upstreams.go (file has 67 lines) [via agent/proxycfg-glue/peered_upstreams.go]"
+      },
+      {
+        "file": "gateway_services.go",
+        "locator": "33",
+        "status": "grounded",
+        "reason": "line 33 in gateway_services.go (file has 66 lines) [via agent/proxycfg-glue/gateway_services.go]"
+      },
+      {
+        "file": "service_http_checks.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in service_http_checks.go (file has 44 lines) [via agent/proxycfg-glue/service_http_checks.go]"
+      },
+      {
+        "file": "trust_bundle.go",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in trust_bundle.go (file has 125 lines) [via agent/proxycfg-glue/trust_bundle.go]"
+      },
+      {
+        "file": "trust_bundle.go",
+        "locator": "83",
+        "status": "grounded",
+        "reason": "line 83 in trust_bundle.go (file has 125 lines) [via agent/proxycfg-glue/trust_bundle.go]"
+      },
+      {
+        "file": "service_list.go",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in service_list.go (file has 159 lines) [via agent/proxycfg-glue/service_list.go]"
+      },
+      {
+        "file": "service_list.go",
+        "locator": "48",
+        "status": "grounded",
+        "reason": "line 48 in service_list.go (file has 159 lines) [via agent/proxycfg-glue/service_list.go]"
+      },
+      {
+        "file": "intention_upstreams.go",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in intention_upstreams.go (file has 84 lines) [via agent/proxycfg-glue/intention_upstreams.go]"
+      },
+      {
+        "file": "resolved_service_config.go",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in resolved_service_config.go (file has 70 lines) [via agent/proxycfg-glue/resolved_service_config.go]"
+      },
+      {
+        "file": "agent/consul/acl_replication_types.go",
+        "locator": "15",
+        "status": "grounded",
+        "reason": "line 15 in agent/consul/acl_replication_types.go (file has 390 lines)"
+      },
+      {
+        "file": "acl_replication.go",
+        "locator": "47",
+        "status": "grounded",
+        "reason": "line 47 in acl_replication.go (file has 568 lines) [via agent/consul/acl_replication.go]"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "153",
+        "status": "grounded",
+        "reason": "line 153 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "762",
+        "status": "grounded",
+        "reason": "line 762 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "acl.go",
+        "locator": "278",
+        "status": "grounded",
+        "reason": "line 278 in acl.go (file has 2021 lines) [via agent/structs/acl.go]"
+      },
+      {
+        "file": "leader_connect_ca.go",
+        "locator": "60",
+        "status": "grounded",
+        "reason": "line 60 in leader_connect_ca.go (file has 1706 lines) [via agent/consul/leader_connect_ca.go]"
+      },
+      {
+        "file": "provider_consul.go",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in provider_consul.go (file has 682 lines) [via agent/connect/ca/provider_consul.go]"
+      },
+      {
+        "file": "auto_config_endpoint.go",
+        "locator": "152",
+        "status": "grounded",
+        "reason": "line 152 in auto_config_endpoint.go (file has 428 lines) [via agent/consul/auto_config_endpoint.go]"
+      },
+      {
+        "file": "auto_config_backend.go",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in auto_config_backend.go (file has 106 lines) [via agent/consul/auto_config_backend.go]"
+      },
+      {
+        "file": "gateway_locator.go",
+        "locator": "44",
+        "status": "grounded",
+        "reason": "line 44 in gateway_locator.go (file has 469 lines) [via agent/consul/gateway_locator.go]"
+      },
+      {
+        "file": "rate/handler.go",
+        "locator": "168",
+        "status": "grounded",
+        "reason": "line 168 in rate/handler.go (file has 528 lines) [via agent/consul/rate/handler.go]"
+      },
+      {
+        "file": "agent.go",
+        "locator": "708",
+        "status": "grounded",
+        "reason": "line 708 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "609",
+        "status": "grounded",
+        "reason": "line 609 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "reporting.go",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in reporting.go (file has 101 lines) [via agent/consul/reporting/reporting.go]"
+      },
+      {
+        "file": "configentry/server.go",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in configentry/server.go (file has 202 lines) [via agent/grpc-external/services/configentry/server.go]"
+      },
+      {
+        "file": "peering/service.go",
+        "locator": "88",
+        "status": "grounded",
+        "reason": "line 88 in peering/service.go (file has 1163 lines) [via agent/rpc/peering/service.go]"
+      },
+      {
+        "file": "peering_backend.go",
+        "locator": "33",
+        "status": "grounded",
+        "reason": "line 33 in peering_backend.go (file has 354 lines) [via agent/consul/peering_backend.go]"
+      },
+      {
+        "file": "peerstream/server.go",
+        "locator": "36",
+        "status": "grounded",
+        "reason": "line 36 in peerstream/server.go (file has 131 lines) [via agent/grpc-external/services/peerstream/server.go]"
+      },
+      {
+        "file": "subscription_manager.go",
+        "locator": "46",
+        "status": "grounded",
+        "reason": "line 46 in subscription_manager.go (file has 976 lines) [via agent/grpc-external/services/peerstream/subscription_manager.go]"
+      },
+      {
+        "file": "subscription_view.go",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in subscription_view.go (file has 159 lines) [via agent/grpc-external/services/peerstream/subscription_view.go]"
+      },
+      {
+        "file": "local_materializer.go",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in local_materializer.go (file has 150 lines) [via agent/submatview/local_materializer.go]"
+      },
+      {
+        "file": "operator/service.go",
+        "locator": "70",
+        "status": "grounded",
+        "reason": "line 70 in operator/service.go (file has 107 lines) [via agent/rpc/operator/service.go]"
+      },
+      {
+        "file": "operator_backend.go",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in operator_backend.go (file has 45 lines) [via agent/consul/operator_backend.go]"
+      },
+      {
+        "file": "subscribe/subscribe.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in subscribe/subscribe.go (file has 131 lines) [via agent/grpc-internal/services/subscribe/subscribe.go]"
+      },
+      {
+        "file": "subscribe_backend.go",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in subscribe_backend.go (file has 38 lines) [via agent/consul/subscribe_backend.go]"
+      },
+      {
+        "file": "resource/server_ce.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in resource/server_ce.go (file has 45 lines) [via agent/grpc-external/services/resource/server_ce.go]"
+      },
+      {
+        "file": "tenancy_bridge.go",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in tenancy_bridge.go (file has 17 lines) [via agent/consul/tenancy_bridge.go]"
+      },
+      {
+        "file": "raft_handle.go",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in raft_handle.go (file has 83 lines) [via agent/consul/raft_handle.go]"
+      },
+      {
+        "file": "forwarding.go",
+        "locator": "115",
+        "status": "grounded",
+        "reason": "line 115 in forwarding.go (file has 268 lines) [via internal/storage/raft/forwarding.go]"
+      },
+      {
+        "file": "register.go",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in register.go (file has 307 lines) [via command/connect/proxy/register.go]"
+      },
+      {
+        "file": "v1compat/controller.go",
+        "locator": "81",
+        "status": "grounded",
+        "reason": "line 81 in v1compat/controller.go (file has 419 lines) [via internal/multicluster/internal/controllers/v1compat/controller.go]"
+      },
+      {
+        "file": "v2_config_entry_exports_shim.go",
+        "locator": "24",
+        "status": "grounded",
+        "reason": "line 24 in v2_config_entry_exports_shim.go (file has 169 lines) [via agent/consul/v2_config_entry_exports_shim.go]"
+      },
+      {
+        "file": "acl/server.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in acl/server.go (file has 91 lines) [via agent/grpc-external/services/acl/server.go]"
+      },
+      {
+        "file": "connectca/server.go",
+        "locator": "29",
+        "status": "grounded",
+        "reason": "line 29 in connectca/server.go (file has 69 lines) [via agent/grpc-external/services/connectca/server.go]"
+      },
+      {
+        "file": "dataplane/server.go",
+        "locator": "24",
+        "status": "grounded",
+        "reason": "line 24 in dataplane/server.go (file has 49 lines) [via agent/grpc-external/services/dataplane/server.go]"
+      },
+      {
+        "file": "peerstream/server.go",
+        "locator": "38",
+        "status": "grounded",
+        "reason": "line 38 in peerstream/server.go (file has 131 lines) [via agent/grpc-external/services/peerstream/server.go]"
+      },
+      {
+        "file": "manager.go",
+        "locator": "96",
+        "status": "grounded",
+        "reason": "line 96 in manager.go (file has 553 lines) [via agent/router/manager.go]"
+      },
+      {
+        "file": "agent.go",
+        "locator": "4659",
+        "status": "grounded",
+        "reason": "line 4659 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "828",
+        "status": "grounded",
+        "reason": "line 828 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "767",
+        "status": "grounded",
+        "reason": "line 767 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "replication.go",
+        "locator": "202",
+        "status": "grounded",
+        "reason": "line 202 in replication.go (file has 674 lines) [via agent/grpc-external/services/peerstream/replication.go]"
+      },
+      {
+        "file": "agent.go",
+        "locator": "249",
+        "status": "grounded",
+        "reason": "line 249 in agent.go (file has 4818 lines) [via agent/agent.go]"
+      },
+      {
+        "file": "state.go",
+        "locator": "179",
+        "status": "grounded",
+        "reason": "line 179 in state.go (file has 1657 lines) [via agent/local/state.go]"
+      },
+      {
+        "file": "backend.go",
+        "locator": "80",
+        "status": "grounded",
+        "reason": "line 80 in backend.go (file has 390 lines) [via internal/storage/raft/backend.go]"
+      },
+      {
+        "file": "controller.go",
+        "locator": "81",
+        "status": "grounded",
+        "reason": "line 81 in controller.go (file has 434 lines) [via agent/consul/controller/controller.go]"
+      },
+      {
+        "file": "server_ce.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in server_ce.go (file has 210 lines) [via agent/consul/server_ce.go]"
+      },
+      {
+        "file": "service.go",
+        "locator": "70",
+        "status": "grounded",
+        "reason": "line 70 in service.go (file has 1163 lines) [via agent/rpc/peering/service.go]"
+      },
+      {
+        "file": "service.go",
+        "locator": "88",
+        "status": "grounded",
+        "reason": "line 88 in service.go (file has 1163 lines) [via agent/rpc/peering/service.go]"
+      },
+      {
+        "file": "subscribe.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in subscribe.go (file has 131 lines) [via agent/grpc-internal/services/subscribe/subscribe.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "1241",
+        "status": "grounded",
+        "reason": "line 1241 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "configentry_backend.go",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in configentry_backend.go (file has 31 lines) [via agent/consul/configentry_backend.go]"
+      },
+      {
+        "file": "shim.go",
+        "locator": "24",
+        "status": "unresolved",
+        "reason": "file not found at shim.go"
+      },
+      {
+        "file": "autopilot.go",
+        "locator": "36",
+        "status": "grounded",
+        "reason": "line 36 in autopilot.go (file has 185 lines) [via agent/consul/autopilot.go]"
+      },
+      {
+        "file": "handler.go",
+        "locator": "168",
+        "status": "grounded",
+        "reason": "line 168 in handler.go (file has 528 lines) [via agent/consul/rate/handler.go]"
+      },
+      {
+        "file": "server_overview.go",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in server_overview.go (file has 192 lines) [via agent/consul/server_overview.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "1302",
+        "status": "grounded",
+        "reason": "line 1302 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "571",
+        "status": "grounded",
+        "reason": "line 571 in server.go (file has 2025 lines) [via agent/consul/server.go]"
+      },
+      {
+        "file": "agent/consul/server_grpc.go",
+        "locator": "37",
+        "status": "grounded",
+        "reason": "line 37 in agent/consul/server_grpc.go (file has 542 lines)"
+      },
+      {
+        "file": "agent/consul/server_register.go",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in agent/consul/server_register.go (file has 25 lines)"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "600",
+        "status": "grounded",
+        "reason": "line 600 in agent/agent.go (file has 4818 lines)"
+      },
+      {
+        "file": "agent/consul/rate/handler.go",
+        "locator": "337",
+        "status": "grounded",
+        "reason": "line 337 in agent/consul/rate/handler.go (file has 528 lines)"
+      },
+      {
+        "file": "agent/agent.go",
+        "locator": "875",
+        "status": "grounded",
+        "reason": "line 875 in agent/agent.go (file has 4818 lines)"
+      }
+    ]
+  },
+  "gold_recall": {
+    "total": 13,
+    "mentioned": 13,
+    "cited": 13,
+    "mention_recall": 1.0,
+    "cited_recall": 1.0,
+    "groups": {
+      "dropped": {
+        "total": 5,
+        "mentioned": 5,
+        "cited": 5,
+        "mention_recall": 1.0,
+        "cited_recall": 1.0
+      },
+      "found": {
+        "total": 8,
+        "mentioned": 8,
+        "cited": 8,
+        "mention_recall": 1.0,
+        "cited_recall": 1.0
+      }
+    },
+    "missed_mention": [],
+    "missed_cite": [],
+    "details": [
+      {
+        "id": "ca-provider",
+        "group": "dropped",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "rate-handler",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "reporting-mgr",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "usagemetrics",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "configentry-svc",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "peerstream-svc",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "peerstream-submgr",
+        "group": "dropped",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "resource-svc",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "subscribe-svc",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "local-state",
+        "group": "dropped",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "operator-svc",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "raft-forwarding",
+        "group": "dropped",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "v1compat-recon",
+        "group": "dropped",
+        "mentioned": true,
+        "cited": true
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the codebase",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "consul",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 131,
+          "unique_refs": 249,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the server lifecycle contract",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 131,
+          "unique_refs": 249,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how server access is handed to a subsystem",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 131,
+          "unique_refs": 249,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Audit every production holder that retains a narrowed server handle",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 131,
+          "unique_refs": 249,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.75,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace the narrowed-interface routes",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 131,
+          "unique_refs": 249,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Assess the blast radius of the lifecycle rework",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 131,
+          "unique_refs": 249,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Produce the change + verification map",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 131,
+          "unique_refs": 249,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "test",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [
+      "Read(server.go)",
+      "Read(server_grpc.go)",
+      "Read(server.go)"
+    ],
+    "post_mcp_misses": [
+      "Bash(grep -n -E \"func NewServer|func (\\(s \\*Server\\) )?(Shutdown|)",
+      "Bash(grep -rn \"registerEndpoint\\|func init()\" agent/consul/server)",
+      "Bash(sed -n 1,45p agent/consul/server_register.go; echo ----; gre)",
+      "Bash(grep -rn \"server.FSM()\\|consulServer\\|deps.ConsulServer\\|Get)",
+      "Bash(grep -n \"GetStore\\|type Config\\|type CertManager\\|tlsConfigu)",
+      "Bash(grep -rn -E \"srv +\\*Server|server +\\*Server|Server +\\*Server)",
+      "Bash(sed -n 560,600p agent/consul/server.go; sed -n 755,790p agen)",
+      "Bash(sed -n 620,670p agent/consul/server.go; sed -n 820,840p agen)",
+      "Bash(grep -rn \"LocalMaterializer\\b\\|LocalMaterializerDeps\" agent )",
+      "Bash(grep -rn \"NewConsulProvider(\" agent --include=\"*.go\" | grep )",
+      "Bash(grep -rn \"\\*consul\\.Server\" --include=\"*.go\" agent command i)",
+      "Bash(grep -n \"CertExpirationMonitor{\" agent/consul/*.go | grep -v)",
+      "Bash(grep -n \"func (s \\*Server) listen\\|func (s \\*Server) handleC)",
+      "Bash(grep -n \"type Config struct\\|type Server struct\\|GetStore \\|)"
+    ],
+    "has_mcp_tools": true,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 3, post-MCP misses: 14 (diagnostic only - grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 21,
+    "grep_count": 14,
+    "read_count": 3,
+    "mcp_count": 4,
+    "token_input_uncached": 32,
+    "token_output": 31786,
+    "token_cache_read": 1143423,
+    "token_cache_write": 84636,
+    "token_total_billed": 31818,
+    "token_total_all": 1259877,
+    "wall_time_seconds": 409.5,
+    "cost_usd": 4.4258,
+    "effective_token_total_billed": 31818,
+    "effective_wall_time_seconds": 409.5,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 480,
+    "token_efficiency": 0.0,
+    "time_efficiency": 0.1469,
+    "answer_chars": 27634,
+    "audit_chars": 156864,
+    "overhead": null
+  }
+}
