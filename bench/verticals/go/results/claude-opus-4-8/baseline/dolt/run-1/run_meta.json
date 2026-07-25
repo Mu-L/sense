@@ -5,7 +5,7 @@
   "wall_time_seconds": 300,
   "session_timeout_seconds": 300,
   "max_budget_usd": 1.5,
-  "timestamp": "2026-07-19T21:42:22Z",
+  "timestamp": "2026-07-22T18:58:58Z",
   "tool_version": null,
   "repo_commit": "7e268bf",
   "model": "claude-opus-4-8",
@@ -18,9 +18,9 @@
   "sense_pitch": null,
   "sense_purpose": null,
   "sense_link": null,
-  "scenario_version": "sha256:20c0b394457e30bf",
+  "scenario_version": "sha256:d5fc84bd85024e24",
   "scenario_file": "/Users/luc/Developer/luuuc/oss/sense/bench/verticals/go/scenarios/dolt.yaml",
-  "valid": false,
-  "void_reason": "claude_session_failed",
-  "error": "claude_session_failed"
+  "watchdog_kind": "hard_cap_timeout",
+  "valid": null,
+  "void_reason": null
 }

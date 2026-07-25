@@ -5,7 +5,7 @@
   "wall_time_seconds": 300,
   "session_timeout_seconds": 300,
   "max_budget_usd": 1.5,
-  "timestamp": "2026-07-20T07:20:54Z",
+  "timestamp": "2026-07-22T19:26:12Z",
   "tool_version": null,
   "repo_commit": "8fb150d",
   "model": "claude-opus-4-8",
@@ -18,9 +18,9 @@
   "sense_pitch": null,
   "sense_purpose": null,
   "sense_link": null,
-  "scenario_version": "sha256:b4b5360a42d01799",
+  "scenario_version": "sha256:618510555a2ad036",
   "scenario_file": "/Users/luc/Developer/luuuc/oss/sense/bench/verticals/go/scenarios/pebble.yaml",
-  "valid": false,
-  "void_reason": "claude_session_failed",
-  "error": "claude_session_failed"
+  "watchdog_kind": "hard_cap_timeout",
+  "valid": null,
+  "void_reason": null
 }

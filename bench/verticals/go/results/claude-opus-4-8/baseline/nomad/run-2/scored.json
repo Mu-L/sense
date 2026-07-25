@@ -4,13 +4,13 @@
   "adoption_score": 0.4,
   "keyword_coverage": 1.0,
   "step_avg_score": 1.0,
-  "efficiency": 0.2215,
+  "efficiency": 0.2384,
   "completeness": 0.6905,
   "tool_fluency": 0.0,
   "discoverability": 1.0,
   "citation_grounding": {
-    "total": 338,
-    "grounded": 338,
+    "total": 143,
+    "grounded": 143,
     "unresolved": 0,
     "hallucinated": 0,
     "rate": 1.0,
@@ -19,8 +19,8 @@
         "nomad/server.go:116 (line 116 in nomad/server.go (file has 2379 lines))",
         "nomad/server.go:336 (line 336 in nomad/server.go (file has 2379 lines))",
         "nomad/server.go:744 (line 744 in nomad/server.go (file has 2379 lines))",
-        "command/agent/agent.go:113 (line 113 in command/agent/agent.go (file has 1845 lines))",
-        "nomad/server.go:378 (line 378 in nomad/server.go (file has 2379 lines))"
+        "server.go:361 (line 361 in server.go (file has 2379 lines) [via nomad/server.go])",
+        "server.go:126 (line 126 in server.go (file has 2379 lines) [via nomad/server.go])"
       ],
       "unresolved": [],
       "hallucinated": []
@@ -45,190 +45,40 @@
         "reason": "line 744 in nomad/server.go (file has 2379 lines)"
       },
       {
-        "file": "command/agent/agent.go",
-        "locator": "113",
+        "file": "server.go",
+        "locator": "361",
         "status": "grounded",
-        "reason": "line 113 in command/agent/agent.go (file has 1845 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "378",
-        "status": "grounded",
-        "reason": "line 378 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "401",
-        "status": "grounded",
-        "reason": "line 401 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "407",
-        "status": "grounded",
-        "reason": "line 407 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "410",
-        "status": "grounded",
-        "reason": "line 410 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "420",
-        "status": "grounded",
-        "reason": "line 420 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "423",
-        "status": "grounded",
-        "reason": "line 423 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "437",
-        "status": "grounded",
-        "reason": "line 437 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "469",
-        "status": "grounded",
-        "reason": "line 469 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "475",
-        "status": "grounded",
-        "reason": "line 475 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "486",
-        "status": "grounded",
-        "reason": "line 486 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/fsm.go",
-        "locator": "168",
-        "status": "grounded",
-        "reason": "line 168 in nomad/fsm.go (file has 3405 lines)"
+        "reason": "line 361 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
         "file": "server.go",
-        "locator": "1359",
+        "locator": "126",
         "status": "grounded",
-        "reason": "line 1359 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "493",
-        "status": "grounded",
-        "reason": "line 493 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "508",
-        "status": "grounded",
-        "reason": "line 508 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 126 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
         "file": "server.go",
-        "locator": "1130",
+        "locator": "215",
         "status": "grounded",
-        "reason": "line 1130 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "514",
-        "status": "grounded",
-        "reason": "line 514 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "520",
-        "status": "grounded",
-        "reason": "line 520 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "531",
-        "status": "grounded",
-        "reason": "line 531 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "534",
-        "status": "grounded",
-        "reason": "line 534 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server_setup_ce.go",
-        "locator": "22",
-        "status": "grounded",
-        "reason": "line 22 in nomad/server_setup_ce.go (file has 37 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "571",
-        "status": "grounded",
-        "reason": "line 571 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "536",
-        "status": "grounded",
-        "reason": "line 536 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "815",
-        "status": "grounded",
-        "reason": "line 815 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "910",
-        "status": "grounded",
-        "reason": "line 910 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 215 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
         "file": "server.go",
-        "locator": "143",
+        "locator": "211",
         "status": "grounded",
-        "reason": "line 143 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "fsm.go",
-        "locator": "138",
-        "status": "grounded",
-        "reason": "line 138 in fsm.go (file has 3405 lines) [via nomad/fsm.go]"
+        "reason": "line 211 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
         "file": "server.go",
-        "locator": "205",
+        "locator": "258",
         "status": "grounded",
-        "reason": "line 205 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "plan_apply.go",
-        "locator": "28",
-        "status": "grounded",
-        "reason": "line 28 in plan_apply.go (file has 787 lines) [via nomad/plan_apply.go]"
+        "reason": "line 258 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
         "file": "server.go",
-        "locator": "254",
+        "locator": "262",
         "status": "grounded",
-        "reason": "line 254 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "250",
-        "status": "grounded",
-        "reason": "line 250 in server.go (file has 2379 lines) [via nomad/server.go]"
+        "reason": "line 262 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
         "file": "server.go",
@@ -238,135 +88,39 @@
       },
       {
         "file": "server.go",
+        "locator": "233",
+        "status": "grounded",
+        "reason": "line 233 in server.go (file has 2379 lines) [via nomad/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "236",
+        "status": "grounded",
+        "reason": "line 236 in server.go (file has 2379 lines) [via nomad/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "254",
+        "status": "grounded",
+        "reason": "line 254 in server.go (file has 2379 lines) [via nomad/server.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "251",
+        "status": "grounded",
+        "reason": "line 251 in server.go (file has 2379 lines) [via nomad/server.go]"
+      },
+      {
+        "file": "server.go",
         "locator": "271",
         "status": "grounded",
         "reason": "line 271 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
         "file": "server.go",
-        "locator": "181",
+        "locator": "162",
         "status": "grounded",
-        "reason": "line 181 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "290",
-        "status": "grounded",
-        "reason": "line 290 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "295",
-        "status": "grounded",
-        "reason": "line 295 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "279",
-        "status": "grounded",
-        "reason": "line 279 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/rpc.go",
-        "locator": "196",
-        "status": "grounded",
-        "reason": "line 196 in nomad/rpc.go (file has 931 lines)"
-      },
-      {
-        "file": "nomad/rpc.go",
-        "locator": "280",
-        "status": "grounded",
-        "reason": "line 280 in nomad/rpc.go (file has 931 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1296",
-        "status": "grounded",
-        "reason": "line 1296 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/job_endpoint.go",
-        "locator": "92",
-        "status": "grounded",
-        "reason": "line 92 in nomad/job_endpoint.go (file has 2432 lines)"
-      },
-      {
-        "file": "nomad/rpc.go",
-        "locator": "586",
-        "status": "grounded",
-        "reason": "line 586 in nomad/rpc.go (file has 931 lines)"
-      },
-      {
-        "file": "nomad/rpc.go",
-        "locator": "854",
-        "status": "grounded",
-        "reason": "line 854 in nomad/rpc.go (file has 931 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "2115",
-        "status": "grounded",
-        "reason": "line 2115 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/rpc.go",
-        "locator": "811",
-        "status": "grounded",
-        "reason": "line 811 in nomad/rpc.go (file has 931 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1187",
-        "status": "grounded",
-        "reason": "line 1187 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/drainer_shims.go",
-        "locator": "14",
-        "status": "grounded",
-        "reason": "line 14 in nomad/drainer_shims.go (file has 46 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1190",
-        "status": "grounded",
-        "reason": "line 1190 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/drainer/drainer.go",
-        "locator": "114",
-        "status": "grounded",
-        "reason": "line 114 in nomad/drainer/drainer.go (file has 441 lines)"
-      },
-      {
-        "file": "nomad/drainer/drainer.go",
-        "locator": "48",
-        "status": "grounded",
-        "reason": "line 48 in nomad/drainer/drainer.go (file has 441 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1199",
-        "status": "grounded",
-        "reason": "line 1199 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/drainer/drainer.go",
-        "locator": "159",
-        "status": "grounded",
-        "reason": "line 159 in nomad/drainer/drainer.go (file has 441 lines)"
-      },
-      {
-        "file": "nomad/leader.go",
-        "locator": "416",
-        "status": "grounded",
-        "reason": "line 416 in nomad/leader.go (file has 2806 lines)"
-      },
-      {
-        "file": "nomad/drainer/drainer.go",
-        "locator": "153",
-        "status": "grounded",
-        "reason": "line 153 in nomad/drainer/drainer.go (file has 441 lines)"
+        "reason": "line 162 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
         "file": "nomad/rpc.go",
@@ -376,15 +130,321 @@
       },
       {
         "file": "server.go",
-        "locator": "407",
-        "status": "grounded",
-        "reason": "line 407 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
         "locator": "157",
         "status": "grounded",
         "reason": "line 157 in server.go (file has 2379 lines) [via nomad/server.go]"
+      },
+      {
+        "file": "nomad/rpc.go",
+        "locator": "586",
+        "status": "grounded",
+        "reason": "line 586 in nomad/rpc.go (file has 931 lines)"
+      },
+      {
+        "file": "nomad/server.go",
+        "locator": "1296",
+        "status": "grounded",
+        "reason": "line 1296 in nomad/server.go (file has 2379 lines)"
+      },
+      {
+        "file": "nomad/job_endpoint.go",
+        "locator": "51",
+        "status": "grounded",
+        "reason": "line 51 in nomad/job_endpoint.go (file has 2432 lines)"
+      },
+      {
+        "file": "nomad/server.go",
+        "locator": "514",
+        "status": "grounded",
+        "reason": "line 514 in nomad/server.go (file has 2379 lines)"
+      },
+      {
+        "file": "nomad/server.go",
+        "locator": "1160",
+        "status": "grounded",
+        "reason": "line 1160 in nomad/server.go (file has 2379 lines)"
+      },
+      {
+        "file": "nomad/server.go",
+        "locator": "1165",
+        "status": "grounded",
+        "reason": "line 1165 in nomad/server.go (file has 2379 lines)"
+      },
+      {
+        "file": "nomad/deploymentwatcher/deployments_watcher.go",
+        "locator": "110",
+        "status": "grounded",
+        "reason": "line 110 in nomad/deploymentwatcher/deployments_watcher.go (file has 484 lines)"
+      },
+      {
+        "file": "nomad/deploymentwatcher/deployments_watcher.go",
+        "locator": "76",
+        "status": "grounded",
+        "reason": "line 76 in nomad/deploymentwatcher/deployments_watcher.go (file has 484 lines)"
+      },
+      {
+        "file": "deployment_watcher.go",
+        "locator": "117",
+        "status": "grounded",
+        "reason": "line 117 in deployment_watcher.go (file has 1017 lines) [via nomad/deploymentwatcher/deployment_watcher.go]"
+      },
+      {
+        "file": "deployment_watcher.go",
+        "locator": "65",
+        "status": "grounded",
+        "reason": "line 65 in deployment_watcher.go (file has 1017 lines) [via nomad/deploymentwatcher/deployment_watcher.go]"
+      },
+      {
+        "file": "server.go",
+        "locator": "1296",
+        "status": "grounded",
+        "reason": "line 1296 in server.go (file has 2379 lines) [via nomad/server.go]"
+      },
+      {
+        "file": "acl_endpoint.go",
+        "locator": "66",
+        "status": "grounded",
+        "reason": "line 66 in acl_endpoint.go (file has 3249 lines) [via nomad/acl_endpoint.go]"
+      },
+      {
+        "file": "alloc_endpoint.go",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in alloc_endpoint.go (file has 804 lines) [via command/agent/alloc_endpoint.go]"
+      },
+      {
+        "file": "client_agent_endpoint.go",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in client_agent_endpoint.go (file has 609 lines) [via nomad/client_agent_endpoint.go]"
+      },
+      {
+        "file": "client_alloc_endpoint.go",
+        "locator": "26",
+        "status": "grounded",
+        "reason": "line 26 in client_alloc_endpoint.go (file has 638 lines) [via nomad/client_alloc_endpoint.go]"
+      },
+      {
+        "file": "client_csi_endpoint.go",
+        "locator": "24",
+        "status": "grounded",
+        "reason": "line 24 in client_csi_endpoint.go (file has 360 lines) [via nomad/client_csi_endpoint.go]"
+      },
+      {
+        "file": "client_fs_endpoint.go",
+        "locator": "26",
+        "status": "grounded",
+        "reason": "line 26 in client_fs_endpoint.go (file has 474 lines) [via nomad/client_fs_endpoint.go]"
+      },
+      {
+        "file": "client_host_volume_endpoint.go",
+        "locator": "18",
+        "status": "grounded",
+        "reason": "line 18 in client_host_volume_endpoint.go (file has 96 lines) [via nomad/client_host_volume_endpoint.go]"
+      },
+      {
+        "file": "client_identity_endpoint.go",
+        "locator": "14",
+        "status": "grounded",
+        "reason": "line 14 in client_identity_endpoint.go (file has 73 lines) [via nomad/client_identity_endpoint.go]"
+      },
+      {
+        "file": "client_meta_endpoint.go",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in client_meta_endpoint.go (file has 80 lines) [via nomad/client_meta_endpoint.go]"
+      },
+      {
+        "file": "client_stats_endpoint.go",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in client_stats_endpoint.go (file has 53 lines) [via nomad/client_stats_endpoint.go]"
+      },
+      {
+        "file": "csi_endpoint.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in csi_endpoint.go (file has 1994 lines) [via nomad/csi_endpoint.go]"
+      },
+      {
+        "file": "csi_endpoint.go",
+        "locator": "1820",
+        "status": "grounded",
+        "reason": "line 1820 in csi_endpoint.go (file has 1994 lines) [via nomad/csi_endpoint.go]"
+      },
+      {
+        "file": "deployment_endpoint.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in deployment_endpoint.go (file has 638 lines) [via nomad/deployment_endpoint.go]"
+      },
+      {
+        "file": "eval_endpoint.go",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in eval_endpoint.go (file has 913 lines) [via nomad/eval_endpoint.go]"
+      },
+      {
+        "file": "event_endpoint.go",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in event_endpoint.go (file has 335 lines) [via nomad/event_endpoint.go]"
+      },
+      {
+        "file": "host_volume_endpoint.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in host_volume_endpoint.go (file has 796 lines) [via nomad/host_volume_endpoint.go]"
+      },
+      {
+        "file": "job_endpoint.go",
+        "locator": "51",
+        "status": "grounded",
+        "reason": "line 51 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
+      },
+      {
+        "file": "keyring_endpoint.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in keyring_endpoint.go (file has 454 lines) [via nomad/keyring_endpoint.go]"
+      },
+      {
+        "file": "namespace_endpoint.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in namespace_endpoint.go (file has 604 lines) [via nomad/namespace_endpoint.go]"
+      },
+      {
+        "file": "node_endpoint.go",
+        "locator": "60",
+        "status": "grounded",
+        "reason": "line 60 in node_endpoint.go (file has 2007 lines) [via nomad/node_endpoint.go]"
+      },
+      {
+        "file": "node_pool_endpoint.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in node_pool_endpoint.go (file has 575 lines) [via nomad/node_pool_endpoint.go]"
+      },
+      {
+        "file": "operator_endpoint.go",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in operator_endpoint.go (file has 866 lines) [via nomad/operator_endpoint.go]"
+      },
+      {
+        "file": "periodic_endpoint.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in periodic_endpoint.go (file has 87 lines) [via nomad/periodic_endpoint.go]"
+      },
+      {
+        "file": "plan_endpoint.go",
+        "locator": "18",
+        "status": "grounded",
+        "reason": "line 18 in plan_endpoint.go (file has 91 lines) [via nomad/plan_endpoint.go]"
+      },
+      {
+        "file": "regions_endpoint.go",
+        "locator": "14",
+        "status": "grounded",
+        "reason": "line 14 in regions_endpoint.go (file has 34 lines) [via nomad/regions_endpoint.go]"
+      },
+      {
+        "file": "scaling_endpoint.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in scaling_endpoint.go (file has 220 lines) [via nomad/scaling_endpoint.go]"
+      },
+      {
+        "file": "search_endpoint.go",
+        "locator": "50",
+        "status": "grounded",
+        "reason": "line 50 in search_endpoint.go (file has 968 lines) [via nomad/search_endpoint.go]"
+      },
+      {
+        "file": "service_registration_endpoint.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in service_registration_endpoint.go (file has 481 lines) [via nomad/service_registration_endpoint.go]"
+      },
+      {
+        "file": "status_endpoint.go",
+        "locator": "18",
+        "status": "grounded",
+        "reason": "line 18 in status_endpoint.go (file has 168 lines) [via nomad/status_endpoint.go]"
+      },
+      {
+        "file": "system_endpoint.go",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in system_endpoint.go (file has 81 lines) [via nomad/system_endpoint.go]"
+      },
+      {
+        "file": "task_group_host_volume_claim_endpoint.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in task_group_host_volume_claim_endpoint.go (file has 149 lines) [via nomad/task_group_host_volume_claim_endpoint.go]"
+      },
+      {
+        "file": "variables_endpoint.go",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in variables_endpoint.go (file has 641 lines) [via nomad/variables_endpoint.go]"
+      },
+      {
+        "file": "job_endpoint_hooks.go",
+        "locator": "234",
+        "status": "grounded",
+        "reason": "line 234 in job_endpoint_hooks.go (file has 677 lines) [via nomad/job_endpoint_hooks.go]"
+      },
+      {
+        "file": "job_endpoint_hooks.go",
+        "locator": "483",
+        "status": "grounded",
+        "reason": "line 483 in job_endpoint_hooks.go (file has 677 lines) [via nomad/job_endpoint_hooks.go]"
+      },
+      {
+        "file": "job_endpoint_hooks.go",
+        "locator": "618",
+        "status": "grounded",
+        "reason": "line 618 in job_endpoint_hooks.go (file has 677 lines) [via nomad/job_endpoint_hooks.go]"
+      },
+      {
+        "file": "job_endpoint_hook_consul.go",
+        "locator": "15",
+        "status": "grounded",
+        "reason": "line 15 in job_endpoint_hook_consul.go (file has 92 lines) [via nomad/job_endpoint_hook_consul.go]"
+      },
+      {
+        "file": "job_endpoint_hook_implicit_identities.go",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in job_endpoint_hook_implicit_identities.go (file has 170 lines) [via nomad/job_endpoint_hook_implicit_identities.go]"
+      },
+      {
+        "file": "job_endpoint_hook_node_pool.go",
+        "locator": "15",
+        "status": "grounded",
+        "reason": "line 15 in job_endpoint_hook_node_pool.go (file has 34 lines) [via nomad/job_endpoint_hook_node_pool.go]"
+      },
+      {
+        "file": "job_endpoint_hook_node_pool_ce.go",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in job_endpoint_hook_node_pool_ce.go (file has 32 lines) [via nomad/job_endpoint_hook_node_pool_ce.go]"
+      },
+      {
+        "file": "job_endpoint_hook_vault.go",
+        "locator": "14",
+        "status": "grounded",
+        "reason": "line 14 in job_endpoint_hook_vault.go (file has 43 lines) [via nomad/job_endpoint_hook_vault.go]"
+      },
+      {
+        "file": "job_endpoint_validators.go",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in job_endpoint_validators.go (file has 117 lines) [via nomad/job_endpoint_validators.go]"
       },
       {
         "file": "nomad/plan_apply.go",
@@ -393,34 +453,28 @@
         "reason": "line 25 in nomad/plan_apply.go (file has 787 lines)"
       },
       {
-        "file": "server.go",
-        "locator": "410",
-        "status": "grounded",
-        "reason": "line 410 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
         "file": "nomad/heartbeat.go",
         "locator": "38",
         "status": "grounded",
         "reason": "line 38 in nomad/heartbeat.go (file has 276 lines)"
       },
       {
-        "file": "server.go",
-        "locator": "417",
+        "file": "nomad/worker.go",
+        "locator": "93",
         "status": "grounded",
-        "reason": "line 417 in server.go (file has 2379 lines) [via nomad/server.go]"
+        "reason": "line 93 in nomad/worker.go (file has 915 lines)"
       },
       {
-        "file": "nomad/autopilot.go",
-        "locator": "33",
+        "file": "nomad/encrypter.go",
+        "locator": "51",
         "status": "grounded",
-        "reason": "line 33 in nomad/autopilot.go (file has 234 lines)"
+        "reason": "line 51 in nomad/encrypter.go (file has 1257 lines)"
       },
       {
-        "file": "server_setup_ce.go",
-        "locator": "24",
+        "file": "nomad/encrypter.go",
+        "locator": "1113",
         "status": "grounded",
-        "reason": "line 24 in server_setup_ce.go (file has 37 lines) [via nomad/server_setup_ce.go]"
+        "reason": "line 1113 in nomad/encrypter.go (file has 1257 lines)"
       },
       {
         "file": "nomad/stats_fetcher.go",
@@ -435,58 +489,10 @@
         "reason": "line 424 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
-        "file": "stats_fetcher.go",
-        "locator": "48",
+        "file": "nomad/autopilot.go",
+        "locator": "33",
         "status": "grounded",
-        "reason": "line 48 in stats_fetcher.go (file has 151 lines) [via nomad/stats_fetcher.go]"
-      },
-      {
-        "file": "nomad/encrypter.go",
-        "locator": "51",
-        "status": "grounded",
-        "reason": "line 51 in nomad/encrypter.go (file has 1257 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "437",
-        "status": "grounded",
-        "reason": "line 437 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/encrypter.go",
-        "locator": "1113",
-        "status": "grounded",
-        "reason": "line 1113 in nomad/encrypter.go (file has 1257 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "571",
-        "status": "grounded",
-        "reason": "line 571 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/worker.go",
-        "locator": "93",
-        "status": "grounded",
-        "reason": "line 93 in nomad/worker.go (file has 915 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1971",
-        "status": "grounded",
-        "reason": "line 1971 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/core_sched.go",
-        "locator": "28",
-        "status": "grounded",
-        "reason": "line 28 in nomad/core_sched.go (file has 1399 lines)"
-      },
-      {
-        "file": "worker.go",
-        "locator": "626",
-        "status": "grounded",
-        "reason": "line 626 in worker.go (file has 915 lines) [via nomad/worker.go]"
+        "reason": "line 33 in nomad/autopilot.go (file has 234 lines)"
       },
       {
         "file": "nomad/drainer_shims.go",
@@ -496,183 +502,45 @@
       },
       {
         "file": "server.go",
-        "locator": "1189",
+        "locator": "1160",
         "status": "grounded",
-        "reason": "line 1189 in server.go (file has 2379 lines) [via nomad/server.go]"
+        "reason": "line 1160 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "962",
+        "file": "nomad/deploymentwatcher/deployments_watcher.go",
+        "locator": "82",
         "status": "grounded",
-        "reason": "line 962 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 82 in nomad/deploymentwatcher/deployments_watcher.go (file has 484 lines)"
       },
       {
-        "file": "server.go",
-        "locator": "1113",
+        "file": "nomad/deploymentwatcher/deployments_watcher.go",
+        "locator": "85",
         "status": "grounded",
-        "reason": "line 1113 in server.go (file has 2379 lines) [via nomad/server.go]"
+        "reason": "line 85 in nomad/deploymentwatcher/deployments_watcher.go (file has 484 lines)"
       },
       {
-        "file": "server.go",
-        "locator": "1296",
+        "file": "nomad/deploymentwatcher/deployment_watcher.go",
+        "locator": "65",
         "status": "grounded",
-        "reason": "line 1296 in server.go (file has 2379 lines) [via nomad/server.go]"
+        "reason": "line 65 in nomad/deploymentwatcher/deployment_watcher.go (file has 1017 lines)"
       },
       {
-        "file": "server.go",
-        "locator": "1268",
+        "file": "deployments_watcher.go",
+        "locator": "449",
         "status": "grounded",
-        "reason": "line 1268 in server.go (file has 2379 lines) [via nomad/server.go]"
+        "reason": "line 449 in deployments_watcher.go (file has 484 lines) [via nomad/deploymentwatcher/deployments_watcher.go]"
       },
       {
-        "file": "nomad/acl_endpoint.go",
-        "locator": "66",
+        "file": "nomad/deploymentwatcher/deployment_watcher.go",
+        "locator": "69",
         "status": "grounded",
-        "reason": "line 66 in nomad/acl_endpoint.go (file has 3249 lines)"
+        "reason": "line 69 in nomad/deploymentwatcher/deployment_watcher.go (file has 1017 lines)"
       },
       {
-        "file": "server.go",
-        "locator": "1313",
-        "status": "grounded",
-        "reason": "line 1313 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/alloc_endpoint.go",
-        "locator": "25",
-        "status": "grounded",
-        "reason": "line 25 in nomad/alloc_endpoint.go (file has 707 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1314",
-        "status": "grounded",
-        "reason": "line 1314 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/client_agent_endpoint.go",
-        "locator": "27",
-        "status": "grounded",
-        "reason": "line 27 in nomad/client_agent_endpoint.go (file has 609 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1279",
-        "status": "grounded",
-        "reason": "line 1279 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1306",
-        "status": "grounded",
-        "reason": "line 1306 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/client_alloc_endpoint.go",
+        "file": "nomad/volumewatcher/volumes_watcher.go",
         "locator": "26",
         "status": "grounded",
-        "reason": "line 26 in nomad/client_alloc_endpoint.go (file has 638 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1272",
-        "status": "grounded",
-        "reason": "line 1272 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1304",
-        "status": "grounded",
-        "reason": "line 1304 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/client_csi_endpoint.go",
-        "locator": "24",
-        "status": "grounded",
-        "reason": "line 24 in nomad/client_csi_endpoint.go (file has 360 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1315",
-        "status": "grounded",
-        "reason": "line 1315 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/client_fs_endpoint.go",
-        "locator": "26",
-        "status": "grounded",
-        "reason": "line 26 in nomad/client_fs_endpoint.go (file has 474 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1275",
-        "status": "grounded",
-        "reason": "line 1275 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1305",
-        "status": "grounded",
-        "reason": "line 1305 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/client_host_volume_endpoint.go",
-        "locator": "18",
-        "status": "grounded",
-        "reason": "line 18 in nomad/client_host_volume_endpoint.go (file has 96 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1338",
-        "status": "grounded",
-        "reason": "line 1338 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/client_identity_endpoint.go",
-        "locator": "14",
-        "status": "grounded",
-        "reason": "line 14 in nomad/client_identity_endpoint.go (file has 73 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1300",
-        "status": "grounded",
-        "reason": "line 1300 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/client_meta_endpoint.go",
-        "locator": "16",
-        "status": "grounded",
-        "reason": "line 16 in nomad/client_meta_endpoint.go (file has 80 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1299",
-        "status": "grounded",
-        "reason": "line 1299 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/client_stats_endpoint.go",
-        "locator": "19",
-        "status": "grounded",
-        "reason": "line 19 in nomad/client_stats_endpoint.go (file has 53 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1298",
-        "status": "grounded",
-        "reason": "line 1298 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/csi_endpoint.go",
-        "locator": "30",
-        "status": "grounded",
-        "reason": "line 30 in nomad/csi_endpoint.go (file has 1994 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1316",
-        "status": "grounded",
-        "reason": "line 1316 in server.go (file has 2379 lines) [via nomad/server.go]"
+        "reason": "line 26 in nomad/volumewatcher/volumes_watcher.go (file has 210 lines)"
       },
       {
         "file": "server.go",
@@ -681,424 +549,28 @@
         "reason": "line 1180 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
-        "file": "nomad/csi_endpoint.go",
-        "locator": "1820",
-        "status": "grounded",
-        "reason": "line 1820 in nomad/csi_endpoint.go (file has 1994 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1317",
-        "status": "grounded",
-        "reason": "line 1317 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/deployment_endpoint.go",
-        "locator": "23",
-        "status": "grounded",
-        "reason": "line 23 in nomad/deployment_endpoint.go (file has 638 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1318",
-        "status": "grounded",
-        "reason": "line 1318 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1168",
-        "status": "grounded",
-        "reason": "line 1168 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/eval_endpoint.go",
-        "locator": "35",
-        "status": "grounded",
-        "reason": "line 35 in nomad/eval_endpoint.go (file has 913 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1319",
-        "status": "grounded",
-        "reason": "line 1319 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/event_endpoint.go",
-        "locator": "21",
-        "status": "grounded",
-        "reason": "line 21 in nomad/event_endpoint.go (file has 335 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1285",
-        "status": "grounded",
-        "reason": "line 1285 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/host_volume_endpoint.go",
+        "file": "nomad/volumewatcher/volume_watcher.go",
         "locator": "30",
         "status": "grounded",
-        "reason": "line 30 in nomad/host_volume_endpoint.go (file has 796 lines)"
+        "reason": "line 30 in nomad/volumewatcher/volume_watcher.go (file has 218 lines)"
+      },
+      {
+        "file": "nomad/drainer/drainer.go",
+        "locator": "159",
+        "status": "grounded",
+        "reason": "line 159 in nomad/drainer/drainer.go (file has 441 lines)"
       },
       {
         "file": "server.go",
-        "locator": "1336",
+        "locator": "1189",
         "status": "grounded",
-        "reason": "line 1336 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/job_endpoint.go",
-        "locator": "51",
-        "status": "grounded",
-        "reason": "line 51 in nomad/job_endpoint.go (file has 2432 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1320",
-        "status": "grounded",
-        "reason": "line 1320 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1169",
-        "status": "grounded",
-        "reason": "line 1169 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/keyring_endpoint.go",
-        "locator": "23",
-        "status": "grounded",
-        "reason": "line 23 in nomad/keyring_endpoint.go (file has 454 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1321",
-        "status": "grounded",
-        "reason": "line 1321 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/namespace_endpoint.go",
-        "locator": "20",
-        "status": "grounded",
-        "reason": "line 20 in nomad/namespace_endpoint.go (file has 604 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1322",
-        "status": "grounded",
-        "reason": "line 1322 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/node_endpoint.go",
-        "locator": "60",
-        "status": "grounded",
-        "reason": "line 60 in nomad/node_endpoint.go (file has 2007 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1323",
-        "status": "grounded",
-        "reason": "line 1323 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/node_pool_endpoint.go",
-        "locator": "23",
-        "status": "grounded",
-        "reason": "line 23 in nomad/node_pool_endpoint.go (file has 575 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1324",
-        "status": "grounded",
-        "reason": "line 1324 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/operator_endpoint.go",
-        "locator": "31",
-        "status": "grounded",
-        "reason": "line 31 in nomad/operator_endpoint.go (file has 866 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1288",
-        "status": "grounded",
-        "reason": "line 1288 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1307",
-        "status": "grounded",
-        "reason": "line 1307 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/periodic_endpoint.go",
-        "locator": "20",
-        "status": "grounded",
-        "reason": "line 20 in nomad/periodic_endpoint.go (file has 87 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1325",
-        "status": "grounded",
-        "reason": "line 1325 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/plan_endpoint.go",
-        "locator": "18",
-        "status": "grounded",
-        "reason": "line 18 in nomad/plan_endpoint.go (file has 91 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1326",
-        "status": "grounded",
-        "reason": "line 1326 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/regions_endpoint.go",
-        "locator": "14",
-        "status": "grounded",
-        "reason": "line 14 in nomad/regions_endpoint.go (file has 34 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1327",
-        "status": "grounded",
-        "reason": "line 1327 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/scaling_endpoint.go",
-        "locator": "20",
-        "status": "grounded",
-        "reason": "line 20 in nomad/scaling_endpoint.go (file has 220 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1328",
-        "status": "grounded",
-        "reason": "line 1328 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/search_endpoint.go",
-        "locator": "50",
-        "status": "grounded",
-        "reason": "line 50 in nomad/search_endpoint.go (file has 968 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1329",
-        "status": "grounded",
-        "reason": "line 1329 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/service_registration_endpoint.go",
-        "locator": "30",
-        "status": "grounded",
-        "reason": "line 30 in nomad/service_registration_endpoint.go (file has 481 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1330",
-        "status": "grounded",
-        "reason": "line 1330 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/status_endpoint.go",
-        "locator": "18",
-        "status": "grounded",
-        "reason": "line 18 in nomad/status_endpoint.go (file has 168 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1331",
-        "status": "grounded",
-        "reason": "line 1331 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/system_endpoint.go",
-        "locator": "16",
-        "status": "grounded",
-        "reason": "line 16 in nomad/system_endpoint.go (file has 81 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1332",
-        "status": "grounded",
-        "reason": "line 1332 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/task_group_host_volume_claim_endpoint.go",
-        "locator": "23",
-        "status": "grounded",
-        "reason": "line 23 in nomad/task_group_host_volume_claim_endpoint.go (file has 149 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1337",
-        "status": "grounded",
-        "reason": "line 1337 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/variables_endpoint.go",
-        "locator": "49",
-        "status": "grounded",
-        "reason": "line 49 in nomad/variables_endpoint.go (file has 641 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1334",
-        "status": "grounded",
-        "reason": "line 1334 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1342",
-        "status": "grounded",
-        "reason": "line 1342 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/endpoints_ce.go",
-        "locator": "16",
-        "status": "grounded",
-        "reason": "line 16 in nomad/endpoints_ce.go (file has 21 lines)"
-      },
-      {
-        "file": "nomad/job_endpoint.go",
-        "locator": "56",
-        "status": "grounded",
-        "reason": "line 56 in nomad/job_endpoint.go (file has 2432 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "66",
-        "status": "grounded",
-        "reason": "line 66 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "nomad/job_endpoint_hooks.go",
-        "locator": "234",
-        "status": "grounded",
-        "reason": "line 234 in nomad/job_endpoint_hooks.go (file has 677 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "67",
-        "status": "grounded",
-        "reason": "line 67 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "nomad/job_endpoint_hook_vault.go",
-        "locator": "14",
-        "status": "grounded",
-        "reason": "line 14 in nomad/job_endpoint_hook_vault.go (file has 43 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "68",
-        "status": "grounded",
-        "reason": "line 68 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "nomad/job_endpoint_hook_consul.go",
-        "locator": "15",
-        "status": "grounded",
-        "reason": "line 15 in nomad/job_endpoint_hook_consul.go (file has 92 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "69",
-        "status": "grounded",
-        "reason": "line 69 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "nomad/job_endpoint_hook_node_pool_ce.go",
-        "locator": "19",
-        "status": "grounded",
-        "reason": "line 19 in nomad/job_endpoint_hook_node_pool_ce.go (file has 32 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "73",
-        "status": "grounded",
-        "reason": "line 73 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "nomad/job_endpoint_hook_implicit_identities.go",
-        "locator": "13",
-        "status": "grounded",
-        "reason": "line 13 in nomad/job_endpoint_hook_implicit_identities.go (file has 170 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "74",
-        "status": "grounded",
-        "reason": "line 74 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "nomad/job_endpoint_validators.go",
-        "locator": "13",
-        "status": "grounded",
-        "reason": "line 13 in nomad/job_endpoint_validators.go (file has 117 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "82",
-        "status": "grounded",
-        "reason": "line 82 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "nomad/job_endpoint_hook_node_pool.go",
-        "locator": "15",
-        "status": "grounded",
-        "reason": "line 15 in nomad/job_endpoint_hook_node_pool.go (file has 34 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "83",
-        "status": "grounded",
-        "reason": "line 83 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "nomad/job_endpoint_hooks.go",
-        "locator": "483",
-        "status": "grounded",
-        "reason": "line 483 in nomad/job_endpoint_hooks.go (file has 677 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "84",
-        "status": "grounded",
-        "reason": "line 84 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "nomad/job_endpoint_hooks.go",
-        "locator": "618",
-        "status": "grounded",
-        "reason": "line 618 in nomad/job_endpoint_hooks.go (file has 677 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "85",
-        "status": "grounded",
-        "reason": "line 85 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "job_endpoint_hooks.go",
-        "locator": "168",
-        "status": "grounded",
-        "reason": "line 168 in job_endpoint_hooks.go (file has 677 lines) [via nomad/job_endpoint_hooks.go]"
+        "reason": "line 1189 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
         "file": "nomad/periodic.go",
         "locator": "27",
         "status": "grounded",
         "reason": "line 27 in nomad/periodic.go (file has 608 lines)"
-      },
-      {
-        "file": "nomad/periodic.go",
-        "locator": "41",
-        "status": "grounded",
-        "reason": "line 41 in nomad/periodic.go (file has 608 lines)"
       },
       {
         "file": "server.go",
@@ -1113,46 +585,10 @@
         "reason": "line 52 in periodic.go (file has 608 lines) [via nomad/periodic.go]"
       },
       {
-        "file": "nomad/fsm.go",
-        "locator": "135",
-        "status": "grounded",
-        "reason": "line 135 in nomad/fsm.go (file has 3405 lines)"
-      },
-      {
-        "file": "fsm.go",
-        "locator": "174",
-        "status": "grounded",
-        "reason": "line 174 in fsm.go (file has 3405 lines) [via nomad/fsm.go]"
-      },
-      {
-        "file": "nomad/variables_endpoint.go",
-        "locator": "52",
-        "status": "grounded",
-        "reason": "line 52 in nomad/variables_endpoint.go (file has 641 lines)"
-      },
-      {
-        "file": "nomad/variables_endpoint.go",
-        "locator": "39",
-        "status": "grounded",
-        "reason": "line 39 in nomad/variables_endpoint.go (file has 641 lines)"
-      },
-      {
-        "file": "variables_endpoint.go",
-        "locator": "58",
-        "status": "grounded",
-        "reason": "line 58 in variables_endpoint.go (file has 641 lines) [via nomad/variables_endpoint.go]"
-      },
-      {
         "file": "nomad/auth/auth.go",
-        "locator": "52",
+        "locator": "71",
         "status": "grounded",
-        "reason": "line 52 in nomad/auth/auth.go (file has 957 lines)"
-      },
-      {
-        "file": "auth.go",
-        "locator": "29",
-        "status": "grounded",
-        "reason": "line 29 in auth.go (file has 957 lines) [via nomad/auth/auth.go]"
+        "reason": "line 71 in nomad/auth/auth.go (file has 957 lines)"
       },
       {
         "file": "server.go",
@@ -1162,15 +598,9 @@
       },
       {
         "file": "nomad/auth/auth.go",
-        "locator": "53",
+        "locator": "72",
         "status": "grounded",
-        "reason": "line 53 in nomad/auth/auth.go (file has 957 lines)"
-      },
-      {
-        "file": "auth.go",
-        "locator": "30",
-        "status": "grounded",
-        "reason": "line 30 in auth.go (file has 957 lines) [via nomad/auth/auth.go]"
+        "reason": "line 72 in nomad/auth/auth.go (file has 957 lines)"
       },
       {
         "file": "server.go",
@@ -1180,15 +610,9 @@
       },
       {
         "file": "nomad/auth/auth.go",
-        "locator": "64",
+        "locator": "81",
         "status": "grounded",
-        "reason": "line 64 in nomad/auth/auth.go (file has 957 lines)"
-      },
-      {
-        "file": "auth.go",
-        "locator": "39",
-        "status": "grounded",
-        "reason": "line 39 in auth.go (file has 957 lines) [via nomad/auth/auth.go]"
+        "reason": "line 81 in nomad/auth/auth.go (file has 957 lines)"
       },
       {
         "file": "server.go",
@@ -1197,154 +621,10 @@
         "reason": "line 482 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
-        "file": "encrypter.go",
-        "locator": "51",
-        "status": "grounded",
-        "reason": "line 51 in encrypter.go (file has 1257 lines) [via nomad/encrypter.go]"
-      },
-      {
-        "file": "nomad/deploymentwatcher/deployments_watcher.go",
-        "locator": "76",
-        "status": "grounded",
-        "reason": "line 76 in nomad/deploymentwatcher/deployments_watcher.go (file has 484 lines)"
-      },
-      {
-        "file": "deployments_watcher.go",
-        "locator": "40",
-        "status": "grounded",
-        "reason": "line 40 in deployments_watcher.go (file has 484 lines) [via nomad/deploymentwatcher/deployments_watcher.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1160",
-        "status": "grounded",
-        "reason": "line 1160 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "deployment_watcher_shims.go",
-        "locator": "15",
-        "status": "grounded",
-        "reason": "line 15 in deployment_watcher_shims.go (file has 59 lines) [via nomad/deployment_watcher_shims.go]"
-      },
-      {
-        "file": "rpc.go",
-        "locator": "806",
-        "status": "grounded",
-        "reason": "line 806 in rpc.go (file has 931 lines) [via nomad/rpc.go]"
-      },
-      {
-        "file": "rpc.go",
-        "locator": "811",
-        "status": "grounded",
-        "reason": "line 811 in rpc.go (file has 931 lines) [via nomad/rpc.go]"
-      },
-      {
-        "file": "nomad/deploymentwatcher/deployments_watcher.go",
-        "locator": "82",
-        "status": "grounded",
-        "reason": "line 82 in nomad/deploymentwatcher/deployments_watcher.go (file has 484 lines)"
-      },
-      {
-        "file": "multiregion_ce.go",
-        "locator": "13",
-        "status": "grounded",
-        "reason": "line 13 in multiregion_ce.go (file has 37 lines) [via nomad/deploymentwatcher/multiregion_ce.go]"
-      },
-      {
-        "file": "nomad/deploymentwatcher/deployments_watcher.go",
-        "locator": "85",
-        "status": "grounded",
-        "reason": "line 85 in nomad/deploymentwatcher/deployments_watcher.go (file has 484 lines)"
-      },
-      {
-        "file": "multiregion_ce.go",
-        "locator": "14",
-        "status": "grounded",
-        "reason": "line 14 in multiregion_ce.go (file has 37 lines) [via nomad/deploymentwatcher/multiregion_ce.go]"
-      },
-      {
-        "file": "nomad/deploymentwatcher/batcher.go",
-        "locator": "20",
-        "status": "grounded",
-        "reason": "line 20 in nomad/deploymentwatcher/batcher.go (file has 142 lines)"
-      },
-      {
-        "file": "nomad/deploymentwatcher/deployment_watcher.go",
-        "locator": "65",
-        "status": "grounded",
-        "reason": "line 65 in nomad/deploymentwatcher/deployment_watcher.go (file has 1017 lines)"
-      },
-      {
-        "file": "deployment_watcher.go",
-        "locator": "37",
-        "status": "grounded",
-        "reason": "line 37 in deployment_watcher.go (file has 1017 lines) [via nomad/deploymentwatcher/deployment_watcher.go]"
-      },
-      {
-        "file": "deployment_watcher.go",
-        "locator": "304",
-        "status": "grounded",
-        "reason": "line 304 in deployment_watcher.go (file has 1017 lines) [via nomad/deploymentwatcher/deployment_watcher.go]"
-      },
-      {
-        "file": "nomad/deploymentwatcher/deployment_watcher.go",
-        "locator": "69",
-        "status": "grounded",
-        "reason": "line 69 in nomad/deploymentwatcher/deployment_watcher.go (file has 1017 lines)"
-      },
-      {
-        "file": "nomad/deploymentwatcher/deployment_watcher.go",
-        "locator": "73",
-        "status": "grounded",
-        "reason": "line 73 in nomad/deploymentwatcher/deployment_watcher.go (file has 1017 lines)"
-      },
-      {
-        "file": "drainer/drainer.go",
-        "locator": "48",
-        "status": "grounded",
-        "reason": "line 48 in drainer/drainer.go (file has 441 lines) [via nomad/drainer/drainer.go]"
-      },
-      {
-        "file": "drainer.go",
-        "locator": "116",
-        "status": "grounded",
-        "reason": "line 116 in drainer.go (file has 441 lines) [via nomad/drainer/drainer.go]"
-      },
-      {
-        "file": "nomad/volumewatcher/volumes_watcher.go",
-        "locator": "26",
-        "status": "grounded",
-        "reason": "line 26 in nomad/volumewatcher/volumes_watcher.go (file has 210 lines)"
-      },
-      {
-        "file": "volumewatcher/interfaces.go",
-        "locator": "14",
-        "status": "grounded",
-        "reason": "line 14 in volumewatcher/interfaces.go (file has 16 lines) [via nomad/volumewatcher/interfaces.go]"
-      },
-      {
-        "file": "nomad/volumewatcher/volume_watcher.go",
-        "locator": "30",
-        "status": "grounded",
-        "reason": "line 30 in nomad/volumewatcher/volume_watcher.go (file has 218 lines)"
-      },
-      {
-        "file": "volume_watcher.go",
-        "locator": "63",
-        "status": "grounded",
-        "reason": "line 63 in volume_watcher.go (file has 218 lines) [via nomad/volumewatcher/volume_watcher.go]"
-      },
-      {
         "file": "scheduler/generic_sched.go",
         "locator": "57",
         "status": "grounded",
         "reason": "line 57 in scheduler/generic_sched.go (file has 954 lines)"
-      },
-      {
-        "file": "scheduler/structs/interfaces.go",
-        "locator": "108",
-        "status": "grounded",
-        "reason": "line 108 in scheduler/structs/interfaces.go (file has 133 lines)"
       },
       {
         "file": "worker.go",
@@ -1354,9 +634,9 @@
       },
       {
         "file": "worker.go",
-        "locator": "93",
+        "locator": "651",
         "status": "grounded",
-        "reason": "line 93 in worker.go (file has 915 lines) [via nomad/worker.go]"
+        "reason": "line 651 in worker.go (file has 915 lines) [via nomad/worker.go]"
       },
       {
         "file": "scheduler/scheduler_system.go",
@@ -1372,273 +652,93 @@
       },
       {
         "file": "nomad/core_sched.go",
-        "locator": "35",
-        "status": "grounded",
-        "reason": "line 35 in nomad/core_sched.go (file has 1399 lines)"
-      },
-      {
-        "file": "command/agent/http.go",
-        "locator": "102",
-        "status": "grounded",
-        "reason": "line 102 in command/agent/http.go (file has 1262 lines)"
-      },
-      {
-        "file": "command/agent/http.go",
-        "locator": "90",
-        "status": "grounded",
-        "reason": "line 90 in command/agent/http.go (file has 1262 lines)"
-      },
-      {
-        "file": "command/agent/agent.go",
-        "locator": "1566",
-        "status": "grounded",
-        "reason": "line 1566 in command/agent/agent.go (file has 1845 lines)"
-      },
-      {
-        "file": "scheduler/generic_sched.go",
-        "locator": "55",
-        "status": "grounded",
-        "reason": "line 55 in scheduler/generic_sched.go (file has 954 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "274",
-        "status": "grounded",
-        "reason": "line 274 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "378",
-        "status": "grounded",
-        "reason": "line 378 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "2035",
-        "status": "grounded",
-        "reason": "line 2035 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "scheduler/scheduler_system.go",
-        "locator": "35",
-        "status": "grounded",
-        "reason": "line 35 in scheduler/scheduler_system.go (file has 911 lines)"
-      },
-      {
-        "file": "scheduler/scheduler_sysbatch.go",
-        "locator": "31",
-        "status": "grounded",
-        "reason": "line 31 in scheduler/scheduler_sysbatch.go (file has 545 lines)"
-      },
-      {
-        "file": "scheduler/feasible/context.go",
-        "locator": "97",
-        "status": "grounded",
-        "reason": "line 97 in scheduler/feasible/context.go (file has 414 lines)"
-      },
-      {
-        "file": "context.go",
-        "locator": "106",
-        "status": "grounded",
-        "reason": "line 106 in context.go (file has 414 lines) [via scheduler/feasible/context.go]"
-      },
-      {
-        "file": "nomad/job_endpoint.go",
-        "locator": "1897",
-        "status": "grounded",
-        "reason": "line 1897 in nomad/job_endpoint.go (file has 2432 lines)"
-      },
-      {
-        "file": "nomad/deploymentwatcher/deployments_watcher.go",
-        "locator": "79",
-        "status": "grounded",
-        "reason": "line 79 in nomad/deploymentwatcher/deployments_watcher.go (file has 484 lines)"
-      },
-      {
-        "file": "leader.go",
-        "locator": "413",
-        "status": "grounded",
-        "reason": "line 413 in leader.go (file has 2806 lines) [via nomad/leader.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "2115",
-        "status": "grounded",
-        "reason": "line 2115 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/fsm.go",
-        "locator": "133",
-        "status": "grounded",
-        "reason": "line 133 in nomad/fsm.go (file has 3405 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "1355",
-        "status": "grounded",
-        "reason": "line 1355 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/plan_apply.go",
-        "locator": "35",
-        "status": "grounded",
-        "reason": "line 35 in nomad/plan_apply.go (file has 787 lines)"
-      },
-      {
-        "file": "plan_apply_node_tracker.go",
-        "locator": "24",
-        "status": "grounded",
-        "reason": "line 24 in plan_apply_node_tracker.go (file has 213 lines) [via nomad/plan_apply_node_tracker.go]"
-      },
-      {
-        "file": "scheduler/structs/structs.go",
-        "locator": "76",
-        "status": "grounded",
-        "reason": "line 76 in scheduler/structs/structs.go (file has 248 lines)"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "1892",
-        "status": "grounded",
-        "reason": "line 1892 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "fsm.go",
-        "locator": "2120",
-        "status": "grounded",
-        "reason": "line 2120 in fsm.go (file has 3405 lines) [via nomad/fsm.go]"
-      },
-      {
-        "file": "nomad/consul.go",
-        "locator": "39",
-        "status": "grounded",
-        "reason": "line 39 in nomad/consul.go (file has 218 lines)"
-      },
-      {
-        "file": "nomad/util.go",
-        "locator": "124",
-        "status": "grounded",
-        "reason": "line 124 in nomad/util.go (file has 145 lines)"
-      },
-      {
-        "file": "nomad/encrypter.go",
-        "locator": "44",
-        "status": "grounded",
-        "reason": "line 44 in nomad/encrypter.go (file has 1257 lines)"
-      },
-      {
-        "file": "plan_apply.go",
-        "locator": "382",
-        "status": "grounded",
-        "reason": "line 382 in plan_apply.go (file has 787 lines) [via nomad/plan_apply.go]"
-      },
-      {
-        "file": "nomad/mock/acl.go",
         "locator": "28",
         "status": "grounded",
-        "reason": "line 28 in nomad/mock/acl.go (file has 378 lines)"
+        "reason": "line 28 in nomad/core_sched.go (file has 1399 lines)"
       },
       {
-        "file": "nomad/testing.go",
-        "locator": "151",
+        "file": "worker.go",
+        "locator": "626",
         "status": "grounded",
-        "reason": "line 151 in nomad/testing.go (file has 212 lines)"
+        "reason": "line 626 in worker.go (file has 915 lines) [via nomad/worker.go]"
       },
       {
-        "file": "nomad/periodic.go",
-        "locator": "52",
+        "file": "deploymentwatcher/deployments_watcher.go",
+        "locator": "76",
         "status": "grounded",
-        "reason": "line 52 in nomad/periodic.go (file has 608 lines)"
+        "reason": "line 76 in deploymentwatcher/deployments_watcher.go (file has 484 lines) [via nomad/deploymentwatcher/deployments_watcher.go]"
       },
       {
-        "file": "variables_endpoint.go",
-        "locator": "52",
+        "file": "deployments_watcher.go",
+        "locator": "40",
         "status": "grounded",
-        "reason": "line 52 in variables_endpoint.go (file has 641 lines) [via nomad/variables_endpoint.go]"
+        "reason": "line 40 in deployments_watcher.go (file has 484 lines) [via nomad/deploymentwatcher/deployments_watcher.go]"
       },
       {
-        "file": "variables_endpoint.go",
-        "locator": "39",
+        "file": "deployment_watcher_shims.go",
+        "locator": "13",
         "status": "grounded",
-        "reason": "line 39 in variables_endpoint.go (file has 641 lines) [via nomad/variables_endpoint.go]"
+        "reason": "line 13 in deployment_watcher_shims.go (file has 59 lines) [via nomad/deployment_watcher_shims.go]"
       },
       {
-        "file": "auth/auth.go",
-        "locator": "52",
+        "file": "deploymentwatcher/deployments_watcher.go",
+        "locator": "82",
         "status": "grounded",
-        "reason": "line 52 in auth/auth.go (file has 957 lines) [via nomad/auth/auth.go]"
+        "reason": "line 82 in deploymentwatcher/deployments_watcher.go (file has 484 lines) [via nomad/deploymentwatcher/deployments_watcher.go]"
       },
       {
-        "file": "auth/auth.go",
-        "locator": "29",
+        "file": "multiregion_ce.go",
+        "locator": "13",
         "status": "grounded",
-        "reason": "line 29 in auth/auth.go (file has 957 lines) [via nomad/auth/auth.go]"
+        "reason": "line 13 in multiregion_ce.go (file has 37 lines) [via nomad/deploymentwatcher/multiregion_ce.go]"
       },
       {
         "file": "server.go",
-        "locator": "2124",
+        "locator": "1168",
         "status": "grounded",
-        "reason": "line 2124 in server.go (file has 2379 lines) [via nomad/server.go]"
+        "reason": "line 1168 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
-        "file": "auth/auth.go",
-        "locator": "64",
+        "file": "deploymentwatcher/deployments_watcher.go",
+        "locator": "85",
         "status": "grounded",
-        "reason": "line 64 in auth/auth.go (file has 957 lines) [via nomad/auth/auth.go]"
+        "reason": "line 85 in deploymentwatcher/deployments_watcher.go (file has 484 lines) [via nomad/deploymentwatcher/deployments_watcher.go]"
       },
       {
-        "file": "auth/auth.go",
-        "locator": "39",
+        "file": "multiregion_ce.go",
+        "locator": "14",
         "status": "grounded",
-        "reason": "line 39 in auth/auth.go (file has 957 lines) [via nomad/auth/auth.go]"
+        "reason": "line 14 in multiregion_ce.go (file has 37 lines) [via nomad/deploymentwatcher/multiregion_ce.go]"
       },
       {
-        "file": "encrypter.go",
-        "locator": "50",
+        "file": "server.go",
+        "locator": "1169",
         "status": "grounded",
-        "reason": "line 50 in encrypter.go (file has 1257 lines) [via nomad/encrypter.go]"
+        "reason": "line 1169 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
-        "file": "deployments_watcher.go",
-        "locator": "76",
-        "status": "grounded",
-        "reason": "line 76 in deployments_watcher.go (file has 484 lines) [via nomad/deploymentwatcher/deployments_watcher.go]"
-      },
-      {
-        "file": "batcher.go",
-        "locator": "20",
-        "status": "grounded",
-        "reason": "line 20 in batcher.go (file has 142 lines) [via nomad/deploymentwatcher/batcher.go]"
-      },
-      {
-        "file": "deployment_watcher.go",
+        "file": "deploymentwatcher/deployment_watcher.go",
         "locator": "65",
         "status": "grounded",
-        "reason": "line 65 in deployment_watcher.go (file has 1017 lines) [via nomad/deploymentwatcher/deployment_watcher.go]"
+        "reason": "line 65 in deploymentwatcher/deployment_watcher.go (file has 1017 lines) [via nomad/deploymentwatcher/deployment_watcher.go]"
       },
       {
-        "file": "deployments_watcher.go",
-        "locator": "82",
+        "file": "volumewatcher/volumes_watcher.go",
+        "locator": "26",
         "status": "grounded",
-        "reason": "line 82 in deployments_watcher.go (file has 484 lines) [via nomad/deploymentwatcher/deployments_watcher.go]"
+        "reason": "line 26 in volumewatcher/volumes_watcher.go (file has 210 lines) [via nomad/volumewatcher/volumes_watcher.go]"
       },
       {
-        "file": "deployment_watcher.go",
-        "locator": "69",
+        "file": "volume_watcher.go",
+        "locator": "30",
         "status": "grounded",
-        "reason": "line 69 in deployment_watcher.go (file has 1017 lines) [via nomad/deploymentwatcher/deployment_watcher.go]"
+        "reason": "line 30 in volume_watcher.go (file has 218 lines) [via nomad/volumewatcher/volume_watcher.go]"
       },
       {
-        "file": "deployment_endpoint.go",
-        "locator": "23",
+        "file": "volumewatcher/interfaces.go",
+        "locator": "14",
         "status": "grounded",
-        "reason": "line 23 in deployment_endpoint.go (file has 638 lines) [via nomad/deployment_endpoint.go]"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "51",
-        "status": "grounded",
-        "reason": "line 51 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
+        "reason": "line 14 in volumewatcher/interfaces.go (file has 16 lines) [via nomad/volumewatcher/interfaces.go]"
       },
       {
         "file": "drainer/drainer.go",
@@ -1653,40 +753,34 @@
         "reason": "line 15 in drainer_shims.go (file has 46 lines) [via nomad/drainer_shims.go]"
       },
       {
-        "file": "drainer_shims.go",
-        "locator": "34",
+        "file": "periodic.go",
+        "locator": "27",
         "status": "grounded",
-        "reason": "line 34 in drainer_shims.go (file has 46 lines) [via nomad/drainer_shims.go]"
+        "reason": "line 27 in periodic.go (file has 608 lines) [via nomad/periodic.go]"
       },
       {
-        "file": "volumes_watcher.go",
-        "locator": "26",
+        "file": "periodic.go",
+        "locator": "41",
         "status": "grounded",
-        "reason": "line 26 in volumes_watcher.go (file has 210 lines) [via nomad/volumewatcher/volumes_watcher.go]"
+        "reason": "line 41 in periodic.go (file has 608 lines) [via nomad/periodic.go]"
       },
       {
-        "file": "volume_watcher.go",
-        "locator": "30",
+        "file": "auth/auth.go",
+        "locator": "71",
         "status": "grounded",
-        "reason": "line 30 in volume_watcher.go (file has 218 lines) [via nomad/volumewatcher/volume_watcher.go]"
+        "reason": "line 71 in auth/auth.go (file has 957 lines) [via nomad/auth/auth.go]"
       },
       {
-        "file": "csi_endpoint.go",
-        "locator": "30",
+        "file": "auth.go",
+        "locator": "29",
         "status": "grounded",
-        "reason": "line 30 in csi_endpoint.go (file has 1994 lines) [via nomad/csi_endpoint.go]"
+        "reason": "line 29 in auth.go (file has 957 lines) [via nomad/auth/auth.go]"
       },
       {
-        "file": "volume_watcher.go",
-        "locator": "212",
+        "file": "auth.go",
+        "locator": "39",
         "status": "grounded",
-        "reason": "line 212 in volume_watcher.go (file has 218 lines) [via nomad/volumewatcher/volume_watcher.go]"
-      },
-      {
-        "file": "generic_sched.go",
-        "locator": "57",
-        "status": "grounded",
-        "reason": "line 57 in generic_sched.go (file has 954 lines) [via scheduler/generic_sched.go]"
+        "reason": "line 39 in auth.go (file has 957 lines) [via nomad/auth/auth.go]"
       },
       {
         "file": "scheduler_system.go",
@@ -1701,374 +795,110 @@
         "reason": "line 33 in scheduler_sysbatch.go (file has 545 lines) [via scheduler/scheduler_sysbatch.go]"
       },
       {
-        "file": "core_sched.go",
-        "locator": "35",
+        "file": "scheduler/structs/interfaces.go",
+        "locator": "108",
         "status": "grounded",
-        "reason": "line 35 in core_sched.go (file has 1399 lines) [via nomad/core_sched.go]"
+        "reason": "line 108 in scheduler/structs/interfaces.go (file has 133 lines)"
       },
       {
         "file": "worker.go",
-        "locator": "645",
+        "locator": "93",
         "status": "grounded",
-        "reason": "line 645 in worker.go (file has 915 lines) [via nomad/worker.go]"
-      },
-      {
-        "file": "agent.go",
-        "locator": "1566",
-        "status": "grounded",
-        "reason": "line 1566 in agent.go (file has 1845 lines) [via command/agent/agent.go]"
-      },
-      {
-        "file": "agent.go",
-        "locator": "113",
-        "status": "grounded",
-        "reason": "line 113 in agent.go (file has 1845 lines) [via command/agent/agent.go]"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "56",
-        "status": "grounded",
-        "reason": "line 56 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "996",
-        "status": "grounded",
-        "reason": "line 996 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1133",
-        "status": "grounded",
-        "reason": "line 1133 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "744",
-        "status": "grounded",
-        "reason": "line 744 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "910",
-        "status": "grounded",
-        "reason": "line 910 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "nomad/deploymentwatcher/multiregion_ce.go",
-        "locator": "13",
-        "status": "grounded",
-        "reason": "line 13 in nomad/deploymentwatcher/multiregion_ce.go (file has 37 lines)"
-      },
-      {
-        "file": "server.go",
-        "locator": "768",
-        "status": "grounded",
-        "reason": "line 768 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "fsm.go",
-        "locator": "135",
-        "status": "grounded",
-        "reason": "line 135 in fsm.go (file has 3405 lines) [via nomad/fsm.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "757",
-        "status": "grounded",
-        "reason": "line 757 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1985",
-        "status": "grounded",
-        "reason": "line 1985 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "feasible/context.go",
-        "locator": "97",
-        "status": "grounded",
-        "reason": "line 97 in feasible/context.go (file has 414 lines) [via scheduler/feasible/context.go]"
-      },
-      {
-        "file": "job_endpoint.go",
-        "locator": "1897",
-        "status": "grounded",
-        "reason": "line 1897 in job_endpoint.go (file has 2432 lines) [via nomad/job_endpoint.go]"
-      },
-      {
-        "file": "rpc.go",
-        "locator": "280",
-        "status": "grounded",
-        "reason": "line 280 in rpc.go (file has 931 lines) [via nomad/rpc.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "1205",
-        "status": "grounded",
-        "reason": "line 1205 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server_setup_ce.go",
-        "locator": "26",
-        "status": "grounded",
-        "reason": "line 26 in server_setup_ce.go (file has 37 lines) [via nomad/server_setup_ce.go]"
-      },
-      {
-        "file": "encrypter.go",
-        "locator": "1116",
-        "status": "grounded",
-        "reason": "line 1116 in encrypter.go (file has 1257 lines) [via nomad/encrypter.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "339",
-        "status": "grounded",
-        "reason": "line 339 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "endpoints_ce.go",
-        "locator": "16",
-        "status": "grounded",
-        "reason": "line 16 in endpoints_ce.go (file has 21 lines) [via nomad/endpoints_ce.go]"
-      },
-      {
-        "file": "server.go",
-        "locator": "320",
-        "status": "grounded",
-        "reason": "line 320 in server.go (file has 2379 lines) [via nomad/server.go]"
-      },
-      {
-        "file": "server_setup_ce.go",
-        "locator": "12",
-        "status": "grounded",
-        "reason": "line 12 in server_setup_ce.go (file has 37 lines) [via nomad/server_setup_ce.go]"
-      },
-      {
-        "file": "leader.go",
-        "locator": "378",
-        "status": "grounded",
-        "reason": "line 378 in leader.go (file has 2806 lines) [via nomad/leader.go]"
-      },
-      {
-        "file": "leader.go",
-        "locator": "1422",
-        "status": "grounded",
-        "reason": "line 1422 in leader.go (file has 2806 lines) [via nomad/leader.go]"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1156",
-        "status": "grounded",
-        "reason": "line 1156 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1268",
-        "status": "grounded",
-        "reason": "line 1268 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1345",
-        "status": "grounded",
-        "reason": "line 1345 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1930",
-        "status": "grounded",
-        "reason": "line 1930 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/leader.go",
-        "locator": "378",
-        "status": "grounded",
-        "reason": "line 378 in nomad/leader.go (file has 2806 lines)"
-      },
-      {
-        "file": "nomad/leader.go",
-        "locator": "1422",
-        "status": "grounded",
-        "reason": "line 1422 in nomad/leader.go (file has 2806 lines)"
-      },
-      {
-        "file": "nomad/rpc.go",
-        "locator": "47",
-        "status": "grounded",
-        "reason": "line 47 in nomad/rpc.go (file has 931 lines)"
-      },
-      {
-        "file": "nomad/rpc.go",
-        "locator": "806",
-        "status": "grounded",
-        "reason": "line 806 in nomad/rpc.go (file has 931 lines)"
+        "reason": "line 93 in worker.go (file has 915 lines) [via nomad/worker.go]"
       },
       {
         "file": "nomad/deployment_watcher_shims.go",
-        "locator": "14",
+        "locator": "13",
         "status": "grounded",
-        "reason": "line 14 in nomad/deployment_watcher_shims.go (file has 59 lines)"
+        "reason": "line 13 in nomad/deployment_watcher_shims.go (file has 59 lines)"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "417",
+        "file": "rpc.go",
+        "locator": "48",
         "status": "grounded",
-        "reason": "line 417 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 48 in rpc.go (file has 931 lines) [via nomad/rpc.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "424",
+        "file": "plan_apply.go",
+        "locator": "25",
         "status": "grounded",
-        "reason": "line 424 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 25 in plan_apply.go (file has 787 lines) [via nomad/plan_apply.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "501",
+        "file": "heartbeat.go",
+        "locator": "38",
         "status": "grounded",
-        "reason": "line 501 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 38 in heartbeat.go (file has 276 lines) [via nomad/heartbeat.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "143",
+        "file": "encrypter.go",
+        "locator": "51",
         "status": "grounded",
-        "reason": "line 143 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 51 in encrypter.go (file has 1257 lines) [via nomad/encrypter.go]"
       },
       {
-        "file": "nomad/fsm.go",
-        "locator": "138",
+        "file": "encrypter.go",
+        "locator": "1113",
         "status": "grounded",
-        "reason": "line 138 in nomad/fsm.go (file has 3405 lines)"
+        "reason": "line 1113 in encrypter.go (file has 1257 lines) [via nomad/encrypter.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "205",
+        "file": "stats_fetcher.go",
+        "locator": "31",
         "status": "grounded",
-        "reason": "line 205 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 31 in stats_fetcher.go (file has 151 lines) [via nomad/stats_fetcher.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "209",
+        "file": "autopilot.go",
+        "locator": "33",
         "status": "grounded",
-        "reason": "line 209 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 33 in autopilot.go (file has 234 lines) [via nomad/autopilot.go]"
       },
       {
-        "file": "nomad/plan_apply.go",
+        "file": "core_sched.go",
         "locator": "28",
         "status": "grounded",
-        "reason": "line 28 in nomad/plan_apply.go (file has 787 lines)"
+        "reason": "line 28 in core_sched.go (file has 1399 lines) [via nomad/core_sched.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "254",
+        "file": "deployments_watcher.go",
+        "locator": "76",
         "status": "grounded",
-        "reason": "line 254 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 76 in deployments_watcher.go (file has 484 lines) [via nomad/deploymentwatcher/deployments_watcher.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "250",
+        "file": "auth.go",
+        "locator": "30",
         "status": "grounded",
-        "reason": "line 250 in nomad/server.go (file has 2379 lines)"
+        "reason": "line 30 in auth.go (file has 957 lines) [via nomad/auth/auth.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "230",
-        "status": "grounded",
-        "reason": "line 230 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "233",
-        "status": "grounded",
-        "reason": "line 233 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "236",
-        "status": "grounded",
-        "reason": "line 236 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "271",
-        "status": "grounded",
-        "reason": "line 271 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "181",
-        "status": "grounded",
-        "reason": "line 181 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "290",
-        "status": "grounded",
-        "reason": "line 290 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "295",
-        "status": "grounded",
-        "reason": "line 295 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "279",
-        "status": "grounded",
-        "reason": "line 279 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/auth/auth.go",
-        "locator": "47",
-        "status": "grounded",
-        "reason": "line 47 in nomad/auth/auth.go (file has 957 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1189",
-        "status": "grounded",
-        "reason": "line 1189 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/drainer/drainer.go",
+        "file": "server.go",
         "locator": "116",
         "status": "grounded",
-        "reason": "line 116 in nomad/drainer/drainer.go (file has 441 lines)"
+        "reason": "line 116 in server.go (file has 2379 lines) [via nomad/server.go]"
       },
       {
-        "file": "nomad/server.go",
-        "locator": "996",
+        "file": "server.go",
+        "locator": "1156",
         "status": "grounded",
-        "reason": "line 996 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/server.go",
-        "locator": "1205",
-        "status": "grounded",
-        "reason": "line 1205 in nomad/server.go (file has 2379 lines)"
-      },
-      {
-        "file": "nomad/job_endpoint.go",
-        "locator": "57",
-        "status": "grounded",
-        "reason": "line 57 in nomad/job_endpoint.go (file has 2432 lines)"
+        "reason": "line 1156 in server.go (file has 2379 lines) [via nomad/server.go]"
       }
     ]
   },
   "gold_recall": {
     "total": 15,
-    "mentioned": 9,
-    "cited": 9,
-    "mention_recall": 0.6,
-    "cited_recall": 0.6,
+    "mentioned": 8,
+    "cited": 8,
+    "mention_recall": 0.5333,
+    "cited_recall": 0.5333,
     "groups": {
       "dropped": {
         "total": 8,
-        "mentioned": 2,
-        "cited": 2,
-        "mention_recall": 0.25,
-        "cited_recall": 0.25
+        "mentioned": 1,
+        "cited": 1,
+        "mention_recall": 0.125,
+        "cited_recall": 0.125
       },
       "found": {
         "total": 7,
@@ -2084,7 +914,8 @@
       "alloc-watcher",
       "arconfig",
       "client-config",
-      "widmgr-signer"
+      "widmgr-signer",
+      "plan-builder"
     ],
     "missed_cite": [
       "allocrunner",
@@ -2092,7 +923,8 @@
       "alloc-watcher",
       "arconfig",
       "client-config",
-      "widmgr-signer"
+      "widmgr-signer",
+      "plan-builder"
     ],
     "details": [
       {
@@ -2182,8 +1014,8 @@
       {
         "id": "plan-builder",
         "group": "dropped",
-        "mentioned": true,
-        "cited": true
+        "mentioned": false,
+        "cited": false
       }
     ]
   },
@@ -2224,8 +1056,8 @@
           "hit": true,
           "type": "response_richness",
           "value": "4",
-          "unique_files": 111,
-          "unique_refs": 338,
+          "unique_files": 86,
+          "unique_refs": 143,
           "threshold": 4,
           "layer": "fairness"
         },
@@ -2256,8 +1088,8 @@
           "hit": true,
           "type": "response_richness",
           "value": "4",
-          "unique_files": 111,
-          "unique_refs": 338,
+          "unique_files": 86,
+          "unique_refs": 143,
           "threshold": 4,
           "layer": "fairness"
         },
@@ -2288,8 +1120,8 @@
           "hit": true,
           "type": "response_richness",
           "value": "6",
-          "unique_files": 111,
-          "unique_refs": 338,
+          "unique_files": 86,
+          "unique_refs": 143,
           "threshold": 6,
           "layer": "fairness"
         },
@@ -2326,8 +1158,8 @@
           "hit": true,
           "type": "response_richness",
           "value": "4",
-          "unique_files": 111,
-          "unique_refs": 338,
+          "unique_files": 86,
+          "unique_refs": 143,
           "threshold": 4,
           "layer": "fairness"
         },
@@ -2358,8 +1190,8 @@
           "hit": true,
           "type": "response_richness",
           "value": "6",
-          "unique_files": 111,
-          "unique_refs": 338,
+          "unique_files": 86,
+          "unique_refs": 143,
           "threshold": 6,
           "layer": "fairness"
         },
@@ -2390,8 +1222,8 @@
           "hit": true,
           "type": "response_richness",
           "value": "6",
-          "unique_files": 111,
-          "unique_refs": 338,
+          "unique_files": 86,
+          "unique_refs": 143,
           "threshold": 6,
           "layer": "fairness"
         },
@@ -2421,32 +1253,29 @@
     "post_mcp_verification_reads": [],
     "post_mcp_misses": [],
     "has_mcp_tools": false,
-    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only \u2014 grep_count drives fluency)"
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only - grep_count drives fluency)"
   },
   "metrics": {
-    "tool_calls": 56,
-    "grep_count": 37,
-    "read_count": 0,
+    "tool_calls": 27,
+    "grep_count": 13,
+    "read_count": 10,
     "mcp_count": 0,
-    "token_input_uncached": 63,
-    "token_output": 16711,
-    "token_cache_read": 1868323,
-    "token_cache_write": 69419,
-    "token_total_billed": 16774,
-    "token_total_all": 1954516,
-    "wall_time_seconds": 479.0,
-    "cost_usd": 2.048,
-    "effective_token_total_billed": 16774,
-    "effective_wall_time_seconds": 479.0,
+    "token_input_uncached": 41,
+    "token_output": 25284,
+    "token_cache_read": 910356,
+    "token_cache_write": 41829,
+    "token_total_billed": 25325,
+    "token_total_all": 977510,
+    "wall_time_seconds": 325.9,
+    "cost_usd": 1.5073,
+    "effective_token_total_billed": 25325,
+    "effective_wall_time_seconds": 325.9,
     "efficiency_ceiling": 30000,
     "time_ceiling_seconds": 480,
-    "token_efficiency": 0.4409,
-    "time_efficiency": 0.0021,
-    "answer_chars": 36667,
-    "audit_chars": 165536,
+    "token_efficiency": 0.1558,
+    "time_efficiency": 0.321,
+    "answer_chars": 22623,
+    "audit_chars": 95264,
     "overhead": null
-  },
-  "failed": false,
-  "constrained": true,
-  "constraint_reason": "claude_session_failed"
+  }
 }

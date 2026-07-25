@@ -6,7 +6,7 @@
     "prompt_version": "v1",
     "rubric_path": "pebble.rubric.yaml"
   },
-  "scenario_quality": 0.9342,
+  "scenario_quality": 0.8767,
   "relationship_audit": {
     "total": 7,
     "covered": 7,
@@ -69,83 +69,83 @@
       "scores": {
         "map_quality": {
           "score": 0.95,
-          "rationale": "Nails the essentials (Pebble as LSM KV, CockroachDB engine, Batch at batch.go:240) and names all the direct holders the rubric asks for \u2014 indexedBatch, batchIter, commitQueue, iteratorBatchState, plus metamorphic/replay. Goes well beyond Step 1's scope but the Step-1 core is fully present."
+          "rationale": "Nails Pebble as the LSM KV store, pins Batch at batch.go:240, and lists the direct holders a field-type sweep finds (batchIter, indexedBatch, commitQueue slots, iteratorBatchState) plus bonus flushableBatch and replay/metamorphic carriers."
         },
         "specificity": {
-          "score": 0.98,
-          "rationale": "Every citation is file:line concrete: batch.go:240, batch.go:488, batch.go:1761, commit.go:25, iterator.go:392, metamorphic/test.go:47, replay/replay.go:621. No vague pointers."
+          "score": 0.95,
+          "rationale": "Every direct holder cited with concrete file:line (batch.go:488, batch.go:1761, commit.go:25, iterator.go:392, commit.go:216, replay/replay.go:621, metamorphic/test.go:47) rather than vague pointers."
         },
         "justification": {
-          "score": 0.85,
-          "rationale": "Explains Batch as the write handle callers accumulate Set/Delete/RangeKeySet into before committing through the commit pipeline, and explicitly frames direct holders as 'already known' setting up the invisible class. Slightly light on 'every write goes through one' phrasing but the role is clear."
+          "score": 0.75,
+          "rationale": "Explains callers accumulate Set/Delete/etc. into a Batch then commit through the pipeline, and the closing rangeKeyMasking note foreshadows why direct holders aren't the whole story, but doesn't state 'every write goes through one' quite that plainly."
         },
         "uncertainty": {
-          "score": 0.8,
-          "rationale": "Step-1 content is asserted with confidence, appropriately \u2014 these are the easy direct holders. Extensive unconfirmed/negative flagging appears later but shows calibrated hedging throughout."
+          "score": 0.7,
+          "rationale": "The answer overshoots the step by pre-verifying indirect retainers (WAL failover, rangeKeyMasking, point-iter injection), which is fine, but it doesn't explicitly flag any residual unknowns for the orient step itself."
         }
       },
-      "step_quality": 0.915,
+      "step_quality": 0.8725,
       "usage": {
         "input_tokens": 6,
-        "output_tokens": 482,
-        "cache_creation_input_tokens": 24682,
-        "cache_read_input_tokens": 30952
+        "output_tokens": 478,
+        "cache_creation_input_tokens": 17322,
+        "cache_read_input_tokens": 31932
       }
     },
     {
       "step": "Find the retainers hidden behind abstractions",
       "scores": {
         "map_quality": {
-          "score": 0.95,
-          "rationale": "Surfaces all the key hidden retainers \u2014 invalidating.iter, iterv2.InterleavingIter, the full rangeKeyMasking chain (SpanMask, boundLimitedFilter, filterer), and the WAL failover ring (recordQueueEntry/poppedEntry with *Batch as RefCount) \u2014 plus a high-value bonus: flushableEntry aliasing batch.data, explicitly flagged as invisible to the interface sweep."
+          "score": 0.85,
+          "rationale": "Covers all major hidden-retention families the rubric calls out: point-iterator stack (mergingIterLevel, iterv2.InterleavingIter, invalidating, keyspan), the rangeKeyMasking chain across all four interface slots, and the WAL failover ring (recordQueueEntry/poppedEntry). Also adds compaction scheduler and bench harness. Missing tighter proof on a couple items (keyspan.InterleavingIter injection for V1 indexed batch) but recall is strong."
         },
         "specificity": {
-          "score": 0.95,
-          "rationale": "Every row carries struct file:line, interface stored, concrete carrier, and injection sites (e.g. 'db.go:908/950 pass b *Batch as RefCount', 'db.go:1312 Mask: &dbi.rangeKeyMasking'); rare vagueness is confined to the honestly-labeled unconfirmed rows."
+          "score": 0.9,
+          "rationale": "Every row cites struct file:line, the interface field, the concrete carrier, and an explicit injection site (e.g., `db.go:1435`, `db.go:908/950`, `wal/failover_writer.go:179/259`). Only a couple rows lack pinned injection lines and are labeled as such."
         },
         "justification": {
           "score": 0.9,
-          "rationale": "Explains why field-type sweeps miss each (interface-typed field, or buffer-alias for flushableBatch) and actively checks satisfier candidates \u2014 dismissing compact.Iter, keyspan.SpanIterOptions, and record.Writer.flusher as likely-false rather than silently including them."
+          "rationale": "Explains why field-type sweeps miss these (interface-typed slots) and actively refutes a tool-suggested candidate at source (`record.Writer.f` self-reference at `record/record.go:708`), plus downgrades `compact.Iter` with reasoning about what compactions actually iterate \u2014 real audit signal."
         },
         "uncertainty": {
-          "score": 1.0,
-          "rationale": "Cleanly separates confirmed vs unconfirmed rows (M\u2013P labeled 'likely false' / 'likely spurious'), records a negative result (standaloneWriter discards RefCount), and flags 'plumbing chain not executed' for row J \u2014 exemplary calibration."
+          "score": 0.95,
+          "rationale": "Each row is explicitly labeled CONFIRMED / UNCONFIRMED / REFUTED / test-only, with 'via_satisfiers' counts noted and edges of the audit (unpinned assignment lines) called out. Exactly the calibrated honesty the rubric asks for."
         }
       },
-      "step_quality": 0.9475,
+      "step_quality": 0.8875,
       "usage": {
         "input_tokens": 6,
-        "output_tokens": 585,
-        "cache_creation_input_tokens": 25097,
-        "cache_read_input_tokens": 30952
+        "output_tokens": 595,
+        "cache_creation_input_tokens": 18420,
+        "cache_read_input_tokens": 31932
       }
     },
     {
       "step": "Produce the indirect-retention risk map",
       "scores": {
         "map_quality": {
-          "score": 0.95,
-          "rationale": "Carries over every retainer from prior steps (A\u2013Q), classifies lifetime, flags goroutine crossings, and correctly ranks process-long/crossing rows (A\u2013E) first. Surfaces the flushableBatch buffer-aliasing case explicitly as highest risk."
+          "score": 0.85,
+          "rationale": "Carries every retainer from prior steps (rows 1-15), classifies lifetime, flags goroutine crossings, and correctly ranks WAL failover (#11/#12) and process-long background schedulers (#13/#14) at the top. Minor gap: rows 3-5 are left unconfirmed rather than resolved, and the rangeKeyMasking chain is compressed into per-iterator no-crossing rows without checking whether any parent Iterator can be used across goroutines."
         },
         "specificity": {
-          "score": 0.95,
-          "rationale": "Every row has file:line, abstraction, carrier, lifetime, and crossing flag; top rows include construction/injection sites (`db.go:832`, `open.go:446`, `compaction_scheduler.go:303`) plus go-statements (`compaction.go:1389`, `record/log_writer.go:595`, `compaction_scheduler.go:306`) and concrete pooling-check guidance."
+          "score": 0.9,
+          "rationale": "Every row carries file:line, abstraction, carrier, lifetime, and crossing flag; top-risk rows have injection sites (db.go:908/950, wal/failover_writer.go:179/259/703) and background-thread proof (periodicGranter compaction_scheduler.go:277). Some carriers still use question marks (#5) rather than being resolved."
         },
         "justification": {
-          "score": 0.9,
-          "rationale": "Ranking argued from evidence \u2014 periodicGranter is process-long, flush goroutine reads aliased buffer, failover queue is multi-consumer. Pooling requirements tie directly to the proven crossings rather than being asserted."
+          "score": 0.85,
+          "rationale": "Ranking is argued from evidence \u2014 'failover replays *Batch to a new LogWriter on another goroutine' and 'periodicGranter thread sampling every 100ms' \u2014 and the pooling-checks section ties each risk to a concrete invariant (Unref gate, iterator-open invariant, DB-vs-batch distinction). Justification for demoting #13/#14 to 'non-issues' is stated but light on why the commit-queue window is definitively safe."
         },
         "uncertainty": {
-          "score": 0.95,
-          "rationale": "Explicitly labels M/N/O/P as unconfirmed with reasons (likely false positive, no injection site), records the standalone-WAL negative result, and flags row J for a second look \u2014 the audit's edge is stated."
+          "score": 0.9,
+          "rationale": "Clearly labels UNCONFIRMED rows (#3-#5), calls #5 'likely spurious', marks #15 REFUTED, and explicitly asks the reader to grep before shipping. Honest about the audit's edge without silently dropping candidates."
         }
       },
-      "step_quality": 0.94,
+      "step_quality": 0.87,
       "usage": {
         "input_tokens": 6,
-        "output_tokens": 501,
-        "cache_creation_input_tokens": 25097,
-        "cache_read_input_tokens": 30952
+        "output_tokens": 638,
+        "cache_creation_input_tokens": 21617,
+        "cache_read_input_tokens": 31932
       }
     }
   ]
