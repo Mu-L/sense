@@ -1,0 +1,152 @@
+{
+  "scenario": "Pebble work session - interface-laundered retention audit of the write batch before pooling it",
+  "repo": "pebble",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "pebble.rubric.yaml"
+  },
+  "scenario_quality": 0.5233,
+  "relationship_audit": {
+    "total": 7,
+    "covered": 7,
+    "related": 7,
+    "contradicted": 0,
+    "covered_recall": 1.0,
+    "related_recall": 1.0,
+    "grounded_precision": 1.0,
+    "missed_covered": [],
+    "missed_related": [],
+    "contradictions": [],
+    "items": [
+      {
+        "id": "contract-handle",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:invalidating",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:iterv2interleave",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:rangekeymask",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:internaliteropts",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:blockpropfilterer",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:walfailoverwriter",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": "Orient on the handle",
+      "scores": {
+        "map_quality": {
+          "score": 0.75,
+          "rationale": "Lands the essentials fast \u2014 Pebble as a KV store, `Batch` in batch.go, and names direct holders (`indexedBatch`, `batchIter`, `commitQueue`, `iteratorBatchState`). Missing an explicit setup for why direct holders aren't the whole story, but the core map is present."
+        },
+        "specificity": {
+          "score": 0.85,
+          "rationale": "Concrete file:line citations throughout (`batch.go:240`, `batch.go:488`, `batch.go:1761`, `commit.go:25`, `iterator.go:392`) rather than vague references. Line numbers unverified but the format meets the rubric's ask."
+        },
+        "justification": {
+          "score": 0.4,
+          "rationale": "States Pebble is a storage engine but doesn't explain WHY `Batch` is central (that every write goes through one), nor sets up why direct holders alone are insufficient for the pooling audit."
+        },
+        "uncertainty": {
+          "score": 0.2,
+          "rationale": "No uncertainty flagged at all for Step 1 \u2014 line numbers and holder claims are stated flatly without any hedge, though the step is simple enough that this is a modest gap."
+        }
+      },
+      "step_quality": 0.6225,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 434,
+        "cache_creation_input_tokens": 17066,
+        "cache_read_input_tokens": 31981
+      }
+    },
+    {
+      "step": "Find the retainers hidden behind abstractions",
+      "scores": {
+        "map_quality": {
+          "score": 0.55,
+          "rationale": "Surfaces the key interface-laundered retainers the rubric names (invalidating.iter, iterv2.InterleavingIter, keyspan chain, rangeKeyMasking via internalIterOpts and BlockPropertiesFilterer, WAL failover recordQueueEntry/poppedEntry) plus extras (compact.Iter, scheduler). But several rows look mis-attributed: record.Writer's flusher is not bench.pebbleDB, and compact.Iter/ConcurrencyLimitScheduler carrying a batchIter/Batch is dubious \u2014 compaction iterates sstables, not batches."
+        },
+        "specificity": {
+          "score": 0.6,
+          "rationale": "Every row has struct file:line, interface, concrete carrier, and an injection site line \u2014 the table shape the rubric asks for. But line numbers are suspiciously round/sequential (e.g. :50, :100, :250, :80) suggesting some are approximations rather than actual construction sites verified in source."
+        },
+        "justification": {
+          "score": 0.35,
+          "rationale": "The answer never explains why a field-type sweep misses each row (the interface-satisfaction gap) and shows no evidence of distinguishing wired-to-a-batch from merely type-compatible \u2014 several rows (compact.Iter's InternalIterator, record.Writer's flusher) appear to be type-compatible-but-not-actually-batch-carrying false positives asserted as Confirmed."
+        },
+        "uncertainty": {
+          "score": 0.15,
+          "rationale": "Every row is labeled 'Confirmed' with no may-hold flags, no evidence bounds, no low-confidence candidates \u2014 exactly the failure mode the rubric warns against. The uniformity is itself a red flag given the plausible false positives in the list."
+        }
+      },
+      "step_quality": 0.4625,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 641,
+        "cache_creation_input_tokens": 18257,
+        "cache_read_input_tokens": 31981
+      }
+    },
+    {
+      "step": "Produce the indirect-retention risk map",
+      "scores": {
+        "map_quality": {
+          "score": 0.5,
+          "rationale": "Carries over most retainers from step 2 (invalidating.iter, iterv2/keyspan InterleavingIter, rangeKeyMasking chain, WAL failover entries) with lifetime and crossing flags, but injects speculative additions (ConcurrencyLimitScheduler\u2192DB, compact.Iter\u2192batchIter, bench.ycsb, record.Writer) whose 'concrete_carrier: pebble.Batch/batchIter' claim looks unproven and dilutes the map."
+        },
+        "specificity": {
+          "score": 0.7,
+          "rationale": "Every row has file:line, abstraction, carrier, lifetime, crossing flag, and top-risk rows include construction sites and goroutine sites (e.g. 'compaction_scheduler.go:306 (periodicGranter)'), though some goroutine sites are vague ('wal.FailoverWriter (background failover)' without a go-statement line)."
+        },
+        "justification": {
+          "score": 0.4,
+          "rationale": "Risk ranking is asserted via a 'risk' field rather than argued from evidence; mitigations are generic ('Exclude from pooling. Add runtime check in Batch.Reset()') and repeated verbatim, not derived from what each site actually does."
+        },
+        "uncertainty": {
+          "score": 0.2,
+          "rationale": "Every row is stamped 'evidence_level: confirmed' with no flagged may-hold cases or unverified injection sites, and no statement of audit edge \u2014 this masks that several concrete_carrier claims are plausibly wrong."
+        }
+      },
+      "step_quality": 0.485,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 568,
+        "cache_creation_input_tokens": 19091,
+        "cache_read_input_tokens": 31981
+      }
+    }
+  ]
+}

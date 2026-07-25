@@ -1,0 +1,152 @@
+{
+  "scenario": "Pebble work session - interface-laundered retention audit of the write batch before pooling it",
+  "repo": "pebble",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "pebble.rubric.yaml"
+  },
+  "scenario_quality": 0.8842,
+  "relationship_audit": {
+    "total": 7,
+    "covered": 7,
+    "related": 7,
+    "contradicted": 0,
+    "covered_recall": 1.0,
+    "related_recall": 1.0,
+    "grounded_precision": 1.0,
+    "missed_covered": [],
+    "missed_related": [],
+    "contradictions": [],
+    "items": [
+      {
+        "id": "contract-handle",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:invalidating",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:iterv2interleave",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:rangekeymask",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:internaliteropts",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:blockpropfilterer",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:walfailoverwriter",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": "Orient on the handle",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Nails Pebble as LSM engine, pinpoints Batch at batch.go:240, and lists all the direct holders the field-type sweep would find (indexedBatch, batchIter, commitQueue, iteratorBatchState) plus the harness ones. Also usefully sets up the interface-hidden class for the next step."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every direct holder has a concrete file:line (batch.go:488, batch.go:1761, commit.go:25, iterator.go:392, etc.) and the Batch definition itself is pinned at batch.go:240 \u2014 no vague 'core write path' handwaving."
+        },
+        "justification": {
+          "score": 0.7,
+          "rationale": "Explains Batch as the accumulator for Set/Delete/RangeKeySet writes with the data byte slice, and calls out that direct holders alone aren't the whole story (interface-typed fields are the audit target). Slightly light on 'every write goes through one' framing but the setup is clear."
+        },
+        "uncertainty": {
+          "score": 0.6,
+          "rationale": "Flags that the retained_via_interfaces rows 'each need source confirmation of the actual injection site' \u2014 an honest scope marker. Doesn't hedge the direct-holder list itself, but for this step that's fine since those are provable from field types."
+        }
+      },
+      "step_quality": 0.8275,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 486,
+        "cache_creation_input_tokens": 15967,
+        "cache_read_input_tokens": 31981
+      }
+    },
+    {
+      "step": "Find the retainers hidden behind abstractions",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Surfaces the key interface-laundered retainers the rubric names: recordQueueEntry/poppedEntry RefCount (R1/R2), rangeKeyMasking chain across SpanMask and BoundLimitedBlockPropertyFilter in three structs (R3/R5/R6), iterv2.InterleavingIter (R7), invalidating.iter (R8), plus the compaction scheduler and ycsb harness transitive chains. Only minor gap is not tying R7's pointIter injection to a specific construction site beyond the file:line of the field assignment."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every row cites struct file:line, the interface stored, the concrete carrier, and injection/construction sites (db.go:908/950, range_keys.go:575, batch.go:1379-1386, bench/ycsb.go:316, etc.). Chains are traced field-by-field with line numbers."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Explains why a field sweep misses each (declared type is the interface, satisfaction is hidden) and demonstrates real audit rigor by labeling R11 and R14 as false positives from interface-satisfier enumeration \u2014 showing checks that the candidate is actually wired, not merely type-compatible."
+        },
+        "uncertainty": {
+          "score": 0.95,
+          "rationale": "Explicit CONFIRMED/UNCONFIRMED labels per row, R8 flagged as invariants-only, R9 flagged test-only, R11/R14 flagged as tool-reported false positives. Exactly the honest labeling the rubric asks for."
+        }
+      },
+      "step_quality": 0.92,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 596,
+        "cache_creation_input_tokens": 19766,
+        "cache_read_input_tokens": 31981
+      }
+    },
+    {
+      "step": "Produce the indirect-retention risk map",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "All Step-2 retainers are carried over (R1-R14 explicitly), tiered by risk with process-long/goroutine-crossing (R1/R2 WAL failover, R12 scheduler) on top, lifetime classes assigned, and goroutine crossings flagged for each row. Bench harness (R13) is included and false positives (R11/R14) are explicitly labeled rather than silently dropped."
+        },
+        "specificity": {
+          "score": 0.92,
+          "rationale": "Every row carries file:line, abstraction, concrete carrier, lifetime, and crossing flag. Top-risk proofs cite exact injection sites (db.go:908/950, failover_writer.go:533/179/257-261) and the go-statement (`failover_manager.go:333-337 opts.stopper.runAsync(...) monitorLoop`) plus the read site failover_writer.go:703, with concrete pooling constraints tied to batch.go:297-305."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Ranking is argued from evidence (monitor goroutine re-reads Batch.data during failover; scheduler holds *DB\u2192commitQueue for process lifetime), and pooling constraints are derived from the Ref/Unref/lifecycle mechanism rather than asserted. Minor: R12's stale-read chain is indirect and the argument acknowledges that honestly."
+        },
+        "uncertainty": {
+          "score": 0.9,
+          "rationale": "R9 flagged UNCONFIRMED, R11/R14 explicitly labeled FALSE POSITIVE with reasoning, iterator-reuse crossings hedged as 'dependent'. Edges not verified (other injection sites, closures) could be called out more explicitly, but the audit is honest about what's proven vs assumed."
+        }
+      },
+      "step_quality": 0.905,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 650,
+        "cache_creation_input_tokens": 22726,
+        "cache_read_input_tokens": 31981
+      }
+    }
+  ]
+}

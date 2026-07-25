@@ -1,0 +1,12 @@
+{
+  "scenario": "dolt work session - audit what retains access into the core database object before a lifecycle rework",
+  "repo": "dolt",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "dolt.rubric.yaml",
+    "skipped_reason": "run_failed"
+  },
+  "scenario_quality": 0.0,
+  "steps": []
+}

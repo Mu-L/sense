@@ -1,0 +1,744 @@
+{
+  "scenario": "dolt work session - audit what retains access into the core database object before a lifecycle rework",
+  "repo": "dolt",
+  "adoption_score": 0.4,
+  "keyword_coverage": 1.0,
+  "step_avg_score": 1.0,
+  "efficiency": 0.0,
+  "completeness": 0.7024,
+  "tool_fluency": 0.0,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 53,
+    "grounded": 42,
+    "unresolved": 11,
+    "hallucinated": 0,
+    "rate": 0.7925,
+    "examples": {
+      "grounded": [
+        "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go:126 (line 126 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go (file has 2584 lines))",
+        "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go:76 (line 76 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go (file has 3225 lines))",
+        "doltdb.go:463 (line 463 in doltdb.go (file has 2584 lines) [via go/libraries/doltcore/doltdb/doltdb.go])",
+        "doltdb.go:799 (line 799 in doltdb.go (file has 2584 lines) [via go/libraries/doltcore/doltdb/doltdb.go])",
+        "doltdb.go:1084 (line 1084 in doltdb.go (file has 2584 lines) [via go/libraries/doltcore/doltdb/doltdb.go])"
+      ],
+      "unresolved": [
+        "dsess/global_state.go:20 (file not found at dsess/global_state.go)",
+        "env/repo_state_reader.go:10 (file not found at env/repo_state_reader.go)",
+        "env/repo_state_writer.go:10 (file not found at env/repo_state_writer.go)",
+        "dtables/dolt_table.go:20 (file not found at dtables/dolt_table.go)",
+        "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/global_state.go:20 (file not found at /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/global_state.go)"
+      ],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go",
+        "locator": "126",
+        "status": "grounded",
+        "reason": "line 126 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go (file has 2584 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go",
+        "locator": "76",
+        "status": "grounded",
+        "reason": "line 76 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go (file has 3225 lines)"
+      },
+      {
+        "file": "doltdb.go",
+        "locator": "463",
+        "status": "grounded",
+        "reason": "line 463 in doltdb.go (file has 2584 lines) [via go/libraries/doltcore/doltdb/doltdb.go]"
+      },
+      {
+        "file": "doltdb.go",
+        "locator": "799",
+        "status": "grounded",
+        "reason": "line 799 in doltdb.go (file has 2584 lines) [via go/libraries/doltcore/doltdb/doltdb.go]"
+      },
+      {
+        "file": "doltdb.go",
+        "locator": "1084",
+        "status": "grounded",
+        "reason": "line 1084 in doltdb.go (file has 2584 lines) [via go/libraries/doltcore/doltdb/doltdb.go]"
+      },
+      {
+        "file": "doltdb.go",
+        "locator": "1753",
+        "status": "grounded",
+        "reason": "line 1753 in doltdb.go (file has 2584 lines) [via go/libraries/doltcore/doltdb/doltdb.go]"
+      },
+      {
+        "file": "doltdb.go",
+        "locator": "126",
+        "status": "grounded",
+        "reason": "line 126 in doltdb.go (file has 2584 lines) [via go/libraries/doltcore/doltdb/doltdb.go]"
+      },
+      {
+        "file": "database.go",
+        "locator": "310",
+        "status": "grounded",
+        "reason": "line 310 in database.go (file has 3225 lines) [via go/libraries/doltcore/sqle/database.go]"
+      },
+      {
+        "file": "table.go",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in table.go (file has 497 lines) [via go/gen/fb/serial/table.go]"
+      },
+      {
+        "file": "tree/node_store.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in tree/node_store.go (file has 384 lines) [via go/store/prolly/tree/node_store.go]"
+      },
+      {
+        "file": "types/value_store.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in types/value_store.go (file has 819 lines) [via go/store/types/value_store.go]"
+      },
+      {
+        "file": "dsess/session.go",
+        "locator": "200",
+        "status": "grounded",
+        "reason": "line 200 in dsess/session.go (file has 2083 lines) [via go/libraries/doltcore/sqle/dsess/session.go]"
+      },
+      {
+        "file": "database.go",
+        "locator": "203",
+        "status": "grounded",
+        "reason": "line 203 in database.go (file has 3225 lines) [via go/libraries/doltcore/sqle/database.go]"
+      },
+      {
+        "file": "database.go",
+        "locator": "322",
+        "status": "grounded",
+        "reason": "line 322 in database.go (file has 3225 lines) [via go/libraries/doltcore/sqle/database.go]"
+      },
+      {
+        "file": "database.go",
+        "locator": "963",
+        "status": "grounded",
+        "reason": "line 963 in database.go (file has 3225 lines) [via go/libraries/doltcore/sqle/database.go]"
+      },
+      {
+        "file": "database.go",
+        "locator": "76",
+        "status": "grounded",
+        "reason": "line 76 in database.go (file has 3225 lines) [via go/libraries/doltcore/sqle/database.go]"
+      },
+      {
+        "file": "dsess/session.go",
+        "locator": "50",
+        "status": "grounded",
+        "reason": "line 50 in dsess/session.go (file has 2083 lines) [via go/libraries/doltcore/sqle/dsess/session.go]"
+      },
+      {
+        "file": "dsess/session_cache.go",
+        "locator": "65",
+        "status": "grounded",
+        "reason": "line 65 in dsess/session_cache.go (file has 511 lines) [via go/libraries/doltcore/sqle/dsess/session_cache.go]"
+      },
+      {
+        "file": "dsess/global_state.go",
+        "locator": "20",
+        "status": "unresolved",
+        "reason": "file not found at dsess/global_state.go"
+      },
+      {
+        "file": "dsess/database_session_state.go",
+        "locator": "61",
+        "status": "grounded",
+        "reason": "line 61 in dsess/database_session_state.go (file has 188 lines) [via go/libraries/doltcore/sqle/dsess/database_session_state.go]"
+      },
+      {
+        "file": "doltdb.go",
+        "locator": "80",
+        "status": "grounded",
+        "reason": "line 80 in doltdb.go (file has 2584 lines) [via go/libraries/doltcore/doltdb/doltdb.go]"
+      },
+      {
+        "file": "table.go",
+        "locator": "100",
+        "status": "grounded",
+        "reason": "line 100 in table.go (file has 497 lines) [via go/gen/fb/serial/table.go]"
+      },
+      {
+        "file": "schema/schema.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in schema/schema.go (file has 413 lines) [via go/libraries/doltcore/schema/schema.go]"
+      },
+      {
+        "file": "env/repo_state_reader.go",
+        "locator": "10",
+        "status": "unresolved",
+        "reason": "file not found at env/repo_state_reader.go"
+      },
+      {
+        "file": "database.go",
+        "locator": "229",
+        "status": "grounded",
+        "reason": "line 229 in database.go (file has 3225 lines) [via go/libraries/doltcore/sqle/database.go]"
+      },
+      {
+        "file": "env/repo_state_writer.go",
+        "locator": "10",
+        "status": "unresolved",
+        "reason": "file not found at env/repo_state_writer.go"
+      },
+      {
+        "file": "dsess/session.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in dsess/session.go (file has 2083 lines) [via go/libraries/doltcore/sqle/dsess/session.go]"
+      },
+      {
+        "file": "database.go",
+        "locator": "78",
+        "status": "grounded",
+        "reason": "line 78 in database.go (file has 3225 lines) [via go/libraries/doltcore/sqle/database.go]"
+      },
+      {
+        "file": "dtables/dolt_table.go",
+        "locator": "20",
+        "status": "unresolved",
+        "reason": "file not found at dtables/dolt_table.go"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go",
+        "locator": "799",
+        "status": "grounded",
+        "reason": "line 799 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go (file has 2584 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go",
+        "locator": "1753",
+        "status": "grounded",
+        "reason": "line 1753 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go (file has 2584 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/session.go",
+        "locator": "200",
+        "status": "grounded",
+        "reason": "line 200 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/session.go (file has 2083 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go",
+        "locator": "203",
+        "status": "grounded",
+        "reason": "line 203 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go (file has 3225 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go",
+        "locator": "322",
+        "status": "grounded",
+        "reason": "line 322 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go (file has 3225 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go",
+        "locator": "963",
+        "status": "grounded",
+        "reason": "line 963 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go (file has 3225 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go",
+        "locator": "310",
+        "status": "grounded",
+        "reason": "line 310 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/database.go (file has 3225 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/session.go",
+        "locator": "50",
+        "status": "grounded",
+        "reason": "line 50 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/session.go (file has 2083 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/session_cache.go",
+        "locator": "65",
+        "status": "grounded",
+        "reason": "line 65 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/session_cache.go (file has 511 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/global_state.go",
+        "locator": "20",
+        "status": "unresolved",
+        "reason": "file not found at /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/global_state.go"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/database_session_state.go",
+        "locator": "61",
+        "status": "grounded",
+        "reason": "line 61 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/database_session_state.go (file has 188 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go",
+        "locator": "463",
+        "status": "grounded",
+        "reason": "line 463 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go (file has 2584 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go",
+        "locator": "1084",
+        "status": "grounded",
+        "reason": "line 1084 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go (file has 2584 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go",
+        "locator": "80",
+        "status": "grounded",
+        "reason": "line 80 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/doltdb/doltdb.go (file has 2584 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/table/table.go",
+        "locator": "25",
+        "status": "unresolved",
+        "reason": "file not found at /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/table/table.go"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/table/table.go",
+        "locator": "100",
+        "status": "unresolved",
+        "reason": "file not found at /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/table/table.go"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/schema/schema.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/schema/schema.go (file has 413 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/store/tree/node_store.go",
+        "locator": "20",
+        "status": "unresolved",
+        "reason": "file not found at /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/store/tree/node_store.go"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/store/types/value_store.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/store/types/value_store.go (file has 819 lines)"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/env/repo_state_reader.go",
+        "locator": "10",
+        "status": "unresolved",
+        "reason": "file not found at /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/env/repo_state_reader.go"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/env/repo_state_writer.go",
+        "locator": "10",
+        "status": "unresolved",
+        "reason": "file not found at /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/env/repo_state_writer.go"
+      },
+      {
+        "file": "/Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/session.go",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in /Users/luc/Developer/luuuc/oss/sense-benchmark/baseline/dolt/go/libraries/doltcore/sqle/dsess/session.go (file has 2083 lines)"
+      },
+      {
+        "file": "types/value.go",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in types/value.go (file has 309 lines) [via go/store/types/value.go]"
+      },
+      {
+        "file": "go-mysql-server/sql/table.go",
+        "locator": "10",
+        "status": "unresolved",
+        "reason": "file not found at go-mysql-server/sql/table.go"
+      }
+    ]
+  },
+  "gold_recall": {
+    "total": 12,
+    "mentioned": 2,
+    "cited": 2,
+    "mention_recall": 0.1667,
+    "cited_recall": 0.1667,
+    "groups": {
+      "found": {
+        "total": 7,
+        "mentioned": 2,
+        "cited": 2,
+        "mention_recall": 0.2857,
+        "cited_recall": 0.2857
+      },
+      "dropped": {
+        "total": 5,
+        "mentioned": 0,
+        "cited": 0,
+        "mention_recall": 0.0,
+        "cited_recall": 0.0
+      }
+    },
+    "missed_mention": [
+      "dbfactory-file",
+      "backups-table",
+      "datas-roottracker",
+      "remotesrv-cache",
+      "spec-db",
+      "cli-queryist",
+      "metrics-cluster",
+      "cluster-dial",
+      "cs-metrics",
+      "pull-hasmanyer"
+    ],
+    "missed_cite": [
+      "dbfactory-file",
+      "backups-table",
+      "datas-roottracker",
+      "remotesrv-cache",
+      "spec-db",
+      "cli-queryist",
+      "metrics-cluster",
+      "cluster-dial",
+      "cs-metrics",
+      "pull-hasmanyer"
+    ],
+    "details": [
+      {
+        "id": "dbfactory-file",
+        "group": "found",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "backups-table",
+        "group": "found",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "datas-roottracker",
+        "group": "found",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "prolly-nodestore",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "types-valuestore",
+        "group": "found",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "remotesrv-cache",
+        "group": "found",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "spec-db",
+        "group": "found",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "cli-queryist",
+        "group": "dropped",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "metrics-cluster",
+        "group": "dropped",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "cluster-dial",
+        "group": "dropped",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "cs-metrics",
+        "group": "dropped",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "pull-hasmanyer",
+        "group": "dropped",
+        "mentioned": false,
+        "cited": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the codebase",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "doltdb",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 27,
+          "unique_refs": 53,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.75,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the storage lifecycle contract",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 27,
+          "unique_refs": 53,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how query access is handed out",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 27,
+          "unique_refs": 53,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Audit every production holder that retains access into the core database lifecycle",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 27,
+          "unique_refs": 53,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.5,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace the narrowed-interface routes",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 27,
+          "unique_refs": 53,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Assess the blast radius of the lifecycle rework",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 27,
+          "unique_refs": 53,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Produce the change + verification map",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 27,
+          "unique_refs": 53,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "test",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [],
+    "post_mcp_misses": [],
+    "has_mcp_tools": false,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only - grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 9,
+    "grep_count": 3,
+    "read_count": 4,
+    "mcp_count": 0,
+    "token_input_uncached": 449871,
+    "token_output": 11846,
+    "token_cache_read": 0,
+    "token_cache_write": 0,
+    "token_total_billed": 461717,
+    "token_total_all": 461717,
+    "wall_time_seconds": 0.0,
+    "cost_usd": null,
+    "effective_token_total_billed": 461717,
+    "effective_wall_time_seconds": 0.0,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 300,
+    "token_efficiency": 0.0,
+    "time_efficiency": 0.0,
+    "answer_chars": 38918,
+    "audit_chars": 239285,
+    "overhead": null
+  }
+}
