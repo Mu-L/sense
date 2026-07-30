@@ -10,10 +10,10 @@ rigor: methodology (no model-comparison claims; this pack is about the method)
 
 **The finding.** Most "our tool helps AI" benchmarks measure the tool against a strawman or against an LLM
 judge that cannot see what the answer left out. The hard part is not running the bench; it is keeping it honest
-when you are the one who benefits from the number. This pack is the method we built to do that, and the four
+when you are the one who benefits from the number. This pack is the method we built to do that, and the
 mistakes that cost us the most to learn. It is the trust layer under every other number we publish.
 
-## The four traps (each cost real time; each is now a rule)
+## The five traps (each cost real time; each is now a rule)
 
 1. **The judge is blind to omission.** A reference-blind LLM judge rates a 35%-recall answer "exhaustive,"
    because it grades what is present, not what is missing. Fix: make the judge **reference-aware**. Feed it the
@@ -30,6 +30,12 @@ mistakes that cost us the most to learn. It is the trust layer under every other
    yet found the axis, not that the repo is unwinnable.
 4. **Never conclude from a proxy.** grep-reachability is not "the baseline finds it"; one run is noise; metadata
    is not evidence. Read both transcripts side by side, per gold target, before any conclusion.
+5. **A new metric is a hypothesis; backtest it on the wins you already banked.** Every gate and every ranking
+   we proposed was plausible, and they went 0 for 5 in a single day. The one that looked strongest - rank
+   candidates by how many things hold them - finds three of four banked wins at rank 2 to 4 and buries the
+   fourth, the biggest win in the corpus, at rank 50 of 901. Tuning on the cases that agree with you is how a
+   gate learns to reject exactly the results you are trying to reproduce. Fix: `gate_backtest.py`, which runs
+   any proposed gate against the banked wins and refuses to attest if it rejects one.
 
 ## The fairness corrections (every one removed an anti- OR pro-tool bias)
 
@@ -59,7 +65,7 @@ why the trustworthy bench is a *prerequisite* for any auto-improvement (see
 |---|---|---|---|
 | Ruby/Rails | 2026-06 | 4 traps surfaced and codified; 3 fairness corrections shipped; reference-aware judge built (`relationship_audit.py`); held-out anchor frozen (`freeze-heldout.sh`). 12W/1T/0L headline survived all corrections. | seed |
 | Python/Django | TBD | does a typed-ish framework surface a new trap (e.g. memorization stronger / weaker)? | … |
-| Go | 2026-07 | **A fifth trap, and it is about the instrument itself: your own validity flag can invert your results.** `run_meta.valid` was stamped `rc == 0`, so the watchdog's exit 124 voided every run the wall clock cut short. Reclassifying 16 void runs from evidence: 15 were real measurements (answers of 5.6k-45.8k chars) and the 1 genuine artifact (a 203-char crash stub) was the one being AVERAGED IN. Exactly inverted. Two corollaries, both found the same day: (a) three instruments - `matrix.py`, `scoreboard.py`, `check_findings_stats.py` - each carried their own copy of the run-aggregation glob, so when one learned to drop artifacts the campaign published two different headlines for the same cell (dolt +0.50 vs +0.38); (b) `check-findings.sh` passed args to one checker and invoked the other with NONE, so it audited a DIFFERENT VERTICAL and printed green - an unpointed gate reports success for work it never inspected. Rule: the rule that decides which runs count lives in ONE place, and every gate must print what it was pointed at. | **refines** (adds the instrument-integrity trap to the four content traps) |
+| Go | 2026-07 | **A trap about the instrument itself, not the content: your own validity flag can invert your results.** `run_meta.valid` was stamped `rc == 0`, so the watchdog's exit 124 voided every run the wall clock cut short. Reclassifying 16 void runs from evidence: 15 were real measurements (answers of 5.6k-45.8k chars) and the 1 genuine artifact (a 203-char crash stub) was the one being AVERAGED IN. Exactly inverted. Two corollaries, both found the same day: (a) three instruments - `matrix.py`, `scoreboard.py`, `check_findings_stats.py` - each carried their own copy of the run-aggregation glob, so when one learned to drop artifacts the campaign published two different headlines for the same cell (dolt +0.50 vs +0.38); (b) `check-findings.sh` passed args to one checker and invoked the other with NONE, so it audited a DIFFERENT VERTICAL and printed green - an unpointed gate reports success for work it never inspected. Rule: the rule that decides which runs count lives in ONE place, and every gate must print what it was pointed at. | **refines** (adds the instrument-integrity trap to the content traps) |
 
 ## Per-vertical detail
 

@@ -20,6 +20,34 @@ covers the dependents) and every survivor was an interface, a contract or a
 trait, where dependents satisfy by `implements`/`use` inside the class body and
 no import prefix enumerates them. So contracts are emitted BEFORE classes at
 equal rank - the gate still decides, this only decides what it sees first.
+
+THE RANKING DOES NOT FIND WINNERS, AND THAT IS MEASURED, NOT ASSUMED. Backtested
+2026-07-30 against the four banked go wins, ranking pebble's `Batch` - the
+STRONGEST win in the corpus, +1.000 off a 0.00 baseline twice - by every
+structural signal available:
+
+    signal                          where `Batch` lands
+    direct inbound composes         50 of 901
+    + holders of interfaces it      110 of 1211
+      satisfies (1-hop SQL proxy)
+    the real retention ring         56 of 86   (ring 14; `DiskWriteCategory`
+      (one blast per candidate)                 tops it at 74 and has never
+                                                featured in a bench)
+
+Three signals, three failures, same repo. The other three wins (dolt `DoltDB`,
+nomad `Server`, consul `Server`) rank 2-4 by inbound composes, so a ranker tuned
+on them alone looks excellent and drops the biggest win on the floor.
+
+WHY: the winning anchor followed from the ENGINEERING TASK, not from structural
+prominence. pebble's cell asks what holds a `Batch` when you pool and reuse it -
+a rework a maintainer would credibly do. No amount of graph shape predicts which
+object a plausible refactor touches. So this file ranks for COVERAGE (what the
+gate should see, contracts first) and never claims to rank for value; picking the
+anchor is a judgment step owned by whoever writes the scenario.
+
+Do not "improve" the ranking without backtesting it here first. Metric proposals
+went 0 for 5 in one day (coverage bar, symbol volume, direct holders, interface
+proxy, ring size) while every check that RAN something was right.
 """
 
 import argparse
