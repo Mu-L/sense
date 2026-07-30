@@ -105,6 +105,17 @@ surface and channel**, and the window triages ALL buckets, not just resolution:
    pre-flight** (macOS `timeout`, subshell PATH). Costs seconds; the 2026-07-15 precedent is a
    PATH-stripped audit loop that printed the exact reverse of its finding and a ledger that failed its
    own checker on eight counts.
+7e. **The PR body states where the gap came from.** Every PR out of this window opens with a line
+   naming its origin:
+
+   > Found through the Sense Improvement Loop while benching `<vertical stack>` with `<repo>`.
+
+   Not decoration. A product fix from this loop is evidence that the bench found something a human
+   reading the code did not, and that provenance is the loop's whole claim to exist. Six months on, the
+   difference between "someone noticed a missing php case" and "benching laravel surfaced a channel the
+   contract promised and never filled" is the difference between a tidy-up and a working instrument.
+   It also hands a reviewer who was not in the session the one piece of context a diff cannot carry.
+
 8. **Council review of the FINISHED code, at merge.** The second `/council` pass reviews the diff itself
    for new-bug introduction and side effects before the PR merges (the existing Council + PR review
    event). Two passes, two questions: step 2 asks "is this the right change to make?", this one asks
