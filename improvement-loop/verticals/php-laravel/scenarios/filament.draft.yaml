@@ -1,0 +1,61 @@
+# MINI-GOLD (Loop 3a eligibility, not an audited scenario).
+#
+# Anchor: the HasSchemas contract. Chosen because it is the ONLY slate anchor whose
+# dependents are mostly grep-dark: 100 blast files, 132 files contain the token, and only
+# 25 of the blast set are inside the token's hit list (25% coverage). akaunting (91%),
+# invoiceninja (89%) and snipe-it (81%) are all grep-reachable by comparison.
+#
+# WHY THESE ROWS ARE DARK - verified by reading each class declaration:
+#   ChartWidget implements HasSchemas  -> BarChartWidget/LineChartWidget extend ChartWidget
+#   BasePage    implements HasSchemas  -> SimplePage -> Login/Register extend it
+#                                      -> Page -> Dashboard/Cluster/SettingsPage extend it
+# So each row below satisfies the contract through ONE inheritance hop and never names the
+# token. `grep -rl HasSchemas` cannot reach any of them.
+#
+# EXCLUDED DELIBERATELY: 61 of the 100 blast files live under `docs-assets/app/`, a vendored
+# demo application inside the monorepo. Gold drawn from there would measure finding demo
+# pages, not the framework seam. Only `packages/**` rows are used.
+name: filament HasSchemas contract satisfaction
+repo: filament
+description: |
+  A contract in this framework is satisfied mostly through inheritance rather than by direct
+  declaration: a small number of base classes declare it, and many concrete classes acquire
+  it by extending those bases. Identify the concrete classes that end up satisfying the
+  schema contract without declaring it themselves, and the base class each one inherits it
+  through.
+steps:
+  - name: contract satisfaction
+    prompt: |
+      You are handing off to another engineer who has to change the schema contract in this
+      framework and needs to know who is affected.
+
+      Give them the concrete classes that satisfy the `HasSchemas` contract WITHOUT naming it
+      themselves - the ones that acquire it by extending a base class that declares it.
+
+      For each: an exact `path:line` citation, and the base class it inherits the contract
+      through. Restrict yourself to the framework's own published source; ignore any bundled
+      demo or documentation application that ships alongside it.
+
+      Cite exact `path:line` for every claim. If you cannot pin a location, say so rather
+      than naming a file you have not opened.
+    checks:
+      - type: contains
+        value: "HasSchemas"
+        required: true
+      - type: contains
+        value: ".php:"
+        required: true
+gold:
+  # --- via ChartWidget (which implements HasSchemas) ---
+  - {id: 'dark:barchart', group: dark_via_chartwidget, match: [packages/widgets/src/BarChartWidget.php]}
+  - {id: 'dark:linechart', group: dark_via_chartwidget, match: [packages/widgets/src/LineChartWidget.php]}
+  # --- via SimplePage -> BasePage (which implements HasSchemas) ---
+  - {id: 'dark:login', group: dark_via_basepage, match: [packages/panels/src/Auth/Pages/Login.php]}
+  - {id: 'dark:register', group: dark_via_basepage, match: [packages/panels/src/Auth/Pages/Register.php]}
+  # --- via Page -> BasePage ---
+  - {id: 'dark:dashboard', group: dark_via_basepage, match: [packages/panels/src/Pages/Dashboard.php]}
+  - {id: 'dark:cluster', group: dark_via_basepage, match: [packages/panels/src/Clusters/Cluster.php]}
+  - {id: 'dark:settingspage', group: dark_via_basepage, match: [packages/spatie-laravel-settings-plugin/src/Pages/SettingsPage.php]}
+  # --- the declaration sites the dark rows inherit through (these DO name the token) ---
+  - {id: 'lit:chartwidget', group: declaration_sites, match: [packages/widgets/src/ChartWidget.php]}
+  - {id: 'lit:basepage', group: declaration_sites, match: [packages/panels/src/Pages/BasePage.php]}

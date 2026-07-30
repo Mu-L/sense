@@ -34,7 +34,7 @@ what makes the ordering possible at all (see below), and it is the one place thi
 
 | Actor | Who/what | Notes |
 |---|---|---|
-| Generator | session agent driving `bench/drivers/vertical-loop.sh`, probes batched to cheap agents across the slate | the run-first ruling's rule 4 - batch the hunt |
+| Generator | session agent running the commands below by hand, probes batched to cheap agents across the slate | the run-first ruling's rule 4 - batch the hunt. **NOT `vertical-loop.sh`:** it has no eligibility phase, and its copy of the bound gate sits inside `preflight`, behind the audited scenario |
 | Evaluator | `bench/lib/control_bound.py` | arithmetic, not an opinion; no separate adversarial vertex needed |
 | Mechanical verifier | `gold.score_gold_recall` - the same scorer the bench uses | a gate with its own scorer would be a second scorer, and two scorers is a bug factory |
 | Human | none | a bound kill is arithmetic; there is nothing to rule on |
@@ -118,15 +118,18 @@ excuse for standing on an expired one.
   on at least one repo, and `control_bound.py --slate <vertical-dir>` prints the queue. The order is
   **weakest control first** - the most headroom, so the highest-probability win opens first.
 
-The stage in four steps:
+The stage in five steps:
 
 ```
-# 1. hand-verify a top-N mini-gold for the slate's anchor  ->  scenarios/<repo>.draft.yaml
-# 2. run the walled control probe (sense forbidden, code-capable, at the cell's REAL wall)
+# 1. memorization screen: a repo the model recites inflates the control and hides the seam
+python3 bench/lib/memorization_probe.py <clone-path> <anchor> --file <anchor-file-hint>
+# 2. hand-verify a top-N mini-gold for the slate's anchor  ->  scenarios/<repo>.draft.yaml
+# 3. run the walled control probe (sense forbidden, code-capable, at the cell's REAL wall).
+#    NOTE: no driver does this yet - see Built vs missing. It is a hand-run agent session.
 python3 bench/lib/sense_build.py --stamp verticals/<v>/results/dryrun/<repo>/probe-1.md
-# 3. the bound, one cell (pass the draft or the audited gold)
+# 4. the bound, one cell (pass the draft or the audited gold)
 python3 bench/lib/control_bound.py verticals/<v>/scenarios/<repo>.draft.yaml <probe files>
-# 4. the ranked paid queue, whole slate; marks draft rows and expired probes
+# 5. the ranked paid queue, whole slate; marks draft rows and expired probes
 python3 bench/lib/control_bound.py --slate verticals/<v>
 ```
 - **Budget:** $0 in dollars, but probes ride a subscription. A throttled or capped arm produces a *false*
@@ -189,7 +192,13 @@ Replay the frozen scored runs; the stage must rediscover what the humans found:
   `control_bound.py --slate` (the ranked queue with expiry enforcement). Pinned by
   `test_sense_build.py`, `test_ledger_check.py`, and the `SlateRankTest` cases in
   `test_control_bound.py`.
-- **Missing:** nothing writes the probe stamp automatically - the operator runs
-  `sense_build.py --stamp` after each probe, and an unstamped probe is reported UNRANKABLE rather than
-  silently ranked. Wiring it into the dry-run path is the obvious next step.
+- **Missing (found by running this stage 2026-07-30):**
+  - **No probe harness.** Nothing in the tree runs a control arm. `vertical-loop.sh` only READS
+    `probe-*.md` files; there is no prompt template, no wall enforcement, and nothing that mechanically
+    forbids Sense for the probe session. Step 3 above is a hand-run agent session on trust.
+  - **No wall for a never-benched cell.** This stage insists the probe runs at "the cell's REAL wall"
+    and that the wall IS the control's score, but nothing derives a wall for a repo that has never run.
+    The first probe therefore picks one, which makes the first verdict unreproducible until it is recorded.
+  - **The stamp is manual** - the operator runs `sense_build.py --stamp` after each probe. An unstamped
+    probe is reported UNSTAMPED rather than silently ranked, so the gap is visible, not silent.
 - **First live use:** the php-laravel slate, before any scenario authoring.
