@@ -94,6 +94,35 @@ sense.yml
 /assets
 
 # ----------------------------------------------------------------------------
+# improvement-loop/ - public by default, small private allowlist
+# ----------------------------------------------------------------------------
+# The default INVERTS here. Everything under improvement-loop/ is tracked unless
+# it matches a line below. Do not add reactive exceptions: the allowlist is the
+# stated policy (improvement-loop/README.md), not an accretion.
+#
+# Results: run cells and transcripts. Large, and provider model output.
+improvement-loop/verticals/*/results/
+improvement-loop/**/transcripts/
+# Working artifacts a driver rewrites as it runs: per-repo phase state and the
+# model-shared variance scratch. Position is read from the results tree, not these.
+improvement-loop/verticals/**/.loop-state.json
+improvement-loop/verticals/**/variance/
+# The admission-gate cache: machine-written, embeds absolute clone paths, and the
+# loop's own instruction is to delete it before trusting a verdict
+# (docs/loops/02-repo-admission.md: `rm -rf verticals/<v>/.gate-cells`, then re-run).
+improvement-loop/verticals/**/.gate-cells/
+# The placement linter carries the private names list it exists to protect, and its
+# own header says so: "the names list is itself private, so nothing here is ever
+# committed". The .git/hooks shims no-op when it is absent, so a public clone still
+# has a working commit path.
+improvement-loop/bench/lib/placement-lint.sh
+# Journal: candid self-directed reasoning (named losses, cost numbers, self-logged
+# bad decisions). A public "how we bench" story is written as a curated doc, never
+# by exposing the raw journal.
+improvement-loop/verticals/**/LEDGER.md
+improvement-loop/docs/**/decision-errors.md
+
+# ----------------------------------------------------------------------------
 # Bench harness (per-run results)
 # ----------------------------------------------------------------------------
 bench/improvement-loop/results/
