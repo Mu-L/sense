@@ -44,8 +44,13 @@ export BENCH_JUDGE_MODEL="${BENCH_JUDGE_MODEL:-$(arms_judge "$VERTICAL")}"
 HEADLINE_MODEL="${MODELS%% *}"      # first model = the headline arm the verdict reads
 RUNS="${RUNS:-2}"
 CLONES="${SENSE_CLONES:-$HOME/Developer/luuuc/oss/sense-benchmark/sense}"
-SCEN_DIR="$BENCH_DIR/../verticals/$VERTICAL/scenarios"
-STATE="$BENCH_DIR/../verticals/$VERTICAL/.loop-state.json"
+# One derivation of the vertical dir, used everywhere below. verticals/ is a SIBLING of
+# bench/ (bench-paths.sh says so): before this was factored out, two sites here still used
+# the pre-move $BENCH_DIR/verticals and silently read a directory that cannot exist - the
+# control-bound gate found no probes and pergroup.py found no runs.
+VDIR="$BENCH_DIR/../verticals/$VERTICAL"
+SCEN_DIR="$VDIR/scenarios"
+STATE="$VDIR/.loop-state.json"
 PHASES=(index scout preflight bench report harvest done)
 
 # ---- args -------------------------------------------------------------------
@@ -161,7 +166,7 @@ do_preflight() {
   # This is NOT advisory and --yes does NOT bypass it: it is arithmetic, not judgment.
   # Probes go in $DRYRUN_DIR (override with CONTROL_PROBE_DIR), one .md per probe run,
   # each the control arm's deliverable from a walled dry-run AT THE CELL'S REAL WALL.
-  DRYRUN_DIR="${CONTROL_PROBE_DIR:-$BENCH_DIR/verticals/$VERTICAL/results/dryrun/$REPO}"
+  DRYRUN_DIR="${CONTROL_PROBE_DIR:-$VDIR/results/dryrun/$REPO}"
   shopt -s nullglob; PROBES=("$DRYRUN_DIR"/*.md); shopt -u nullglob
   if [ ${#PROBES[@]} -gt 0 ]; then
     echo "---- control bound (\$0, ${#PROBES[@]} probe run(s) from $DRYRUN_DIR) ----"
@@ -216,7 +221,7 @@ do_report() {
   # RESULTS_DIR mirrors bench-paths.sh: verticals/<name>/results/<sanitized-model>.
   local msan rdir out
   msan="$(printf '%s' "$HEADLINE_MODEL" | tr '/:' '__')"
-  rdir="$BENCH_DIR/verticals/$VERTICAL/results/$msan"
+  rdir="$VDIR/results/$msan"
   out="$(RESULTS_DIR="$rdir" python3 "$LIB/pergroup.py" "$REPO" 0.50 2>&1)"
   echo "$out" | sed 's/^/  /'
   if echo "$out" | grep -q '^VERDICT: WIN'; then
