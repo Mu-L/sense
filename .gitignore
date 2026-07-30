@@ -102,6 +102,10 @@ sense.yml
 #
 # Results: run cells and transcripts. Large, and provider model output.
 improvement-loop/verticals/*/results/
+# The global (non-vertical) results tree: loopA-scan.sh writes gap logs here, and
+# bench-paths.sh points the non-VERTICAL bench at it. Same policy as the per-vertical
+# tree - it is run output, so it stays private.
+improvement-loop/bench/results/
 improvement-loop/**/transcripts/
 # Working artifacts a driver rewrites as it runs: per-repo phase state and the
 # model-shared variance scratch. Position is read from the results tree, not these.
