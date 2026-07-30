@@ -7,8 +7,11 @@
 
 Measure, at $0, whether each admitted repo can arithmetically clear +0.50 - and rank the slate by that
 measurement so the paid stages go deep on the strongest cell first. Exit state: every slate repo carries
-a per-group control mean and a bound verdict, and the next repo to author is chosen from numbers, not
-from order of admission.
+a hand-verified mini-gold, a per-group control mean and a bound verdict, and the next repo to author is
+chosen from numbers, not from order of admission.
+
+This stage owns the **mini-gold**; [Authoring](03-b-authoring.md) owns the audited gold. That split is
+what makes the ordering possible at all (see below), and it is the one place this stage does design work.
 
 ## Product duties (per Sense surface)
 
@@ -62,6 +65,33 @@ cells where that was tried). A cell needs BOTH `control <= 0.50` here AND Sense 
 `base + 0.50` in [Run](03-c-run.md) - that second half is a measurement, never an assumption, because
 Sense's own floor ranges 0.41–1.00 across a corpus.
 
+## The mini-gold (this stage's only authoring, and why it exists)
+
+A bound verdict is `mean(control)` scored against gold, so **eligibility cannot run before gold exists** -
+there would be nothing to score. The resolution is not to wait for [Authoring](03-b-authoring.md), which
+would invert the run-first ruling and make the $0 screen depend on the expensive stage. It is that the two
+stages own different golds:
+
+| | Mini-gold (here) | Audited gold (Authoring) |
+|---|---|---|
+| Size | top-N, narrow | the full set |
+| Verified how | by hand, at probe time | per dependency, hand-audited, 0.3 and 0.7 checked |
+| Lives in | `scenarios/<repo>.draft.yaml` | `scenarios/<repo>.yaml` |
+| Answers | can this cell clear the bar at all | what exactly the cell measures |
+| Re-targetable | yes, freely | only through the scenario-integrity gate |
+
+`control_bound.py --slate` reads the audited gold when it exists and falls back to the draft, and it
+**prints which one it used**. A draft ranking is provisional by construction:
+
+- **Rough gold does not fail safe.** It biases toward PASS, and a gold that does not answer the ask passes
+  everything - so it cannot kill anything and tells you nothing. The gitea probe scored 0.202 and looked
+  like a clean floor while 32 of its 42 rows answered a different question than the ask.
+- Therefore a draft PASS means **"not yet killed"**, never "alive". Only a draft KILL is load-bearing at
+  this stage, and even then the per-unit check applies: list the rows the control missed and ask whether
+  the ask ever pointed at them. A surprising PASS is a gold bug until proven otherwise.
+- **Hand-verified is not optional.** "Top-N from a blast sweep" is a starting list, not a mini-gold; the
+  verification is what separates the two, and it is the whole reason this stage can be trusted at $0.
+
 ## A probe verdict expires when Sense changes (decided 2026-07-30)
 
 **A bound verdict is scoped to the Sense version that produced it.** The control arm has Sense forbidden,
@@ -88,12 +118,16 @@ excuse for standing on an expired one.
   on at least one repo, and `control_bound.py --slate <vertical-dir>` prints the queue. The order is
   **weakest control first** - the most headroom, so the highest-probability win opens first.
 
-The stage in three commands:
+The stage in four steps:
 
 ```
+# 1. hand-verify a top-N mini-gold for the slate's anchor  ->  scenarios/<repo>.draft.yaml
+# 2. run the walled control probe (sense forbidden, code-capable, at the cell's REAL wall)
 python3 bench/lib/sense_build.py --stamp verticals/<v>/results/dryrun/<repo>/probe-1.md
-python3 bench/lib/control_bound.py verticals/<v>/scenarios/<repo>.yaml <probe files>   # one cell
-python3 bench/lib/control_bound.py --slate verticals/<v>                               # the queue
+# 3. the bound, one cell (pass the draft or the audited gold)
+python3 bench/lib/control_bound.py verticals/<v>/scenarios/<repo>.draft.yaml <probe files>
+# 4. the ranked paid queue, whole slate; marks draft rows and expired probes
+python3 bench/lib/control_bound.py --slate verticals/<v>
 ```
 - **Budget:** $0 in dollars, but probes ride a subscription. A throttled or capped arm produces a *false*
   low control score, which is a false PASS - re-probe on a healthy arm rather than banking the number.
@@ -129,9 +163,10 @@ python3 bench/lib/control_bound.py --slate verticals/<v>                        
 
 ## Inputs / outputs
 
-- **Consumes:** the pinned slate (`verticals/<vertical>/repos.md`), the built index, the draft gold
-  groups, the cell's real wall.
-- **Produces:** probe files, per-group control means, a bound verdict per repo, and the ranked paid queue.
+- **Consumes:** the pinned slate (`verticals/<vertical>/repos.md` + `slate.json` anchors), the built
+  index, the cell's real wall.
+- **Produces:** the mini-gold (`scenarios/<repo>.draft.yaml`), probe files with their build stamps,
+  per-group control means, a bound verdict per repo, and the ranked paid queue.
 
 ## Fixture test (standalone, $0)
 

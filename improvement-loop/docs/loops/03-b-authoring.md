@@ -52,6 +52,12 @@ can survive the probe and still fail to reach at the cell's wall.
 
 ## Gold curation rules
 
+The starting point is the mini-gold [Eligibility](03-a-eligibility.md) hand-verified
+(`scenarios/<repo>.draft.yaml`). This stage widens it to the full set, audits it per dependency, and
+writes `scenarios/<repo>.yaml` - at which point the audited set supersedes the draft everywhere, including
+in the bound. **Re-targeting the draft is expected, not a failure:** it was built to answer "can this cell
+clear the bar", not "what exactly does this cell measure".
+
 - **One item per FILE.** A gold group that lists several symbols from one file rewards a single read.
 - **Hand-audit every credit.** Basename matching has awarded credit for the wrong file; run the tally,
   then read the credits.

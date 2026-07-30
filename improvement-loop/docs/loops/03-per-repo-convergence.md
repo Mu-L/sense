@@ -16,7 +16,7 @@ it wins, parks, or hands up a decision.**
 
 | Stage | Goal | Ledger keys | Un-fakeable check | Human event |
 |---|---|---|---|---|
-| [Eligibility](03-a-eligibility.md) | Prove the cell can arithmetically clear +0.50 before anyone authors anything | `loop3/<repo>/probe` | `control_bound.py` exit code | none - a bound kill is arithmetic |
+| [Eligibility](03-a-eligibility.md) | Hand-verify a mini-gold, then prove the cell can arithmetically clear +0.50 | `loop3/<repo>/probe` | `control_bound.py` exit code | none - a bound kill is arithmetic |
 | [Authoring](03-b-authoring.md) | Produce a leak-free scenario with hand-audited gold that survives the adversary probe | `loop3/<repo>/{scenario,event-b}` | `scenario.py --prompt` leak check + per-dep hand audit | B (scenario integrity) |
 | [Run](03-c-run.md) | Spend once, at the cell's real wall, ×2, and confirm or fail the DoD | `loop3/<repo>/{event-c,run-<n>}` | `pergroup.py` on the real transcripts | C (spend) |
 | [Diagnosis](03-d-diagnosis.md) | Turn a sub-floor verdict into one named branch with detector output, never into a loss | `loop3/<repo>/{swap,close}` | the branch detectors, each producing output | D (unwinnable repo) |

@@ -197,15 +197,41 @@ class SlateRankTest(unittest.TestCase):
             self.assertFalse(control_bound.rankable(row))
             self.assertEqual(control_bound.slate(t, binp), 1)
 
-    def test_probe_dir_without_a_scenario_is_unrankable_not_dead(self):
+    def test_probe_dir_without_any_gold_is_unrankable_not_dead(self):
         with tempfile.TemporaryDirectory() as t:
             binp = self._vertical(t, {"repo-a": 0})
             os.remove(os.path.join(t, "scenarios", "repo-a.yaml"))
             row = control_bound.assess_repo(
                 t, "repo-a", os.path.join(t, "results", "dryrun", "repo-a"),
                 binary_key(binp))
-            self.assertIn("no scenarios/", row["note"])
+            self.assertIn("no gold", row["note"])
             self.assertFalse(control_bound.rankable(row))
+
+    def test_draft_gold_is_used_when_nothing_is_authored_yet(self):
+        """Eligibility runs BEFORE authoring, so it scores against the mini-gold."""
+        with tempfile.TemporaryDirectory() as t:
+            binp = self._vertical(t, {"repo-a": 0})
+            os.replace(os.path.join(t, "scenarios", "repo-a.yaml"),
+                       os.path.join(t, "scenarios", "repo-a.draft.yaml"))
+            path, kind = control_bound.scenario_for(t, "repo-a")
+            self.assertEqual(kind, "draft")
+            row = control_bound.assess_repo(
+                t, "repo-a", os.path.join(t, "results", "dryrun", "repo-a"),
+                binary_key(binp))
+            self.assertEqual(row["gold_kind"], "draft")
+            self.assertTrue(control_bound.rankable(row), "a draft cell still ranks")
+            self.assertEqual(control_bound.slate(t, binp), 0)
+
+    def test_audited_gold_wins_over_a_draft_when_both_exist(self):
+        """Once authoring lands, the audited set is strictly better evidence."""
+        with tempfile.TemporaryDirectory() as t:
+            self._vertical(t, {"repo-a": 0})
+            draft = os.path.join(t, "scenarios", "repo-a.draft.yaml")
+            with open(draft, "w") as fh:
+                fh.write("gold:\n  - {id: x, group: g, match: [pkg/x.go]}\n")
+            path, kind = control_bound.scenario_for(t, "repo-a")
+            self.assertEqual(kind, "audited")
+            self.assertTrue(path.endswith("repo-a.yaml"))
 
     def test_empty_dryrun_tree_is_a_clean_error(self):
         with tempfile.TemporaryDirectory() as t:

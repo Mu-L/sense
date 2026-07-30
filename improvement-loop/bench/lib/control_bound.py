@@ -146,10 +146,29 @@ def evaluate(scenario_path, probe_paths):
     return per_run, means
 
 
+DRAFT_SUFFIX = ".draft.yaml"
+
+
 def scenario_for(vertical_dir, repo):
-    """<vertical>/scenarios/<repo>.yaml, or None. A probe dir with no scenario is not rankable."""
-    p = os.path.join(vertical_dir, "scenarios", f"{repo}.yaml")
-    return p if os.path.exists(p) else None
+    """(path, kind) for the gold to score against: audited if authored, else the draft.
+
+    Eligibility runs BEFORE authoring, so it cannot wait for the audited gold - it scores
+    against the hand-verified MINI-GOLD the first session builds (`<repo>.draft.yaml`). Once
+    authoring produces `<repo>.yaml`, that wins: the audited set is strictly better evidence.
+
+    The kind is carried through and PRINTED, never silently averaged in, because a bound
+    verdict is only as good as the gold under it. Rough gold does not fail safe: it biases
+    toward PASS, and a gold that does not answer the ask passes everything (the gitea run
+    scored 0.202 and looked like a floor while 32 of 42 rows answered a different question).
+    A ranking built on draft gold is a provisional ranking and has to say so.
+    """
+    audited = os.path.join(vertical_dir, "scenarios", f"{repo}.yaml")
+    if os.path.exists(audited):
+        return audited, "audited"
+    draft = os.path.join(vertical_dir, "scenarios", f"{repo}{DRAFT_SUFFIX}")
+    if os.path.exists(draft):
+        return draft, "draft"
+    return None, None
 
 
 def probe_dirs(vertical_dir):
@@ -168,15 +187,17 @@ def repo_probes(probe_dir):
 
 def assess_repo(vertical_dir, repo, probe_dir, current_key):
     """One row of the slate: the bound verdict plus the freshness of the probes behind it."""
-    row = {"repo": repo, "probes": repo_probes(probe_dir), "means": {}, "note": None}
+    row = {"repo": repo, "probes": repo_probes(probe_dir), "means": {}, "note": None,
+           "gold_kind": None}
     if not row["probes"]:
         row["note"] = "no probe .md files"
         return row
 
     row["freshness"] = [freshness(p, current_key) for p in row["probes"]]
-    scenario = scenario_for(vertical_dir, repo)
+    scenario, row["gold_kind"] = scenario_for(vertical_dir, repo)
     if not scenario:
-        row["note"] = f"no scenarios/{repo}.yaml"
+        row["note"] = (f"no gold: need scenarios/{repo}.yaml (audited) or "
+                       f"scenarios/{repo}{DRAFT_SUFFIX} (hand-verified mini-gold)")
         return row
 
     try:
@@ -201,11 +222,11 @@ def print_slate(rows, current_key):
     print(f"## slate rank - bar +{BAR:.2f}, build in hand {current_key}")
     print("   weakest control first: most headroom, so the highest-probability win goes first.")
     print()
-    print(f"   {'repo':<20} {'probes':>6}  {'weakest group':<16} {'control':>7} "
+    print(f"   {'repo':<20} {'probes':>6} {'gold':<9} {'weakest group':<16} {'control':>7} "
           f"{'ceiling':>8}   state")
     for row in rows:
         if row.get("note"):
-            print(f"   {row['repo']:<20} {'-':>6}  {'-':<16} {'-':>7} {'-':>8}   "
+            print(f"   {row['repo']:<20} {'-':>6} {'-':<9} {'-':<16} {'-':>7} {'-':>8}   "
                   f"UNRANKABLE ({row['note']})")
             continue
         states = set(row["freshness"])
@@ -213,8 +234,9 @@ def print_slate(rows, current_key):
             state = "ranked" if row["alive"] else "DEAD (bound kill)"
         else:
             state = " + ".join(sorted(states - {"FRESH"}))
-        print(f"   {row['repo']:<20} {len(row['probes']):>6}  {row['best_group']:<16} "
-              f"{row['best_control']:>7.3f} {row['ceiling']:>+8.3f}   {state}")
+        print(f"   {row['repo']:<20} {len(row['probes']):>6} {row['gold_kind']:<9} "
+              f"{row['best_group']:<16} {row['best_control']:>7.3f} "
+              f"{row['ceiling']:>+8.3f}   {state}")
         if len(row["probes"]) < 2 and states == {"FRESH"}:
             print(f"   {'':<20} {'':>6}  [OPEN: n=1, the RUNS=2 law is unmet]")
 
@@ -230,7 +252,14 @@ def print_queue(queue):
     print("   PAID QUEUE (depth-first: finish one before opening the next)")
     for i, row in enumerate(queue, 1):
         print(f"     {i}. {row['repo']:<20} control {row['best_control']:.3f} "
-              f"on '{row['best_group']}', ceiling {row['ceiling']:+.3f}")
+              f"on '{row['best_group']}', ceiling {row['ceiling']:+.3f}"
+              f"{'   [draft gold]' if row['gold_kind'] == 'draft' else ''}")
+    if any(r["gold_kind"] == "draft" for r in queue):
+        print()
+        print("   PROVISIONAL: rows marked [draft gold] are ranked on a hand-verified")
+        print("   mini-gold, not an audited set. Rough gold biases toward PASS and cannot")
+        print("   kill anything, so treat a draft PASS as 'not yet killed', never as 'alive'")
+        print("   (the gitea 0.202 floor was a gold mismatch: 32 of 42 rows off-ask).")
     return 0
 
 
