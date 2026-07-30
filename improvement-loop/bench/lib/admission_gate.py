@@ -445,6 +445,7 @@ def measure(clone, symbol, file_hint, sense, exclude=None, slot=None, memo=None)
         return out
 
     d = b03["data"]
+    out["bar0"] = bar0_undeclared(d)
     # CLI blast reports symbol as a string; the contract's defining file comes
     # from the --file hint or a graph lookup.
     contract_file = file_hint or ""
@@ -511,6 +512,59 @@ def measure(clone, symbol, file_hint, sense, exclude=None, slot=None, memo=None)
     if memo:
         out["bar5"] = memo
     return out
+
+
+UNDECLARED_FLOOR = 0.05
+
+
+def bar0_undeclared(blast_data):
+    """BAR 0 - is the relationship UNDECLARED? Depth does not protect a
+    relationship, implicitness does.
+
+    If the source declares the edge at the definition site (`class X extends Y`,
+    `use T;`, a typed field), a text parser recovers 100% of it AT ANY DEPTH, so
+    the candidate is dead however deep or scattered it is. The share of
+    dependents reached ONLY through an interface-typed field is the part no
+    parser can recover, and it is what `retained_via_interfaces` computes.
+
+    WHY THIS IS CODE AND NOT A NOTE. This law was already written, as sub-law (b)
+    of bar 3, learned from litellm. On 2026-07-30 it did not fire: a php
+    candidate with a 7-hop chain, 1 direct user and 215 transitive dependents was
+    argued for in writing, and the adversary wrote a class parser and returned
+    216 against 215 - recall 0.991, ceiling +0.009. Prose in a sub-clause blocks
+    nothing. This is the same failure as bar 5's "an unrun bar is not a passed
+    bar" and as the printed-note version of the adversary bar.
+
+    BACKTEST (the licence to gate - it admits every banked win):
+        pebble Batch 0.094, nomad Server 0.106, dolt DoltDB 0.187,
+        consul Server 0.272          -> all 4 banked wins clear the floor
+        filament EvaluatesClosures 0.003, akaunting Relationships 0.000,
+        invoiceninja Client 0.004    -> all 3 bound-killed anchors rejected
+
+    NECESSARY, NOT SUFFICIENT, and NEVER a ranking. Within go the wins rank 7 of
+    12, 5 of 10 and 3 of 7 by this number, and pebble `File` scores 1.449 having
+    never won. It removes the arithmetically dead; it does not find winners.
+
+    CONFOUND, unbroken and recorded: every banked win is go and every rejection
+    php, so this is partly a proxy for "is go". Two of 38 go anchors measured
+    0.000 (nomad Context, consul HTTPFlags), so it does vary within a language,
+    but n=4 wins makes it a HYPOTHESIS. It predicts the go shape reappears in any
+    language with implicit satisfaction and never in php/ruby/python hierarchies
+    whatever their depth - which is how to kill it.
+    """
+    total = blast_data.get("total_affected") or 0
+    ring = blast_data.get("retained_via_interfaces_count")
+    if ring is None:
+        ring = len(blast_data.get("retained_via_interfaces") or [])
+    share = (ring / total) if total else 0.0
+    ok = share >= UNDECLARED_FLOOR
+    return {"ok": ok, "ring": ring, "total_affected": total,
+            "undeclared_share": round(share, 4), "floor": UNDECLARED_FLOOR,
+            "fails": [] if ok else [
+                f"undeclared share {share:.3f} < {UNDECLARED_FLOOR} "
+                f"({ring} of {total} dependents reached only through an "
+                "interface-typed field): the source DECLARES this relationship, so a "
+                "text parser recovers it at any depth. Depth is not grep-hostility."]}
 
 
 def bar1_contract(b2):
@@ -602,6 +656,12 @@ def _admission_verdict(out):
     """The whole gate, seam verdict plus the four bars that used to be a human
     checklist. ADMIT is the loop's own decision now (no the admission sign-off, 2026-07-29) and
     it requires every bar to have RUN - an unrun bar 5 is PENDING, never ADMIT."""
+    # BAR 0 runs FIRST and is $0: a declared relationship is parser-recoverable at
+    # any depth, so nothing downstream can rescue it. Before slot_verdict, because
+    # "runs first" has to be true in the code, not just in the comment.
+    bar0 = out.get("bar0")
+    if bar0 and not bar0.get("ok"):
+        return "REJECT", [f"bar0: {f}" for f in bar0["fails"]]
     seam, reasons = slot_verdict(out)
     blocking = []
     for name in ("bar1", "bar6", "bar7"):

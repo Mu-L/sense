@@ -46,9 +46,51 @@ that never happens again).
 | Mechanical verifier | the gate script on the real index (to build; wraps `seam_hunt.py` + `structural_surplus.py` + `resolve_oracle.py`) | |
 | Human | none - reads `repos.md` + the `loop2/slate` ledger entry after the fact | the admission sign-off retired 2026-07-29 |
 
+## Bar 0 - IS THE RELATIONSHIP UNDECLARED? Run this before anything else
+
+**The law: depth does not protect a relationship, IMPLICITNESS does.** Sense's edge is over
+relationships the source does not spell out. If the source declares the edge at the definition site,
+a text parser recovers 100% of it AT ANY DEPTH, and the candidate is dead no matter how scattered,
+how deep, or how large the fan-out.
+
+**This law was already written down - as sub-law (b) of bar 3, learned from litellm - and on
+2026-07-30 it did not fire.** A full day went into a php candidate with a 7-hop chain, 1 direct user
+and 215 transitive dependents, on the reasoning that seven grep rounds defeat a baseline. The
+adversary wrote a php class parser in 17 tool calls and returned **216 against 215, recall 0.991**,
+ceiling +0.009. The law was correct and buried in a sub-clause, where nothing executed it. Hence a
+bar 0 with a command, not a paragraph.
+
+**The screen, one blast per candidate:**
+
+    sense blast <Anchor> --file <path> --json    # undeclared share = ring / total_affected
+    #   ring = retained_via_interfaces_count, the dependents reached ONLY through an
+    #          interface-typed field, which is the case no parser can recover
+    # FLOOR: share >= 0.05. Below it, REJECT before spending anything else on the candidate.
+
+**Backtest (the licence to gate - it must admit what we banked):**
+
+| | undeclared share |
+|---|---|
+| pebble `Batch`, nomad `Server`, dolt `DoltDB`, consul `Server` (all 4 banked wins) | 0.094 / 0.106 / 0.187 / 0.272 |
+| filament `EvaluatesClosures`, akaunting `Relationships`, invoiceninja `Client` (all bound-killed) | 0.003 / 0.000 / 0.004 |
+
+**NECESSARY, NOT SUFFICIENT, and do not turn it into a ranking.** Within go the wins rank 7 of 12,
+5 of 10 and 3 of 7 by this number; pebble `File` scores 1.449 and `Task` 0.851 and neither ever won.
+It is a floor that removes the arithmetically dead, and it is the SIXTH metric proposed in one day -
+the other five all failed as rankings. Rank with it and it will fail too.
+
+**The confound, stated because it is not fully broken:** every banked win is go and every rejected
+anchor is php, so "undeclared share" is partly a proxy for "is go". What weakens the confound: two of
+38 go anchors measured 0.000 (nomad `Context`, consul `HTTPFlags`), so the number does vary within
+the language. It is a HYPOTHESIS with n=4 wins until a vertical carries both shapes in one language.
+The prediction it makes, and the way to kill it: the go shape should reappear in any language with
+IMPLICIT satisfaction (rust traits, java/kotlin interfaces via DI) and should NOT appear in php, ruby
+or python explicit hierarchies, whatever their depth.
+
 ## The admission gate (the design piece)
 
-Per candidate, on its built index, slot-aware:
+Per candidate, on its built index, slot-aware. **Bar 0 above runs first and is $0; a candidate that
+fails it never reaches bar 1.**
 
 1. **Contract exists** - `seam_hunt.py --propose` finds a central abstraction with a heterogeneous,
    scattered, non-obvious fan-out (manifesto §7.0's repo-choice language).
@@ -68,7 +110,9 @@ Per candidate, on its built index, slot-aware:
    covers - a typed field (`group: Group`), an accessor, a DSL line, or a file-layout convention each
    one-pattern-covers gold the import graph says is scattered; (b) transitive DEPTH alone is never
    grep-hostility - statically-declared hierarchies are $0-enumerable via a throwaway ast.walk script
-   (litellm run-2); the edge must be UNDECLARED (implicit satisfaction), not merely far; (c) the
+   (litellm run-2, re-confirmed on filament 2026-07-30 at adversary recall 0.991 through SEVEN hops);
+   the edge must be UNDECLARED (implicit satisfaction), not merely far. **This sub-law is now BAR 0
+   with a command, because as prose here it did not fire and cost a day;** (c) the
    baseline's real weaknesses are truncation-fragility and salience-drop under noise - gold that
    survives a covering pattern but sits past that horizon is where the margin lives (the sentry law).
    The bar recalibrates from every vertical's losses, not from a one-time backtest.
