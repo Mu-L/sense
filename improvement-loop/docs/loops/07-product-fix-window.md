@@ -76,9 +76,17 @@ surface and channel**, and the window triages ALL buckets, not just resolution:
    cross-cutting / query-layer change takes a **no-regress bench on EVERY vertical it touches** (the
    global-change law), plus side-effect checks across repo sizes (§12(b)). RUN the bench, don't reason
    about it.
-6. **Layer rule on ship:** a scan/resolve/extract-layer fix sets the re-index flag Loop 2 owns (all slate
-   indexes rebuild before the next authoritative sweep); an `mcpio`/query-layer fix takes effect on
-   existing indexes immediately.
+6. **Layer rule on ship:** a scan/resolve/extract-layer fix sets the re-index flag Loop 2 owns (the
+   affected slate indexes rebuild before the next authoritative sweep); an `mcpio`/query-layer fix takes
+   effect on existing indexes immediately.
+
+   **Scope the rebuild to what the fix touched.** A per-language extractor change does not invalidate
+   the other languages' indexes, and proving that is cheap: the php holder-composition fix was verified
+   PHP-only by rescanning a Go, a Ruby and a Python repo and finding byte-identical edge counts. So the
+   flag means `VERTICALS="php-laravel" bash bench/drivers/rescan-all.sh`, or
+   `bash bench/lib/ensure-index.sh <repo>` for a single index - not the bare driver, which rebuilds and
+   re-embeds every repo of every vertical and costs hours to refresh indexes the change cannot reach.
+   Use `--check` first when unsure what is actually stale.
 7. **Identity check throughout:** the fix must not denature the product. Feature-complete v1, three lanes,
    no config knobs, read-only, no fifth tool; conventions ideas additionally pass the irreplaceability
    test. A gap whose only fix violates these is recorded as out-of-scope, not forced.

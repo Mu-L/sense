@@ -16,9 +16,20 @@ what makes the ordering possible at all (see below), and it is the one place thi
 ## Product duties (per Sense surface)
 
 - **status / index health.** Every probe runs against the pinned index, so this stage is the first place
-  a stale or thin index shows itself. Re-index through `bench/drivers/rescan-all.sh` (or
-  `bench/lib/ensure-index.sh`) before probing; a probe on a stale index measures a cell that does not
-  exist.
+  a stale or thin index shows itself. A probe on a stale index measures a cell that does not exist.
+
+  **Always re-index with a scope.** Bare `rescan-all.sh` rebuilds and re-embeds EVERY repo of EVERY
+  vertical, which is hours of work to refresh the one or two indexes a stage actually touches:
+
+  ```
+  bash bench/lib/ensure-index.sh <repo>                      # one repo, the usual case
+  REPOS="akaunting filament" bash bench/drivers/rescan-all.sh  # a named subset
+  VERTICALS="php-laravel" bash bench/drivers/rescan-all.sh     # one whole vertical
+  bash bench/drivers/rescan-all.sh --check                     # freshness report, rebuilds nothing
+  ```
+
+  Reach for the unscoped form only after a scan/resolve/extract-layer change sets the re-index flag,
+  where rebuilding everything IS the intent.
 - **No other surface is exercised here, by design.** The control arm has Sense forbidden - that is the
   point of the measurement. Sense-side reach is measured in [Run](03-c-run.md), never assumed here.
 
