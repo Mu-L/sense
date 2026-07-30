@@ -8,6 +8,7 @@ Or directly:
     python3 bench/lib/test_grounding.py
 """
 
+import glob
 import os
 import sys
 import tempfile
@@ -202,29 +203,29 @@ class RealTranscriptSmokeTest(unittest.TestCase):
     """
 
     def test_extracts_from_existing_transcripts(self):
-        results = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "..", "results"
-        )
-        if not os.path.isdir(results):
-            self.skipTest("bench/results/ not present")
+        # Transcripts live in the VERTICAL layout:
+        #   verticals/<key>/results/<model>/<arm>/<repo>/run-N/transcript.json
+        # This used to scan the pre-move bench/results/<tool>/<repo>/transcript.json and so
+        # never ran here; it started FAILING the moment an unrelated write created
+        # bench/results/, because the guard tested for the directory rather than for
+        # transcripts. Guard on the thing the test actually needs.
+        il_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+        transcripts = glob.glob(os.path.join(
+            il_root, "verticals", "*", "results", "*", "*", "*", "run-*", "transcript.json"))
+        if not transcripts:
+            self.skipTest("no run transcripts on disk")
 
         found_any = False
-        for tool in os.listdir(results):
-            tool_dir = os.path.join(results, tool)
-            if not os.path.isdir(tool_dir):
-                continue
-            for repo in os.listdir(tool_dir):
-                t = os.path.join(tool_dir, repo, "transcript.json")
-                if not os.path.exists(t):
-                    continue
-                answer, _ = read_transcript_texts(t)
-                cites = grounding.extract_citations(answer)
-                # Just assert the call doesn't blow up and returns a list.
-                self.assertIsInstance(cites, list)
-                if cites:
-                    found_any = True
+        for t in transcripts:
+            answer, _ = read_transcript_texts(t)
+            cites = grounding.extract_citations(answer)
+            # Just assert the call doesn't blow up and returns a list.
+            self.assertIsInstance(cites, list)
+            if cites:
+                found_any = True
 
-        self.assertTrue(found_any, "no citations extracted from any transcript")
+        self.assertTrue(found_any,
+                        f"no citations extracted from any of {len(transcripts)} transcript(s)")
 
 
 if __name__ == "__main__":

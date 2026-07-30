@@ -249,8 +249,15 @@ def evaluate_check(check, transcript_text, tool_calls, repo_path=None):
 
 # ── Response richness ────────────────────────────────────────────────
 
+# The extension ALLOWLIST is deliberate: it is what stops prose like "version 1.2:3"
+# from scoring as a citation. It is also a silent per-language blind spot - `php` was
+# missing, so on php-laravel an answer with 84 `*.php:<line>` citations extracted ZERO,
+# citation_grounding read all-zeros and "no hallucinated cites" passed vacuously
+# (LEDGER stopper/scorer-php-citations-invisible). A new stack must assert its own
+# extension survives this regex BEFORE its first cell.
 _SOURCE_FILE_RE = re.compile(
-    r'([\w/\-_.]+\.(?:py|go|rs|java|kt|rb|ts|tsx|js|jsx|c|h|cpp|hpp|swift|scala|cs|vue|svelte|ex|exs))'
+    r'([\w/\-_.]+\.(?:py|go|rs|java|kt|rb|php|ts|tsx|js|jsx|c|h|cpp|hpp|swift|scala|cs'
+    r'|vue|svelte|ex|exs))'
     r'\s*[:>]\s*(\d+|[\w.#:]+)'
 )
 
