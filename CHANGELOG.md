@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.13.5] - 2026-07-30
+
+### Enhancements
+
+- index holder relationships, so php has a composition graph (#240)
 ## [1.13.4] - 2026-07-30
 
 ### Enhancements
