@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.13.3] - 2026-07-30
+
+### Enhancements
+
+- emit the index caveat for PHP files (#237)
 ## [1.13.2] - 2026-07-22
 
 ### Bug Fixes
