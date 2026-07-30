@@ -251,7 +251,9 @@ def check_repo(stack, repo, spec):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stack", default="ruby-rails")
+    # No default stack, by policy: defaulting to a past campaign silently audits the
+    # wrong vertical and prints green (the drivers were fixed for this; the lib was missed).
+    ap.add_argument("--stack", required=True)
     ap.add_argument("--repo", default="", help="comma-separated repo filter")
     ap.add_argument("--json", default="")
     args = ap.parse_args()

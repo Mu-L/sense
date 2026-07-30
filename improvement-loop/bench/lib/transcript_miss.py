@@ -255,7 +255,9 @@ def load_gold(stack, repo):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stack", default="ruby-rails")
+    # No default stack, by policy (see resolve_oracle.py): a defaulted vertical audits
+    # the wrong campaign and reports clean.
+    ap.add_argument("--stack", required=True)
     ap.add_argument("--model", default=None,
                     help="model dir under verticals/<stack>/results/, or 'all'")
     ap.add_argument("--repo", default="", help="comma-separated repo filter")

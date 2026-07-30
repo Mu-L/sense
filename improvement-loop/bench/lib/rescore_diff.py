@@ -48,12 +48,27 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file_
 _OLD_MTIME = None
 
 
+def _gold_repo_path():
+    """gold.py's path RELATIVE TO THE GIT ROOT, which is not REPO_ROOT.
+
+    `git show <ref>:<path>` and `git log -- <path>` both resolve <path> from the repository
+    root, ignoring -C. REPO_ROOT here is improvement-loop/, a subdirectory of the repo, so
+    the hardcoded "bench/lib/gold.py" resolved to the PRE-MOVE tree's copy - a different
+    file (verified: the two differ). Every "old" version this tool loaded came from the
+    wrong tree, so its diff measured a delta between two trees instead of across history.
+    """
+    r = subprocess.run(["git", "-C", REPO_ROOT, "rev-parse", "--show-prefix"],
+                       capture_output=True, text=True)
+    prefix = r.stdout.strip() if r.returncode == 0 else ""
+    return f"{prefix}bench/lib/gold.py"
+
+
 def _old_gold_mtime():
     """Unix time of gold.py's last commit: the cutoff below which an on-disk number
     was produced by an EARLIER scorer and a control mismatch is expected, not a bug."""
     global _OLD_MTIME
     if _OLD_MTIME is None:
-        r = subprocess.run(["git", "-C", REPO_ROOT, "log", "-1", "--format=%ct", "--", "bench/lib/gold.py"],
+        r = subprocess.run(["git", "-C", REPO_ROOT, "log", "-1", "--format=%ct", "--", _gold_repo_path()],
                            capture_output=True, text=True)
         _OLD_MTIME = float(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip() else 0.0
     return _OLD_MTIME
@@ -70,7 +85,7 @@ def load_old_gold(ref):
     """The previous gold.py, from a git ref or a path."""
     if os.path.isfile(ref):
         return _load("gold_old", ref)
-    blob = subprocess.run(["git", "-C", REPO_ROOT, "show", f"{ref}:bench/lib/gold.py"],
+    blob = subprocess.run(["git", "-C", REPO_ROOT, "show", f"{ref}:{_gold_repo_path()}"],
                           capture_output=True, text=True)
     if blob.returncode != 0:
         sys.exit(f"rescore_diff: cannot read gold.py at ref {ref!r}: {blob.stderr.strip()}")
@@ -160,7 +175,11 @@ def main(argv=None):
 
     old = load_old_gold(a.old)
     new = _load("gold_new", os.path.join(REPO_ROOT, "bench", "lib", "gold.py"))
-    verticals = [a.vertical] if a.vertical else ["ruby-rails", "python-django", "go"]
+    # No implicit fan-out over past campaigns: --vertical is required, so a re-score
+    # blast radius is always stated against a named vertical.
+    if not a.vertical:
+        raise SystemExit("rescore_diff: --vertical is required (no default fan-out)")
+    verticals = [a.vertical]
 
     all_runs, all_cells = [], {}
     for v in verticals:

@@ -4,8 +4,12 @@ literal matcher. No scored.json is written - read-only. Prints every changed
 (repo, arm, run, target) with the exact compacted answer-string and the full
 real path it grounds to, so each new credit is individually auditable.
 
-Usage: python3 lib/dryrun_path_oracle.py [model_dir] [repo_glob]
-  model_dir default: claude-opus-4-8
+Usage: VERTICAL=<key> python3 lib/dryrun_path_oracle.py [model_dir] [repo_glob]
+  VERTICAL is REQUIRED - no default. This file used to hardcode ruby-rails AND the
+  pre-move bench/verticals/ layout, so in this tree it crashed on import-time paths and,
+  had it run, would have audited a different vertical than the caller asked for (the
+  "audited the wrong vertical, printed green" shape the drivers were fixed for).
+  model_dir default: the vertical's headline arm from its arms.txt.
 """
 import glob
 import os
@@ -18,15 +22,27 @@ import yaml  # noqa: E402
 import gold as G  # noqa: E402
 from judge import read_answer_text  # noqa: E402
 
-SENSE_REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))  # oss/sense
-RESULTS = os.path.join(SENSE_REPO, "bench", "verticals", "ruby-rails", "results")
-SCEN = os.path.join(SENSE_REPO, "bench", "verticals", "ruby-rails", "scenarios")
+IL_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))  # improvement-loop
+SENSE_REPO = os.path.dirname(IL_ROOT)                                          # oss/sense
 INDEX = os.path.join(os.path.dirname(SENSE_REPO), "sense-benchmark", "sense")  # per-repo .sense
 
 
-def load_gold_by_repo():
+def vertical_paths():
+    """(results, scenarios) for $VERTICAL. Hard-fails without it, by policy: a default
+    vertical here is a tool that silently audits a different campaign than the caller."""
+    vertical = os.environ.get("VERTICAL")
+    if not vertical:
+        raise SystemExit("dryrun_path_oracle: VERTICAL is required "
+                         "(e.g. VERTICAL=php-laravel python3 lib/dryrun_path_oracle.py)")
+    base = os.path.join(IL_ROOT, "verticals", vertical)
+    if not os.path.isdir(base):
+        raise SystemExit(f"dryrun_path_oracle: no vertical at {base}")
+    return os.path.join(base, "results"), os.path.join(base, "scenarios")
+
+
+def load_gold_by_repo(scen_dir):
     out = {}
-    for f in glob.glob(os.path.join(SCEN, "*.yaml")):
+    for f in glob.glob(os.path.join(scen_dir, "*.yaml")):
         if ".rubric" in f:
             continue
         try:
@@ -50,9 +66,10 @@ def repo_files(repo):
 
 
 def main():
+    results_dir, scen_dir = vertical_paths()
     model = sys.argv[1] if len(sys.argv) > 1 else __import__("arms").headline()
     repo_glob = sys.argv[2] if len(sys.argv) > 2 else "*"
-    gold_by_repo = load_gold_by_repo()
+    gold_by_repo = load_gold_by_repo(scen_dir)
     files_cache = {}
 
     totals = {"runs": 0, "men_old": 0, "men_new": 0, "cit_old": 0, "cit_new": 0,
@@ -62,7 +79,7 @@ def main():
     arm_cr = {"baseline": {"old": [], "new": []}, "sense": {"old": [], "new": []}}
 
     for arm in ("baseline", "sense"):
-        for repo_dir in sorted(glob.glob(os.path.join(RESULTS, model, arm, repo_glob))):
+        for repo_dir in sorted(glob.glob(os.path.join(results_dir, model, arm, repo_glob))):
             repo = os.path.basename(repo_dir)
             gold = gold_by_repo.get(repo)
             if not gold:

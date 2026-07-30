@@ -414,7 +414,8 @@ def report_scenario(repo, res):
 def main():
     ap = argparse.ArgumentParser(description="Structural-surplus preflight (Sense-first hunt).")
     ap.add_argument("repo", nargs="?", help="repo slug (clone under $SENSE_CLONES)")
-    ap.add_argument("--stack", default="python-django")
+    # No default stack, by policy (see resolve_oracle.py).
+    ap.add_argument("--stack", required=True)
     ap.add_argument("--symbol")
     ap.add_argument("--file", dest="file_arg")
     ap.add_argument("--scenario", action="store_true")
