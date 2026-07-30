@@ -611,11 +611,13 @@ def admission_verdict(out):
     if adversary_probe_required(out):
         adv = out.get("adversary")
         if not adv:
+            cover = (out.get("bar3") or {}).get("name_family_union_cover")
+            prior = (f" Prior: name-family union covers {cover} of the dependent set, so "
+                     "start there.") if cover and cover >= COVER_THRESHOLD else ""
             return "PENDING-ADVERSARY-PROBE", [
-                f"bar 3 name-family union covers {out['bar3']['name_family_union_cover']} "
-                "of the dependent set, so one composed pattern may transcribe this seam. "
-                "Run the adversary probe (grep/read only, sense forbidden, headline task) "
-                "and pass its verdict with --adversary before authoring gold."]
+                "every candidate is probed before admission: metrics went 0 for 2 against "
+                "the probe's 2 for 2 on the anchors measured. Run it (grep/read only, sense "
+                "forbidden, headline task only) and pass its verdict with --adversary." + prior]
         if not adv.get("ok"):
             return "REJECT", [f"adversary probe assembled the answer: "
                               f"{adv.get('reason', 'no reason recorded')}"]
@@ -628,12 +630,28 @@ def admission_verdict(out):
 
 
 def adversary_probe_required(out):
-    """True when one composed name family covers the dependent set, so a grep-only
-    adversary plausibly reconstructs the seam. Reads the same number bar 3 already
-    computes; this function exists so the requirement is a testable predicate rather
-    than a sentence inside a notes list."""
-    b3 = out.get("bar3") or {}
-    return b3.get("name_family_union_cover", 0) >= COVER_THRESHOLD
+    """ALWAYS true: every candidate gets the probe before admission.
+
+    This was conditional on the name-family union cover, and the condition was dropped on
+    measurement. Two anchors died at control 1.000 the same day. On both, the metrics were
+    wrong and the probe was right:
+
+      akaunting  precision bar admitted it;  a proposed coverage bar flagged it;  probe: KILL
+      filament   precision bar admitted it;  the same coverage bar predicted SURVIVAL; probe: KILL
+
+    Metrics 0 for 2, probe 2 for 2. filament is the reason a threshold cannot replace this:
+    no single pattern covered its dependents (token cover 0.23), and the adversary reached
+    them anyway by grepping the token, then grepping `extends <base>`, then writing a class
+    hierarchy scanner. Anatomy law #4 already says statically-declared hierarchies are
+    $0-enumerable at any depth; bar 3 deliberately does not score hops, so no number it
+    computes can see that shape.
+
+    The bar-3 measurements are not discarded - they stay in the output as a PRIOR that tells
+    the probe where to look. They are simply no longer the gate.
+
+    Kept as a function rather than inlined so the requirement has one name, one docstring,
+    and one place to change if a future calibration earns the right to narrow it again."""
+    return True
 
 
 def slot_verdict(out):

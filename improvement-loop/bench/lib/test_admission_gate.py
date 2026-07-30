@@ -38,18 +38,22 @@ def _passing_out(union_cover, adversary=None, memorization=True):
 
 
 class AdversaryProbeRequirementTest(unittest.TestCase):
-    def test_predicate_fires_at_the_cover_threshold(self):
-        self.assertTrue(adversary_probe_required(_passing_out(COVER_THRESHOLD)))
-        self.assertTrue(adversary_probe_required(_passing_out(0.912)))  # akaunting's number
-        self.assertFalse(adversary_probe_required(_passing_out(COVER_THRESHOLD - 0.01)))
-        self.assertFalse(adversary_probe_required({}))
+    def test_the_probe_is_required_unconditionally(self):
+        """No threshold gates it. filament is why: token cover 0.23, no covering pattern,
+        and its adversary still reached every dependent via a two-hop declared chain. A
+        number that cannot see that shape cannot be trusted to decide when to look."""
+        self.assertTrue(adversary_probe_required(_passing_out(0.912)))  # akaunting
+        self.assertTrue(adversary_probe_required(_passing_out(0.23)))   # filament
+        self.assertTrue(adversary_probe_required(_passing_out(0.0)))
+        self.assertTrue(adversary_probe_required({}))
 
-    def test_name_family_cover_blocks_admission(self):
-        """akaunting's shape: every bar passes, one composed family covers 0.912, and the
-        gate must NOT admit until the probe has run."""
+    def test_an_otherwise_clean_anchor_is_still_pending(self):
+        """akaunting's shape: every other bar passes and the gate must still not admit
+        until the probe has run. This is the case that was admitted for real, authored,
+        and then killed at control 1.000."""
         verdict, why = admission_verdict(_passing_out(0.912))
         self.assertEqual(verdict, "PENDING-ADVERSARY-PROBE")
-        self.assertIn("adversary probe", " ".join(why).lower())
+        self.assertIn("probed before admission", " ".join(why))
 
     def test_a_probe_that_assembled_the_answer_rejects(self):
         verdict, why = admission_verdict(
@@ -61,12 +65,23 @@ class AdversaryProbeRequirementTest(unittest.TestCase):
         verdict, _ = admission_verdict(_passing_out(0.912, adversary={"ok": True}))
         self.assertEqual(verdict, "ADMIT")
 
-    def test_anchors_below_the_threshold_are_unaffected(self):
-        """filament's shape: no composed cover, so the requirement never fires and the
-        verdict is whatever the other bars say. This is the no-regress case."""
-        self.assertEqual(admission_verdict(_passing_out(0.23))[0], "ADMIT")
+    def test_a_low_cover_anchor_is_also_pending(self):
+        """filament's shape. Under the old threshold this admitted; it then died at control
+        1.000, which is the measurement that removed the threshold."""
+        verdict, why = admission_verdict(_passing_out(0.23))
+        self.assertEqual(verdict, "PENDING-ADVERSARY-PROBE")
+        self.assertNotIn("Prior:", " ".join(why), "no cover prior should be claimed at 0.23")
+
+    def test_a_high_cover_anchor_carries_the_prior(self):
+        _, why = admission_verdict(_passing_out(0.912))
+        self.assertIn("Prior:", " ".join(why))
+
+    def test_the_probe_gates_before_the_memorization_bar(self):
+        """Both are pending-shaped; the probe is $0 and comes first, so it is the one
+        reported when neither has run."""
         self.assertEqual(
-            admission_verdict(_passing_out(0.23, memorization=False))[0], "PENDING-BAR-5")
+            admission_verdict(_passing_out(0.23, memorization=False))[0],
+            "PENDING-ADVERSARY-PROBE")
 
     def test_a_blocking_bar_still_wins(self):
         """The new requirement must not mask a real rejection."""

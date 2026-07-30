@@ -42,7 +42,7 @@ that never happens again).
 | Actor | Who/what | Notes |
 |---|---|---|
 | Generator | session agent: pool research, `provision-repos.sh`, `ensure-index.sh`, gate runs, `repos.md` drafting | |
-| Evaluator | the admission-gate verdict per candidate - all seven bars measured, incl. memorization (`memorization_probe.py`) and channel/banner (bar 7) | numbers only; there is no prose half left |
+| Evaluator | the admission-gate verdict per candidate - every bar measured, incl. memorization (`memorization_probe.py`), channel/banner, and the unconditional adversary probe | numbers PLUS one agent verdict: the probe is the one bar that is not a number, and it is the one that has never been wrong |
 | Mechanical verifier | the gate script on the real index (to build; wraps `seam_hunt.py` + `structural_surplus.py` + `resolve_oracle.py`) | |
 | Human | none - reads `repos.md` + the `loop2/slate` ledger entry after the fact | the admission sign-off retired 2026-07-29 |
 
@@ -81,7 +81,25 @@ Per candidate, on its built index, slot-aware:
    anchor. A marker interface with no members is INAPPLICABLE, not a pass by default.
 6. **Slot + pillars fit** - §7.0 composition (`1 framework + 1 big + 2 medium`, or the `2 big + 2 medium`
    variant, never both), two independent win pillars, a same-type backup per slot.
-7. **Channel + banner** - bar 7 scans the repo's own docs for a community-channel link and for an
+7. **ADVERSARY PROBE - unconditional, and the only bar that has never been wrong.** One frontier
+   subagent in the clone, grep and read only, Sense forbidden, headline task only. It either assembles
+   the answer or it does not, and admission waits on that verdict (`--adversary`). No threshold gates
+   it, because measurement removed the threshold: on 2026-07-30 two anchors were probed and both died
+   at control 1.000, and on both the numbers were wrong. akaunting's precision bar admitted it. A
+   proposed coverage bar flagged akaunting and predicted filament would SURVIVE. The probe killed both.
+   Metrics 0 for 2, probe 2 for 2.
+
+   filament is why no number can replace it: token cover 0.23, no usable covering pattern, and its
+   adversary still reached every dependent by grepping the token, then grepping `extends <base>`, then
+   writing a class-hierarchy scanner. That is anatomy law #4 (statically-declared hierarchies are
+   $0-enumerable at any depth) and bar 3 deliberately does not score hops, so nothing it computes can
+   see the shape.
+
+   The other bars are not discarded - they are the PRIOR that tells the probe where to look. They are
+   simply no longer the gate. Cost: one $0 subagent per candidate, batched across the slate per the
+   run-first ruling's rule 4.
+
+8. **Channel + banner** - bar 7 scans the repo's own docs for a community-channel link and for an
    anti-LLM banner. A banner never rejects: it flags a strip from BOTH arms (the lobsters rule).
    `provision-repos.sh` carries the same scan at clone time.
 
