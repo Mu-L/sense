@@ -29,8 +29,8 @@ self-proposing against the frozen anchor). Documented forward-horizon; no one-pa
 
 Session pickup is the vertical's `STATUS.md` (Readability Phase 2; re-render via
 [`render-status.sh`](../../bench/lib/render-status.sh) `<key> <doc-dir>`), with `LEDGER.md` opened on demand. The go
-campaign's `next-steps.md` is FROZEN history in `../ZZ-go-vertical-legacy/` (go-vertical reset,
-2026-07-17) and is never updated again. The operator's manual (how to start, stop, resume; what a
+campaign's `next-steps.md` is frozen history and lives outside this folder; it is never updated again,
+and nothing here reads it. The operator's manual (how to start, stop, resume; what a
 human reviews and when; where spend happens) is [`how-to-run.md`](../how-to-run.md).
 Empirical laws distilled from past campaigns live in [`campaign-laws.md`](campaign-laws.md); Loops 2/3 read it at slate composition and scenario authoring.
 record as history, re-runnable by ruling).

@@ -113,8 +113,8 @@ parenthetical or comma expansion on that same line.
 - **Render:** `bash bench/lib/render-status.sh <vertical-key>` (the doc dir is `docs/<vertical-key>/`).
   Regenerates `STATUS.md` from disk: `report-matrix.sh` for the matrix,
   `repos.md` for the slate, and - only if the vertical's doc dir has one - a per-vertical
-  `next-steps.md` for the unchecked steps (the go campaign's copy is frozen in
-  `ZZ-go-vertical-legacy/`; fresh verticals run on STATUS + LEDGER alone). Degrades gracefully when a
+  `next-steps.md` for the unchecked steps (the go campaign's frozen copy lives outside this
+  folder; fresh verticals run on STATUS + LEDGER alone). Degrades gracefully when a
   source is missing.
 - **Measure the fleet:** `python3 spawn_cost.py [--since YYYY-MM-DD] [--until YYYY-MM-DD]` (defaults
   to the last 7 days). Reads the session transcripts and prints, per day, `Agent` spawns by

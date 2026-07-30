@@ -3,9 +3,8 @@
 > **What this is.** The distillation ordered by the go-vertical reset (LEDGER
 > `ruling/go-vertical-reset`, 2026-07-17): the laws that survive the campaign because they are
 > facts about scorers, language shape, and gold construction - NOT positions, verdicts, or
-> product state. Everything else from that campaign is history in
-> `../ZZ-go-vertical-legacy/` and `verticals/go-legacy/`, and per the owner's explicit
-> amendment carries **no re-run prohibition**. One law per bullet: statement, then legacy
+> product state. Everything else from that campaign is history kept outside this folder, and per the
+> owner's explicit amendment carries **no re-run prohibition**. One law per bullet: statement, then legacy
 > provenance. The fresh vertical's Loops 2/3 read this file at slate composition and
 > scenario authoring; it is a checklist, not a narrative.
 
