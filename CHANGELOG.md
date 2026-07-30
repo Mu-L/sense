@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.13.4] - 2026-07-30
+
+### Enhancements
+
+- name the importers no call edge reaches (#238)
 ## [1.13.3] - 2026-07-30
 
 ### Enhancements
