@@ -107,13 +107,18 @@ KEY_CONTRACT_FROM = "2026-07-16"
 
 
 def parse_entries(lines):
-    """Return (entries, findings): entries as (key, heading_lineno, body_lines)."""
+    """Return (entries, findings): entries as (key, heading_lineno, body_lines, date).
+
+    The date is carried because rule 10 requires a stopper entry dated TODAY, and it was
+    previously discarded here - so the check accepted any stopper entry ever written and a
+    two-week-old one satisfied a fresh instrument change.
+    """
     entries, findings, current = [], [], None
     for n, line in enumerate(lines, 1):
         if line.startswith("## "):
             m = HEADING.match(line)
             if m:
-                current = (m.group(2), n, [])
+                current = (m.group(2), n, [], m.group(1))
                 entries.append(current)
             else:
                 findings.append(f"line {n}: malformed entry heading (want '## YYYY-MM-DD | key | title'): {line.strip()}")
@@ -125,7 +130,7 @@ def parse_entries(lines):
 
 def check_fields(entries):
     findings = []
-    for key, n, body in entries:
+    for key, n, body, _ in entries:
         text = "\n".join(body)
         for field in FIELDS:
             if f"**{field}:**" not in text:
@@ -135,7 +140,7 @@ def check_fields(entries):
 
 def check_duplicate_keys(entries):
     seen, findings = {}, []
-    for key, n, _ in entries:
+    for key, n, _, _ in entries:
         if key in seen:
             findings.append(f"entry '{key}' (line {n}): duplicate key (first at line {seen[key]})")
         else:
@@ -181,7 +186,7 @@ def field_text(body, field):
 
 def check_lesson_exit(entries):
     findings = []
-    for key, n, body in entries:
+    for key, n, body, _ in entries:
         lesson = field_text(body, "Lesson")
         if not lesson or re.match(r"^none\b", lesson, re.IGNORECASE):
             continue
@@ -195,7 +200,7 @@ def check_lesson_exit(entries):
 
 def check_provenance(entries):
     findings = []
-    for key, n, body in entries:
+    for key, n, body, _ in entries:
         if not VERDICT_KEY.match(key):
             continue
         text = "\n".join(body)
@@ -247,7 +252,7 @@ def _probe_provenance(key, n, text):
 def check_cost_currency(entries):
     """Schema v3: a Cost field must carry the fleet as a spawn count, not dollars alone."""
     findings = []
-    for key, n, body in entries:
+    for key, n, body, _ in entries:
         cost = field_text(body, "Cost")
         if not cost or FLEET.search(cost):
             continue
@@ -278,7 +283,7 @@ def check_key_contract(lines):
 
 def check_codenames(entries):
     findings = []
-    for key, n, body in entries:
+    for key, n, body, _ in entries:
         seen = set()
         for offset, line in enumerate(body):
             for m in CODENAME.finditer(line):
@@ -327,6 +332,13 @@ def _unverifiable_instruments(repo_root):
     return sorted(f for f in on_disk if f not in tracked)
 
 
+def _today():
+    """Injectable for tests via LEDGER_CHECK_TODAY; otherwise the real date."""
+    import datetime
+    import os as _os
+    return _os.environ.get("LEDGER_CHECK_TODAY") or datetime.date.today().isoformat()
+
+
 def check_stopper(entries, repo_root):
     """Rule 10: a measurement-instrument change needs a stopper entry carrying its blast
     radius. The stop is affordable BECAUSE the re-score is $0 - see rescore_diff.py."""
@@ -343,12 +355,19 @@ def check_stopper(entries, repo_root):
     touched = _touched_instruments(repo_root)
     if not touched:
         return findings
-    todays = [(k, n, b) for k, n, b in entries if k.startswith("stopper/")]
+    # DATED TODAY, as rule 10 says. The date was previously not read at all, so ANY
+    # stopper entry in the file's history satisfied a fresh instrument change - including
+    # one written weeks earlier for an unrelated defect. Found by triggering it: an
+    # admission-gate change passed the check on the strength of a stopper logged hours
+    # earlier for the scorer.
+    today = _today()
+    todays = [(k, n, b) for k, n, b, d in entries if k.startswith("stopper/") and d == today]
     if not todays:
         findings.append(
             f"rule 10 (stopper law): {', '.join(touched)} changed, but no `stopper/<slug>` "
-            f"entry exists. A measurement instrument cannot change quietly: STOP, re-score "
-            f"with bench/lib/rescore_diff.py, log the blast radius, let the human rule.")
+            f"entry dated {today} exists. A measurement instrument cannot change quietly: "
+            f"STOP, re-score with bench/lib/rescore_diff.py, log the blast radius, let the "
+            f"human rule.")
         return findings
     if not any(BLAST_RADIUS.search("\n".join(b)) for _, _, b in todays):
         findings.append("rule 10 (stopper law): a stopper entry exists but carries no re-score "

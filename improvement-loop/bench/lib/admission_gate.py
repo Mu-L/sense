@@ -603,12 +603,37 @@ def admission_verdict(out):
     mem = out.get("bar5")
     if blocking:
         return "REJECT", blocking
+    # The adversary probe follows bar 5's law: an unrun bar is not a passed bar. The gate
+    # already printed "ADVERSARY PROBE is REQUIRED" as a NOTE when one pattern family
+    # covers the dependent set, and a note blocks nothing - akaunting was admitted
+    # carrying that exact warning, and its control arm then scored 1.000 on every gold
+    # group, killing the cell for $0 that the warning had already predicted.
+    if adversary_probe_required(out):
+        adv = out.get("adversary")
+        if not adv:
+            return "PENDING-ADVERSARY-PROBE", [
+                f"bar 3 name-family union covers {out['bar3']['name_family_union_cover']} "
+                "of the dependent set, so one composed pattern may transcribe this seam. "
+                "Run the adversary probe (grep/read only, sense forbidden, headline task) "
+                "and pass its verdict with --adversary before authoring gold."]
+        if not adv.get("ok"):
+            return "REJECT", [f"adversary probe assembled the answer: "
+                              f"{adv.get('reason', 'no reason recorded')}"]
     if not mem:
         return "PENDING-BAR-5", ["bars 1/2/3/4/6/7 pass; the memorization probe "
                                  "has not run (memorization_probe.py --json)"]
     if not mem.get("ok"):
         return "REJECT", [f"bar5: {mem.get('reason', 'memorized')}"]
     return "ADMIT", [f"seam {seam}; bars 1/5/6/7 pass"]
+
+
+def adversary_probe_required(out):
+    """True when one composed name family covers the dependent set, so a grep-only
+    adversary plausibly reconstructs the seam. Reads the same number bar 3 already
+    computes; this function exists so the requirement is a testable predicate rather
+    than a sentence inside a notes list."""
+    b3 = out.get("bar3") or {}
+    return b3.get("name_family_union_cover", 0) >= COVER_THRESHOLD
 
 
 def slot_verdict(out):
@@ -757,6 +782,9 @@ def main():
                     help="the §7.0 slot this candidate is claimed for (bar 6)")
     ap.add_argument("--memorization", default=None,
                     help="path to a memorization_probe.py verdict json (bar 5)")
+    ap.add_argument("--adversary", default=None,
+                    help="path to an adversary-probe verdict json, required when the "
+                         "name-family union covers the dependent set (see bar 3)")
     ap.add_argument("--exclude", default=None,
                     help="regex; dependent files whose path matches are dropped "
                          "from the win-signature metrics (gold-law scout: strip "
@@ -765,6 +793,9 @@ def main():
 
     exclude = re.compile(args.exclude) if args.exclude else None
     memo = None
+    if args.adversary:
+        with open(args.adversary) as f:
+            out["adversary"] = json.load(f)
     if args.memorization:
         with open(args.memorization) as f:
             memo = json.load(f)
