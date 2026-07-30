@@ -64,6 +64,23 @@ class ProbeProvenanceTest(unittest.TestCase):
         self.assertEqual(len(findings), 1)
         self.assertIn("missing wall", findings[0])
 
+    def test_a_wrapped_provenance_is_read_whole(self):
+        """Regression: the first live probe entry wrapped its provenance over three lines and
+        the first-line-only scan called its `wall 480s` missing. A complete probe provenance
+        does not fit on one line, so the field is what gets scanned."""
+        # Shaped exactly like main(): read_text().splitlines(), no trailing newlines.
+        # The date is interpolated, not typed on a line carrying `#`: a heading literal
+        # reads as a dated code comment to the placement linter.
+        day = "2026-07-30"
+        lines = (f"## {day} | loop3/akaunting/probe | kill\n"
+                 "- **What:** x\n"
+                 "- **Provenance:** sense build d0ffc2a2e062 (stamped at scoring),\n"
+                 "  repo akaunting@72fdf8e, scenario akaunting.draft.yaml @sha256:6480936a,\n"
+                 f"  wall 480s (derived), arm claude-opus-5 baseline x2 ({day})").splitlines()
+        entries, findings = parse_entries(lines)
+        self.assertEqual(findings, [])
+        self.assertEqual(check_provenance(entries), [])
+
     def test_complete_probe_provenance_passes(self):
         findings = check_provenance(_entry(
             "loop3/snipe-it/probe",

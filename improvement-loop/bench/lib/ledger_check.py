@@ -219,8 +219,22 @@ def _probe_provenance(key, n, text):
     """
     if not key.endswith("/probe"):
         return []
-    line = next((ln for ln in text.splitlines() if "**Provenance:**" in ln), "")
-    missing = [want for want in ("build", "wall") if want not in line.lower()]
+    # Read the WHOLE Provenance field, not just its first line. A complete probe
+    # provenance (build + repo pin + scenario version + wall + arm) does not fit on one
+    # line and wraps - the first live probe entry wrapped, and a first-line-only scan
+    # reported its `wall 480s` as missing.
+    lines, field = text.splitlines(), []
+    for i, ln in enumerate(lines):
+        if "**Provenance:**" not in ln:
+            continue
+        field.append(ln)
+        for cont in lines[i + 1:]:
+            if cont.strip().startswith("- **") or not cont.strip():
+                break
+            field.append(cont)
+        break
+    blob = " ".join(field).lower()
+    missing = [want for want in ("build", "wall") if want not in blob]
     if not missing:
         return []
     return [
