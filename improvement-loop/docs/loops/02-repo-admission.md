@@ -116,6 +116,38 @@ the small slot is removed and replaced by a second medium, because a small repo 
 its corpus is readable inside the wall). So a BALLAST-ONLY verdict no longer admits anywhere: it fails
 the slot and sends the hunt back to the contract or the pool per the try-harder law.
 
+## A bar may gate only while it admits the wins we already banked
+
+**`bench/lib/gate_backtest.py` is the gate's licence to gate, and `admission_gate.py` reads it at
+verdict time.** While the backtest fails, every REJECT is returned as `ADVISORY-REJECT` with the reason
+attached: the bars still report, they stop blocking. A missing attestation counts as failing, because an
+unverified gate is not a verified one.
+
+Measured 2026-07-30, the first time anyone ran it: the gate rejected **4 of 4 banked go wins** - pebble
+(+1.000), dolt (+0.708), nomad (+0.567), consul (+0.538). Three of them it had itself labelled "win
+signature" one bar earlier, then rejected on a later bar. dolt it killed outright as BALLAST-ONLY
+because the token `DoltDB` covers 92.5% of its dependents: true, and irrelevant, since dolt's baseline
+still scored 0.25/0.33 - the question was never "where is the token", it was "what retains this object".
+
+**Why this is machinery and not a paragraph.** The rule "backtest a filter against known positives"
+was already implicit in bar 2's own calibration, which was false-negative-checked against the banked
+wins ("> 0.50 kills 10 cells and 0 wins"). That standard was never applied to the other six bars, and
+the gate then ran for four verticals - python, php, go, php again - without ever producing a win.
+The evidence needed to falsify it sat frozen on disk the whole time and cost one command to read.
+
+The general form, which is the expensive lesson of 2026-07-30 and the reason this section exists:
+
+> **On a stalled vertical, the FIRST move is a differential comparison against the banked wins, not a
+> deeper analysis of the failure.** A day went into improving gates, probes and metrics on php-laravel
+> while four winning go cells sat unexamined. The moment they were compared, the answer took fifteen
+> minutes: the wins share a question shape (transitive retention through interface-typed fields) that
+> rests on a composition density php does not have - 3.3-5.5% of edges in go, 0.06-0.31% in php.
+> Two metrics were proposed and both were wrong before that comparison was run; neither would have
+> survived it.
+
+Same rule, stated for anything that filters: **if it has never produced a positive, backtest it against
+known positives before using it again.**
+
 ## Stop conditions
 
 - **Success:** 4 admitted per §7.0 + backup per slot, SHAs pinned in `verticals/<key>/PINNED_COMMITS.json`, both arms

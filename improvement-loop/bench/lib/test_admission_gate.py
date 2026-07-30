@@ -11,6 +11,7 @@ import json
 import os
 import sys
 import unittest
+import unittest.mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -56,8 +57,12 @@ class AdversaryProbeRequirementTest(unittest.TestCase):
         self.assertIn("probed before admission", " ".join(why))
 
     def test_a_probe_that_assembled_the_answer_rejects(self):
-        verdict, why = admission_verdict(
-            _passing_out(0.912, adversary={"ok": False, "reason": "grep -rn 'use Jobs' found 31 of 34"}))
+        # Attested, because this asserts the BAR's logic. Unattested, every REJECT is
+        # correctly downgraded to advisory - that is the licence's job, tested separately.
+        with unittest.mock.patch("admission_gate.backtest_attestation", return_value=True):
+            verdict, why = admission_verdict(
+                _passing_out(0.912, adversary={"ok": False,
+                                               "reason": "grep -rn 'use Jobs' found 31 of 34"}))
         self.assertEqual(verdict, "REJECT")
         self.assertIn("31 of 34", " ".join(why))
 
@@ -87,4 +92,62 @@ class AdversaryProbeRequirementTest(unittest.TestCase):
         """The new requirement must not mask a real rejection."""
         out = _passing_out(0.912)
         out["bar1"]["fails"] = ["contract too thin"]
-        self.assertEqual(admission_verdict(out)[0], "REJECT")
+        with unittest.mock.patch("admission_gate.backtest_attestation", return_value=True):
+            self.assertEqual(admission_verdict(out)[0], "REJECT")
+
+
+class BacktestLicenceTest(unittest.TestCase):
+    """A gate may block only while it admits the wins we already banked.
+
+    This is the structural answer to a failure that repeated across four verticals: the gate
+    rejected and admitted repos for a year and never produced a win, and nobody backtested it.
+    When someone finally did, on 2026-07-30, it rejected 4 of 4 banked go wins - pebble
+    (+1.000), dolt (+0.708), nomad (+0.567), consul (+0.538) - three of which it had itself
+    labelled "win signature" one bar earlier.
+
+    The rule lives in code rather than in a doc because a doc is what failed. A decision-log
+    entry, a memory, and a paragraph in a one-pager all existed for other rules today and none
+    of them fired; the checks that fired were the ones a machine ran.
+    """
+
+    def _no_attestation(self):
+        import admission_gate
+        return unittest.mock.patch.object(admission_gate, "backtest_attestation",
+                                          return_value=False)
+
+    def _attested(self):
+        import admission_gate
+        return unittest.mock.patch.object(admission_gate, "backtest_attestation",
+                                          return_value=True)
+
+    def test_a_reject_is_advisory_while_the_backtest_fails(self):
+        out = _passing_out(0.23, adversary={"ok": True})
+        out["bar1"]["fails"] = ["contract too thin"]
+        with self._no_attestation():
+            verdict, why = admission_verdict(out)
+        self.assertEqual(verdict, "ADVISORY-REJECT")
+        self.assertIn("does not block", " ".join(why))
+        self.assertIn("contract too thin", " ".join(why),
+                      "the underlying reason must survive, not be replaced")
+
+    def test_a_reject_blocks_once_the_backtest_passes(self):
+        out = _passing_out(0.23, adversary={"ok": True})
+        out["bar1"]["fails"] = ["contract too thin"]
+        with self._attested():
+            self.assertEqual(admission_verdict(out)[0], "REJECT")
+
+    def test_a_missing_attestation_counts_as_failing(self):
+        """An unverified gate is not a verified one."""
+        import admission_gate
+        with unittest.mock.patch.object(admission_gate.os.path, "join",
+                                        return_value="/nonexistent/gate-backtest.json"):
+            self.assertFalse(admission_gate.backtest_attestation())
+
+    def test_non_reject_verdicts_are_untouched(self):
+        """The licence gates REJECT only. A pending bar is still pending, and an admit that
+        every bar agreed on is still an admit."""
+        with self._no_attestation():
+            self.assertEqual(admission_verdict(_passing_out(0.23))[0],
+                             "PENDING-ADVERSARY-PROBE")
+            self.assertEqual(
+                admission_verdict(_passing_out(0.23, adversary={"ok": True}))[0], "ADMIT")

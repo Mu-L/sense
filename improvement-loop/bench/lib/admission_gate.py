@@ -590,6 +590,15 @@ def bar7_channel(clone):
 
 
 def admission_verdict(out):
+    verdict, reasons = _admission_verdict(out)
+    if verdict.startswith("REJECT") and not backtest_attestation():
+        return "ADVISORY-REJECT", [
+            "the gate rejects banked wins, so this REJECT does not block. Run "
+            "bench/lib/gate_backtest.py: while it fails, bars are reported, not enforced."] + reasons
+    return verdict, reasons
+
+
+def _admission_verdict(out):
     """The whole gate, seam verdict plus the four bars that used to be a human
     checklist. ADMIT is the loop's own decision now (no the admission sign-off, 2026-07-29) and
     it requires every bar to have RUN - an unrun bar 5 is PENDING, never ADMIT."""
@@ -627,6 +636,25 @@ def admission_verdict(out):
     if not mem.get("ok"):
         return "REJECT", [f"bar5: {mem.get('reason', 'memorized')}"]
     return "ADMIT", [f"seam {seam}; bars 1/5/6/7 pass"]
+
+
+def backtest_attestation():
+    """The gate's own licence to gate, read from gate_backtest.py's attestation.
+
+    A bar may block admission only while the gate admits the wins we already banked.
+    Measured 2026-07-30: it rejected 4 of 4 (pebble +1.000, dolt +0.708, nomad +0.567,
+    consul +0.538), three of which it had itself labelled "win signature" one bar earlier.
+
+    This is read at verdict time rather than trusted to a doc because a doc did not stop
+    four verticals of gating on a filter nobody had backtested. A missing attestation counts
+    as failing: an unverified gate is not a verified one.
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "gate-backtest.json")
+    try:
+        with open(path) as fh:
+            return bool(json.load(fh).get("passed"))
+    except (OSError, ValueError):
+        return False
 
 
 def adversary_probe_required(out):
@@ -811,14 +839,17 @@ def main():
 
     exclude = re.compile(args.exclude) if args.exclude else None
     memo = None
-    if args.adversary:
-        with open(args.adversary) as f:
-            out["adversary"] = json.load(f)
     if args.memorization:
         with open(args.memorization) as f:
             memo = json.load(f)
     m = measure(args.clone, args.symbol, args.file_hint, args.sense, exclude,
                 slot=args.slot, memo=memo)
+    # After measure(), because the verdict reads it off the measurement dict. The first
+    # version loaded it before `m` existed and crashed on the CLI path - the unit tests
+    # called admission_verdict() directly and never exercised main(), so nothing caught it.
+    if args.adversary:
+        with open(args.adversary) as f:
+            m["adversary"] = json.load(f)
     print(render(m))
     if "bar2" in m:
         verdict, reasons = admission_verdict(m)

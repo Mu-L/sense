@@ -1,0 +1,40 @@
+{
+ "killed": [
+  "pebble",
+  "dolt",
+  "nomad",
+  "consul"
+ ],
+ "passed": false,
+ "rows": [
+  {
+   "delta": 1.0,
+   "ok": false,
+   "repo": "pebble",
+   "symbol": "Batch",
+   "verdict": "REJECT"
+  },
+  {
+   "delta": 0.708,
+   "ok": false,
+   "repo": "dolt",
+   "symbol": "DoltDB",
+   "verdict": "REJECT"
+  },
+  {
+   "delta": 0.567,
+   "ok": false,
+   "repo": "nomad",
+   "symbol": "Server",
+   "verdict": "REJECT"
+  },
+  {
+   "delta": 0.538,
+   "ok": false,
+   "repo": "consul",
+   "symbol": "Server",
+   "verdict": "REJECT"
+  }
+ ],
+ "skipped": []
+}
