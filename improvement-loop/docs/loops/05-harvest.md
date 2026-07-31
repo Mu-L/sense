@@ -18,7 +18,7 @@ program's widest product-telemetry pipe: three of `goal.md`'s sensory systems la
 - **All five tools - misuse mining:** run `tool_use_audit.py` (to build) over each repo's
   `sense-io.jsonl`: wrong tool for the question shape, wrong params, abandoned-on-empty, ignored hints,
   never-tried-search. Verified entries land in a **misuse ledger category** alongside the resolution gaps
-  in `loopA-gaps/<stack>.md`, each naming its meta-surface (contract / hint / setup / response shape).
+  in `verticals/<stack>/results/loopA-gaps.md`, each naming its meta-surface (contract / hint / setup / response shape).
 - **blast - budget-trim audit:** did `ApplyBlastBudget` drop items the gold needed and the agent lacked?
   A confirmed trim-miss is a product finding on the "send the RIGHT info" thesis itself.
 - **search / status / conventions - feature-coverage check** (to build): per vertical, which surfaces the
@@ -40,7 +40,7 @@ program's widest product-telemetry pipe: three of `goal.md`'s sensory systems la
   `carry-forward.md`. Two tiers:
   - **Per repo** (fires inside Loop 3's win path, automatically): `loopA-scan.sh harvest` →
     `transcript_miss.py` mines the ×N transcripts (cited-not-returned / fallback-reads / empty returns),
-    adoption-gated, appends to `bench/results/loopA-gaps/<stack>.md`.
+    adoption-gated, appends to `verticals/<stack>/results/loopA-gaps.md`.
   - **Per repo, survey channel** (fires inside `session-run.sh`'s sense arm, automatically): the
     post-run agent survey turn → `survey_verify.py` transcript-verifies and appends to the model root's
     `surveys.jsonl`; read only in aggregate at loop close via `--report`, next to the
@@ -77,7 +77,7 @@ dossier; the fix decisions they seed belong to Loop 7's authorization gate, not 
 
 ## State / memory
 
-- `bench/results/loopA-gaps/<stack>.md` - append-only product-gap ledger (Loop 7's inbox).
+- `verticals/<stack>/results/loopA-gaps.md` - append-only product-gap ledger (Loop 7's inbox).
 - `02-bench-harvest.md` (private tree) - the cumulative conventions ledger (A-D categories,
   recording discipline at the top of the file).
 - `../cross-cutting/0*.md` - one row per vertical, via the harvest prompt.
@@ -114,7 +114,7 @@ dossier; the fix decisions they seed belong to Loop 7's authorization gate, not 
 - **Built:** `loopA-scan.sh` (harvest wired into `vertical-loop.sh`'s win path), `transcript_miss.py`,
   `resolve_oracle.py`, the harvest prompt, the conventions ledger + recording discipline, the graduation
   rule.
-- **Missing:** the misuse ledger category file convention inside `loopA-gaps/<stack>.md` (first entries
+- **Missing:** the misuse ledger category file convention inside `verticals/<stack>/results/loopA-gaps.md` (first entries
   land with the Go vertical; the frozen-board catches are staged in the loss-anatomy/goal docs meanwhile).
   BUILT 2026-07-11: `tool_use_audit.py` (detectors + `--coverage` feature-check + degraded
   `--from-transcript` mode, fixtures in `test_tool_use_audit.py`; validated against all 38 frozen

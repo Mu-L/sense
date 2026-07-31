@@ -38,7 +38,7 @@ surface and channel**, and the window triages ALL buckets, not just resolution:
   coverage floor, complexity ledger, per-language namespacing, NON-GOALS) on top of the bench law.
 - **Unit of work:** one verified gap taken through: re-assess factual in current `main` → spike or fix →
   bench gate → ship or revert.
-- **Position:** consumes Loop 5's ledgers (`loopA-gaps/<stack>.md`, the conventions ledger's graduated
+- **Position:** consumes Loop 5's ledgers (`verticals/<stack>/results/loopA-gaps.md`, the conventions ledger's graduated
   pitches, carry-forward D items, and the survey friction ledger's **filed** rows -
   `../FRICTION.md`, process `00-agent-survey.md`; the window records their
   shipped/killed exit on the row); produces a better binary for the next vertical and the re-index flag
@@ -113,6 +113,7 @@ surface and channel**, and the window triages ALL buckets, not just resolution:
    pre-flight** (macOS `timeout`, subshell PATH). Costs seconds; the 2026-07-15 precedent is a
    PATH-stripped audit loop that printed the exact reverse of its finding and a ledger that failed its
    own checker on eight counts.
+
 7e. **The PR body states where the gap came from.** Every PR out of this window opens with a line
    naming its origin:
 
@@ -154,7 +155,7 @@ not to Sense's `main`.
 
 ## State / memory
 
-- `bench/results/loopA-gaps/<stack>.md` entries (open → closed-with-PR, or attempt-recorded).
+- `verticals/<stack>/results/loopA-gaps.md` entries (open → closed-with-PR, or attempt-recorded).
 - Branches per fix (`fix/<slug>`) or enhancement (`enhance/<slug>`); conventional commits (a real defect
   is `fix`, better output of an existing surface is `enhance`, both patch; new capability is `feat`;
   bench-only work is `bench(<scope>)`), `git-cliff --bumped-version` before PR.

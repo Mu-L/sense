@@ -15,8 +15,11 @@
 #              for (cited-not-returned / fallback-reads / empty returns). Run it
 #              AFTER a sweep to bank the Loop-A signal for free.
 #
-# Output is appended (never overwritten) to results/loopA-gaps/<stack>.md so the
-# product-gap log accumulates across repos and verticals. A FAIL in the oracle is
+# Output is appended (never overwritten) to verticals/<stack>/results/loopA-gaps.md
+# so the product-gap log accumulates across that vertical's repos. Loop 7 reads
+# the set with `verticals/*/results/loopA-gaps.md`, which still finds an archived
+# vertical. It is NOT model-scoped: a resolution gap is a fact about the product,
+# so it never sits under a BENCH_MODEL root. A FAIL in the oracle is
 # a fix CANDIDATE for the NEXT vertical's pre-bench window, not a reason to stop -
 # fixing the product mid-vertical invalidates that vertical's frozen numbers.
 #
@@ -27,14 +30,20 @@
 set -uo pipefail
 
 BENCH_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+IL_ROOT="$(cd "$BENCH_DIR/.." && pwd)"
 LIB="$BENCH_DIR/lib"
 MODE="${1:?usage: loopA-scan.sh <preflight|harvest|both> <stack> [repo|model]}"
 STACK="${2:?usage: loopA-scan.sh <mode> <stack> [arg]}"
 ARG="${3:-}"
 
-LOGDIR="$BENCH_DIR/results/loopA-gaps"
+# The stack IS the vertical key, so the log lives in that vertical's own home
+# (bench-paths.sh: verticals/<name>/results/). Writing to $BENCH_DIR/results put
+# a per-vertical file in the GLOBAL bench root, which is the competitor bench.
+LOGDIR="$IL_ROOT/verticals/$STACK/results"
+[ -d "$IL_ROOT/verticals/$STACK" ] || {
+  echo "loopA-scan: no such vertical: verticals/$STACK" >&2; exit 66; }
 mkdir -p "$LOGDIR"
-LOG="$LOGDIR/$STACK.md"
+LOG="$LOGDIR/loopA-gaps.md"
 STAMP="$(date -u +%Y-%m-%dT%H:%MZ)"
 
 append() { tee -a "$LOG"; }

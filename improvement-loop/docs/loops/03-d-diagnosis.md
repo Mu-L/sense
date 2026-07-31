@@ -54,7 +54,7 @@ otherwise.*
 | 3a | Sense returned it, the agent dropped it | `transcript_miss.py` (cited-not-returned, fallback reads, empties), `mcp_count` | fix the harness or the output shape upstream - **never the scorer** | $0 |
 | 3b | The agent misused the tool: wrong tool for the question shape, wrong params, abandoned after one empty result, ignored hints | `tool_use_audit.py` over `sense-io.jsonl` | product meta-surface fix (contract, hint, setup) ledgered for Loop 7; harness compensation allowed meanwhile | cheap |
 | 4 | Judge or scorer error | hand-audit the per-dependency credits (basename false-credit guard), `relationship_audit.py` | fix the scorer **with a guard test** | $0 |
-| 5 | Genuine product gap | `resolve_oracle.py` fact-check on known-true edges | append to the **cross-vertical** gap list (`bench/results/loopA-gaps/<stack>.md`, keyed by stack), **parked** for Loop 7's window | $0 now |
+| 5 | Genuine product gap | `resolve_oracle.py` fact-check on known-true edges | append to that vertical's gap list (`verticals/<stack>/results/loopA-gaps.md`), which Loop 7 reads as a set via `verticals/*/results/loopA-gaps.md`, **parked** for Loop 7's window | $0 now |
 | 6 | Seam measurably nonexistent | existence measurement on the index | the swap gate swap, with the numbers attached | $0 |
 
 Branch 6 should be rare, because Loop 2 gates admission on the same measurement. When it fires anyway
@@ -96,7 +96,7 @@ Three protocols bind every write-up here ([`../decision-errors.md`](../decision-
 ## State / memory
 
 - `verticals/<vertical>/results/` - read-only here, plus the branch analysis written alongside the cell.
-- The cross-vertical gap list `bench/results/loopA-gaps/<stack>.md`, append-only, for branch 5.
+- The per-vertical gap list `verticals/<stack>/results/loopA-gaps.md`, append-only, for branch 5; Loop 7 globs `verticals/*/results/loopA-gaps.md`, which still finds an archived vertical.
   It is deliberately NOT per-vertical: a product gap is product state, Loop 7 reads it across
   stacks, and cross-stack recurrence is the strongest signal in it. A vertical that gets reset
   leaves its gaps behind rather than taking them.

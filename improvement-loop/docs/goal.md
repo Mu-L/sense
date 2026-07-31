@@ -33,7 +33,7 @@ defaults: the blast `min_confidence` 0.7-vs-0.3 contract bug is the canonical mi
 
 ## The three sensory systems (how the loops see product truth)
 
-1. **Resolution gaps** (BUILT): `resolve_oracle.py` + `transcript_miss.py` → `loopA-gaps/<stack>.md`.
+1. **Resolution gaps** (BUILT): `resolve_oracle.py` + `transcript_miss.py` → `verticals/<stack>/results/loopA-gaps.md`.
    Truth is a fact: this edge exists in code, Sense misses it.
 2. **Misuse** (BUILT 2026-07-11): `bench/lib/tool_use_audit.py` over full request/response captures
    (degraded `--from-transcript` mode for pre-capture runs) → the misuse ledger. Truth is a transcript
