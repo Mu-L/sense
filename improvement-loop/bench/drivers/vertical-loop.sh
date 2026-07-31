@@ -10,20 +10,22 @@
 # not the author. The script cannot write a scenario itself, so at the scout pause it
 # hands control back to the AI agent to author <repo>.yaml + <repo>.rubric.yaml +
 # gold, then resumes once those exist. The only true HUMAN decision is the cost
-# confirm before the paid sweep (--yes).
+# NOTE: loops 1-3 have had NO human gate since 2026-07-31; --yes is retained as a
+# no-op so existing invocations keep working.
 #
 # Phases (a state file resumes at the next one; re-run to advance):
 #   index      ensure-index.sh                                    [auto]
 #   scout      seam_hunt.py --propose  ->  GATE: draft+review scenario+gold
-#   preflight  render prompt + loopA preflight (resolve_oracle)   [auto] -> cost GATE
-#   bench      runs-variance.sh Opus x2 (PAID)                    [GATE: --yes]
-#   report     pergroup.py verdict; WIN -> harvest, else          GATE: diagnose
+#   preflight  render prompt + loopA preflight (resolve_oracle)   [auto]
+#   validate   both arms x1, UNSCORED (BENCH_VALIDATION=1)        [auto]
+#   bench      runs-variance.sh Opus x2 (PAID)                    [auto]
+#   report     pergroup.py verdict; WIN -> harvest, else          -> Loop 3
 #   harvest    loopA-scan.sh harvest (mine the paid transcripts)  [auto] -> done
 #
 # Usage:
 #   bash bench/drivers/vertical-loop.sh <repo>                 # run from saved phase
 #   bash bench/drivers/vertical-loop.sh <repo> --symbol ProductVariant --file product/models.py
-#   bash bench/drivers/vertical-loop.sh <repo> --yes          # confirm the paid bench
+#   bash bench/drivers/vertical-loop.sh <repo> --yes          # accepted, no-op since 2026-07-31
 #   bash bench/drivers/vertical-loop.sh <repo> --phase scout  # force one phase
 #   bash bench/drivers/vertical-loop.sh <repo> --reset        # back to index
 #   bash bench/drivers/vertical-loop.sh --status              # all repos' phases
@@ -54,7 +56,7 @@ CLONES="${SENSE_CLONES:-$HOME/Developer/luuuc/oss/sense-benchmark/sense}"
 VDIR="$BENCH_DIR/../verticals/$VERTICAL"
 SCEN_DIR="$VDIR/scenarios"
 STATE="$VDIR/.loop-state.json"
-PHASES=(index scout preflight bench report harvest done)
+PHASES=(index scout preflight validate bench report harvest done)
 
 # ---- args -------------------------------------------------------------------
 REPO=""; SYMBOL=""; FILE_HINT=""; YES=0; FORCE_PHASE=""; STATUS=0; RESET=0
@@ -88,6 +90,9 @@ d['$1']='$2'
 os.makedirs(os.path.dirname(p),exist_ok=True)
 json.dump(d,open(p,'w'),indent=2,sort_keys=True); open(p,'a').write('\n')"
 }
+# Loop 3's six-cycle swap rule needs two more facts per repo. They ride on
+# suffixed keys ("<repo>#cycle", "<repo>#credits") so the repo->phase map that
+# every other reader expects keeps its shape.
 state_dump() {
   python3 -c "import json
 try: d=json.load(open('$STATE'))
@@ -143,13 +148,13 @@ do_scout() {
     echo "   repos.md, then: vertical-loop.sh $REPO --symbol <Sym> [--file <path>])"
   fi
   gate \
-    "AI AUTHORING STEP (Loop B) - the agent running this loop DRAFTS + tunes these now;" \
-    "the human reviews adversarially, async (anomalies / inconsistencies), not as the author:" \
+    "LOOP 1 AUTHORING - the agent running this loop authors these now; no human review:" \
     "  - $YAML            (7 neutral steps, audit step forces per-dep file:line)" \
     "  - $RUBRIC   (matching rubric)" \
     "  - gold: + contract_symbol:/contract_file: in the yaml (curate the candidate above)" \
-    "Guidance: docs/scenarios/crafting.md + manifesto §4/§13." \
-    "Scenarios are refined AFTER the first bench to hit the +0.50 floor - draft, don't perfect."
+    "Guidance: docs/loops/01-repo-authoring.md + docs/scenarios/crafting.md." \
+    "Before it leaves Loop 1: adversary probe, scenario.py --prompt, audit_scenarios.py," \
+    "gold_confidence_check.py at 0.3 AND 0.7, and the per-dependency hand audit."
 }
 
 do_preflight() {
@@ -160,26 +165,34 @@ do_preflight() {
   echo "---- Loop-A preflight (gold must be default-blast-retrievable, manifesto §10) ----"
   bash "$LIB/loopA-scan.sh" preflight "$VERTICAL" "$REPO" 2>&1 || true
 
-  if [ "$YES" = 1 ]; then
-    echo "## [preflight] --yes given - proceeding to the paid bench"
+  # The COST GATE was REMOVED 2026-07-31: loops 1-3 have no human gate. Runs go
+  # through a subscription by default, so what a cycle spends is quota against the
+  # weekly reset. The leak check and the oracle above are what decide now.
+  NEXT=bench
+}
+
+do_validate() {
+  # Loop 2's validation run (docs/loops/02-repo-run.md): both arms, ONE run each,
+  # unscored, before anything paid. BENCH_VALIDATION=1 routes it to a separate
+  # results root and stamps "scoring": false, so no scorer can ever see it.
+  local vdir_out="$VDIR/results/validation"
+  if [ -d "$vdir_out" ] && [ -n "$(find "$vdir_out" -name 'transcript.json' 2>/dev/null | head -1)" ]; then
+    echo "## [validate] a validation run already exists for this scenario - not re-running"
+    echo "   (delete $vdir_out to force a fresh one)"
     NEXT=bench; return
   fi
-  gate \
-    "COST GATE - the next phase spends real tokens (Opus 4.8 x$RUNS, both arms, ~\$10-18)." \
-    "Confirm the prompt is leak-free and the oracle retrieves the gold, then run:" \
-    "  bash bench/drivers/vertical-loop.sh $REPO --yes"
-  # (gate exits; phase stays preflight. --yes re-enters here and advances to bench.)
+  echo "## [validate] unscored validation run, both arms x1 (BENCH_VALIDATION=1)"
+  BENCH_VALIDATION=1 VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS=1 \
+    bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || {
+      echo "[validate] the validation run FAILED - that is a result, not an obstacle."
+      echo "           Read the transcripts before re-running (02-repo-run.md)."; exit 1; }
+  echo "## [validate] done. Read it before paying:"
+  echo "   RESULTS_DIR=$vdir_out python3 bench/lib/credit_table.py $REPO"
+  echo "   If the baseline assembled the set, DO NOT PAY - go back to Loop 1 authoring."
+  NEXT=bench
 }
 
 do_bench() {
-  if [ "$YES" != 1 ]; then
-    if [ -t 0 ]; then
-      read -r -p "## [bench] spend on Opus 4.8 x$RUNS both arms for $REPO? [y/N] " a
-      [[ "$a" =~ ^[Yy]$ ]] || gate "Bench not confirmed. Re-run with --yes when ready."
-    else
-      gate "Bench step needs confirmation (non-interactive). Re-run with --yes."
-    fi
-  fi
   echo "## [bench] VERTICAL=$VERTICAL MODELS='$MODELS' RUNS=$RUNS runs-variance.sh $REPO"
   VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS="$RUNS" \
     bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || { echo "[bench] FAILED"; exit 1; }
@@ -198,15 +211,45 @@ do_report() {
   echo "$out" | sed 's/^/  /'
   if echo "$out" | grep -q '^VERDICT: WIN'; then
     echo "  -> WIN (discriminator >= +0.50). Banking Loop-A harvest."
+    state_set "$REPO#cycle" 0
     NEXT=harvest; return
   fi
+  # The credit table is Loop 3's one mechanical input, and its fingerprint is the
+  # movement detector: a re-authored scenario that moves no row has not moved the
+  # cell, however different its prose.
+  local fp prev cycle
+  fp="$(RESULTS_DIR="$rdir" python3 "$LIB/credit_table.py" "$REPO" --fingerprint 2>/dev/null)"
+  prev="$(state_get "$REPO#credits")"
+  cycle="$(state_get "$REPO#cycle")"; [ -z "$cycle" ] && cycle=0
+  if [ -n "$fp" ] && [ "$fp" != "$prev" ]; then
+    cycle=1
+    echo "  -> credit table MOVED ($prev -> $fp): cycle counter reset to 1"
+  else
+    cycle=$((cycle + 1))
+    echo "  -> credit table UNCHANGED ($fp): cycle $cycle of 6"
+  fi
+  state_set "$REPO#cycle" "$cycle"
+  [ -n "$fp" ] && state_set "$REPO#credits" "$fp"
+
+  echo ""
+  RESULTS_DIR="$rdir" python3 "$LIB/credit_table.py" "$REPO" 2>&1 | sed 's/^/  /' || true
+
+  if [ "$cycle" -ge 6 ]; then
+    gate \
+      "SIX CYCLES WITH NO MOVEMENT - swap this repo (docs/loops/03-repo-diagnosis.md)." \
+      "The slot takes its OWN declared backup from slate.json, not the next slate repo." \
+      "Write the swap dossier to LEDGER.md as loop3/$REPO/swap, then reset:" \
+      "  bash bench/drivers/vertical-loop.sh <backup-repo> --reset"
+  fi
   gate \
-    "BELOW +0.50 - diagnose the tie (manifesto §8.8; the model drafts the fix, human reviews):" \
-    "  - per-dep tally: which gold ids the baseline CITED vs MISSED across runs" \
-    "  - \$0 gold-retarget: move baseline-gets-3/3 deps to 'context', promote baseline-misses-3/3" \
-    "    re-score (no re-bench): python3 bench/lib/scorer.py <run_dir> $YAML bench" \
-    "  - only re-author + re-bench if the PROMPT/steps must change" \
-    "After retargeting/re-authoring, re-run; a gold-only change needs NO new bench."
+    "BELOW +0.50 - hand the cell to Loop 3 diagnosis (docs/loops/03-repo-diagnosis.md)." \
+    "1. STRUGGLE READ (every run): spawn the bench-struggle-read agent on the table above." \
+    "   It returns scenario material - the rows the baseline missed and what it spent instead." \
+    "2. TAXONOMY (sub-floor only): spawn bench-evaluator; branches in order, cheapest first." \
+    "   \$0 gold-retarget re-scores without re-benching:" \
+    "     python3 bench/lib/scorer.py <run_dir> $YAML bench" \
+    "   Branch 2 (re-author + re-bench) is the only paid lever and needs 1/3/4 exhausted." \
+    "Then re-enter Loop 1: bash bench/drivers/vertical-loop.sh $REPO --phase scout"
 }
 
 do_harvest() {
@@ -232,6 +275,7 @@ while :; do
     index)     do_index ;;
     scout)     do_scout ;;
     preflight) do_preflight ;;
+    validate)  do_validate ;;
     bench)     do_bench ;;
     report)    do_report ;;
     harvest)   do_harvest ;;

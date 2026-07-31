@@ -21,9 +21,9 @@ loop.
 
 | # | Loop | One iteration is | Stops when | Human gate | Status |
 |---|---|---|---|---|---|
-| 1 | [Repo authoring](01-repo-authoring.md) | one scenario + gold for one repo | the scenario-integrity gate signed on audited gold | B (permanent) | scripted except the per-dep hand audit |
-| 2 | [Repo run](02-repo-run.md) | one validation run (unscored, both arms), then one paid cell ×2 at the real wall | WIN confirmed or a verdict reported | C (permanent) | runners + capture + `bench-win-confirm` live; `BENCH_VALIDATION=1` routes + stamps the unscored run |
-| 3 | [Repo diagnosis](03-repo-diagnosis.md) | one run read: the struggle read always, the taxonomy on a sub-floor verdict | material handed back to authoring, or one branch named with detector output | D (permanent) + async tie review | `bench-evaluator` + `bench-struggle-read` live; budget-trim audit still a hand check |
+| 1 | [Repo authoring](01-repo-authoring.md) | one scenario + gold for one repo | leak check, 0.3/0.7 gold check and per-dep audit all clean | none | scripted except the per-dep hand audit |
+| 2 | [Repo run](02-repo-run.md) | one validation run (unscored, both arms), then one paid cell ×2 at the real wall | WIN confirmed or a verdict reported | none | runners + capture + `bench-win-confirm` live; `BENCH_VALIDATION=1` routes + stamps the unscored run |
+| 3 | [Repo diagnosis](03-repo-diagnosis.md) | one run read: the struggle read always, the taxonomy on a sub-floor verdict | material handed back to authoring, or one branch named with detector output | none | `bench-evaluator` + `bench-struggle-read` live; budget-trim audit still a hand check |
 | 4 | [Matrix fill](04-matrix-fill.md) | one confirmation-arm ×1 cell | all arm×repo cells done, anomalies re-run | budget policy set once | scripts built; scheduling manual |
 | 5 | [Harvest](05-harvest.md) | one repo's transcripts mined | ledgers appended for all 4 | none (advisory by design) | scripted (`loopA-scan.sh`) |
 | 6 | [Publish](06-publish.md) | one article pack authored + validated | the publish sign-off | the publish sign-off; permanent | packs + prompt 08 exist |

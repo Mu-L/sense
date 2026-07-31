@@ -22,7 +22,7 @@ be read here.
 | Runs on | every run, including a win | a scored sub-floor verdict |
 | Asks | where did the baseline have a hard time, and what did Sense reach that it did not | which of six causes produced this number |
 | Vertex | the `bench-struggle-read` agent | the `bench-evaluator` agent |
-| Anchored on | the per-gold-item credit table from the run | the branch detectors, each producing output |
+| Anchored on | `credit_table.py` (per gold item, both arms) | the branch detectors, each producing output |
 | Produces | gold rows and a shape for the next draft | one named branch and one lever |
 
 **The struggle read is the adversary probe's disclaimer, measured instead of self-reported.** Authoring's
@@ -43,10 +43,13 @@ branch and issues no verdict.
 
 A repo may go round authoring → run → diagnosis **six times**. The counter advances on every cycle and
 **resets only on measured movement in the credit table**, never on an edit alone: six cosmetic re-shapes
-would otherwise burn the budget and fire the swap on a repo nobody actually pushed on. The count lives
-in `.loop-state.json` beside the phase cursor.
+would otherwise burn the budget and fire the swap on a repo nobody actually pushed on. `vertical-loop.sh`
+keeps the count in `.loop-state.json` under `<repo>#cycle`, and detects movement with
+`credit_table.py --fingerprint`, which hashes the sense-only and neither rows only. Gold churning in and
+out of the diluter bucket is deliberately NOT movement - counting it would reset the counter forever and
+the swap would never fire.
 
-At six with no movement the swap gate fires with the dossier, and the slot takes **its own declared
+At six with no movement the swap fires with the dossier, and the slot takes **its own declared
 backup** from `slate.json`, never the next repo on the slate. The replacement enters
 [Authoring](01-repo-authoring.md) with the counter reset to zero.
 
@@ -83,7 +86,7 @@ backup** from `slate.json`, never the next repo on the slate. The replacement en
 | Evaluator | the `bench-evaluator` agent - adversarial, separate, this taxonomy as its rubric | stands only on mechanical verifier output; anything else it says is prose |
 | Mechanical verifier | `pergroup.py`, `scorer.py`, `transcript_miss.py`, `tool_use_audit.py`, `resolve_oracle.py`, `relationship_audit.py`, `rescore_diff.py` | each branch below names its own |
 | Rubric judge | pinned, distinct from the evaluator | |
-| Human | the swap gate (unwinnable repo) and the tie-diagnosis review | the swap gate is a **permanent anchor**; the review is demotable |
+| Human | none - the loop routes, swaps and closes on its own | every branch must still cite its detector's output; that is what replaces the reviewer |
 
 ## The taxonomy
 
@@ -94,12 +97,12 @@ otherwise.*
 | # | Cause | Detector | Lever | Cost |
 |---|---|---|---|---|
 | 1 | Gold mis-curation | per-dependency tally from `scored.json` | re-target gold, then re-score the existing transcripts with `scorer.py` | $0 |
-| 2 | Scenario shape wrong (fan instead of chain, satisficing-friendly prompt) | tally pattern + transcript read | re-author → the scenario-integrity gate again → re-bench | paid |
+| 2 | Scenario shape wrong (fan instead of chain, satisficing-friendly prompt) | tally pattern + transcript read | re-author → re-bench | paid |
 | 3a | Sense returned it, the agent dropped it | `transcript_miss.py` (cited-not-returned, fallback reads, empties), `mcp_count` | fix the harness or the output shape upstream - **never the scorer** | $0 |
 | 3b | The agent misused the tool: wrong tool for the question shape, wrong params, abandoned after one empty result, ignored hints | `tool_use_audit.py` over `sense-io.jsonl` | product meta-surface fix (contract, hint, setup) ledgered for Loop 7; harness compensation allowed meanwhile | cheap |
 | 4 | Judge or scorer error | hand-audit the per-dependency credits (basename false-credit guard), `relationship_audit.py` | fix the scorer **with a guard test** | $0 |
 | 5 | Genuine product gap | `resolve_oracle.py` fact-check on known-true edges | append to that vertical's gap list (`verticals/<stack>/results/loopA-gaps.md`), which Loop 7 reads as a set via `verticals/*/results/loopA-gaps.md`, **parked** for Loop 7's window | $0 now |
-| 6 | Seam measurably nonexistent | existence measurement on the index | the swap gate swap, with the numbers attached | $0 |
+| 6 | Seam measurably nonexistent | existence measurement on the index | swap, with the numbers attached | $0 |
 
 Branch 6 is the one branch that ends the repo, and it is a measurement, never an impression: nothing
 screens seams before a scenario exists any more, so the existence check is made here or nowhere.
@@ -116,8 +119,8 @@ is over-tuned.
 - **Success (taxonomy):** one branch named, its detector output recorded, and the lever handed to the
   owning loop. A branch chosen without detector output is not a diagnosis.
 - **Budget:** the struggle read and every branch except 2 are $0; branch 2 re-enters the paid path
-  through the scenario-integrity gate and Run, never directly. Park with the analysis on disk.
-- **Failure:** all branches exhausted with evidence → the swap gate, with the dossier: what was tried, the
+  through Authoring and Run, never directly. Park with the analysis on disk.
+- **Failure:** all branches exhausted with evidence → swap, with the dossier: what was tried, the
   per-dependency tally, and the product-gap hypothesis. **The loop wins, parks, or escalates a swap.**
 
 Three protocols bind every write-up here ([`../decision-errors.md`](../decision-errors.md)):
@@ -136,8 +139,13 @@ Three protocols bind every write-up here ([`../decision-errors.md`](../decision-
 
 | Event | Fires when | Blocking? | Demotable? |
 |---|---|---|---|
-| Unwinnable repo (swap) | taxonomy exhausted, still < +0.50 | yes | **never** - repo-selection anchor |
-| Tie-diagnosis review | a branch is picked, before acting on ANY branch | yes, async | yes - narrows to branch-2-only after one clean vertical under this split (trust ledger) |
+| none | - | - | - |
+
+The swap gate and the tie-diagnosis review were REMOVED 2026-07-31. A swap now fires on the
+mechanical condition alone - six crafting cycles with no movement in the credit table, or branch 6
+measuring the seam absent - and the dossier is written for the record rather than for approval.
+**A branch ruled out without its detector's output was always invalid; now it is also uncaught**,
+so the evidence requirement is the whole of what keeps this loop honest.
 
 ## State / memory
 
@@ -160,7 +168,7 @@ Three protocols bind every write-up here ([`../decision-errors.md`](../decision-
 - **Consumes:** the sub-floor verdict, scored transcripts, `sense-io.jsonl`, the gold and the scenario;
   the loss taxonomy in [`loss-anatomy.md`](loss-anatomy.md).
 - **Produces:** the named branch with evidence, the routed lever, parked gap entries for Loop 7, or the
-  the swap gate swap dossier.
+  the swap dossier.
 
 ## Fixture test (standalone, $0)
 
@@ -186,13 +194,14 @@ The evaluator must rediscover what the humans found, and must not invent problem
 ## Built vs missing
 
 - **Built:** the `bench-evaluator` agent with this taxonomy as its rubric, the `bench-struggle-read`
-  agent (the every-run read, anchored on the credit table), `tool_use_audit.py` (with
+  agent (the every-run read), `credit_table.py` + `test_credit_table.py` (its mechanical input and the
+  movement detector), the cycle counter and swap trigger in `vertical-loop.sh`, `tool_use_audit.py` (with
   `test_tool_use_audit.py` covering the contract-bug replay and the deliberate-narrowing negative side),
   `transcript_miss.py`, `resolve_oracle.py`, `relationship_audit.py`, `rescore_diff.py`,
   `loss-anatomy.md`.
 - **Missing, deferred by decision 2026-07-30:** the budget-trim audit stays a **hand check**. It needs
   per-run gold cross-referenced against the full captured responses - real work - and it affects
-  diagnosis *routing*, where the async tie-diagnosis review still puts a human in the loop. The 0.3/0.7
+  diagnosis *routing*, which no longer has a human reviewing it at all. The 0.3/0.7
   gold check in [Authoring](01-repo-authoring.md) was scripted first because it gates whether a WIN is real.
   **The cost of this deferral, stated plainly:** the check most able to falsify "send the RIGHT info"
   remains the easiest one to skip, so every sub-floor verdict this vertical rests on someone actually

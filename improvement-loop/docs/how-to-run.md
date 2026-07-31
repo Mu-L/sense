@@ -91,19 +91,22 @@ Verify-after-write: the CLI can silently no-op (comment quirk in the conf; `todo
 
 ## Your gates (what you review, and when)
 
-You are pinged at these events; everything else runs without you. The three **permanent anchors** never
-demote; the rest can demote to advisory after a vertical of clean reviews (trust ledger). The repo slate
-was the fourth until 2026-07-29 - bootstrap is now autonomous and composes it against the screens.
+You are pinged at these events; everything else runs without you. **The per-repo loops 1-3 have NO
+human gate at all as of 2026-07-31**: they author, spend, diagnose and swap on their own. Runs are on
+a SUBSCRIPTION by default (API optional), so the binding constraint on a cycle is the weekly reset
+rather than a dollar figure - and nothing checkpoints it. What stands in place of the removed gates
+is mechanical and listed in each one-pager. The repo slate stopped being a gate on 2026-07-29 when
+bootstrap began composing it.
 
 | When | Event (loop) | What you actually review | Permanent? |
 |---|---|---|---|
 | Vertical start | Stack confirm (before bootstrap) | the stack choice + sequencing | yes |
 | Scaffold stamped | Prompt-refresh review (bootstrap) | stamped prompts, no stale stack refs | demotable |
 | ~~Slate composed~~ | ~~the admission sign-off~~ | retired 2026-07-29 - bootstrap admits its own slate; read it after the fact in `repos.md` + the `bootstrap/slate` ledger entry | no |
-| Scenario drafted | **the scenario-integrity gate** (3) | scenario + gold integrity, before any spend | yes (anchor) |
-| Before paid runs | **the spend gate** (3) | the spend itself (preflight + dry-run already passed) | yes (anchor) |
-| Repo unwinnable | **the swap gate** (3) | the swap dossier (taxonomy exhausted, numbers attached) | yes (anchor) |
-| Tie diagnosed | Tie-diagnosis review (3) | the evaluator's branch pick, before a paid re-author | demotable |
+| ~~Scenario drafted~~ | ~~the scenario-integrity gate~~ | retired 2026-07-31 - Loop 1 checks its own gold (leak check, 0.3/0.7, per-dep audit) | no |
+| ~~Before paid runs~~ | ~~the spend gate~~ | retired 2026-07-31 - Loop 2 spends on its validation run's verdict; nothing checkpoints the weekly quota | no |
+| ~~Repo unwinnable~~ | ~~the swap gate~~ | retired 2026-07-31 - Loop 3 swaps on six cycles without movement, or a measured-absent seam | no |
+| ~~Tie diagnosed~~ | ~~Tie-diagnosis review~~ | retired 2026-07-31 - the branch stands on its detector's output alone | no |
 | Vertical start (once) | Cap/budget policy (4) | which arms, which subscriptions, weekly ceilings | demotable |
 | Packs drafted | Pack review (6) | fact packs vs the numbers | demotable |
 | Vertical close | **the publish sign-off** (6) | scorecard, 6 verdicts, matrix, gap list; publish sign-off | yes (anchor) |
@@ -139,13 +142,14 @@ stall dressed as deference. (Ratified 2026-07-15.)
 
 - **$0 by law or construction:** bootstrap, Loops 5 (harvest is "$0 as law": if verifying costs money, the
   entry stays unverified), 6, and Loop 7's detection half. All fixture tests are $0.
-- **Paid, and gated:** Loop 2's headline runs (Opus ×2 per repo, behind the spend gate every time) and Loop 4's
+- **Paid, and UNGATED since 2026-07-31:** Loop 2's headline runs (Opus ×2 per repo) and Loop 4's
   confirmation cells (×1 each, behind the once-per-vertical cap policy, cap-aware ordering, big repos
   last). Loop 7's re-bench is behind its own spend gate.
 - **The "loops forever" fear is scoped away twice.** Across verticals: the program never self-advances; a
   vertical's total spend is bounded by its 4 repos × the arm plan you approved, and the program pauses
-  indefinitely between verticals at zero cost. Within a vertical: every paid unit passes a blocking,
-  never-demotable spend gate first. Bootstrap in particular is NOT "loop through the verticals": it is
+  indefinitely between verticals at zero cost. Within a vertical, since 2026-07-31: nothing gates a
+  paid unit, so the bound is the arm plan times 4 repos times the crafting cycles a repo is allowed -
+  six - and the subscription's own weekly reset. Bootstrap in particular is NOT "loop through the verticals": it is
   one command for a single vertical. There is no unattended path from "session running"
   to "subscription drained"; the worst unattended case is Loop 4 finishing the cells already covered by
   the cap policy you set, then parking on the weekly cap.

@@ -43,15 +43,17 @@ validation run's whole purpose is the read Diagnosis does on it.
 | Evaluator | the `bench-win-confirm` agent - the five definition-of-done checks on a WIN | confirms or bounces; **never diagnoses a sub-floor verdict, never fault-finds a clean win** |
 | Mechanical verifier | `pergroup.py` on the real transcripts | the WIN arbiter, never a proxy, never the judge's mood |
 | Rubric judge | pinned prompt version, distinct from every evaluator | merging judge and evaluator re-creates self-grading |
-| Human | authorises the spend | **permanent anchor, never demotable** |
+| Human | none - the loop spends on its own judgement | the validation run is what stands between a scenario and the money |
 
 ## The validation run (unscored, both arms, once)
 
-Before the spend gate, the scenario runs for real on the real runner: **both arms, one run each, at the
+Before the paid pair, the scenario runs for real on the real runner: **both arms, one run each, at the
 cell's wall.** It is a measurement of whether the scenario is the right scenario, and it produces the
 material Diagnosis reads. It is separate from Authoring's design-time adversary probe, which is a
 measurement of what a grep-and-read baseline could reach on the shape before anyone benched it.
 
+- **`vertical-loop.sh` runs it as the `validate` phase**, between preflight and the paid bench, and
+  skips it when one already exists on disk (delete `results/validation/` to force a fresh one).
 - **It is never scored and never cited.** Run it with `BENCH_VALIDATION=1`, which routes every runner
   to `results/<model>/validation/` and stamps `"scoring": false` into `run_meta.json`. A number from a
   ×1 unscored run is a sample; it may not close a question, settle a win or tie, or enter an article.
@@ -95,7 +97,14 @@ only thing that has ever moved this program, which is a run instead of an argume
 
 | Event | Fires when | Blocking? | Demotable? |
 |---|---|---|---|
-| Spend | preflight passed and the validation run says the scenario discriminates, before the paid ×2 | yes | **never** - spend anchor |
+| none | - | - | - |
+
+The spend gate was REMOVED 2026-07-31. Runs go through a SUBSCRIPTION by default (the API path is
+optional), so what a cycle consumes is quota against the weekly reset, not dollars - but nothing
+checkpoints that consumption any more. The validation run is the only thing left standing between a
+scenario and a paid pair: it is unscored, both arms, and if the baseline assembles the set the pair
+does not run. Treat a validation run that says "do not pay" as binding, because nothing reviews it
+afterwards.
 
 ## State / memory
 
@@ -116,7 +125,7 @@ only thing that has ever moved this program, which is a run instead of an argume
 
 ## Inputs / outputs
 
-- **Consumes:** the frozen scenario + audited gold + the scenario-integrity gate record, and the
+- **Consumes:** the frozen scenario + audited gold, and the
   cell's real wall.
 - **Produces:** scored transcripts, `sense-io.jsonl` per run, the confirmed win notice or the sub-floor
   verdict, and the surveys line Loop 5 aggregates.
@@ -135,7 +144,8 @@ only thing that has ever moved this program, which is a run instead of an argume
 
 ## Built vs missing
 
-- **Built:** `vertical-loop.sh` phase machine and gates, the three arm runners, `BENCH_VALIDATION=1`
+- **Built:** `vertical-loop.sh` phase machine (`index → scout → preflight → validate → bench →
+  report → harvest`), the three arm runners, `BENCH_VALIDATION=1`
   (results-root routing in `bench-paths.sh` + the `scoring` stamp in all four runners, pinned by
   `test_validation_isolation.py`), `mcp_tee.py` capture,
   `pergroup.py` / `scorer.py` / `judge.py`, `runs-variance.sh`, `audit_watchdog.py`, the
@@ -143,4 +153,4 @@ only thing that has ever moved this program, which is a run instead of an argume
 - **Missing:** the budget-trim audit needs per-run gold cross-referenced against the *full* captured
   responses - the capture exists, the cross-reference does not. Stop-hook wiring stays deferred; it is
   friction reduction, not a prerequisite.
-- **First live use:** the first php-laravel cell to clear the scenario-integrity gate.
+- **First live use:** the first cell whose validation run says the scenario discriminates.

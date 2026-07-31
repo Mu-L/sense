@@ -17,7 +17,7 @@ hands over the slot's declared backup from `slate.json`, cycle counter reset to 
 
 Author one scenario and its gold for one repo off the slate, such that a code-capable baseline
 with Sense forbidden cannot assemble the answer. Exit state: a stamped scenario plus rubric, gold
-hand-audited per dependency, an adversary probe that failed to shortcut it, and the scenario-integrity gate signed.
+hand-audited per dependency, and an adversary probe that failed to shortcut it.
 
 The scenario is CRAFTED, and that is the whole job: nothing scores this repo before the scenario
 exists. Diagnosis feeds the next draft, so a repo usually reaches its verdict through several
@@ -50,7 +50,7 @@ passes through here ([`03-repo-diagnosis.md`](03-repo-diagnosis.md)).
 | Generator | session agent, authoring serially - never forked onto shared files | fork swarms on one scenario file confabulate |
 | Evaluator | the **adversary probe**: one frontier subagent in the baseline clone, grep and read only, Sense forbidden, headline task only | separate from the author; it is trying to beat the scenario, not improve it |
 | Mechanical verifier | `scenario.py --prompt` leak check, `audit_scenarios.py`, `gold_confidence_check.py` (0.3 vs 0.7), per-dependency hand audit of gold credits | the basename false-credit trap is real: a script tally alone has passed wrong gold before |
-| Human | signs off scenario and ground-truth integrity | **permanent anchor, never demotable** |
+| Human | none - the loop authors and checks its own scenario | ground truth is held by the mechanical verifiers above, not by a reviewer |
 
 ## The adversary probe (design-time kill, $0)
 
@@ -94,7 +94,7 @@ Gold is built here from scratch for the shape the adversary probe disclaimed, an
 
 - **Success:** scenario plus rubric stamped, `scenario.py --prompt` leak check clean, `audit_scenarios.py`
   clean, every gold dependency hand-audited, gold verified at 0.3 and 0.7, adversary probe failed to
-  assemble the answer, the scenario-integrity gate signed.
+  assemble the answer.
 - **Budget:** $0 in dollars; capped by session turns. Park with the draft on disk - a half-authored
   scenario resumes, it never restarts.
 - **Failure:** the adversary probe assembled the answer and no undisclaimed axis remains after the
@@ -107,7 +107,14 @@ Gold is built here from scratch for the shape the adversary probe disclaimed, an
 
 | Event | Fires when | Blocking? | Demotable? |
 |---|---|---|---|
-| Scenario integrity (batchable across the slate) | scenario + gold drafted and pressure-tested, before any spend | yes | **never** - ground-truth anchor |
+| none | - | - | - |
+
+The scenario-integrity sign-off was REMOVED 2026-07-31. What stood in its place is mechanical and
+must all pass before the scenario leaves this loop: the adversary probe failing to assemble the
+answer, `scenario.py --prompt` proving no leak, `audit_scenarios.py`, `gold_confidence_check.py` at
+both 0.3 and 0.7, and the per-dependency hand audit. **The audit is the load-bearing one** - a
+script tally alone has passed wrong gold before - so it is done here, in full, with nobody
+downstream to catch it.
 
 ## State / memory
 
@@ -132,7 +139,7 @@ Gold is built here from scratch for the shape the adversary probe disclaimed, an
   [`../scenarios/sourcing-runbook.md`](../scenarios/sourcing-runbook.md)); the empirical laws in
   [`campaign-laws.md`](campaign-laws.md).
 - **Produces:** the stamped scenario + rubric, the adversary probe transcript, the audited gold, the
-  the scenario-integrity gate record.
+  the audit trail for each of them.
 
 ## Fixture test (standalone, $0)
 

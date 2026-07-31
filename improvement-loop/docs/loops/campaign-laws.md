@@ -114,6 +114,12 @@ the other three became loops in their own right, so the laws they all shared liv
   prove otherwise", and it starts at proposal time, not at tie-diagnosis time. When a proposal
   reaches for "honest boundary", "tie" or "ballast", the required response is to deepen the
   contract hunt and widen the pool. No loop offers a boundary framing; it exhausts axes first.
+- **LOOPS 1-3 HAVE NO HUMAN GATE (2026-07-31).** The scenario-integrity, spend, swap and
+  tie-diagnosis gates were all removed: the per-repo loops author, spend, diagnose and swap on their
+  own. What replaces each one is mechanical and named in that loop's one-pager, and the STOPPER below
+  is the only thing that still halts the line. Runs are on a subscription by default, so a cycle
+  spends quota against the weekly reset rather than dollars, and nothing checkpoints it - the bound
+  is the arm plan, four repos, and six crafting cycles per repo.
 - **A STAGE IS SELF-CONTAINED.** Its input is a file on disk, its output is a file plus a ledger
   entry, never a conversation carried forward. If a loop needs something the previous one did
   not write down, that is a defect in the previous loop, not a reason to widen this one.
