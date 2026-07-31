@@ -28,14 +28,17 @@
 #   bash bench/drivers/vertical-loop.sh <repo> --reset        # back to index
 #   bash bench/drivers/vertical-loop.sh --status              # all repos' phases
 #
-# Env: VERTICAL (default python-django), MODELS (default claude-opus-4-8),
+# Env: VERTICAL (REQUIRED, no default), MODELS (default claude-opus-4-8),
 #      RUNS (default 2), SENSE_CLONES (default ~/Developer/luuuc/oss/sense-benchmark/sense).
 set -uo pipefail
 
 BENCH_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$BENCH_DIR/.."
 LIB="$BENCH_DIR/lib"
-VERTICAL="${VERTICAL:-python-django}"
+# VERTICAL is REQUIRED and has no default. It used to default to python-django, a
+# vertical that has never had a directory, so an unset VERTICAL sent every path in
+# this script at a tree that does not exist.
+: "${VERTICAL:?VERTICAL must be set (a key from verticals.txt, e.g. VERTICAL=ruby-rails)}"
 source "$BENCH_DIR/lib/arms.sh"
 # The headline arm by default; the id lives only in verticals/<key>/arms.txt.
 MODELS="${MODELS:-$(arms_models "$VERTICAL" headline)}"

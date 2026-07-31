@@ -20,13 +20,17 @@
 #   bash bench/bootstrap/provision.sh --index django  # also build the sense-arm index
 #   bash bench/bootstrap/provision.sh --check         # report state only, clone nothing
 #
-# Env: VERTICAL (default python-django), SENSE_CLONES (sense-arm root; baseline arm is its
+# Env: VERTICAL (REQUIRED, no default), SENSE_CLONES (sense-arm root; baseline arm is its
 #      sibling baseline/).
 set -uo pipefail
 BENCH_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$BENCH_DIR/.."
+# VERTICAL is REQUIRED and has no default, and it is read BEFORE the paths below.
+# It used to default to python-django (a vertical that has never had a directory)
+# and to be assigned one line AFTER $PINNED already used it, which under `set -u`
+# aborts on an unset VERTICAL instead of applying the default at all.
+: "${VERTICAL:?VERTICAL must be set (a key from verticals.txt, e.g. VERTICAL=ruby-rails)}"
 PINNED="$BENCH_DIR/../verticals/$VERTICAL/PINNED_COMMITS.json"
-VERTICAL="${VERTICAL:-python-django}"
 SENSE_ARM="${SENSE_CLONES:-$HOME/Developer/luuuc/oss/sense-benchmark/sense}"
 BASE_ARM="$(dirname "$SENSE_ARM")/baseline"
 REPOS_TXT="$BENCH_DIR/../verticals/$VERTICAL/repos.txt"

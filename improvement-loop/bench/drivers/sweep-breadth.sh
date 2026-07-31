@@ -63,20 +63,27 @@ PASS="${PASS:-both}"                # 1 | 2 | both
 WINBAR="${WINBAR:-0.50}"            # close-call threshold (mirrors pergroup VERDICT)
 SKIP_BIG="${SKIP_BIG:-0}"          # defer the cost-outlier repos (only if the cap forces it)
 
-# Default repo order. ruby-rails keeps its hand-tuned smallest-first list (so under
-# a weekly cap the most cells land before the big repos at the tail); every OTHER
-# vertical reads its own verticals/<v>/repos.txt membership (list it smallest-first
-# there for the same benefit). Always overridable with REPOS=.
-RAILS_ORDER="raix langchainrb lobsters ruby_llm llm.rb solidus redmine chatwoot forem mastodon rails discourse gitlabhq"
+# Default repo order: the vertical's own verticals/<v>/repos.txt membership (list
+# it smallest-first, so under a weekly cap the most cells land before the big
+# repos at the tail). Always overridable with REPOS=.
+#
+# A MISSING repos.txt is an error, never a fallback. This used to fall back to a
+# hardcoded thirteen-repo Rails order, which meant a sweep on a vertical whose
+# membership had not been written benched RAILS repos under that vertical's name
+# and produced results rather than a failure. A wrong list that runs is worse
+# than no list at all.
 repos_default() {
   local f="$BENCH_DIR/../verticals/$VERTICAL/repos.txt"
-  if [ -f "$f" ]; then
-    grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$f" | tr '\n' ' '
-  else
-    echo "$RAILS_ORDER"
-  fi
+  [ -f "$f" ] || return 1
+  grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$f" | tr '\n' ' '
 }
-REPOS="${REPOS:-$(repos_default)}"
+if [ -z "${REPOS:-}" ]; then
+  REPOS="$(repos_default)" || {
+    echo "[breadth] no repo list: verticals/$VERTICAL/repos.txt does not exist." >&2
+    echo "          Write it (smallest-first) or pass REPOS=\"repo1 repo2 ...\"." >&2
+    exit 1
+  }
+fi
 # Cost outliers held back by SKIP_BIG=1 (178k + the framework): only when a cap forces it.
 HUGE="${HUGE_REPOS:-gitlabhq rails}"
 # Repos that get the runaway guard (mid-big; the huge ones keep their harness
