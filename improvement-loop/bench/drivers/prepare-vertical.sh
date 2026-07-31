@@ -78,12 +78,14 @@ else
 fi
 say "   $KEY (lang=$LANG_ARG framework=$FRAMEWORK)"
 
-CONF="$IL_ROOT/stacks/$KEY.conf"
-[ -f "$CONF" ] || {
-  say "   no stack profile at stacks/$KEY.conf - the hunt queries and the"
-  say "   in-vertical marker are declared there, and an undeclared hunt cannot"
-  say "   support a 'pool exhausted' claim later."
-  emit NO-STACK-PROFILE 66 "$KEY" select "stacks/$KEY.conf missing"; }
+# The stack profile is a hand-written bootstrap prerequisite, checked here the
+# same way the queue is - BEFORE the stamp, so a bad profile never leaves a
+# half-created vertical behind.
+say "## [prerequisite] stacks/$KEY.conf"
+if ! python3 "$BENCH_DIR/lib/stack_profile_check.py" "$KEY" >&2; then
+  say "   write or fix it before re-running - format: stacks/README.md"
+  emit NO-STACK-PROFILE 66 "$KEY" prerequisite "stacks/$KEY.conf missing or invalid"
+fi
 
 # --- 2. bootstrap (Loop 1) ----------------------------------------------------
 say "## [bootstrap] Loop 1"
