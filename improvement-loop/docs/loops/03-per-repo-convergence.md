@@ -82,7 +82,7 @@ Imported by pointer, never restated in a stage file:
   [`campaign-laws.md`](campaign-laws.md)).
 - The agent dry-run gate before any paid bench - real arm asymmetry, never a hand-grep.
 - **STOPPER:** a bug found in ANY measurement instrument (`gold.py`, `scorer.py`, `judge.py`,
-  `admission_gate.py`, `grounding.py`, `pergroup.py`, `efficiency.py`) halts **all four stages
+  `repo_screen.py`, `grounding.py`, `pergroup.py`, `efficiency.py`) halts **all four stages
   immediately** - no new cells, no verdicts, no swap dossiers, no kills. Log it to the vertical's
   `LEDGER.md` the moment it is found, recheck at $0 with `rescore_diff.py`, and the human rules.
   Continuing without a ruling requires proving zero impact with a zero-diff re-score; a mitigation is

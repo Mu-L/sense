@@ -109,7 +109,7 @@ was the fourth until 2026-07-29 - Loop 2 is now autonomous and decides it agains
 
 **The STOPPER row is the one gate the AGENT must pull on its own** (the owner, 2026-07-15). Find a bug in
 a measurement instrument - anything whose output becomes a number that decides something
-(`gold.py`, `scorer.py`, `judge.py`, `admission_gate.py`, `grounding.py`, `pergroup.py`,
+(`gold.py`, `scorer.py`, `judge.py`, `repo_screen.py`, `grounding.py`, `pergroup.py`,
 `efficiency.py`) - and everything downstream STOPS: no new cells, no verdicts, no seat/kill
 rulings, no publishing. (Doc work, unrelated product windows, and the investigation itself
 continue - an absolute "stop everything" is unenforceable and gets rationalized away.) Then:

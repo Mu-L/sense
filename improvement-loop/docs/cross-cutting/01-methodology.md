@@ -9,11 +9,10 @@ rigor: methodology (no model-comparison claims; this pack is about the method)
 # Benchmarking a dev tool for AI agents, honestly
 
 **The finding.** Most "our tool helps AI" benchmarks measure the tool against a strawman or against an LLM
-judge that cannot see what the answer left out. The hard part is not running the bench; it is keeping it honest
-when you are the one who benefits from the number. This pack is the method we built to do that, and the
+judge that cannot see what the answer left out. The hard part is not running the bench; it is keeping it honest when you are the one who benefits from the number. This pack is the method we built to do that, and the
 mistakes that cost us the most to learn. It is the trust layer under every other number we publish.
 
-## The five traps (each cost real time; each is now a rule)
+## The six traps (each cost real time; each is now a rule)
 
 1. **The judge is blind to omission.** A reference-blind LLM judge rates a 35%-recall answer "exhaustive,"
    because it grades what is present, not what is missing. Fix: make the judge **reference-aware**. Feed it the
@@ -34,8 +33,15 @@ mistakes that cost us the most to learn. It is the trust layer under every other
    we proposed was plausible, and they went 0 for 5 in a single day. The one that looked strongest - rank
    candidates by how many things hold them - finds three of four banked wins at rank 2 to 4 and buries the
    fourth, the biggest win in the corpus, at rank 50 of 901. Tuning on the cases that agree with you is how a
-   gate learns to reject exactly the results you are trying to reproduce. Fix: `gate_backtest.py`, which runs
-   any proposed gate against the banked wins and refuses to attest if it rejects one.
+   gate learns to reject exactly the results you are trying to reproduce. Fix: backtest any proposed gate or
+   ranking against the banked wins before it gates anything, and treat a filter that has never produced a
+   positive as unlicensed to reject one. Measured cost of skipping this: the seven-bar admission gate ran four
+   verticals without producing a win, and when finally backtested rejected 4 of 4 banked wins.
+6. **On a stalled vertical, compare against the banked wins BEFORE analysing the failure.** A day went into
+   improving gates, probes and metrics on a stuck vertical while four winning cells from a finished one sat
+   unexamined; the moment they were compared, the answer took fifteen minutes (the wins shared a question shape
+   resting on a structural density the new stack does not have). Deeper analysis of a failure is the second
+   move, never the first.
 
 ## The fairness corrections (every one removed an anti- OR pro-tool bias)
 

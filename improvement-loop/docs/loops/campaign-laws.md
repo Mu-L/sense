@@ -18,7 +18,11 @@
   `context.Base` killed at cited_recall 1.00 by a 366-file import dump; same screen killed
   gitea Session + client.Client and photoprism entity.Session. LEDGER
   `ruling/import-law-v10-queue`._
-- **K7 (mechanized IMPORT-LAW).** `bench/lib/admission_gate.py` bar 3 carries the pkg-import
+- **K7 (IMPORT-LAW) - MECHANISM RETIRED 2026-07-31, law UNIMPLEMENTED.** It lived in
+  `admission_gate.py` bar 3, which went with the seam gate (it ran before a scenario existed,
+  and the gate backtested at 4 of 4 banked wins rejected). The law's recorded kills stand; its
+  automation does not exist, and re-siting it inside Loop 3 - where a scenario is there to run
+  it against - is an OPEN decision, not a settled one. The retired bar 3 carried the pkg-import
   row + K7 = import cover ≥ 0.8 AND retained prod files < floor. The retention exemption is
   load-bearing: a blanket K7 back-kills genuine retention golds. The four-anchor backtest
   fixture (gitea BALLAST/K7, pebble GRAY, doltdb BALLAST, attributes GRAY) is the regression
@@ -86,6 +90,5 @@
 - **Gate-fidelity law** (the adversary probe must be stronger than the production arm) and the
   **agent dry-run gate before any paid bench**: `02-repo-admission.md` /
   `03-per-repo-convergence.md` + memory `feedback_agent_dryrun_gate_before_bench`.
-- **Instruments that carry** (bench/lib, not vertical docs): `admission_gate.py` (+K7,
-  four-anchor fixture), `control_bound.py`, `mcp_probe.py`, `rescore_diff.py`,
+- **Instruments that carry** (bench/lib, not vertical docs): `repo_screen.py`, `control_bound.py`, `mcp_probe.py`, `rescore_diff.py`,
   `select_final.py`, `bootstrap_check.py`.
