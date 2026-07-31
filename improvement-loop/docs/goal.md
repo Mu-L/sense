@@ -44,7 +44,7 @@ defaults: the blast `min_confidence` 0.7-vs-0.3 contract bug is the canonical mi
    a cold `min_confidence=0.6` blast on chatwoot (schema-steered), and litellm's
    `low_confidence_hidden` hint never acted on - both response-shape/contract levers.
 3. **Loss anatomy** (TO BUILD): one distilled row per recorded tie/loss stating the transcript-level reason
-   grep won (window-batching, covering declaration, memorized API, satisficing shape). Feeds Loop 2's bar 3
+   grep won (window-batching, covering declaration, memorized API, satisficing shape). Feeds the loss-anatomy ledger
    so admission recalibrates from every vertical's losses, not from a one-time backtest.
 
 Plus one coverage check (BUILT: `tool_use_audit.py --coverage`): per vertical, which surfaces the paid

@@ -1,4 +1,4 @@
-# The default arms. new-vertical.sh copies this to verticals/<key>/arms.txt, where the
+# The default arms. stamp.sh copies this to verticals/<key>/arms.txt, where the
 # campaign edits it. THIS FILE IS THE ONLY PLACE A MODEL ID IS NAMED - when a release
 # supersedes one, edit here (for future verticals) and in the vertical's own arms.txt
 # (for a live one). No doc, driver, or one-pager may hardcode a model id.

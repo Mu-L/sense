@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""The SLATE-level half of Loop 2: does the composed set obey §7.0, and is it
+"""The SLATE-level half of admission: does the composed set obey §7.0, and is it
 actually on disk the way it says it is?
 
     slate_check.py <vertical> [--clones DIR]
 
-`repo_screen.py` decides ONE candidate. This decides the SET, which is
-the part the admission sign-off used to do by eye before it was retired (2026-07-29, Loop 2 is
+`screen.py` decides ONE candidate. This decides the SET, which is
+the part the admission sign-off used to do by eye before it was retired (2026-07-29, admission is
 autonomous). Everything here is a file on disk or a number from an index; prose
 moves none of it.
 

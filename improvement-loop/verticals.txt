@@ -1,6 +1,6 @@
 # The vertical QUEUE, in order. One `key|lang|framework|title` per line.
 #
-# `prepare-vertical.sh` walks this top to bottom and takes the FIRST key whose
+# `run.sh` walks this top to bottom and takes the FIRST key whose
 # verticals/<key>/ directory does not exist. That is the whole selection rule:
 # the human decides the ORDER by editing this file, the script decides nothing.
 # When every key already has a directory it stops and says so rather than
@@ -12,7 +12,7 @@
 #   title      display name for the stamp
 #
 # Each queued key also needs `stacks/<key>.conf` (the manifest marker and the
-# hunt queries). prepare-vertical.sh refuses to start without it, because a
+# hunt queries). run.sh refuses to start without it, because a
 # vertical whose repo hunt is undeclared cannot make a checkable "pool
 # exhausted" claim later.
 

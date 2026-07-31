@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # sense-version-check.sh - the installed binary must BE the latest release.
 #
-#   bash bench/lib/sense-version-check.sh          # exit 0 = current
+#   bash bench/bootstrap/sense-version-check.sh          # exit 0 = current
 #
 # Every index the pipeline builds is only as good as the binary that built it,
 # and an index built by an older binary is indistinguishable from a fresh one

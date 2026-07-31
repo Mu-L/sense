@@ -56,7 +56,7 @@ The project is no longer one person working one campaign at a time; several peop
 for different verticals at once. Ordering campaigns in a serial queue blocked $0 work for no reason,
 so the 2026-07-06 slot sequence below stands as history only. What replaces it is one mechanical
 dependency per lane, not an ordering between lanes: **paid bench cells for a stack require that
-stack's extraction/resolution to be built first** (`bootstrap_check.py --strict` green for the
+stack's extraction/resolution to be built first** (`scaffold_check.py --strict` green for the
 vertical). Everything upstream of paid spend - repo pool, pinning, scenario crafting, gold
 curation, article skeletons - is $0 and can start in any lane at any time. Where a lane's index is
 still symbols-only, admission-gate numbers are provisional and are re-run once the language support

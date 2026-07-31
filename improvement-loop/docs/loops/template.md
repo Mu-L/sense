@@ -50,7 +50,7 @@
 | | | | |
 
 <!-- The three permanent anchors (scenario/ground-truth integrity, spend, publish) never demote; the repo
-     slate was a fourth until 2026-07-29, when Loop 2 went autonomous.
+     slate was a fourth until 2026-07-29, when bootstrap went autonomous.
      Everything else may flip to advisory-logged after a vertical of clean reviews (trust ledger). -->
 
 ## State / memory
@@ -58,7 +58,7 @@
 - <files: state json, ledgers, checklists. "The repo remembers so the agent can forget." Every state file
   is gitignored or committed per the existing conventions; name them exactly.>
 - <Readability duty: name this loop's `LEDGER.md` write points (keys + transitions) per
-  [`00-ledger.md`](00-ledger.md). The ledger is write-only for the loop - never read to decide anything.>
+  [`ledger.md`](ledger.md). The ledger is write-only for the loop - never read to decide anything.>
 
 ## Un-fakeable check
 

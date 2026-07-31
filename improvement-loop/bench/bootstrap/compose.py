@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Compose the §7.0 slate from repo_screen.py's ADMIT cells, and write the output.
+"""Compose the §7.0 slate from screen.py's ADMIT cells, and write the output.
 
-    compose_slate.py <vertical> --cells DIR [--clones DIR] [--write]
+    compose.py <vertical> --cells DIR [--clones DIR] [--write]
 
-Reads every `*.json` repo_screen.py wrote into --cells, keeps the ADMITs, and
+Reads every `*.json` screen.py wrote into --cells, keeps the ADMITs, and
 picks one repo per slot. Without --write it prints the composition and changes
 nothing; with --write it writes repos.txt, PINNED_COMMITS.json and slate.json.
 
@@ -151,7 +151,7 @@ def main():
     json.dump(pins, open(pins_path, "w"), indent=2, sort_keys=True)
 
     out = {"_meta": {"vertical": args.vertical,
-                     "note": "Written by compose_slate.py; verified by slate_check.py."}}
+                     "note": "Written by compose.py; verified by slate_check.py."}}
     for repo, s in slate.items():
         b = backups.get(repo)
         # No anchor here, by design: choosing the anchor is Loop 3's judgment

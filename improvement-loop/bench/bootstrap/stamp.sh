@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# new-vertical.sh - stamp the directory structure for a new stack vertical
-# (docs/loops/01-vertical-bootstrap.md). It scaffolds the MECHANICAL skeleton; it deliberately
+# stamp.sh - stamp the directory structure for a new stack vertical
+# (docs/loops/00-bootstrap.md). It scaffolds the MECHANICAL skeleton; it deliberately
 # does NOT choose repos, pin commits, or author scenarios - those are the human
 # judgment gates: it never chooses repos, pins commits, or authors scenarios.
 #
@@ -17,9 +17,9 @@
 # is safe to re-run and safe against a partially-stamped vertical.
 #
 # Usage:
-#   bash bench/drivers/new-vertical.sh <key> [--title "Display Name"]
-#   bash bench/drivers/new-vertical.sh laravel --title "PHP / Laravel"
-#   bash bench/drivers/new-vertical.sh laravel --no-doc        # bench dirs only
+#   bash bench/bootstrap/stamp.sh <key> [--title "Display Name"]
+#   bash bench/bootstrap/stamp.sh laravel --title "PHP / Laravel"
+#   bash bench/bootstrap/stamp.sh laravel --no-doc        # bench dirs only
 set -uo pipefail
 cd "$(dirname "$0")/../.."                      # improvement-loop root
 ROOT="$(pwd)"
@@ -34,7 +34,7 @@ while [ $# -gt 0 ]; do
     *)  KEY="$1"; shift ;;
   esac
 done
-[ -z "$KEY" ] && { echo "usage: new-vertical.sh <key> [--title T] [--no-doc]" >&2; exit 64; }
+[ -z "$KEY" ] && { echo "usage: stamp.sh <key> [--title T] [--no-doc]" >&2; exit 64; }
 [ -z "$TITLE" ] && TITLE="$KEY"
 
 made=0; skipped=0
@@ -82,12 +82,12 @@ else
   writef "$DOCDIR/README.md" <<EOF
 # $TITLE Vertical - Tracker
 
-Vertical scaffolded by \`bench/drivers/new-vertical.sh\`.
+Vertical scaffolded by \`bench/bootstrap/stamp.sh\`.
 
 > **Authorities** (this folder never overrides them):
 > [\`../../docs/manifesto.md\`](../../docs/manifesto.md) (rules),
 > [\`../../docs/vertical-program.md\`](../../docs/vertical-program.md) (sequence),
-> [\`../../docs/loops/01-vertical-bootstrap.md\`](../../docs/loops/01-vertical-bootstrap.md) (this loop).
+> [\`../../docs/loops/00-bootstrap.md\`](../../docs/loops/00-bootstrap.md) (the bootstrap).
 
 ## Status
 
@@ -129,7 +129,7 @@ label that eight repos carried into Loop 3 before dying there).
 ## Freeze plan (at clone time)
 
 \`PINNED_COMMITS.json\` (this folder): for each repo \`git ls-remote <url> HEAD\` -> pin the
-SHA, then \`bash bench/drivers/provision-repos.sh\` clones both arms and strips any
+SHA, then \`bash bench/bootstrap/provision.sh\` clones both arms and strips any
 anti-LLM banner from BOTH (fairness, manifesto §3).
 EOF
 fi
@@ -138,5 +138,5 @@ echo ""
 echo "== done: $made created, $skipped already present =="
 echo "Next:"
 echo "  2. choose the 4 repos + contracts -> verticals/$KEY/repos.md, fill verticals/$KEY/repos.txt"
-echo "  3. pin commits in verticals/$KEY/PINNED_COMMITS.json, then bash bench/drivers/provision-repos.sh"
+echo "  3. pin commits in verticals/$KEY/PINNED_COMMITS.json, then bash bench/bootstrap/provision.sh"
 echo "  4. per repo:  bash bench/drivers/vertical-loop.sh <repo>   (VERTICAL=$KEY)"

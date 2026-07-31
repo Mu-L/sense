@@ -1,8 +1,8 @@
 # Loss anatomy - every non-WIN outcome, distilled (cross-vertical, append-only)
 
 > **What this is.** One row per recorded tie / killed slot across all verticals: the transcript-level
-> reason the baseline reached parity (or the design-time reason the slot died). Loop 2's bar-3
-> recalibration input ([`02-repo-admission.md`](02-repo-admission.md)) and the standing
+> reason the baseline reached parity (or the design-time reason the slot died). the admission screens'
+> recalibration input ([`00-bootstrap.md`](00-bootstrap.md)) and the standing
 > "what beats us" map (goal file, sensory system 3). Loop 5 appends a row per new tie/loss at harvest.
 > Discipline: every row cites transcript evidence (headline-arm baseline transcripts) or the
 > design-time measurement doc; no row concludes from a proxy. Backfilled 2026-07-11 from the frozen
@@ -214,7 +214,7 @@ model-variance ceilings; a deeper look split them:
   12/12 gold in the payload, and cites 2-5. The same fix that converted consul did NOT move it (5/12,
   2/12), which is the proof that these are two different failure modes and not one anomaly. No Sense
   change reaches a model that is handed the answer and does not transcribe it.
-- **Method note for Loop 2:** the separator was reading each run's `sense-io.jsonl` for tool-called +
+- **Method note:** the separator was reading each run's `sense-io.jsonl` for tool-called +
   payload-held vs cited. A payload probe alone proved the accounting defect but NOT its causal role; the
   falsifier run (fix + re-bench) is what told the two modes apart. See `decision-errors.md` 2026-07-22.
 
@@ -249,7 +249,7 @@ promoted).
 **Adjacent design-time kills** (same sweep family, recorded for the pool): DSPy 0/470 grep-invisible
 edges (`repos.md` line 211/1011); LangChain scoped out (slim live core, max memorization).
 
-## Standing observations (recalibration input for Loop 2)
+## Standing observations (recalibration input for admission)
 
 1. **The small-gem/ballast lane is consistent:** every small-slot tie so far is enumerable-surface or
    covering-declaration. §7.0 ballast behaves as designed; bar 2/3 numbers should still be RECORDED at

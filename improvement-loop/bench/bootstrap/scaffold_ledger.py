@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Write Loop 1's `loop1/scaffold` LEDGER entry from measured facts.
+"""Write the `bootstrap/scaffold` LEDGER entry from measured facts.
 
-Driven by loop1-bootstrap.sh through the environment (KEY, LANG_ARG, TITLE,
+Driven by scaffold.sh through the environment (KEY, LANG_ARG, TITLE,
 FRAMEWORK, REASON, EXTRACT_DIR, REPO_ROOT, IL_ROOT), so the entry records what
 the run actually found rather than what someone remembered afterwards.
 
-The schema is `00-ledger.md`'s and `ledger_check.py` enforces it: What, Why,
+The schema is `ledger.md`'s and `ledger_check.py` enforces it: What, Why,
 Alternatives, Lesson, Exit check, Scores, Cost, Links. Every field here is
 either a fact from disk or the caller's stated reason. The one field a script
 cannot invent is the LESSON, so it says plainly that a clean scaffold taught
@@ -17,12 +17,12 @@ import os
 import sys
 
 TEMPLATE = """
-## {date} | loop1/scaffold | {title} stamped and evaluated green
+## {date} | bootstrap/scaffold | {title} stamped and evaluated green
 
 - **What:** `verticals/{key}/` stamped with {n_elements} element(s): {elements}.
-  Loop 1's three elements: the stamp; extractor readiness; the arm decision.
-  Evaluator `bootstrap_check.py {key} --lang {lang} --strict` exits 0, and a
-  re-run of `new-vertical.sh` creates nothing.
+  The scaffold's three elements: the stamp; extractor readiness; the arm decision.
+  Evaluator `scaffold_check.py {key} --lang {lang} --strict` exits 0, and a
+  re-run of `stamp.sh` creates nothing.
 - **Extractor readiness (checked, not assumed):** `internal/extract/{lang}/`
   carries {n_extract} production file(s) ({extract_files}).{support}
   Ready; no Loop 7 blocker and no lane park.
@@ -34,12 +34,12 @@ TEMPLATE = """
   place - rejected: a hand-patched stamp proves nothing about what the generator
   produces for the NEXT vertical, which is the only thing that matters.
 - **Lesson:** {lesson}
-  `Exit: check(bootstrap_check.py {key} --lang {lang} --strict rc=0; new-vertical.sh
-  re-run creates 0; loop1-bootstrap.sh returns status=BOOTSTRAPPED)`
+  `Exit: check(scaffold_check.py {key} --lang {lang} --strict rc=0; stamp.sh
+  re-run creates 0; scaffold.sh returns status=BOOTSTRAPPED)`
 - **Scores:** n/a: scaffold, no runs.
 - **Cost:** $0 API. Subscription: one session, no paid arms; fleet: no spawns
   (0 spawns, main session only).
-- **Links:** `docs/loops/01-vertical-bootstrap.md`, `bench/drivers/loop1-bootstrap.sh`.
+- **Links:** `docs/loops/00-bootstrap.md`, `bench/bootstrap/scaffold.sh`.
 """
 
 CLEAN_LESSON = ("none owed - the stamp was clean on the first walk and the "
@@ -50,7 +50,7 @@ CLEAN_LESSON = ("none owed - the stamp was clean on the first walk and the "
 HEADER = """# {key} - LEDGER
 
 Append-only narrative for the {key} vertical. Entry schema and write points:
-[`../../docs/loops/00-ledger.md`](../../docs/loops/00-ledger.md). Never edited
+[`../../docs/loops/ledger.md`](../../docs/loops/ledger.md). Never edited
 after the fact; never committed.
 """
 
@@ -110,7 +110,7 @@ def main():
             fh.write(HEADER.format(key=key))
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(body)
-    print(f"   wrote loop1/scaffold to verticals/{key}/LEDGER.md", file=sys.stderr)
+    print(f"   wrote bootstrap/scaffold to verticals/{key}/LEDGER.md", file=sys.stderr)
     return 0
 
 

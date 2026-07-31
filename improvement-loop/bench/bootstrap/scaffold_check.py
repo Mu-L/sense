@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Loop 1 evaluator - mechanical bootstrap validation for a stamped vertical.
+"""The scaffold evaluator - mechanical validation of a stamped vertical.
 
-    bootstrap_check.py <key> --lang <extract-dir> [--prev <key>] [--stale tok1,tok2]
+    scaffold_check.py <key> --lang <extract-dir> [--prev <key>] [--stale tok1,tok2]
 
-Four file-level checks (the Loop 1 un-fakeable list,
-docs/loops/01-vertical-bootstrap.md); nothing here can
+Four file-level checks (the scaffold's un-fakeable list,
+docs/loops/00-bootstrap.md); nothing here can
 be gamed by prose:
 
   structure   verticals/<key>/ has every stamped element: the tracker, the slate,

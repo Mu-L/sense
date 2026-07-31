@@ -1,7 +1,7 @@
 # Survey friction ledger
 
 > Fed by `bench/lib/survey_verify.py --report` at loop close (process:
-> `loops/00-agent-survey.md`). One row per friction hypothesis. Status is FORWARD-ONLY:
+> `loops/08-agent-survey.md`). One row per friction hypothesis. Status is FORWARD-ONLY:
 > `hypothesis → finding → filed → shipped | killed`. Promotion to finding needs verified instances
 > from ≥2 independent model×repo runs AND a clean confound cross-tab. Killed rows stay - they are
 > the record that stops a dead idea from resurfacing as "new".

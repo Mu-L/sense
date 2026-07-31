@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# loop2-hunt.sh - Loop 2 end to end, no human in it (docs/loops/02-repo-admission.md).
+# admit.sh - the admit stage of bootstrap, no human in it (docs/loops/00-bootstrap.md).
 #
 #   pool -> clone -> screen -> compose -> pin -> index the admitted -> verify
 #
 # The screens are repo-level facts: does it declare this stack, is it maintained,
 # is it big enough, is it used. Nothing here opens an index or picks an anchor.
-# Loop 2 used to run a seven-bar seam gate over every anchor of every candidate;
+# Admission used to run a seven-bar seam gate over every anchor of every candidate;
 # backtested against the four banked go wins it rejected 4 of 4, so it was
 # retired. What Sense can win on is Loop 3's question, asked against a scenario
 # that exists.
@@ -16,9 +16,9 @@
 # invents each session is a pool whose "exhausted" claim cannot be checked. A
 # declared file is diffable, and widening it is an edit someone can review.
 #
-#   bash bench/drivers/loop2-hunt.sh php-laravel            # dry run, composes nothing
-#   bash bench/drivers/loop2-hunt.sh php-laravel --write    # writes repos.txt/pins/slate.json
-#   NO_API=1 bash bench/drivers/loop2-hunt.sh php-laravel   # skip gh; maintained+used UNRUN
+#   bash bench/bootstrap/admit.sh php-laravel            # dry run, composes nothing
+#   bash bench/bootstrap/admit.sh php-laravel --write    # writes repos.txt/pins/slate.json
+#   NO_API=1 bash bench/bootstrap/admit.sh php-laravel   # skip gh; maintained+used UNRUN
 #
 # The maintained and used screens need `gh`. NO_API=1 leaves them UNRUN, which
 # NEVER admits - an unrun screen is not a passed screen.
@@ -33,7 +33,7 @@ IL_ROOT="$(cd "$BENCH_DIR/.." && pwd)"
 cd "$IL_ROOT" || exit 1
 
 VERTICAL="${1:-}"
-[ -z "$VERTICAL" ] && { echo "usage: loop2-hunt.sh <vertical> [--write]" >&2; exit 64; }
+[ -z "$VERTICAL" ] && { echo "usage: admit.sh <vertical> [--write]" >&2; exit 64; }
 shift
 
 WRITE=""
@@ -82,7 +82,7 @@ while IFS='|' read -r key url isfw stars pushed; do
     SURVIVORS="$SURVIVORS $key|$url"; continue
   fi
   # shellcheck disable=SC2086
-  v=$(python3 bench/lib/repo_screen.py /dev/null --key "$key" --url "$url" \
+  v=$(python3 bench/bootstrap/screen.py /dev/null --key "$key" --url "$url" \
         --api-only $facts --stack "$STACK_MARKER" --json "$CELLS/$key.json" 2>&1 |
       grep -oE 'SCREEN: [A-Z-]+')
   case "$v" in
@@ -113,7 +113,7 @@ for pair in $SURVIVORS; do
   decl=""; case ",$frameworks," in *",$key,"*) decl="--declared" ;; esac
   # shellcheck disable=SC2086
   # shellcheck disable=SC2086
-  v=$(python3 bench/lib/repo_screen.py "$CLONES/$key" --key "$key" --url "$url" \
+  v=$(python3 bench/bootstrap/screen.py "$CLONES/$key" --key "$key" --url "$url" \
         --stack "$STACK_MARKER" --json "$CELLS/$key.json" $api_flag $decl 2>&1 |
       grep -oE 'SCREEN: [A-Z]+')
   printf '   %-22s %s\n' "$key" "${v:-SCREEN FAILED}"
@@ -122,7 +122,7 @@ done
 [ -z "$ADMITTED" ] && { echo "no repo cleared the screens - widen pool.txt (try-harder law)" >&2; exit 1; }
 
 echo "## [compose]"
-python3 bench/lib/compose_slate.py "$VERTICAL" --cells "$CELLS" --clones "$CLONES" \
+python3 bench/bootstrap/compose.py "$VERTICAL" --cells "$CELLS" --clones "$CLONES" \
         --frameworks "${frameworks#,}" $WRITE
 rc=$?
 
@@ -135,8 +135,8 @@ if [ -n "$WRITE" ] && [ $rc -eq 0 ]; then
   bash bench/lib/ensure-index.sh $slate_repos 2>&1 | grep -E '^\[' || true
 
   echo "## [verify]"
-  python3 bench/lib/slate_check.py "$VERTICAL"
+  python3 bench/bootstrap/slate_check.py "$VERTICAL"
   rc=$?
-  echo "## [next] write the loop2/slate LEDGER entry, then Loop 3"
+  echo "## [next] write the bootstrap/slate LEDGER entry, then Loop 3"
 fi
 exit $rc

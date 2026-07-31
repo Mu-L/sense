@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# provision-repos.sh - clone-day provisioning for a vertical (docs/loops/02-repo-admission.md).
+# provision.sh - clone-day provisioning for a vertical (docs/loops/00-bootstrap.md).
 # For each repo: shallow-fetch the PINNED_COMMITS SHA into BOTH arms (baseline + sense),
 # scan for an anti-LLM banner (the lobsters fairness rule), and optionally build the
 # sense-arm index. Matches the existing depth-1 clone layout (commit count = 1).
@@ -15,10 +15,10 @@
 # the two arms directly on the host; docker + freeze-heldout.sh are GLOBAL-bench only.
 #
 # Usage:
-#   bash bench/drivers/provision-repos.sh                 # all repos in the vertical's repos.txt
-#   bash bench/drivers/provision-repos.sh django haystack # a subset
-#   bash bench/drivers/provision-repos.sh --index django  # also build the sense-arm index
-#   bash bench/drivers/provision-repos.sh --check         # report state only, clone nothing
+#   bash bench/bootstrap/provision.sh                 # all repos in the vertical's repos.txt
+#   bash bench/bootstrap/provision.sh django haystack # a subset
+#   bash bench/bootstrap/provision.sh --index django  # also build the sense-arm index
+#   bash bench/bootstrap/provision.sh --check         # report state only, clone nothing
 #
 # Env: VERTICAL (default python-django), SENSE_CLONES (sense-arm root; baseline arm is its
 #      sibling baseline/).

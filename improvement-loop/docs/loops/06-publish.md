@@ -10,7 +10,7 @@
 
 Turn a finished vertical into its validated public artifacts: 7 fact packs whose every number traces to a
 run record on disk, reconciled with the verdicts, signed off at the publish sign-off, and handed to `social-writing`.
-Exit state: the vertical is closed in Loop 0's ledger and nothing published can drift from the data.
+Exit state: the vertical is closed in the program ledger and nothing published can drift from the data.
 
 ## Product duties (per Sense surface)
 
@@ -77,7 +77,7 @@ Exit state: the vertical is closed in Loop 0's ledger and nothing published can 
   separately; the packs + scorecard ARE the durable output.
 - **Readability duty:** append `loop6/event-e` to `verticals/<vertical>/LEDGER.md` at vertical close;
   `ledger_check.py` runs here, advisory, alongside the closing review (contract in
-  [`00-ledger.md`](00-ledger.md)).
+  [`ledger.md`](ledger.md)).
 
 ## Un-fakeable check
 
@@ -89,7 +89,7 @@ Exit state: the vertical is closed in Loop 0's ledger and nothing published can 
 - **Consumes:** verdicts + scored transcripts (Loop 3), matrix + billed tokens (Loop 4), harvest dossier
   (Loop 5), the `_skeleton` template.
 - **Produces:** the validated pack set (the `social-writing` handoff), the campaign scorecard, the signed
-  the publish sign-off that closes the vertical in Loop 0's ledger.
+  the publish sign-off that closes the vertical in the program ledger.
 
 ## Fixture test (standalone, $0) - RUN 2026-07-11
 

@@ -2,7 +2,7 @@
 
 One file per queued vertical: `stacks/<key>.conf`, where `<key>` matches a line in
 [`../verticals.txt`](../verticals.txt). **Written by hand** (by a human or an LLM) before
-`prepare-vertical.sh` will touch that vertical, and checked as a precondition the same way the queue
+`run.sh` will touch that vertical, and checked as a precondition the same way the queue
 itself is: a missing or incomplete profile stops the pipeline with a named reason, it never guesses.
 
 It is not generated, on purpose. The queries are the search that a later "the pool is exhausted"
@@ -56,7 +56,7 @@ The four axes that have earned their place so far:
     hunt: --language <lang> --topic self-hosted --stars ">1000"
 
 The hunt is allowed to be greedy and wrong. Everything it proposes is verified downstream by
-`repo_screen.py` against the repo's own manifest, its API facts and its file count, so a bad
+`screen.py` against the repo's own manifest, its API facts and its file count, so a bad
 candidate costs a screen, never a bad slate.
 
 ### `framework:` - optional, one per line
@@ -73,9 +73,9 @@ for october and winter. The manifest does not separate a framework from an appli
 
 ## Check it
 
-    python3 bench/lib/stack_profile_check.py <key>
+    python3 bench/bootstrap/stack_profile_check.py <key>
 
-`prepare-vertical.sh` runs the same check before it stamps anything, so a bad profile fails before a
+`run.sh` runs the same check before it stamps anything, so a bad profile fails before a
 vertical is half-created rather than during the hunt.
 
 ## Worked example

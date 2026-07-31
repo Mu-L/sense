@@ -13,6 +13,7 @@ Three things, and each is one thing: the **scripts**, the **rule-book**, and one
 ```
 improvement-loop/
 ├── bench/                all scripts (own scoring core: gold / scorer / scenario)
+│   ├── bootstrap/        one command that stands a vertical up: bash bench/bootstrap/run.sh
 │   ├── lib/              orchestration, gates, scoring
 │   └── drivers/          the loop drivers
 ├── docs/                 the rule-book: manifesto, judging contract, loop one-pagers,

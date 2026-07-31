@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run a stack's DECLARED hunt queries and write verticals/<key>/pool.txt.
 
-    hunt_pool.py <key> [--conf stacks/<key>.conf] [--out verticals/<key>/pool.txt]
+    hunt.py <key> [--conf stacks/<key>.conf] [--out verticals/<key>/pool.txt]
                        [--limit 60] [--force]
 
 The queries live in `stacks/<key>.conf`, not in this file and not in a session's
@@ -9,7 +9,7 @@ head. That is the point: "the pool is exhausted" is only a checkable claim if
 the search that produced it can be re-run by someone else.
 
 What this does NOT do is decide anything. It proposes candidates; every one is
-then verified by repo_screen.py against the repo's own manifest, its API facts
+then verified by screen.py against the repo's own manifest, its API facts
 and its file count. A repo that does not exist, or is not this stack, dies
 there. So the hunt is allowed to be greedy and wrong.
 
@@ -100,9 +100,9 @@ def key_for(full_name):
 def hunt(conf_path, limit):
     stack, queries, frameworks = read_conf(conf_path)
     if not stack:
-        sys.exit(f"hunt_pool: {conf_path} has no `stack:` marker")
+        sys.exit(f"hunt: {conf_path} has no `stack:` marker")
     if not queries:
-        sys.exit(f"hunt_pool: {conf_path} declares no `hunt:` queries")
+        sys.exit(f"hunt: {conf_path} declares no `hunt:` queries")
 
     found, per_query, failed = {}, [], 0
     # A DECLARED framework repo is a candidate by declaration, never by search
@@ -141,7 +141,7 @@ def render(key, stack, found, frameworks, per_query):
          "# is thinned to the handful worth cloning for free. A hand-added line may",
          "# omit them, and then those two screens fall back to one API call for it.",
          "#",
-         "# WRITTEN BY hunt_pool.py from the declared queries in "
+         "# WRITTEN BY hunt.py from the declared queries in "
          f"stacks/{key}.conf.",
          "# Re-running the hunt reproduces it; widening it means editing that conf,",
          "# or adding a line here by hand, which the hunt will not overwrite without",
@@ -182,14 +182,14 @@ def main():
     out = args.out or os.path.join(root, "verticals", args.key, "pool.txt")
 
     if not os.path.exists(conf):
-        sys.exit(f"hunt_pool: no stack profile at {conf}")
+        sys.exit(f"hunt: no stack profile at {conf}")
     if os.path.exists(out) and not args.force:
         print(f"   pool.txt exists, keeping it (pass --force to re-hunt)", file=sys.stderr)
         return 0
 
     stack, found, frameworks, per_query, failed = hunt(conf, args.limit)
     if not found:
-        print("hunt_pool: every query returned nothing - check `gh auth status`",
+        print("hunt: every query returned nothing - check `gh auth status`",
               file=sys.stderr)
         return 1
     with open(out, "w", encoding="utf-8") as fh:

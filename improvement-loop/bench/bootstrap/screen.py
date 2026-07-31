@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Loop 2's four repo-level screens (docs/loops/02-repo-admission.md).
+"""The four repo-level admission screens (docs/loops/00-bootstrap.md).
 
-    repo_screen.py <clone_dir> --key <repo-key> [--url URL] [--stack composer.json:a|b]
+    screen.py <clone_dir> --key <repo-key> [--url URL] [--stack composer.json:a|b]
                    [--json OUT] [--no-api]
 
 Facts about the repo, never guesses about a scenario. Nothing here opens an
@@ -331,7 +331,7 @@ def main():
             r = screen_api_only(args.key, args.url)
     else:
         if not os.path.isdir(args.clone):
-            sys.exit(f"repo_screen: no such clone: {args.clone}")
+            sys.exit(f"screen: no such clone: {args.clone}")
         r = screen(args.clone, args.key, args.url, args.stack, use_api=not args.no_api)
         if args.declared:
             r["in_vertical"] = dict(DECLARED)

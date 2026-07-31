@@ -17,14 +17,15 @@ nothing here is executable.
 
 ## The loops
 
-[`loops/`](loops) holds one page per loop (bootstrap → admission → convergence → matrix fill →
-harvest → publish → product fix), plus the ledger discipline (`00-ledger.md`) and the standing
-empirical laws distilled from past campaigns (`campaign-laws.md`).
+[`loops/`](loops) opens with the one-command [`bootstrap`](loops/00-bootstrap.md) that stands a
+vertical up, then one page per loop (convergence → matrix fill → harvest → publish → product fix),
+plus the ledger discipline (`ledger.md`) and the standing empirical laws distilled from past
+campaigns (`campaign-laws.md`).
 
 ## Per vertical
 
 A vertical lives in ONE folder outside this one: [`../verticals/<key>/`](../verticals), stamped by
-[`../bench/drivers/new-vertical.sh`](../bench/drivers/new-vertical.sh). The stamp carries structure and
+[`../bench/bootstrap/stamp.sh`](../bench/bootstrap/stamp.sh). The stamp carries structure and
 never values - no results, no scores, no filled pack. It holds both halves together - `repos.txt`, `scenarios/`, `results/` and the tracker, repo slate,
 and the findings packs. `LEDGER.md` (append-only narrative) and `results/` stay
 private; `STATUS.md` is a render, never a source.

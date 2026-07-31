@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# prepare-vertical.sh - everything Loop 3 needs before it can start.
+# run.sh - everything Loop 3 needs before it can start.
 #
-#   select -> bootstrap (Loop 1) -> hunt -> admit (Loop 2) -> READY-FOR-LOOP3
+#   select -> scaffold -> hunt -> admit -> READY-FOR-LOOP3
 #
 # This is scripted automation, not a loop: it converges on the first pass or it
 # stops with a reason. Nothing here iterates and no model is in the path.
@@ -10,9 +10,9 @@
 # bottom and the FIRST key whose verticals/<key>/ does not exist is taken. The
 # human sets the order by editing that file. Pass a key explicitly to override.
 #
-#   bash bench/drivers/prepare-vertical.sh                  # next in the queue
-#   bash bench/drivers/prepare-vertical.sh php-laravel      # a named vertical
-#   bash bench/drivers/prepare-vertical.sh --re-hunt        # re-run the repo hunt
+#   bash bench/bootstrap/run.sh                  # next in the queue
+#   bash bench/bootstrap/run.sh php-laravel      # a named vertical
+#   bash bench/bootstrap/run.sh --re-hunt        # re-run the repo hunt
 #
 # Progress to STDERR, result JSON on STDOUT, every exit path returns one.
 
@@ -27,7 +27,7 @@ emit() {  # emit <status> <exit-code> <key> <stage> <note>
   python3 - "$@" <<'PY'
 import json, sys
 a = sys.argv + [""] * 6
-out = {"pipeline": "prepare-vertical", "status": a[1], "vertical": a[3],
+out = {"pipeline": "bootstrap", "status": a[1], "vertical": a[3],
        "stage": a[4], "note": a[5]}
 if a[1] == "READY-FOR-LOOP3":
     out["next"] = {"loop": "3-per-repo-convergence",
@@ -53,7 +53,7 @@ QUEUE="$IL_ROOT/verticals.txt"
 # Everything downstream builds indexes, and an index built by an older binary is
 # indistinguishable from a fresh one once it is on disk.
 say "## [preflight] sense version"
-if ! bash "$BENCH_DIR/lib/sense-version-check.sh" >&2; then
+if ! bash "$BENCH_DIR/bootstrap/sense-version-check.sh" >&2; then
   emit SENSE-STALE 69 "" preflight "installed sense is not the latest release"
 fi
 
@@ -90,41 +90,41 @@ say "   $KEY (lang=$LANG_ARG framework=$FRAMEWORK)"
 # same way the queue is - BEFORE the stamp, so a bad profile never leaves a
 # half-created vertical behind.
 say "## [prerequisite] stacks/$KEY.conf"
-if ! python3 "$BENCH_DIR/lib/stack_profile_check.py" "$KEY" >&2; then
+if ! python3 "$BENCH_DIR/bootstrap/stack_profile_check.py" "$KEY" >&2; then
   say "   write or fix it before re-running - format: stacks/README.md"
   emit NO-STACK-PROFILE 66 "$KEY" prerequisite "stacks/$KEY.conf missing or invalid"
 fi
 
-# --- 2. bootstrap (Loop 1) ----------------------------------------------------
-say "## [bootstrap] Loop 1"
-b=$(bash "$BENCH_DIR/drivers/loop1-bootstrap.sh" "$KEY" --lang "$LANG_ARG" \
+# --- 2. scaffold --------------------------------------------------------------
+say "## [scaffold]"
+b=$(bash "$BENCH_DIR/bootstrap/scaffold.sh" "$KEY" --lang "$LANG_ARG" \
       --framework "$FRAMEWORK" --title "$TITLE" \
-      --reason "taken from the verticals.txt queue by prepare-vertical.sh")
+      --reason "taken from the verticals.txt queue by run.sh")
 brc=$?
 if [ $brc -ne 0 ]; then
   st=$(printf '%s' "$b" | python3 -c "import json,sys; print(json.load(sys.stdin)['status'])" 2>/dev/null)
-  emit "${st:-BOOTSTRAP-FAILED}" "$brc" "$KEY" bootstrap "loop1-bootstrap.sh returned ${st:-non-zero}"
+  emit "${st:-BOOTSTRAP-FAILED}" "$brc" "$KEY" bootstrap "scaffold.sh returned ${st:-non-zero}"
 fi
 
 # --- 3. hunt ------------------------------------------------------------------
 say "## [hunt] declared queries from stacks/$KEY.conf"
 command -v gh >/dev/null 2>&1 || {
-  say "   gh not installed - the hunt and two of Loop 2's screens need it"
+  say "   gh not installed - the hunt and two of the admission screens need it"
   emit PREFLIGHT-FAILED 70 "$KEY" hunt "gh missing"; }
 gh auth status >/dev/null 2>&1 || {
   say "   gh is not authenticated (run: gh auth login)"
   emit PREFLIGHT-FAILED 70 "$KEY" hunt "gh not authenticated"; }
 # shellcheck disable=SC2086
-python3 "$BENCH_DIR/lib/hunt_pool.py" "$KEY" $REHUNT || {
-  emit HUNT-FAILED 71 "$KEY" hunt "hunt_pool.py failed"; }
+python3 "$BENCH_DIR/bootstrap/hunt.py" "$KEY" $REHUNT || {
+  emit HUNT-FAILED 71 "$KEY" hunt "hunt.py failed"; }
 
-# --- 4. admit (Loop 2) --------------------------------------------------------
-say "## [admit] Loop 2"
-bash "$BENCH_DIR/drivers/loop2-hunt.sh" "$KEY" --write >&2
+# --- 4. admit -----------------------------------------------------------------
+say "## [admit]"
+bash "$BENCH_DIR/bootstrap/admit.sh" "$KEY" --write >&2
 arc=$?
 if [ $arc -ne 0 ]; then
   emit SLATE-INCOMPLETE "$arc" "$KEY" admit \
-    "loop2-hunt.sh could not compose a standing slate; widen stacks/$KEY.conf hunt queries and re-run with --re-hunt"
+    "admit.sh could not compose a standing slate; widen stacks/$KEY.conf hunt queries and re-run with --re-hunt"
 fi
 
 say "## [done] READY-FOR-LOOP3"
