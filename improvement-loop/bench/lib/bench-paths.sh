@@ -41,4 +41,17 @@ if [ -n "${VERTICAL:-}" ] && [ -n "${BENCH_MODEL:-}" ]; then
 else
   RESULTS_DIR="${RESULTS_DIR:-$_results_base}"
 fi
-export RESULTS_DIR SCENARIOS_DIR VERTICAL BENCH_MODEL
+# BENCH_VALIDATION=1 -> Loop 2's unscored validation run (02-repo-run.md). It is a
+# measurement of whether the scenario is the right scenario, and its number may never
+# settle anything. The isolation is the RESULTS ROOT, not a flag the scorer has to
+# honour: pergroup.py/scorer.py walk RESULTS_DIR, so a validation run is invisible to
+# them by construction and no measurement instrument had to change to make it so.
+# BENCH_SCORING rides along for run_meta.json, so a file copied out of the tree still
+# says what it is.
+if [ "${BENCH_VALIDATION:-0}" = 1 ]; then
+  RESULTS_DIR="$RESULTS_DIR/validation"
+  BENCH_SCORING=0
+else
+  BENCH_SCORING=1
+fi
+export RESULTS_DIR SCENARIOS_DIR VERTICAL BENCH_MODEL BENCH_SCORING

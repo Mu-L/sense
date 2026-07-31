@@ -614,6 +614,10 @@ meta = {
     "sense_dirty": sdirty == "true",
     "sense_release": srel or None,
     "sense_build_key": os.environ.get("SENSE_BUILD_KEY") or None,
+    # Loop 2's validation run is unscored by law (02-repo-run.md): a x1 unscored number
+    # is a sample and may not settle a win, a tie, or an article. The results root already
+    # isolates it; this says so on the artifact itself, for anything copied out of the tree.
+    "scoring": os.environ.get("BENCH_SCORING", "1") != "0",
     # ^ the EXPIRY key: sha256 of the binary. sense_ref+sense_dirty cannot separate
     # two dirty trees on one commit, which is what a Loop 7 spike-rebuild is
     # (lib/sense_build.py).
