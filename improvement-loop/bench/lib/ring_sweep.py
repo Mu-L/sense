@@ -19,9 +19,10 @@ ring spread across MANY distinct narrow interfaces has no single enumerating
 grep; dolt's paid gold spans 5+ interfaces and the best single method grep
 covers 3 of its 12 files.
 
-So the screen is: rank anchors by (prod ring rows, DISTINCT vias), then hand the
-survivors to admission_gate.py. Anchors that fail here need no session and no
-gate run. Test-file satisfiers are excluded (the temporal law: one test struct
+So the screen is: rank anchors by (prod ring rows, DISTINCT vias). The survivors
+are a LISTING for whoever writes the scenario (Loop 3), never an admission
+verdict: the seven-bar gate this used to feed was retired after it rejected
+4 of 4 banked wins. Test-file satisfiers are excluded (the temporal law: one test struct
 embedding a dozen interfaces fabricated 52 of 100 rows).
 
 Output is a ranked table; exit 0 always (a screen reports, it does not gate).
@@ -181,7 +182,7 @@ def main():
             why = (f"CANDIDATE ⚠ {p['top_carrier_share']} of the ring on ONE carrier "
                    "read that carrier in source before curating gold (vault class)")
         elif ok:
-            why = "CANDIDATE → run admission_gate.py"
+            why = "CANDIDATE → scenario material (Loop 3)"
         else:
             why = "under bar"
         if ok:
@@ -193,7 +194,7 @@ def main():
 
     print(f"\n{len(survivors)} candidate(s) above the bar.")
     for name, path, p in survivors:
-        print(f"  python3 bench/lib/admission_gate.py {a.clone} '{name}' --file {path}")
+        print(f"  {name}  ({path})")
 
 
 if __name__ == "__main__":

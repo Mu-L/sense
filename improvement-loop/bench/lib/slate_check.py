@@ -4,7 +4,7 @@ actually on disk the way it says it is?
 
     slate_check.py <vertical> [--clones DIR]
 
-`admission_gate.py --slot` decides ONE candidate. This decides the SET, which is
+`repo_screen.py` decides ONE candidate. This decides the SET, which is
 the part the admission sign-off used to do by eye before it was retired (2026-07-29, Loop 2 is
 autonomous). Everything here is a file on disk or a number from an index; prose
 moves none of it.

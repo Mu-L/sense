@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
-"""Compose the §7.0 slate from the gate's ADMIT cells, and write the loop's output.
+"""Compose the §7.0 slate from repo_screen.py's ADMIT cells, and write the output.
 
     compose_slate.py <vertical> --cells DIR [--clones DIR] [--write]
 
-Reads every `*.json` the gate wrote into --cells, keeps the ADMITs, and picks
-one repo per slot. Without --write it prints the composition and changes
+Reads every `*.json` repo_screen.py wrote into --cells, keeps the ADMITs, and
+picks one repo per slot. Without --write it prints the composition and changes
 nothing; with --write it writes repos.txt, PINNED_COMMITS.json and slate.json.
 
-PICKING RULE, in order:
-  1. the WIN SIGNATURE (no usable cover + token precision <= 0.3 +
-     total_affected >= 500) - what all three banked wins share;
-  2. then total_affected, descending.
-A repo is used ONCE: its best admitted anchor takes a slot, and the next-best
-repo of the same size class becomes that slot's backup. Anything left over is
-recorded, not discarded - a rejected repo is not a dead repo.
+PICKING RULE: stars, descending. That is the whole rule, and it is deliberately
+not clever. Six ranking signals were proposed to order candidates by how
+winnable they look, and all six failed against the banked wins - the strongest
+of them buried the biggest win in the corpus at rank 50 of 901. Ordering here is
+a fact about the repo (how many people depend on it), never a prediction about a
+scenario that does not exist yet. Which repo can win is Loop 3's question.
 
-The slate itself is only valid if `slate_check.py` passes afterwards; this
-script composes, that one verifies, and they are deliberately separate so the
-composer cannot bless its own output.
+A repo is used ONCE: it takes a slot, and the next qualified repo of the same
+size class becomes that slot's backup. Anything left over is recorded, not
+discarded - a repo that missed a slot is not a dead repo.
+
+The slate is only valid if `slate_check.py` passes afterwards; this script
+composes, that one verifies, and they are deliberately separate so the composer
+cannot bless its own output.
 """
 
 import argparse
@@ -27,49 +30,27 @@ import os
 import subprocess
 import sys
 
-PRECISION_CEILING = 0.30
-AFFECTED_FLOOR = 500
-SIZE_MEDIUM_FLOOR = 1_000
-SIZE_BIG_FLOOR = 4_000
 LAYOUTS = ({"framework": 1, "big": 1, "medium": 2}, {"big": 2, "medium": 2})
 
 
-def size_of(clone):
-    db = os.path.join(clone, ".sense", "index.db")
-    if not os.path.exists(db):
-        return None, None
-    import sqlite3
-    con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
-    n = con.execute(
-        "SELECT count(*) FROM sense_files WHERE path NOT LIKE '%vendor/%' "
-        "AND path NOT LIKE '%node_modules/%' AND path NOT LIKE '%test%' "
-        "AND path NOT LIKE '%spec%'").fetchone()[0]
-    con.close()
-    return n, ("big" if n >= SIZE_BIG_FLOOR else
-               "medium" if n >= SIZE_MEDIUM_FLOOR else "small")
-
-
-def load_cells(cells_dir, clones):
+def load_cells(cells_dir):
+    """The screen cells, best first. Size comes from the screen, not an index:
+    indexing happens AFTER composition now, on the admitted 8 only."""
     out = []
     for p in sorted(glob.glob(os.path.join(cells_dir, "*.json"))):
         try:
-            d = json.load(open(p))
+            with open(p, encoding="utf-8") as fh:
+                d = json.load(fh)
         except (json.JSONDecodeError, OSError):
             continue
-        if d.get("admission") != "ADMIT" or "bar2" not in d:
+        if d.get("verdict") != "ADMIT":
             continue
-        repo = os.path.basename(os.path.abspath(d.get("clone", "")))
-        b2, b3 = d["bar2"], d.get("bar3", {})
-        n, size = size_of(os.path.join(clones, repo))
-        prec = b2.get("precision")
         out.append({
-            "repo": repo, "symbol": d["symbol"], "file": d.get("file_hint"),
-            "affected": b2.get("total_affected", 0), "precision": prec,
-            "prod_files": n, "size": size,
-            "win_signature": bool(not b3.get("covered")
-                                  and prec is not None and prec <= PRECISION_CEILING
-                                  and b2.get("total_affected", 0) >= AFFECTED_FLOOR)})
-    out.sort(key=lambda c: (not c["win_signature"], -c["affected"]))
+            "repo": d["repo"], "url": d.get("url", ""),
+            "size": d["size_class"], "prod_files": d["size"]["prod_files"],
+            "stars": d["used"].get("stars", 0),
+            "banner": bool(d.get("banner"))})
+    out.sort(key=lambda c: -c["stars"])
     return out
 
 
@@ -131,15 +112,15 @@ def main():
         os.path.dirname(os.path.abspath(__file__)), "..", "..",
         "verticals", args.vertical))
     fw = {x for x in args.frameworks.split(",") if x}
-    cells = load_cells(args.cells, args.clones)
+    cells = load_cells(args.cells)
     slate, backups = pick(cells, fw)
 
-    print(f"### Compose - {args.vertical} ({len(cells)} ADMIT cells)")
+    print(f"### Compose - {args.vertical} ({len(cells)} ADMIT repos)")
     for repo, s in slate.items():
         b = backups.get(repo)
-        print(f"- {s['slot']:9} `{repo}` `{s['symbol']}` affected={s['affected']} "
-              f"precision={s['precision']} win_signature={s['win_signature']}"
-              + (f" | backup `{b['repo']}` `{b['symbol']}`" if b else " | backup MISSING"))
+        print(f"- {s['slot']:9} `{repo}` {s['prod_files']} files, {s['stars']} stars"
+              + (" [BANNER: strip both arms]" if s["banner"] else "")
+              + (f" | backup `{b['repo']}` ({b['stars']} stars)" if b else " | backup MISSING"))
     counts = {}
     for s in slate.values():
         counts[s["slot"]] = counts.get(s["slot"], 0) + 1
@@ -173,12 +154,14 @@ def main():
                      "note": "Written by compose_slate.py; verified by slate_check.py."}}
     for repo, s in slate.items():
         b = backups.get(repo)
-        out[repo] = {"slot": s["slot"], "anchor": s["symbol"], "anchor_file": s["file"],
-                     "affected": s["affected"], "precision": s["precision"],
-                     "win_signature": s["win_signature"],
-                     "backup": ({"repo": b["repo"], "anchor": b["symbol"],
-                                 "anchor_file": b["file"], "affected": b["affected"],
-                                 "precision": b["precision"]} if b else None)}
+        # No anchor here, by design: choosing the anchor is Loop 3's judgment
+        # call, made while the scenario is written, not guessed at admission.
+        out[repo] = {"slot": s["slot"], "size": s["size"],
+                     "prod_files": s["prod_files"], "stars": s["stars"],
+                     "banner": s["banner"],
+                     "backup": ({"repo": b["repo"], "size": b["size"],
+                                 "prod_files": b["prod_files"],
+                                 "stars": b["stars"]} if b else None)}
     json.dump(out, open(os.path.join(root, "slate.json"), "w"), indent=2)
     print("- WROTE repos.txt, PINNED_COMMITS.json, slate.json - now run slate_check.py")
     return 0 if ok else 1

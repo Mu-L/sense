@@ -34,7 +34,7 @@ Verifies shape and coverage, NOT immutability (.doc has no git history):
 
  10. stopper law (by ruling): a working-tree/staged change to a MEASUREMENT
      INSTRUMENT (the chain whose output becomes a number that decides something:
-     gold/scorer/judge/admission_gate/grounding/pergroup/efficiency) requires a
+     gold/scorer/judge/repo_screen/grounding/pergroup/efficiency) requires a
      `stopper/<slug>` entry dated today, carrying the re-score blast radius
      ("N of M runs") from `bench/lib/rescore_diff.py`. Born 2026-07-15: a scorer
      false-credit was FOUND, correctly analysed, then MITIGATED instead of fixed and
@@ -68,15 +68,15 @@ VERDICT_KEY = re.compile(r"^loop3/[^/]+/(probe|run-\d+|swap|close)$")
 FLEET = re.compile(r"(\d+\s+spawns?|no\s+spawns)", re.IGNORECASE)
 
 # Rule 10. The measurement chain: any instrument whose output becomes a number that
-# decides something. admission_gate is IN - it decides what gets benched at all, and its
-# own precision>1 bug already reached a board. Keyed by blast radius, not by folder: a bad
+# decides something. repo_screen is IN - it decides what gets benched at all. Keyed by
+# blast radius, not by folder: a bad
 # gold ROW in one scenario is scoped (the hand-audit catches it); a bad MATCHER is systemic
 # and retroactive across every run ever scored.
 MEASUREMENT_INSTRUMENTS = (
     "improvement-loop/bench/lib/gold.py",
     "improvement-loop/bench/lib/scorer.py",
     "improvement-loop/bench/lib/judge.py",
-    "improvement-loop/bench/lib/admission_gate.py",
+    "improvement-loop/bench/lib/repo_screen.py",
     "improvement-loop/bench/lib/grounding.py",
     "improvement-loop/bench/lib/pergroup.py",
     "improvement-loop/bench/lib/efficiency.py",

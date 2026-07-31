@@ -24,7 +24,7 @@ Prints, and this is what a `stopper/<slug>` ledger entry must carry:
   - per-cell deltas old vs new, in exact Fractions, with any verdict move flagged.
 
 Design note: this diffs gold.py because gold_recall is the headline. When another
-instrument in the chain changes (judge.py, admission_gate.py), extend `score_run`
+instrument in the chain changes (judge.py, repo_screen.py), extend `score_run`
 rather than hand-rolling a one-off script in a scratchpad; that hand-rolling is what
 made 2026-07-15's first three answers wrong.
 """
