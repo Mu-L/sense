@@ -2,7 +2,7 @@
 
 > **Status: defined 2026-07-11; scripts built, scheduling manual.** Fills the confirmation half of the
 > anchor matrix (repos × tools × LLMs): every non-headline arm, ×1, on all 4 repos. The headline Opus ×2
-> belongs to Loop 3; this loop never produces a verdict, it produces the cross-model / cross-harness
+> belongs to the per-repo loops; this loop never produces a verdict, it produces the cross-model / cross-harness
 > confirmation rows. Its binding constraint is provider weekly caps, not work or intelligence: it is a
 > scheduler fighting quotas.
 
@@ -29,7 +29,7 @@ filled or explicitly marked degraded/OPEN, and the cross-model / harness rows fi
 - **Character:** scheduler. No judgment inside the loop body; the design is entirely policy (ordering,
   caps, anomaly handling) plus honest bookkeeping.
 - **Unit of work:** one cell = one confirmation arm × one repo, both toolsets, ×1, on the frozen scenario.
-- **Position:** consumes Loop 3's banked wins (a cell runs only on a FROZEN scenario, post-WIN; running on
+- **Position:** consumes the per-repo loops' banked wins (a cell runs only on a FROZEN scenario, post-WIN; running on
   a draft wastes quota because a re-author invalidates the cell); produces the filled matrix consumed by
   Loop 5's harvest and Loop 6's cross-model / harness fact-pack rows.
 
@@ -37,12 +37,12 @@ filled or explicitly marked degraded/OPEN, and the cross-model / harness rows fi
 
 | Actor | Who/what | Notes |
 |---|---|---|
-| Generator | **The default confirmation driver is `bench/drivers/sweep-breadth.sh`** - one per confirmation LLM, launched in parallel. It walks breadth-first (PASS 1 = run-1 for every repo, PASS 2 = run-2, additive via `KEEP_RUNS=1`) and holds a per-provider lock so same-provider arms serialize while different providers run concurrently. Model-id routed (`claude-*` → bench-sense-local, `gpt-*` → codex-run, opencode providers → opencode-run). `sweep.sh` (depth-first ×1) and `sweep-resume.sh` are NOT the default - reach for them only for a one-off single cell or an explicit resume. This is the CONFIRMATION path only: the headline Opus ×2 belongs to Loop 3 (`runs-variance.sh RUNS=2`), and no breadth cell runs until that win freezes. | |
+| Generator | **The default confirmation driver is `bench/drivers/sweep-breadth.sh`** - one per confirmation LLM, launched in parallel. It walks breadth-first (PASS 1 = run-1 for every repo, PASS 2 = run-2, additive via `KEEP_RUNS=1`) and holds a per-provider lock so same-provider arms serialize while different providers run concurrently. Model-id routed (`claude-*` → bench-sense-local, `gpt-*` → codex-run, opencode providers → opencode-run). `sweep.sh` (depth-first ×1) and `sweep-resume.sh` are NOT the default - reach for them only for a one-off single cell or an explicit resume. This is the CONFIRMATION path only: the headline Opus ×2 belongs to Loop 2 (`runs-variance.sh RUNS=2`), and no breadth cell runs until that win freezes. | |
 | Evaluator | the anomaly rule (below) + adoption/contamination checks per cell | mechanical, no adversarial prompt needed |
 | Mechanical verifier | `mcp_count` per cell, contamination guard + offload gate in `opencode-run.sh`, `--strict-mcp-config`, `report-matrix.sh` rendering from disk | |
 | Human | cap/budget policy set once per vertical; arm-degraded verdicts | no per-cell gate |
 
-The post-run agent survey (`00-agent-survey.md`) fires on **all three runners** - `bench-sense-local.sh`
+The post-run agent survey (`08-agent-survey.md`) fires on **all three runners** - `bench-sense-local.sh`
 (incl. ollama provider), `codex-run.sh` (`codex exec resume`), `opencode-run.sh` (`opencode run -s`) -
 each normalizing through its own parser into the canonical shape `survey_verify.py` reads. Two per-arm
 guards: the survey turn always runs AFTER the answer is banked and can only fail itself, never the run
@@ -111,7 +111,7 @@ policy. This is the most demotable loop in the registry.
 - Cap handoffs live in the arm's matching prompt file (state + resume command), the durable-handoff rule.
 - **Readability duty:** append `loop4/<arm>/{done,parked}` entries (per arm, never per cell) to
   `verticals/<vertical>/LEDGER.md`; `STATUS.md` stays a render (`render-status.sh`), never a source,
-  which preserves the rule above (contract in [`00-ledger.md`](00-ledger.md)).
+  which preserves the rule above (contract in [`ledger.md`](ledger.md)).
 
 ## Un-fakeable check
 
@@ -121,7 +121,7 @@ policy. This is the most demotable loop in the registry.
 
 ## Inputs / outputs
 
-- **Consumes:** Loop 3's frozen, won scenarios + the pinned indexes; the arm plan from Loop 1; provider
+- **Consumes:** the per-repo loops' frozen, won scenarios + the pinned indexes; the arm plan from bootstrap; provider
   quota windows.
 - **Produces:** the filled confirmation matrix (rows for `03-cross-model.md` / `04-harness.md`), per-arm
   boards, billed-token records for the efficiency-at-parity reporting.
@@ -148,4 +148,4 @@ policy. This is the most demotable loop in the registry.
   the owner's arm/ceiling decisions (the standing open question). `sweep-resume.sh` reading it is optional
   later wiring; the file already makes rule 2 checkable from disk. The two opencode-run.sh hardening
   fixes are COMMITTED (475d3ff, 2026-07-11).
-- **First live use:** the Go vertical's confirmation arms, after its first Loop 3 wins bank.
+- **First live use:** the Go vertical's confirmation arms, after its first per-repo wins bank.

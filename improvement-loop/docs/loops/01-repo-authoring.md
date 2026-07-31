@@ -1,13 +1,27 @@
-# Loop 3b - Authoring
+# Loop 1 - Repo authoring
 
-> Stage 2 of 4. Shared laws, the depth-first rule and the ledger namespace live in the parent
-> ([`03-per-repo-convergence.md`](03-per-repo-convergence.md)) and are not repeated here.
+> First of the three per-repo loops (authoring → [run](02-repo-run.md) →
+> [diagnosis](03-repo-diagnosis.md)). The laws all three share live in
+> [`campaign-laws.md`](campaign-laws.md) and are not repeated here.
+
+**One repo at a time, to a verdict.** A repo enters the sequence here and does not leave it until it
+wins, parks or is swapped. No second repo's scenario is authored while the first is mid-diagnosis.
+
+**Which repo: the first in `repos.txt` order with no verdict on disk.** There is no ranking, because
+any ordering claim made before a scenario exists is a predictor and predictors are banned
+([`campaign-laws.md`](campaign-laws.md)). Slate order is arbitrary and honest; a ranking would be
+arbitrary and dressed up. After a swap this loop does not choose either: [Diagnosis](03-repo-diagnosis.md)
+hands over the slot's declared backup from `slate.json`, cycle counter reset to zero.
 
 ## Goal
 
-Author one scenario and its gold for the top-ranked bound-legal repo, such that a code-capable baseline
+Author one scenario and its gold for one repo off the slate, such that a code-capable baseline
 with Sense forbidden cannot assemble the answer. Exit state: a stamped scenario plus rubric, gold
 hand-audited per dependency, an adversary probe that failed to shortcut it, and the scenario-integrity gate signed.
+
+The scenario is CRAFTED, and that is the whole job: nothing scores this repo before the scenario
+exists. Diagnosis feeds the next draft, so a repo usually reaches its verdict through several
+passes through here ([`03-repo-diagnosis.md`](03-repo-diagnosis.md)).
 
 ## Product duties (per Sense surface)
 
@@ -18,15 +32,16 @@ hand-audited per dependency, an adversary probe that failed to shortcut it, and 
   two-hop grep reaches the answer, the scenario is not measuring Sense, it is measuring patience.
 - **search / status:** record at authoring time whether the shape *needs* them. If the winning shape
   never asks for either, that is a feature-coverage blind spot to hand Loop 5, not a verdict.
-- **conventions:** nothing here. The slate sweep belongs to Loop 2.
+- **conventions:** nothing here. The slate sweep belongs to bootstrap.
 
 ## Identity
 
 - **Character:** judgment. This is where a win can be manufactured by accident, so the adversary vertex
-  and the human ground-truth anchor both sit inside this stage.
+  and the human ground-truth anchor both sit inside this loop.
 - **Unit of work:** one scenario plus its gold for one repo.
-- **Position:** consumes the ranked bound-legal queue from [Eligibility](03-a-eligibility.md); produces
-  the frozen scenario artifacts [Run](03-c-run.md) spends against.
+- **Position:** consumes one repo off bootstrap's slate, or the same repo back from
+  [Diagnosis](03-repo-diagnosis.md) with a named lever; produces the frozen scenario artifacts
+  [Run](02-repo-run.md) spends against.
 
 ## Actors
 
@@ -46,17 +61,26 @@ Run it **before** gold curation, not after. Its two outputs are both load-bearin
 - Its **honesty disclaimer** is the discriminator axis, verbatim. What the probe says it could not
   establish is what the scenario must ask for.
 
-**Only probe-disclaimed shapes proceed to gold.** This is the design-time kill; the sense-arm dry-run in
-[Run](03-c-run.md) is the separate spend-time go/no-go. One does not substitute for the other: a shape
+**Only probe-disclaimed shapes proceed to gold.** This is the design-time kill; the validation run in
+[Run](02-repo-run.md) is the separate spend-time go/no-go. One does not substitute for the other: a shape
 can survive the probe and still fail to reach at the cell's wall.
+
+## Memorization is a gold-time constraint, never an admission verdict
+
+A famous repo is not disqualified; a memorized gold row is. The model recites what it has seen, so
+every gold target must be either churn-dated after the model's snapshot or a line-level structural
+fact (callers, edges) the probe demonstrably cannot produce. Run `bench/lib/memorization_probe.py`
+per item at gold time and cut what comes back recited.
+
+Two measured shapes, so neither gets rediscovered. On an evergreen-famous repo the weights are simply
+CORRECT, so the only discriminators are recency-dated internals and structural facts. Where the weights
+are stale they are confidently WRONG, which sets what may be credited but is **not** a win axis in
+itself: with repo access a strong agent self-corrects in about two moves.
 
 ## Gold curation rules
 
-The starting point is the mini-gold [Eligibility](03-a-eligibility.md) hand-verified
-(`scenarios/<repo>.draft.yaml`). This stage widens it to the full set, audits it per dependency, and
-writes `scenarios/<repo>.yaml` - at which point the audited set supersedes the draft everywhere, including
-in the bound. **Re-targeting the draft is expected, not a failure:** it was built to answer "can this cell
-clear the bar", not "what exactly does this cell measure".
+Gold is built here from scratch for the shape the adversary probe disclaimed, and it is written to
+`scenarios/<repo>.yaml`.
 
 - **One item per FILE.** A gold group that lists several symbols from one file rewards a single read.
 - **Hand-audit every credit.** Basename matching has awarded credit for the wrong file; run the tally,
@@ -75,9 +99,9 @@ clear the bar", not "what exactly does this cell measure".
   scenario resumes, it never restarts.
 - **Failure:** the adversary probe assembled the answer and no undisclaimed axis remains after the
   contract hunt was deepened and the pool widened. Hand the repo to
-  [Diagnosis](03-d-diagnosis.md) branch 2 (re-shape) or branch 6 (seam nonexistent) - with the probe
-  transcript attached. This stage never writes a tie or a boundary framing; the parent's try-harder law
-  applies at proposal time, not after the fact.
+  [Diagnosis](03-repo-diagnosis.md) branch 2 (re-shape) or branch 6 (seam nonexistent) - with the probe
+  transcript attached. This loop never writes a tie or a boundary framing; the try-harder law
+  ([`campaign-laws.md`](campaign-laws.md)) applies at proposal time, not after the fact.
 
 ## Human events
 
@@ -88,12 +112,11 @@ clear the bar", not "what exactly does this cell measure".
 ## State / memory
 
 - `verticals/<vertical>/scenarios/<repo>.yaml` + `<repo>.rubric.yaml`.
-- Adversary probe transcript alongside the control probes in
-  `verticals/<vertical>/results/dryrun/<repo>/`.
+- Adversary probe transcript in `verticals/<vertical>/results/dryrun/<repo>/`.
 - **`scenario_version` is a sha256 of the WHOLE scenario file, comments included.** Editing a comment
   drifts the hash and orphans every run pinned to it - grep the drivers for the current hash before
   touching a benched scenario.
-- Ledger: `loop3/<repo>/scenario` (stamped, with the version hash) and `loop3/<repo>/event-b` (gold
+- Ledger: `loop1/<repo>/scenario` (stamped, with the version hash) and `loop1/<repo>/event-b` (gold
   sign-off).
 
 ## Un-fakeable check
@@ -104,8 +127,8 @@ clear the bar", not "what exactly does this cell measure".
 
 ## Inputs / outputs
 
-- **Consumes:** the ranked bound-legal queue and per-group control means from Eligibility; the
-  scenario-crafting law ([`../scenarios/crafting.md`](../scenarios/crafting.md),
+- **Consumes:** one repo off bootstrap's slate (pinned repo, index, contract) or the same repo back
+  from Diagnosis with a named lever and its credit table; the scenario-crafting law ([`../scenarios/crafting.md`](../scenarios/crafting.md),
   [`../scenarios/sourcing-runbook.md`](../scenarios/sourcing-runbook.md)); the empirical laws in
   [`campaign-laws.md`](campaign-laws.md).
 - **Produces:** the stamped scenario + rubric, the adversary probe transcript, the audited gold, the
@@ -124,11 +147,14 @@ clear the bar", not "what exactly does this cell measure".
 ## Built vs missing
 
 - **Built:** `scenario.py` (with `--prompt`), `audit_scenarios.py`, `gold.py` (with the basename guard),
-  `compose_slate.py`, `anchor_rank.py`, the crafting and sourcing docs.
+  `anchor_rank.py` (a LISTING for whoever writes the scenario, never a gate; its docstring records
+  the three rankings that all buried the biggest banked win), the crafting and sourcing docs.
+  `compose.py` no longer emits an anchor: choosing it is this stage's judgment call, made
+  while the scenario is written.
 - **Built 2026-07-30:** `gold_confidence_check.py` (pinned by `test_gold_confidence_check.py`) runs
   `sense blast` at both `min_confidence` values and fails any gold row that exists only at 0.3 - the
   manufactured-win shape, since agents pass the documented 0.7. Rows reachable by neither threshold are
   reported, never failed: graph/search/hand-sourced gold is legitimately not in a blast set, and failing
   it would narrow the bench to one tool. It was prioritised over the blast trim audit because a fake win
   propagates into Loops 4/5/6 and a published article before anyone re-reads it.
-- **First live use:** the top-ranked php-laravel repo, after its eligibility probe passes.
+- **First live use:** the first php-laravel repo off the slate.

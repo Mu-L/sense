@@ -25,7 +25,7 @@ own bench, manifesto law).
 | Artifact | Path | Written by |
 |---|---|---|
 | Survey prompt (questions + anchored scale + JSON shape) | `bench/lib/survey_prompt.md` | hand |
-| Trigger (sense arm, clean runs, after `run_meta.json`, output NEVER into `transcript.json`) | ALL runners: `bench/drivers/bench-sense-local.sh` (Loop 3 `vertical-loop.sh` + claude/ollama sweep cells), `codex-run.sh` (`codex exec resume` + parse-codex normalize), `opencode-run.sh` (`opencode run -s` + parse-opencode normalize, `hclass=ok` only), `session-run.sh` (session mode) | hand |
+| Trigger (sense arm, clean runs, after `run_meta.json`, output NEVER into `transcript.json`) | ALL runners: `bench/drivers/bench-sense-local.sh` (Loop 2 `vertical-loop.sh` + claude/ollama sweep cells), `codex-run.sh` (`codex exec resume` + parse-codex normalize), `opencode-run.sh` (`opencode run -s` + parse-opencode normalize, `hclass=ok` only), `session-run.sh` (session mode) | hand |
 | Parse + transcript-verify + append; `--report` aggregates | `bench/lib/survey_verify.py` (tests: `test_survey_verify.py`, 13 green) | hand |
 | Raw survey turn (full provenance, never delete) | `results/<model>/sense/<repo>/survey.json` | runner |
 | One verified record per run | `results/<model>/surveys.jsonl` (model-scoped, uncommitted mid-campaign) | `survey_verify.py` |
@@ -42,7 +42,7 @@ all). Residual until first live sweep: `codex exec resume` flag acceptance is un
 (failure mode is a logged WARN, never a lost run).
 
 **Loop wiring (who enforces what):** Loop 3 generates (automatic inside `bench-sense-local.sh`; noted in
-`03-per-repo-convergence.md` Actors), Loop 4 generates on claude cells only (caveat in
+`02-repo-run.md` Actors), Loop 4 generates on claude cells only (caveat in
 `04-matrix-fill.md`), Loop 5 reads at loop close (`05-harvest.md` per-repo tier), Loop 7 consumes filed
 FRICTION.md rows and records their exit (`07-product-fix-window.md` Position).
 

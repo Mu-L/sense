@@ -9,7 +9,7 @@
 ## Goal
 
 Bank everything the paid runs already bought, for $0: verified product gaps for Loop 7, conventions
-material for the law ledger, cross-cutting rows for Loop 0, and staged lessons for the next Loop 1. This
+material for the law ledger, cross-cutting rows for the program cadence, and staged lessons for the next vertical. This
 loop is what makes the campaign cumulative; without it every vertical starts from scratch. It is the
 program's widest product-telemetry pipe: three of `goal.md`'s sensory systems land their entries here.
 
@@ -27,7 +27,7 @@ program's widest product-telemetry pipe: three of `goal.md`'s sensory systems la
 - **conventions:** the A-D ledger DoD re-check (`02-bench-harvest.md`) is this loop's per-vertical tier,
   unchanged.
 - **Loss anatomy:** every tie/loss this vertical produced gets its distilled row (the transcript-level
-  reason grep won) appended to the loss-anatomy ledger, Loop 2's bar-3 recalibration input.
+  reason grep won) appended to the loss-anatomy ledger.
 
 ## Identity
 
@@ -35,16 +35,16 @@ program's widest product-telemetry pipe: three of `goal.md`'s sensory systems la
   fixed moments and verifying entries before they land.
 - **Unit of work:** one harvest target: a repo's paid transcripts (per-repo tier) or one ledger/fact-pack
   destination (per-vertical tier).
-- **Position:** consumes Loop 3's transcripts + verdicts and Loop 4's matrix; produces Loop 7's worklist
-  (`loopA-gaps`), Loop 0's cross-cutting rows, the conventions ledger, and the next Loop 1's
+- **Position:** consumes the per-repo loops' transcripts + verdicts and Loop 4's matrix; produces Loop 7's worklist
+  (`loopA-gaps`), the program's cross-cutting rows, the conventions ledger, and the next vertical's
   `carry-forward.md`. Two tiers:
-  - **Per repo** (fires inside Loop 3's win path, automatically): `loopA-scan.sh harvest` →
+  - **Per repo** (fires inside Loop 2's win path, automatically): `loopA-scan.sh harvest` →
     `transcript_miss.py` mines the ×N transcripts (cited-not-returned / fallback-reads / empty returns),
     adoption-gated, appends to `verticals/<stack>/results/loopA-gaps.md`.
   - **Per repo, survey channel** (fires inside `session-run.sh`'s sense arm, automatically): the
     post-run agent survey turn → `survey_verify.py` transcript-verifies and appends to the model root's
     `surveys.jsonl`; read only in aggregate at loop close via `--report`, next to the
-    `transcript_miss.py` mine (process + thresholds: `00-agent-survey.md`, ledger
+    `transcript_miss.py` mine (process + thresholds: `08-agent-survey.md`, ledger
     `../FRICTION.md`).
   - **Per vertical** (fires at DoD, before the publish sign-off): `../cross-cutting/prompts/harvest-after-vertical.md`
     appends one row per fact pack (methodology / providers / cross-model / harness / product); the
@@ -82,9 +82,9 @@ dossier; the fix decisions they seed belong to Loop 7's authorization gate, not 
   recording discipline at the top of the file).
 - `../cross-cutting/0*.md` - one row per vertical, via the harvest prompt.
 - the retired carry-forward staging file - staging with the graduation rule: nothing stays once it has a durable home;
-  empty carry-forward = next vertical bootstrappable (Loop 1's exit check).
+  empty carry-forward = next vertical bootstrappable.
 - **Readability duty:** append `loop5/<repo-or-tier>` entries to `verticals/<vertical>/LEDGER.md` as
-  each harvest tier completes (write-only for the loop; contract in [`00-ledger.md`](00-ledger.md)).
+  each harvest tier completes (write-only for the loop; contract in [`ledger.md`](ledger.md)).
 
 ## Un-fakeable check
 
@@ -96,9 +96,9 @@ dossier; the fix decisions they seed belong to Loop 7's authorization gate, not 
 ## Inputs / outputs
 
 - **Consumes:** paid transcripts (Loops 3/4), pinned indexes, verdicts, the vertical's lessons.
-- **Produces:** Loop 7's verified worklist (resolution gaps + the misuse category); Loop 0's cross-cutting
-  rows; conventions-law raw material; the loss-anatomy rows (Loop 2's input); the feature-coverage record;
-  the staged carry-forward that seeds the next Loop 1 (including the misuse lessons Loop 1 graduates into
+- **Produces:** Loop 7's verified worklist (resolution gaps + the misuse category); the program's cross-cutting
+  rows; conventions-law raw material; the loss-anatomy rows; the feature-coverage record;
+  the staged carry-forward that seeds the next vertical (including the misuse lessons bootstrap graduates into
   arm prompts and setup).
 
 ## Fixture test (standalone, $0)

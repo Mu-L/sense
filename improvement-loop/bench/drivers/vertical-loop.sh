@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # vertical-loop.sh - the mechanical per-repo loop of the vertical bench (manifesto
-# docs/loops/03-per-repo-convergence.md), with the two human gates kept load-bearing.
+# docs/loops/01-repo-authoring.md .. 03-repo-diagnosis.md), with the human gates kept load-bearing.
 #
 # It chains the FREE/mechanical steps and PAUSES where someone must act. The line
 # goal.md draws: Loop A (the product-gap detectors) and the run
@@ -47,7 +47,7 @@ CLONES="${SENSE_CLONES:-$HOME/Developer/luuuc/oss/sense-benchmark/sense}"
 # One derivation of the vertical dir, used everywhere below. verticals/ is a SIBLING of
 # bench/ (bench-paths.sh says so): before this was factored out, two sites here still used
 # the pre-move $BENCH_DIR/verticals and silently read a directory that cannot exist - the
-# control-bound gate found no probes and pergroup.py found no runs.
+# preflight gate found no scenario and pergroup.py found no runs.
 VDIR="$BENCH_DIR/../verticals/$VERTICAL"
 SCEN_DIR="$VDIR/scenarios"
 STATE="$VDIR/.loop-state.json"
@@ -157,44 +157,13 @@ do_preflight() {
   echo "---- Loop-A preflight (gold must be default-blast-retrievable, manifesto §10) ----"
   bash "$LIB/loopA-scan.sh" preflight "$VERTICAL" "$REPO" 2>&1 || true
 
-  # ---- THE ARITHMETIC BOUND (control_bound.py) -------------------------------
-  # delta = mean(sense) - mean(control) and cited_recall <= 1.0, so a +0.50 delta
-  # REQUIRES mean(control) <= 0.50. A cell whose control probe scores above that is
-  # dead before it is paid for, whatever its seam looks like. Measured over all 384
-  # frozen runs: TEN of twenty paid cells on the bench model were already
-  # arithmetically dead (healthchecks/litellm ceiling EXACTLY 0.000; dolt 0.67).
-  # This is NOT advisory and --yes does NOT bypass it: it is arithmetic, not judgment.
-  # Probes go in $DRYRUN_DIR (override with CONTROL_PROBE_DIR), one .md per probe run,
-  # each the control arm's deliverable from a walled dry-run AT THE CELL'S REAL WALL.
-  DRYRUN_DIR="${CONTROL_PROBE_DIR:-$VDIR/results/dryrun/$REPO}"
-  shopt -s nullglob; PROBES=("$DRYRUN_DIR"/*.md); shopt -u nullglob
-  if [ ${#PROBES[@]} -gt 0 ]; then
-    echo "---- control bound (\$0, ${#PROBES[@]} probe run(s) from $DRYRUN_DIR) ----"
-    if ! python3 "$LIB/control_bound.py" "$YAML" "${PROBES[@]}" 2>&1 | sed 's/^/  /'; then
-      echo
-      echo "## [preflight] BOUND KILL: this cell cannot clear the bar. NOT spending."
-      echo "   --yes does not bypass arithmetic. Re-target the gold, re-shape the ask,"
-      echo "   or swap the repo (the swap gate). The wall is NOT a lever (dolt measured it)."
-      state_set "$REPO" preflight
-      exit 1
-    fi
-  else
-    echo "---- control bound: NO PROBE FOUND in $DRYRUN_DIR ----"
-    echo "  The bound cannot be evaluated, so this cell's ceiling is UNKNOWN and the"
-    echo "  spend is unguarded. Run the walled control dry-run (control arm, sense"
-    echo "  forbidden, code-capable, at the cell's REAL wall) and save each run's"
-    echo "  deliverable as $DRYRUN_DIR/probe-<n>.md. RUNS=2 to estimate the mean:"
-    echo "  the control's spread is real (dolt swung 0.444 -> 0.889 on identical prompts)."
-  fi
-
   if [ "$YES" = 1 ]; then
     echo "## [preflight] --yes given - proceeding to the paid bench"
     NEXT=bench; return
   fi
   gate \
     "COST GATE - the next phase spends real tokens (Opus 4.8 x$RUNS, both arms, ~\$10-18)." \
-    "Confirm the prompt is leak-free, the oracle retrieves the gold, and the control" \
-    "bound passed on >= 2 probe runs, then run:" \
+    "Confirm the prompt is leak-free and the oracle retrieves the gold, then run:" \
     "  bash bench/drivers/vertical-loop.sh $REPO --yes"
   # (gate exits; phase stays preflight. --yes re-enters here and advances to bench.)
 }

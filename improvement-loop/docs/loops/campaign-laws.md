@@ -5,8 +5,8 @@
 > facts about scorers, language shape, and gold construction - NOT positions, verdicts, or
 > product state. Everything else from that campaign is history kept outside this folder, and per the
 > owner's explicit amendment carries **no re-run prohibition**. One law per bullet: statement, then legacy
-> provenance. The fresh vertical's Loops 2/3 read this file at slate composition and
-> scenario authoring; it is a checklist, not a narrative.
+> provenance. Bootstrap reads this file at slate composition and Authoring reads it at
+> scenario time; it is a checklist, not a narrative.
 
 ## Admission and axis screening
 
@@ -29,16 +29,28 @@
   guard - run it after any gate edit.
   _Provenance: LEDGER `ruling/bar3-k7-import-law` (2026-07-17); the blanket-K7 smoke
   back-killed pebble.Batch and was caught by the fixture before landing._
-- **CONTROL BOUND.** The admission gate is control ≤ 0.25 AND sense ≥ 0.75, and the control is
-  MEASURED (`bench/lib/control_bound.py` probes at the wall), never predicted - three
-  predictions died in one day. The baseline is a control, not an adversary.
-  _Provenance: corpus mining 2026-07-16, all 384 recorded runs, $0
-  (memory `project_grep_hostility_catalog_research`)._
-- **ARITHMETIC KILL FIRST.** Sense is a floor-raiser (sense ≈ 0.68 + 0.25·base across the
-  corpus); delta ≥ +0.50 REQUIRES base ≤ 0.50, so a cell whose control probes above 0.50 is
-  dead before it runs. Check the arithmetic before any spend.
-  _Provenance: same corpus mining; 10 of 20 paid cells in the recorded corpus were
-  arithmetically unwinnable._
+- **CONTROL BOUND - RETIRED 2026-07-31 with the eligibility stage; do not rebuild it.** The
+  bound was `delta = sense - control` and `recall <= 1.0`, therefore `+0.50` requires
+  `control <= 0.50`. The arithmetic is true and it bought nothing: it never once prevented a
+  spend. Its ten-of-twenty figure was computed retrospectively over 384 runs that had ALREADY
+  been paid for, and it was then cited for months as a saving. `control_bound.py` and its
+  preflight gate are deleted.
+  _Provenance: php-laravel `STATUS.md` correction (2026-07-30): "the arithmetic bound has NEVER
+  prevented a spend... We paid for all of them."_
+- **NO PREDICTORS BEFORE A SCENARIO EXISTS.** A win is CRAFTED for a repo and stack; it is not
+  detected by a script beforehand. Anything that scores a repo before there is a task to score
+  it against is a predictor, and predictors here have produced false kills, never a win. The
+  boundary is sharp: a **killer** runs against a scenario that exists and may kill it; a
+  **predictor** guesses before one does and is banned.
+  _Provenance: owner ruling 2026-07-30. The php-laravel battery killed EVERY framework shape
+  pre-authoring and reported "zero win candidates"; the falsifier it never ran, a baseline
+  dry-run at giant scale, then measured the baseline dropping 9 of 15 gold. Four days, ~40
+  ledger entries and 0 paid cells against one 4-minute run. Filed as decision-error Class 8,
+  procedure as shield._
+- **ONE-TOKEN-COVER KILLS ARE SIZE-CONDITIONED.** "A covering grep exists" is not "the agent
+  runs it to closure". Valid as a kill at enumerable scale (≤15k symbols); above that it is a
+  hypothesis and the dry-run decides.
+  _Provenance: the same giant-scale run that overturned the Container kill._
 - **MEMORIZATION DISCRIMINATOR.** Famous repos are memorized; the discriminator is obscure
   internals, and on a famous repo the module path gets rewritten (the `gitea.dev` pattern) so
   recall cannot come from training data.
@@ -83,12 +95,42 @@
   as irrelevant: it explained one sample. Memory `feedback_runs2_settled_standard` gave ×2 for the
   stable headline arm; this ruling extends the floor to every arm and adds the ×3 escape hatch._
 
+## The per-repo loops (folded in 2026-07-31 from the retired Loop 3 parent map)
+
+Authoring, Run and Diagnosis were four sub-stages under one parent. Eligibility was deleted and
+the other three became loops in their own right, so the laws they all shared live here.
+
+- **ONE REPO AT A TIME, TO A VERDICT.** No second repo's scenario is authored while the first is
+  mid-diagnosis. Each repo is checkpointed in `.loop-state.json`; a parked repo resumes, never
+  restarts. Loops 4/5/6 stay aggregate and downstream, on frozen won scenarios only.
+  _Provenance: Rails won its cells one repo at a time with no loop system at all, while later
+  verticals produced protocol across four repos and no runs. The known cost, stated so nobody
+  rediscovers it: the first repo pays the whole instrument-debugging tax._
+- **THE LOOP CANNOT RECORD A LOSS.** It wins, parks, or hands up a swap with the numbers
+  attached. A sub-floor verdict is a routed lever, never a loss.
+- **RUN FIRST, EXPLAIN AFTER** (ruling 2026-07-19, supersedes any ordering rule that conflicts).
+  A kill or hold reasoned without a run is not a verdict. A session ends with a run artifact or
+  the lane parks; ledger and protocol writing is overhead, never the deliverable. Rulings go up
+  for money and repo-slot life-or-death only, no option menus. Delegation aims at the hunt, not
+  the paperwork.
+- **TRY HARDER** (ruling 2026-07-13). The default stance is "there is an unfound win axis here;
+  prove otherwise", and it starts at proposal time, not at tie-diagnosis time. When a proposal
+  reaches for "honest boundary", "tie" or "ballast", the required response is to deepen the
+  contract hunt and widen the pool. No loop offers a boundary framing; it exhausts axes first.
+- **A STAGE IS SELF-CONTAINED.** Its input is a file on disk, its output is a file plus a ledger
+  entry, never a conversation carried forward. If a loop needs something the previous one did
+  not write down, that is a defect in the previous loop, not a reason to widen this one.
+- **WHAT THE PER-REPO LOOPS DO NOT OWN.** The slate and its conventions sweep belong to
+  bootstrap. Product fixes are parked for Loop 7 and never made mid-vertical. The agent survey
+  is read in aggregate by Loop 5, never per run. Cross-model confirmation is Loop 4.
+
 ## Process laws already wired elsewhere (pointers, not duplicates)
 
 - **STOPPER law** (measurement-instrument bugs stop the line): `how-to-run.md` gate table +
-  `ledger_check.py` rule 10 + `bench/lib/rescore_diff.py`.
+  `ledger_check.py` rule 10 + `bench/lib/rescore_diff.py`. It halts all three per-repo loops
+  immediately: no new cells, no verdicts, no swap dossiers, no kills, until the owner rules.
 - **Gate-fidelity law** (the adversary probe must be stronger than the production arm) and the
-  **agent dry-run gate before any paid bench**: `02-repo-admission.md` /
-  `03-per-repo-convergence.md` + memory `feedback_agent_dryrun_gate_before_bench`.
-- **Instruments that carry** (bench/lib, not vertical docs): `repo_screen.py`, `control_bound.py`, `mcp_probe.py`, `rescore_diff.py`,
-  `select_final.py`, `bootstrap_check.py`.
+  **agent dry-run gate before any paid bench**: `00-bootstrap.md` / `02-repo-run.md` + memory
+  `feedback_agent_dryrun_gate_before_bench`.
+- **Instruments that carry** (bench/lib, not vertical docs): `screen.py`, `mcp_probe.py`,
+  `rescore_diff.py`, `select_final.py`, `scaffold_check.py`.

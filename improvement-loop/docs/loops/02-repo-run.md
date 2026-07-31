@@ -1,14 +1,19 @@
-# Loop 3c - Run
+# Loop 2 - Repo run
 
-> Stage 3 of 4. Shared laws, the depth-first rule and the ledger namespace live in the parent
-> ([`03-per-repo-convergence.md`](03-per-repo-convergence.md)) and are not repeated here.
+> Second of the three per-repo loops ([authoring](01-repo-authoring.md) → run →
+> [diagnosis](03-repo-diagnosis.md)). The laws all three share live in
+> [`campaign-laws.md`](campaign-laws.md) and are not repeated here.
 
 ## Goal
 
-Spend once on one repo - both arms, identical prompt, ×2, at the cell's real wall, with full Sense I/O
+Run the scenario twice over: once unscored to find out whether it is the right scenario, then, if it
+is, once for real - both arms, identical prompt, ×2, at the cell's real wall, with full Sense I/O
 captured - and let the mechanical arbiter say WIN or sub-floor. Exit state: a confirmed win with its
-definition-of-done checks numbered, or a sub-floor verdict handed to
-[Diagnosis](03-d-diagnosis.md) with its transcripts intact.
+definition-of-done checks numbered, or a verdict handed to [Diagnosis](03-repo-diagnosis.md) with its
+transcripts intact.
+
+**Every run leaves here for Diagnosis, including the validation run and including a win.** The
+validation run's whole purpose is the read Diagnosis does on it.
 
 ## Product duties (per Sense surface)
 
@@ -20,15 +25,15 @@ definition-of-done checks numbered, or a sub-floor verdict handed to
 - **The agent survey** is generated automatically on clean sense-arm runs (`bench-sense-local.sh` →
   `survey.json` plus a transcript-verified line in `surveys.jsonl`). It is **never read per-run and never
   feeds a verdict here**; Loop 5 reads it in aggregate.
-- Reading the capture is not this stage's job. This stage guarantees it exists.
+- Reading the capture is Diagnosis's job. This loop guarantees it exists, on the validation run too.
 
 ## Identity
 
 - **Character:** scheduler. The judgment happened upstream; here the work is spending correctly once and
   refusing to spend twice on the same question.
 - **Unit of work:** one cell - one repo, one frozen scenario, both arms, ×2.
-- **Position:** consumes the frozen scenario from [Authoring](03-b-authoring.md); produces scored
-  transcripts and a verdict for [Diagnosis](03-d-diagnosis.md), Loops 4/5/6.
+- **Position:** consumes the frozen scenario from [Authoring](01-repo-authoring.md); produces scored
+  transcripts and a verdict for [Diagnosis](03-repo-diagnosis.md), Loops 4/5/6.
 
 ## Actors
 
@@ -40,16 +45,29 @@ definition-of-done checks numbered, or a sub-floor verdict handed to
 | Rubric judge | pinned prompt version, distinct from every evaluator | merging judge and evaluator re-creates self-grading |
 | Human | authorises the spend | **permanent anchor, never demotable** |
 
-## The dry-run gate (spend-time go/no-go)
+## The validation run (unscored, both arms, once)
 
-Before the spend gate, the **sense arm** runs the real pipeline on the real runner. This is a measurement of
-whether Sense can reach `base + 0.50` at this wall, and it is separate from Authoring's design-time
-adversary probe. Two rules that cost mistakes:
+Before the spend gate, the scenario runs for real on the real runner: **both arms, one run each, at the
+cell's wall.** It is a measurement of whether the scenario is the right scenario, and it produces the
+material Diagnosis reads. It is separate from Authoring's design-time adversary probe, which is a
+measurement of what a grep-and-read baseline could reach on the shape before anyone benched it.
 
-- **A hand-grep is not a dry-run.** The gate needs real arm asymmetry from real runs; hand-simulating the
-  baseline produces false ties.
-- **If the baseline assembles the set, do not pay.** That verdict stands regardless of how good the
-  scenario looks.
+- **It is never scored and never cited.** Run it with `BENCH_VALIDATION=1`, which routes every runner
+  to `results/<model>/validation/` and stamps `"scoring": false` into `run_meta.json`. A number from a
+  ×1 unscored run is a sample; it may not close a question, settle a win or tie, or enter an article.
+  **The isolation is the results root, not a flag the scorer honours:** `pergroup.py` and `scorer.py`
+  walk `RESULTS_DIR`, so a validation cell is invisible to them by construction and no measurement
+  instrument had to change to make it so (which would have been a STOPPER).
+- **Both arms, not just the baseline.** A shape can pass the baseline dry-run and die on the sense arm
+  the same day: measured, baseline 6/15 (a win candidate) then sense-arm cited 3/15 with the agent
+  never calling `sense_blast`. A baseline-only validation tells you the scenario is hard, not that
+  Sense reaches.
+- **A hand-grep is not a run.** Hand-simulating the baseline produces false ties.
+- **If the baseline assembles the set, do not pay.** That stands regardless of how good the scenario
+  looks. Route to Diagnosis, which reads the run and hands Authoring the next draft.
+
+The cost is stated, not hidden: this is one extra pair of sessions per crafting cycle. It buys the
+only thing that has ever moved this program, which is a run instead of an argument.
 
 ## The wall, and what a wall failure means
 
@@ -69,7 +87,7 @@ adversary probe. Two rules that cost mistakes:
 - **Budget:** spend ceiling or turn cap → park with state intact; the repo resumes from
   `.loop-state.json`. A cap that fires is a measurement, not an obstacle: discharge the knob-first
   protocol ([`../decision-errors.md`](../decision-errors.md)) before any ceiling moves.
-- **Failure:** sub-floor after ×2 → hand the cell to [Diagnosis](03-d-diagnosis.md) with the transcripts,
+- **Failure:** sub-floor after ×2 → hand the cell to [Diagnosis](03-repo-diagnosis.md) with the transcripts,
   the scored output and the capture. **This stage never writes a loss and never diagnoses one** - it
   reports the number and stops.
 
@@ -77,14 +95,14 @@ adversary probe. Two rules that cost mistakes:
 
 | Event | Fires when | Blocking? | Demotable? |
 |---|---|---|---|
-| Spend | preflight and the sense-arm dry-run both passed, before the paid ×2 | yes | **never** - spend anchor |
+| Spend | preflight passed and the validation run says the scenario discriminates, before the paid ×2 | yes | **never** - spend anchor |
 
 ## State / memory
 
 - `verticals/<vertical>/results/<cell>/` - `transcript.json`, `scored.json`, `run_meta.json`,
   `sense-io.jsonl`, `survey.json`.
 - `.loop-state.json` - the phase cursor for this repo.
-- Ledger: `loop3/<repo>/event-c` (spend approved, with the wall and arm plan) and `loop3/<repo>/run-<n>`
+- Ledger: `loop2/<repo>/event-c` (spend approved, with the wall and arm plan) and `loop2/<repo>/run-<n>`
   (the verdict). Run entries **require** the provenance line - Sense version, pinned repo commit,
   scenario version - enforced by `ledger_check.py`.
 - Never delete clean runs. A cleanup that removes both arms destroys the only evidence a verdict rests on.
@@ -98,8 +116,8 @@ adversary probe. Two rules that cost mistakes:
 
 ## Inputs / outputs
 
-- **Consumes:** the frozen scenario + audited gold + the scenario-integrity gate record; the cell's real wall and control
-  means from Eligibility.
+- **Consumes:** the frozen scenario + audited gold + the scenario-integrity gate record, and the
+  cell's real wall.
 - **Produces:** scored transcripts, `sense-io.jsonl` per run, the confirmed win notice or the sub-floor
   verdict, and the surveys line Loop 5 aggregates.
 
@@ -117,7 +135,9 @@ adversary probe. Two rules that cost mistakes:
 
 ## Built vs missing
 
-- **Built:** `vertical-loop.sh` phase machine and gates, the three arm runners, `mcp_tee.py` capture,
+- **Built:** `vertical-loop.sh` phase machine and gates, the three arm runners, `BENCH_VALIDATION=1`
+  (results-root routing in `bench-paths.sh` + the `scoring` stamp in all four runners, pinned by
+  `test_validation_isolation.py`), `mcp_tee.py` capture,
   `pergroup.py` / `scorer.py` / `judge.py`, `runs-variance.sh`, `audit_watchdog.py`, the
   `bench-win-confirm` agent.
 - **Missing:** the budget-trim audit needs per-run gold cross-referenced against the *full* captured

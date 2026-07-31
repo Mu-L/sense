@@ -1,7 +1,7 @@
 # Loop 7 - Product-fix window
 
 > **Status: defined 2026-07-11; detection half built, propose half manual.** The only loop that touches
-> Sense's code. It runs in the seam between verticals: after the publish sign-off closes vertical N, before Loop 2
+> Sense's code. It runs in the seam between verticals: after the publish sign-off closes vertical N, before bootstrap
 > builds vertical N+1's indexes. That placement is law, not convenience: a mid-vertical product fix
 > invalidates frozen numbers (manifesto §12), and the next vertical's index build freezes the binary again.
 > This is Loop A in the endgame's terms, and its safety property is that its truth is a **fact**, never a
@@ -12,7 +12,7 @@
 Make Sense factually better between verticals: take verified gaps from the ledgers through repro → fix →
 bench gate, and ship what proves value or revert cleanly, without ever destabilizing a running campaign's
 frozen numbers or denaturing the product. Exit state: the window's worklist is shipped-or-reverted and the
-re-index flag is set for Loop 2 if owed.
+re-index flag is set for the next bootstrap if owed.
 
 ## Product duties (per Sense surface)
 
@@ -25,7 +25,7 @@ surface and channel**, and the window triages ALL buckets, not just resolution:
   from the misuse ledger. The repro for these is the transcript pattern + a before/after probe on the
   pinned index, still a fact, never taste. The blast `min_confidence` contract bug is the reference: a
   schema that misleads the LLM is a product defect of the same rank as a missed edge.
-- **Per-stack extraction maturity:** thin-seam patterns flagged by Loop 2's gate telemetry.
+- **Per-stack extraction maturity:** thin-seam patterns flagged by the admission screens.
 - **Query-layer caution, doubled for misuse fixes:** contract/hint changes take effect immediately and
   steer agent behavior directly; they are the cheapest fixes and the most regression-prone, so the
   cross-vertical no-regress gate (the global-change law) applies with no small-fix exemption.
@@ -40,9 +40,9 @@ surface and channel**, and the window triages ALL buckets, not just resolution:
   bench gate → ship or revert.
 - **Position:** consumes Loop 5's ledgers (`verticals/<stack>/results/loopA-gaps.md`, the conventions ledger's graduated
   pitches, carry-forward D items, and the survey friction ledger's **filed** rows -
-  `../FRICTION.md`, process `00-agent-survey.md`; the window records their
+  `../FRICTION.md`, process `08-agent-survey.md`; the window records their
   shipped/killed exit on the row); produces a better binary for the next vertical and the re-index flag
-  for Loop 2. **Hard deadline:** the window closes when Loop 2 starts indexing; anything unfinished parks
+  for bootstrap. **Hard deadline:** the window closes when bootstrap starts indexing; anything unfinished parks
   to the next window, it does not slip mid-vertical.
 
 ## Actors
@@ -76,7 +76,7 @@ surface and channel**, and the window triages ALL buckets, not just resolution:
    cross-cutting / query-layer change takes a **no-regress bench on EVERY vertical it touches** (the
    global-change law), plus side-effect checks across repo sizes (§12(b)). RUN the bench, don't reason
    about it.
-6. **Layer rule on ship:** a scan/resolve/extract-layer fix sets the re-index flag Loop 2 owns (the
+6. **Layer rule on ship:** a scan/resolve/extract-layer fix sets the re-index flag bootstrap owns (the
    affected slate indexes rebuild before the next authoritative sweep); an `mcpio`/query-layer fix takes
    effect on existing indexes immediately.
 
@@ -106,7 +106,7 @@ surface and channel**, and the window triages ALL buckets, not just resolution:
    [`decision-errors.md`](../decision-errors.md)). 7b machine-checks the CODE; nothing was machine-checking
    the RECORD, and the record is what the next session inherits. Before this window is claimed recorded:
    (i) **any contracted surface gets its contract read and its checker RUN** - `ledger_check.py` for the
-   LEDGER, the loader/oracle for scenario+rubric, `bootstrap_check.py` for scaffold; "it's written" is
+   LEDGER, the loader/oracle for scenario+rubric, `scaffold_check.py` for scaffold; "it's written" is
    not "it's recorded"; (ii) **any instrument whose output becomes evidence** (probe scripts, classifiers,
    gate loops) is first run against a **known-answer control** - one row known true, one known false - a
    tool that cannot fail visibly cannot be trusted quietly; (iii) **recorded harness lessons are
@@ -166,7 +166,7 @@ not to Sense's `main`.
   window.
 - **Readability duty:** append `loop7/<window>/{open,<fix>-shipped,<fix>-reverted,close}` entries to
   `verticals/<vertical>/LEDGER.md`, shipped fixes with before/after incl. side-effect benches
-  (write-only for the loop; contract in [`00-ledger.md`](00-ledger.md)).
+  (write-only for the loop; contract in [`ledger.md`](ledger.md)).
 
 ## Un-fakeable check
 
@@ -181,10 +181,10 @@ not to Sense's `main`.
 
 - **Consumes:** verified gap ledgers (Loop 5, resolution + misuse categories), pitches graduated from the
   conventions ledger, carry-forward D items, spend authorization.
-- **Produces:** merged fixes + version bumps, closed ledger entries, the re-index flag for Loop 2, revert
+- **Produces:** merged fixes + version bumps, closed ledger entries, the re-index flag for bootstrap, revert
   records (as valuable as ships: they close dead ends permanently), and - **decided 2026-07-30** - the
   **probe-expiry trigger**: every shipped fix marks every `loop3/<repo>/probe` verdict measured on the
-  previous Sense version as STALE, so [Eligibility](03-a-eligibility.md) re-probes instead of standing on
+  previous Sense version as STALE, so [Diagnosis](03-repo-diagnosis.md) re-verifies instead of standing on
   an expired kill. A fix that makes a dead cell live is a *success* of this loop, and the only way the
   program notices is if this loop invalidates the old measurement. A revert fires the trigger too: it also
   moves the version.
@@ -203,7 +203,7 @@ not to Sense's `main`.
   (spike method, §12, bench gate, layer rule), and the precedents proving both exits.
 - **Missing:** the propose→re-bench-vs-frozen-anchor→accept-on-lift half (endgame step 3). Today the
   proposal is agent-drafted and the acceptance is human + bench; the frozen cross-stack anchor it would
-  need does not exist yet ("enough verticals" is Loop 0's discovery target). This gap is the endgame, not
+  need does not exist yet ("enough verticals" is the program's discovery target). This gap is the endgame, not
   a wiring item; do not attempt it piecemeal.
 - **First live use (next):** the pre-Go window, whose worklist triage is the first act after the publish sign-off of
   the current campaign.

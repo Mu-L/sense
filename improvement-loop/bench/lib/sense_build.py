@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-"""sense_build.py -- the identity of a Sense BUILD, and the expiry key for a probe verdict.
+"""sense_build.py -- the identity of a Sense BUILD, and the expiry key for a verdict.
 
     python3 sense_build.py [--bin PATH]           # show this build's identity
-    python3 sense_build.py --stamp <probe.md>     # write <probe.md>.build.json beside it
+    python3 sense_build.py --stamp <file.md>      # write <file.md>.build.json beside it
 
 ## WHY A BUILD IDENTITY AND NOT A VERSION STRING
 
-A bound verdict (03-a-eligibility.md) is scoped to the Sense build that produced it: Loop 7
-ships fixes between verticals, and a fix can turn a correctly-killed cell live. So "has Sense
-changed since this probe ran" must be answerable mechanically. The version string CANNOT
+A cell's verdict is scoped to the Sense build that produced it: Loop 7 ships fixes between
+verticals, and a fix can turn a correctly-killed cell live. So "has Sense changed since this run"
+must be answerable mechanically. The version string CANNOT
 answer it, for three separate reasons, each measured on this repo:
 
   1. `make build` stamped `VERSION ?= dev`, so EVERY local build reported the same string --
      `sense dev`, with no number in it at all. The dev label (release-relative, e.g.
      1.13.3-dev) fixes the human half of this, and only the human half.
   2. Even a correct dev label repeats across every iteration of ONE Loop 7 spike -- and
-     Loop 3 invokes Loop 7 more than once per vertical, which is the normal case, not the
+     the per-repo loops invoke Loop 7 more than once per vertical, which is the normal case, not the
      edge case.
   3. `sense_ref` + `sense_dirty` (already stamped into run_meta.json by all three runners)
-     cannot separate two DIFFERENT dirty trees on the same commit. A spike-rebuild-reprobe
+     cannot separate two DIFFERENT dirty trees on the same commit. A spike-rebuild-rerun
      loop is exactly that: same commit, still dirty, different bytes.
 
 So the EXPIRY KEY is the sha256 of the binary itself. It changes when, and only when, the

@@ -1,41 +1,85 @@
-# Loop 3d - Diagnosis
+# Loop 3 - Repo diagnosis
 
-> Stage 4 of 4. Shared laws, the depth-first rule and the ledger namespace live in the parent
-> ([`03-per-repo-convergence.md`](03-per-repo-convergence.md)) and are not repeated here.
+> Third of the three per-repo loops ([authoring](01-repo-authoring.md) →
+> [run](02-repo-run.md) → diagnosis). The laws all three share live in
+> [`campaign-laws.md`](campaign-laws.md) and are not repeated here.
 
 ## Goal
 
-Turn a sub-floor verdict into exactly one named cause, each candidate ruled in or out by a detector that
-produced output. Exit state: the cell is routed back to an earlier stage with a lever, parked as a product
-gap for Loop 7, or escalated as a swap with the numbers attached. **This stage cannot write a loss.**
+Read every run this repo produces and turn it into the next move: the material for a better scenario,
+or exactly one named cause with a detector behind it. Exit state: the cell goes back to
+[Authoring](01-repo-authoring.md) with a lever, forward to Loop 4 as a confirmed win, parked as a
+product-gap hypothesis for Loop 7, or escalated as a swap with the numbers attached.
+**This loop cannot write a loss.**
+
+## Two reads, and they run on different inputs
+
+This loop runs on **every** run, not only on a sub-floor verdict, because the validation run exists to
+be read here.
+
+| | The struggle read | The taxonomy |
+|---|---|---|
+| Runs on | every run, including a win | a scored sub-floor verdict |
+| Asks | where did the baseline have a hard time, and what did Sense reach that it did not | which of six causes produced this number |
+| Vertex | the `bench-struggle-read` agent | the `bench-evaluator` agent |
+| Anchored on | the per-gold-item credit table from the run | the branch detectors, each producing output |
+| Produces | gold rows and a shape for the next draft | one named branch and one lever |
+
+**The struggle read is the adversary probe's disclaimer, measured instead of self-reported.** Authoring's
+probe says what it could not establish; this read shows it. The items the baseline missed, and what it
+spent its move budget on before missing them, are the next scenario's material. Keep it an analysis, but
+keep it anchored: the credit table is the mechanical input, and a claim about the run that is not
+traceable to it is prose.
+
+**Do not route the struggle read through `bench-evaluator`.** That agent is defined to emit a one-line
+verdict block, to stand only on script output, and to refuse anything at or above the win bar. Those
+properties are why it is trustworthy on a loss, and they make it the wrong instrument for an open-ended
+read whose output is scenario material. `bench-struggle-read` is the separate vertex: it splits the
+gold into diluters, sense-only reach and shared misses, quotes the move the baseline spent instead of
+each miss, checks whether it exhausted its budget, and reports what it did NOT examine. It names no
+branch and issues no verdict.
+
+## Six crafting cycles per repo, then swap
+
+A repo may go round authoring → run → diagnosis **six times**. The counter advances on every cycle and
+**resets only on measured movement in the credit table**, never on an edit alone: six cosmetic re-shapes
+would otherwise burn the budget and fire the swap on a repo nobody actually pushed on. The count lives
+in `.loop-state.json` beside the phase cursor.
+
+At six with no movement the swap gate fires with the dossier, and the slot takes **its own declared
+backup** from `slate.json`, never the next repo on the slate. The replacement enters
+[Authoring](01-repo-authoring.md) with the counter reset to zero.
 
 ## Product duties (per Sense surface)
 
 - **blast - the budget-trim audit, before blaming the scenario.** On every sub-floor verdict, check
   `sense-io.jsonl` against the gold to see whether the blast budget trimmed a dependency the gold needed.
-  "Send the right info" is a hypothesis this stage is uniquely positioned to falsify, and today it is the
+  "Send the right info" is a hypothesis this loop is uniquely positioned to falsify, and today it is the
   check most often skipped.
 - **Tool contracts and response shape - double-file every misuse finding.** The harness may compensate
   mid-campaign (arm prompt, run script), but the product-side cause - contract text, a default, a hint,
   empty-result guidance - is ledgered for Loop 7. **Compensation without the ledger entry loses the
-  product signal**, which is the whole reason this stage exists.
+  product signal**, which is the whole reason this loop exists.
 - **Genuine product gaps are parked, never fixed mid-vertical.** File the hypothesis with its evidence and
   move on; the spike belongs to Loop 7.
 
 ## Identity
 
-- **Character:** judgment, adversarial. This is the stage that is one keystroke from game-until-green if
-  its separate evaluator is removed.
-- **Unit of work:** one sub-floor verdict on one cell.
-- **Position:** consumes the verdict, transcripts and capture from [Run](03-c-run.md); produces a routed
-  lever back to [Eligibility](03-a-eligibility.md) / [Authoring](03-b-authoring.md) / Run, a parked gap
-  for Loop 7, or a swap dossier that hands the slot back to Loop 2.
+- **Character:** judgment, adversarial on the taxonomy half. That half is one keystroke from
+  game-until-green if its separate evaluator is removed.
+- **Unit of work:** one run on one cell - the struggle read on any of them, the taxonomy on a
+  scored sub-floor verdict.
+- **Position:** consumes every run's transcripts, credit table and capture from
+  [Run](02-repo-run.md); produces scenario material and a routed lever back to
+  [Authoring](01-repo-authoring.md), a confirmed win forward to Loop 4, a parked gap for Loop 7, or a
+  swap dossier that hands the slot back to the backup admitted at bootstrap.
 
 ## Actors
 
 | Actor | Who/what | Notes |
 |---|---|---|
 | Generator | the session agent that ran the cell | it may propose, it may not conclude |
+| Struggle read | the `bench-struggle-read` agent - runs on EVERY run, including a win | returns scenario material, never a verdict or a branch |
 | Evaluator | the `bench-evaluator` agent - adversarial, separate, this taxonomy as its rubric | stands only on mechanical verifier output; anything else it says is prose |
 | Mechanical verifier | `pergroup.py`, `scorer.py`, `transcript_miss.py`, `tool_use_audit.py`, `resolve_oracle.py`, `relationship_audit.py`, `rescore_diff.py` | each branch below names its own |
 | Rubric judge | pinned, distinct from the evaluator | |
@@ -57,8 +101,8 @@ otherwise.*
 | 5 | Genuine product gap | `resolve_oracle.py` fact-check on known-true edges | append to that vertical's gap list (`verticals/<stack>/results/loopA-gaps.md`), which Loop 7 reads as a set via `verticals/*/results/loopA-gaps.md`, **parked** for Loop 7's window | $0 now |
 | 6 | Seam measurably nonexistent | existence measurement on the index | the swap gate swap, with the numbers attached | $0 |
 
-Branch 6 should be rare, because Loop 2 gates admission on the same measurement. When it fires anyway
-that is a **Loop 2 calibration finding** and it goes in the gate's ledger, not only in this one.
+Branch 6 is the one branch that ends the repo, and it is a measurement, never an impression: nothing
+screens seams before a scenario exists any more, so the existence check is made here or nowhere.
 Branch 5 is the only branch touching product truth, and it is asynchronous by law.
 
 Branch 3b has a required negative side: a run where the same parameter was a deliberate,
@@ -67,10 +111,12 @@ is over-tuned.
 
 ## Stop conditions
 
-- **Success:** one branch named, its detector output recorded, and the lever handed to the owning stage.
-  A branch chosen without detector output is not a diagnosis.
-- **Budget:** every branch except 2 is $0; branch 2 re-enters the paid path through the scenario-integrity gate and C, never
-  directly. Park with the branch analysis on disk.
+- **Success (struggle read):** the credit table read, the baseline's misses named with what it spent
+  its budget on instead, and that material handed to Authoring as the next draft's gold candidates.
+- **Success (taxonomy):** one branch named, its detector output recorded, and the lever handed to the
+  owning loop. A branch chosen without detector output is not a diagnosis.
+- **Budget:** the struggle read and every branch except 2 are $0; branch 2 re-enters the paid path
+  through the scenario-integrity gate and Run, never directly. Park with the analysis on disk.
 - **Failure:** all branches exhausted with evidence → the swap gate, with the dossier: what was tried, the
   per-dependency tally, and the product-gap hypothesis. **The loop wins, parks, or escalates a swap.**
 
@@ -139,14 +185,15 @@ The evaluator must rediscover what the humans found, and must not invent problem
 
 ## Built vs missing
 
-- **Built:** the `bench-evaluator` agent with this taxonomy as its rubric, `tool_use_audit.py` (with
+- **Built:** the `bench-evaluator` agent with this taxonomy as its rubric, the `bench-struggle-read`
+  agent (the every-run read, anchored on the credit table), `tool_use_audit.py` (with
   `test_tool_use_audit.py` covering the contract-bug replay and the deliberate-narrowing negative side),
   `transcript_miss.py`, `resolve_oracle.py`, `relationship_audit.py`, `rescore_diff.py`,
   `loss-anatomy.md`.
 - **Missing, deferred by decision 2026-07-30:** the budget-trim audit stays a **hand check**. It needs
   per-run gold cross-referenced against the full captured responses - real work - and it affects
   diagnosis *routing*, where the async tie-diagnosis review still puts a human in the loop. The 0.3/0.7
-  gold check in [Authoring](03-b-authoring.md) was scripted first because it gates whether a WIN is real.
+  gold check in [Authoring](01-repo-authoring.md) was scripted first because it gates whether a WIN is real.
   **The cost of this deferral, stated plainly:** the check most able to falsify "send the RIGHT info"
   remains the easiest one to skip, so every sub-floor verdict this vertical rests on someone actually
   opening `sense-io.jsonl` before blaming the scenario.

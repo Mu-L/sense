@@ -16,12 +16,12 @@ reach; they measure the curator's threshold. A cell can then post a delta that n
 reproduce - which is the most expensive error in the program, because a fake win propagates
 into the confirmation matrix, the harvest and a published article before anyone re-reads it.
 
-This is the hand step the Loop 3 split priced and scripted first (03-b-authoring.md).
+This is the hand step the Loop 3 split priced and scripted first (01-repo-authoring.md).
 
 ## WHAT IT DOES NOT DO
 
 It does not judge whether a row BELONGS in the gold: blast-radius gold != edit-impact gold,
-and that is the hand-audit's job (see control_bound.py's gitea note - 32 of 42 rows were
+and that is the hand-audit's job (the gitea case: 32 of 42 rows were
 answering a different question, and no threshold check would have caught it). This script
 answers one narrow question: of the rows blast can reach, do any of them vanish at 0.7?
 

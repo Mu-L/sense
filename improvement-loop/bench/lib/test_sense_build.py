@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Behaviour pins for the probe-expiry key.
+"""Behaviour pins for the build-expiry key.
 
 The load-bearing pin is `test_same_commit_different_bytes_expires`: the whole reason this
 module exists is that a version string and a commit+dirty pair BOTH fail to separate two
@@ -65,41 +65,41 @@ class StampTest(unittest.TestCase):
     def test_stamp_roundtrips(self):
         with tempfile.TemporaryDirectory() as t:
             b = _fake_bin(t, b"build-A")
-            probe = os.path.join(t, "probe-1.md")
-            with open(probe, "w") as fh:
-                fh.write("control probe answer")
-            ident = stamp(probe, b)
-            self.assertTrue(os.path.exists(stamp_path(probe)))
-            self.assertEqual(read_stamp(probe)["sense_build_key"], ident["sense_build_key"])
+            run = os.path.join(t, "run-1.md")
+            with open(run, "w") as fh:
+                fh.write("run answer")
+            ident = stamp(run, b)
+            self.assertTrue(os.path.exists(stamp_path(run)))
+            self.assertEqual(read_stamp(run)["sense_build_key"], ident["sense_build_key"])
 
     def test_freshness_three_states(self):
         with tempfile.TemporaryDirectory() as t:
             old = _fake_bin(t, b"build-A", "old")
             new = _fake_bin(t, b"build-B", "new")
-            probe = os.path.join(t, "probe-1.md")
-            with open(probe, "w") as fh:
+            run = os.path.join(t, "run-1.md")
+            with open(run, "w") as fh:
                 fh.write("answer")
 
-            unstamped = os.path.join(t, "probe-2.md")
+            unstamped = os.path.join(t, "run-2.md")
             with open(unstamped, "w") as fh:
                 fh.write("answer")
 
-            stamp(probe, old)
-            self.assertEqual(freshness(probe, binary_key(old)), "FRESH")
-            self.assertEqual(freshness(probe, binary_key(new)), "STALE")
+            stamp(run, old)
+            self.assertEqual(freshness(run, binary_key(old)), "FRESH")
+            self.assertEqual(freshness(run, binary_key(new)), "STALE")
             # UNSTAMPED is its own state, never folded into STALE: no provenance at all is
             # a different problem from superseded provenance.
             self.assertEqual(freshness(unstamped, binary_key(old)), "UNSTAMPED")
 
     def test_corrupt_stamp_reads_as_unstamped(self):
         with tempfile.TemporaryDirectory() as t:
-            probe = os.path.join(t, "probe-1.md")
-            with open(probe, "w") as fh:
+            run = os.path.join(t, "run-1.md")
+            with open(run, "w") as fh:
                 fh.write("answer")
-            with open(stamp_path(probe), "w") as fh:
+            with open(stamp_path(run), "w") as fh:
                 fh.write("{not json")
-            self.assertIsNone(read_stamp(probe))
-            self.assertEqual(freshness(probe, "abc123"), "UNSTAMPED")
+            self.assertIsNone(read_stamp(run))
+            self.assertEqual(freshness(run, "abc123"), "UNSTAMPED")
 
 
 if __name__ == "__main__":

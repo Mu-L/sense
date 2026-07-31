@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ledger_check.py - $0 advisory check for a vertical's LEDGER.md (00-ledger.md).
+"""ledger_check.py - $0 advisory check for a vertical's LEDGER.md (ledger.md).
 
 Runs at the publish sign-off alongside the closing review; blocks nothing mid-flight.
 Verifies shape and coverage, NOT immutability (.doc has no git history):
@@ -15,26 +15,23 @@ Verifies shape and coverage, NOT immutability (.doc has no git history):
      comma expansion following the codename)
   6. lesson exit law (schema v2): a Lesson that is not "none" must carry an exit
      tag: Exit: check(...) | rule(...) | fixture(...) | parked(...)
-  7. provenance (schema v2): Loop 3 verdict entries (loop3/<repo>/probe|run-<n>|swap|close)
-     must carry a **Provenance:** field (sense version, pin SHA, scenario + date).
-     `probe` joined the list 2026-07-30 with the Loop 3 split: an eligibility kill IS a
-     verdict, and it is the one verdict that EXPIRES. Loop 7 ships fixes between
-     verticals, so a cell killed on one build can be live on the next; without the
-     build recorded, a dead cell gets silently re-proposed or a stale kill gets cited
-     as current. A probe's Provenance must name the wall too - the wall IS the
-     control's score, so a bound verdict without it cannot be re-read later.
+  7. provenance (schema v2): the per-repo verdict entries (loop2/<repo>/run-<n>,
+     loop3/<repo>/swap|close) must carry a **Provenance:** field (sense version, pin
+     SHA, scenario + date). Loop 7 ships fixes between verticals, so a cell's verdict
+     is always true OF a build; without the build recorded, a dead cell gets silently
+     re-proposed or a stale kill gets cited as current.
   8. cost currency (schema v3): a Cost field must record the subscription side, not
      dollars alone. "$0 API" is true and irrelevant when the weekly reset is the
      binding constraint; the fleet (spawn counts, sessions) is what spends it.
   9. key contract (by ruling, forward-only): entries dated on or after
-     KEY_CONTRACT_FROM must use a key from 00-ledger.md's write-point table.
+     KEY_CONTRACT_FROM must use a key from ledger.md's write-point table.
      Earlier entries are grandfathered by ruling and never rewritten. Born from
-     rule 7 sitting inert: nothing had ever used the loop3 verdict key shape, so
+     rule 7 sitting inert: nothing had ever used the verdict key shape, so
      Provenance never fired on a real entry and looked green the whole time.
 
  10. stopper law (by ruling): a working-tree/staged change to a MEASUREMENT
      INSTRUMENT (the chain whose output becomes a number that decides something:
-     gold/scorer/judge/repo_screen/grounding/pergroup/efficiency) requires a
+     gold/scorer/judge/screen/grounding/pergroup/efficiency) requires a
      `stopper/<slug>` entry dated today, carrying the re-score blast radius
      ("N of M runs") from `bench/lib/rescore_diff.py`. Born 2026-07-15: a scorer
      false-credit was FOUND, correctly analysed, then MITIGATED instead of fixed and
@@ -60,7 +57,7 @@ HEADING = re.compile(r"^## (\d{4}-\d{2}-\d{2}) \| (\S+) \| (.+)$")
 FIELDS = ["What", "Why", "Alternatives", "Lesson", "Scores", "Cost", "Links"]
 CODENAME = re.compile(r"\b(G-\d+|F-[A-Z0-9]+(?:-[A-Za-z0-9]+)*)\b")
 EXIT_TAG = re.compile(r"Exit: (check|rule|fixture|parked)\(")
-VERDICT_KEY = re.compile(r"^loop3/[^/]+/(probe|run-\d+|swap|close)$")
+VERDICT_KEY = re.compile(r"^(loop2/[^/]+/run-\d+|loop3/[^/]+/(swap|close))$")
 # The subscription side of Cost = the FLEET, as a spawn count. Deliberately strict: an
 # earlier draft accepted any mention of "session", which passed every dollars-only entry
 # on the phrase "one session segment" (that is time, not fleet). The spawn count is the
@@ -68,7 +65,7 @@ VERDICT_KEY = re.compile(r"^loop3/[^/]+/(probe|run-\d+|swap|close)$")
 FLEET = re.compile(r"(\d+\s+spawns?|no\s+spawns)", re.IGNORECASE)
 
 # Rule 10. The measurement chain: any instrument whose output becomes a number that
-# decides something. repo_screen is IN - it decides what gets benched at all. Keyed by
+# decides something. screen is IN - it decides what gets benched at all. Keyed by
 # blast radius, not by folder: a bad
 # gold ROW in one scenario is scoped (the hand-audit catches it); a bad MATCHER is systemic
 # and retroactive across every run ever scored.
@@ -76,14 +73,14 @@ MEASUREMENT_INSTRUMENTS = (
     "improvement-loop/bench/lib/gold.py",
     "improvement-loop/bench/lib/scorer.py",
     "improvement-loop/bench/lib/judge.py",
-    "improvement-loop/bench/lib/repo_screen.py",
+    "improvement-loop/bench/bootstrap/screen.py",
     "improvement-loop/bench/lib/grounding.py",
     "improvement-loop/bench/lib/pergroup.py",
     "improvement-loop/bench/lib/efficiency.py",
 )
 BLAST_RADIUS = re.compile(r"\b\d+\s+of\s+\d+\b|\b\d+\s*/\s*\d+\s+runs?\b", re.IGNORECASE)
 
-# The write-point table of 00-ledger.md, as patterns. Keys are the ledger's index: they
+# The write-point table of ledger.md, as patterns. Keys are the ledger's index: they
 # make checklist-loop re-runs idempotent, and they are what rule 7 keys off.
 KEY_CONTRACT = [
     re.compile(p)
@@ -91,9 +88,11 @@ KEY_CONTRACT = [
         r"^seed/\d{4}-\d{2}-\d{2}$",
         r"^ruling/[^/]+$",
         r"^stopper/[^/]+$",
-        r"^loop1/scaffold$",
-        r"^loop2/slate$",
-        r"^loop3/[^/]+/(probe|scenario|event-b|event-c|run-\d+|swap|close)$",
+        r"^bootstrap/scaffold$",
+        r"^bootstrap/slate$",
+        r"^loop1/[^/]+/(scenario|event-b)$",
+        r"^loop2/[^/]+/(event-c|run-\d+)$",
+        r"^loop3/[^/]+/(swap|close)$",
         r"^loop4/[^/]+/(done|parked)$",
         r"^loop5/[^/]+$",
         r"^loop6/event-e$",
@@ -206,47 +205,10 @@ def check_provenance(entries):
         text = "\n".join(body)
         if "**Provenance:**" not in text:
             findings.append(
-                f"entry '{key}' (line {n}): Loop 3 verdict entry missing **Provenance:** "
+                f"entry '{key}' (line {n}): per-repo verdict entry missing **Provenance:** "
                 f"(sense version, pin SHA, scenario + date; the stale-verdict mechanization)"
             )
-            continue
-        findings.extend(_probe_provenance(key, n, text))
     return findings
-
-
-def _probe_provenance(key, n, text):
-    """A probe verdict needs two extra facts, because it is the verdict that EXPIRES.
-
-    build: what the kill is true OF. Loop 7 ships between verticals, so "dead" is always
-    "dead on build X"; without X, a stale kill reads as current (sense_build.py).
-    wall: the wall IS the control's score - the same cell measured 0.00 at 300s and 0.67
-    at 720s. A bound verdict without its wall cannot be re-read at all.
-    """
-    if not key.endswith("/probe"):
-        return []
-    # Read the WHOLE Provenance field, not just its first line. A complete probe
-    # provenance (build + repo pin + scenario version + wall + arm) does not fit on one
-    # line and wraps - the first live probe entry wrapped, and a first-line-only scan
-    # reported its `wall 480s` as missing.
-    lines, field = text.splitlines(), []
-    for i, ln in enumerate(lines):
-        if "**Provenance:**" not in ln:
-            continue
-        field.append(ln)
-        for cont in lines[i + 1:]:
-            if cont.strip().startswith("- **") or not cont.strip():
-                break
-            field.append(cont)
-        break
-    blob = " ".join(field).lower()
-    missing = [want for want in ("build", "wall") if want not in blob]
-    if not missing:
-        return []
-    return [
-        f"entry '{key}' (line {n}): probe Provenance is missing {' and '.join(missing)} "
-        f"(need the sense BUILD key that the kill is true of, and the WALL it was measured "
-        f"at; `python3 sense_build.py` prints the build fragment)"
-    ]
 
 
 def check_cost_currency(entries):
@@ -275,7 +237,7 @@ def check_key_contract(lines):
             continue
         if not any(p.match(key) for p in KEY_CONTRACT):
             findings.append(
-                f"entry '{key}' (line {n}): key is not in the write-point table (00-ledger.md); "
+                f"entry '{key}' (line {n}): key is not in the write-point table (ledger.md); "
                 f"the keys are the ledger's index and rule 7 keys off them"
             )
     return findings

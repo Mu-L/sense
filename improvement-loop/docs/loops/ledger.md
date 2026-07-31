@@ -28,7 +28,7 @@ is public.
 Every entry, exactly this shape (the checker enforces the fields):
 
 ```markdown
-## 2026-07-14 | loop3/dolt/event-c | Paid cell approved
+## 2026-07-14 | loop2/dolt/event-c | Paid cell approved
 - **What:** plain sentences; a stranger understands without opening another file.
 - **Why:** the reason, not the mechanism.
 - **Alternatives:** considered and rejected, with why. "none tried: <reason>" is legal and
@@ -37,7 +37,8 @@ Every entry, exactly this shape (the checker enforces the fields):
   tag: `Exit: check(<name>)` | `Exit: rule(<one-pager>)` | `Exit: fixture(<path>)` |
   `Exit: parked(<reason>)`. A lesson that exits as prose alone is a repeat waiting to happen
   (the auto-improvement exit law; the checker flags it).
-- **Provenance:** REQUIRED on Loop 3 verdict entries (`loop3/<repo>/run-<n>|swap|close`), the
+- **Provenance:** REQUIRED on the per-repo verdict entries (`loop2/<repo>/run-<n>`,
+  `loop3/<repo>/swap|close`), the
   Class-1 stale-verdict mechanization: sense version, pinned repo SHA, scenario file + date.
   Makes "has anything changed since this verdict" answerable by diff. Other entries omit it.
 - **Scores:** before → after, INCLUDING side-effect benches (or "n/a: <why>").
@@ -50,7 +51,7 @@ Every entry, exactly this shape (the checker enforces the fields):
 - **Links:** artifacts: run dirs, PRs, pitch files, transcripts.
 ```
 
-- The heading is `## <date> | <key> | <title>`. Keys make re-runs idempotent: Loops 1/2/5/6 may re-run;
+- The heading is `## <date> | <key> | <title>`. Keys make re-runs idempotent: bootstrap and Loops 5/6 may re-run;
   a keyed entry that already exists is skipped, never duplicated.
 - **The key contract is enforced forward-only (the owner, 2026-07-15).** Entries dated on or after
   **2026-07-16** must use a key from the write-point table below; `ledger_check.py` rule 9 flags the
@@ -74,17 +75,19 @@ Every entry, exactly this shape (the checker enforces the fields):
 
 ## Write points (the transition list)
 
-Entries follow each loop's natural grain, not every heartbeat:
+Entries follow the natural grain of the stage that writes them, not every heartbeat:
 
-| Loop | Key pattern | Fires at |
+| Owner | Key pattern | Fires at |
 |---|---|---|
-| 1 | `loop1/scaffold` | scaffold stamped (loop exit) |
-| 2 | `loop2/slate` | slate composed (the admission sign-off packet; per-candidate numbers stay in `repos.md`, the entry links to it) |
-| 3 | `loop3/<repo>/{probe,scenario,event-b,event-c,run-<n>,swap,close}` | bound verdict (build + wall REQUIRED on its Provenance: a probe kill is true only OF a Sense build, and Loop 7 expires it); scenario stamped; gold sign-off; spend approval; each run verdict WITH the diagnosis branch; swap dossier; repo closed |
-| 4 | `loop4/<arm>/{done,parked}` | per arm (completion or park), matching the per-arm status-format law; never per cell |
-| 5 | `loop5/<repo-or-tier>` | each harvest tier done |
-| 6 | `loop6/event-e` | vertical close |
-| 7 | `loop7/<window>/{open,<fix>-shipped,<fix>-reverted,close}` | window open (worklist); each fix resolution; window close |
+| bootstrap | `bootstrap/scaffold` | scaffold stamped |
+| bootstrap | `bootstrap/slate` | slate composed (the admission sign-off packet; per-candidate numbers stay in `repos.md`, the entry links to it) |
+| Loop 1 (authoring) | `loop1/<repo>/{scenario,event-b}` | scenario stamped (with its version hash); gold sign-off |
+| Loop 2 (run) | `loop2/<repo>/{event-c,run-<n>}` | spend approval (wall + arm plan); each run verdict WITH the diagnosis branch |
+| Loop 3 (diagnosis) | `loop3/<repo>/{swap,close}` | swap dossier; repo closed |
+| Loop 4 | `loop4/<arm>/{done,parked}` | per arm (completion or park), matching the per-arm status-format law; never per cell |
+| Loop 5 | `loop5/<repo-or-tier>` | each harvest tier done |
+| Loop 6 | `loop6/event-e` | vertical close |
+| Loop 7 | `loop7/<window>/{open,<fix>-shipped,<fix>-reverted,close}` | window open (worklist); each fix resolution; window close |
 | - | `ruling/<slug>` | any out-of-loop consequential decision (a owner ruling, an honesty incident, a park) |
 | - | `stopper/<slug>` | **a measurement-instrument bug (rule 10).** Fires the moment it is FOUND, not when it is fixed. MUST carry the re-score blast radius ("N of M runs", `bench/lib/rescore_diff.py`) and what it retro-invalidates. `ledger_check.py` rule 10 blocks a quiet scorer change. |
 
