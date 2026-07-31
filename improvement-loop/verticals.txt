@@ -1,21 +1,19 @@
 # The vertical QUEUE, in order. One `key|lang|framework|title` per line.
-#
-# `run.sh` walks this top to bottom and takes the FIRST key whose
-# verticals/<key>/ directory does not exist. That is the whole selection rule:
-# the human decides the ORDER by editing this file, the script decides nothing.
-# When every key already has a directory it stops and says so rather than
-# inventing a stack.
-#
-#   key        verticals/<key>/, the LEDGER key, the bench VERTICAL= value
-#   lang       the internal/extract/<lang> directory name
-#   framework  names internal/model/<framework>.go and the framework slot
-#   title      display name for the stamp
-#
-# Each queued key also needs `stacks/<key>.conf` (the manifest marker and the
-# hunt queries). run.sh refuses to start without it, because a
-# vertical whose repo hunt is undeclared cannot make a checkable "pool
-# exhausted" claim later.
 
-php-laravel|php|laravel|PHP / Laravel
 ruby-rails|ruby|rails|Ruby on Rails
+php-laravel|php|laravel|PHP / Laravel
 python-django|python|django|Python / Django
+java-spring|java|spring|Java / Spring
+csharp-aspnet|csharp|aspnetcore|C# / ASP.NET Core
+typescript-nestjs|tsjs|nestjs|TypeScript / NestJS
+go-cloudnative|golang|cloudnative|Go / Cloud-Native
+rust-axum|rust|axum|Rust / Axum
+python-fastapi|python|fastapi|Python / FastAPI
+php-symfony|php|symfony|PHP / Symfony
+kotlin-spring|kotlin|spring|Kotlin / Spring
+elixir-phoenix|elixir|phoenix|Elixir / Phoenix
+swift-vapor|swift|vapor|Swift / Vapor
+dart-flutter|dart|flutter|Dart / Flutter
+haskell-servant|haskell|servant|Haskell / Servant
+clojure-ring|clojure|ring|Clojure / Ring
+zig-systems|zig|systems|Zig / Systems
