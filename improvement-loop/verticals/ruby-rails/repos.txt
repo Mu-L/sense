@@ -1,5 +1,0 @@
-# ruby-rails vertical - the repo list. One repo key per line.
-mastodon
-discourse
-chatwoot
-solidus

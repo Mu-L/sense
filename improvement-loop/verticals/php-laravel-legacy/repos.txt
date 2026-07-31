@@ -1,5 +1,0 @@
-# php-laravel vertical - the repo list. One repo key per line.
-akaunting
-invoiceninja
-filament
-snipe-it
