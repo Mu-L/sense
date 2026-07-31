@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "lynndylanhurley/devise_token_auth",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem \"rails\"",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem \"rails\" in Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-30T15:58:02Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "devise_token_auth",
+ "size": {
+  "ok": false,
+  "prod_files": 32,
+  "size": "small",
+  "why": "32 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/lynndylanhurley/devise_token_auth.git",
+ "used": {
+  "ok": true,
+  "stars": 3570,
+  "why": "3570 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "akaunting/akaunting",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 3,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-28T07:42:13Z",
+  "why": "last push 3d ago (floor 365d)"
+ },
+ "repo": "akaunting",
+ "size": {
+  "ok": true,
+  "prod_files": 3852,
+  "size": "medium",
+  "why": "3852 prod source files = medium (floor 1000)"
+ },
+ "size_class": "medium",
+ "url": "https://github.com/akaunting/akaunting.git",
+ "used": {
+  "ok": true,
+  "stars": 10003,
+  "why": "10003 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

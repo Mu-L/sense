@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "simplecov-ruby/simplecov",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 4\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-30T13:21:30Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "simplecov",
+ "size": {
+  "ok": false,
+  "prod_files": 140,
+  "size": "small",
+  "why": "140 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/simplecov-ruby/simplecov.git",
+ "used": {
+  "ok": true,
+  "stars": 4913,
+  "why": "4913 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

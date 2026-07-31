@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "rails/spring",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem \"activesupport\"",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem \"activesupport\" in Gemfile"
+ },
+ "maintained": {
+  "age_days": 30,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-06-30T16:30:38Z",
+  "why": "last push 30d ago (floor 365d)"
+ },
+ "repo": "spring",
+ "size": {
+  "ok": false,
+  "prod_files": 30,
+  "size": "small",
+  "why": "30 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/rails/spring.git",
+ "used": {
+  "ok": true,
+  "stars": 2814,
+  "why": "2814 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

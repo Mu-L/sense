@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "BookStackApp/BookStack",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T04:31:09Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "bookstack",
+ "size": {
+  "ok": true,
+  "prod_files": 1876,
+  "size": "medium",
+  "why": "1876 prod source files = medium (floor 1000)"
+ },
+ "size_class": "medium",
+ "url": "https://github.com/BookStackApp/BookStack.git",
+ "used": {
+  "ok": true,
+  "stars": 18950,
+  "why": "18950 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

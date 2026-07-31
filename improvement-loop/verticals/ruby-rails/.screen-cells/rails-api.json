@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": null,
+  "why": "needs a clone (UNRUN)"
+ },
+ "maintained": {
+  "age_days": 1916,
+  "archived": false,
+  "ok": false,
+  "pushed_at": "2021-05-02T00:00:00Z",
+  "why": "last push 1916d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "rails-api",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/rails-api/rails-api.git",
+ "used": {
+  "ok": true,
+  "stars": 5130,
+  "why": "5130 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

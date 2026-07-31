@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "Azuriom/Azuriom",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 20,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-11T00:09:01Z",
+  "why": "last push 20d ago (floor 365d)"
+ },
+ "repo": "azuriom",
+ "size": {
+  "ok": false,
+  "prod_files": 426,
+  "size": "small",
+  "why": "426 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/Azuriom/Azuriom.git",
+ "used": {
+  "ok": false,
+  "stars": 731,
+  "why": "731 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

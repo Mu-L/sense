@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "discourse/discourse",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem \"railties\"",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem \"railties\" in Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T10:38:58Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "discourse",
+ "size": {
+  "ok": true,
+  "prod_files": 7969,
+  "size": "big",
+  "why": "7969 prod source files = big (floor 1000)"
+ },
+ "size_class": "big",
+ "url": "https://github.com/discourse/discourse.git",
+ "used": {
+  "ok": true,
+  "stars": 47568,
+  "why": "47568 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "activerecord-hackery/ransack",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem 'activesupport'",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem 'activesupport' in Gemfile"
+ },
+ "maintained": {
+  "age_days": 60,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-05-31T20:24:55Z",
+  "why": "last push 60d ago (floor 365d)"
+ },
+ "repo": "ransack",
+ "size": {
+  "ok": false,
+  "prod_files": 37,
+  "size": "small",
+  "why": "37 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/activerecord-hackery/ransack.git",
+ "used": {
+  "ok": true,
+  "stars": 5864,
+  "why": "5864 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

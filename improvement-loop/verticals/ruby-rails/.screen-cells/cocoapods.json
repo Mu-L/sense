@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "CocoaPods/CocoaPods",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem 'activesupport'",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem 'activesupport' in Gemfile"
+ },
+ "maintained": {
+  "age_days": 24,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-06T21:36:05Z",
+  "why": "last push 24d ago (floor 365d)"
+ },
+ "repo": "cocoapods",
+ "size": {
+  "ok": false,
+  "prod_files": 145,
+  "size": "small",
+  "why": "145 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/CocoaPods/CocoaPods.git",
+ "used": {
+  "ok": true,
+  "stars": 14828,
+  "why": "14828 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

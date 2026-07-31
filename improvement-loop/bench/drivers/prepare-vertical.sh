@@ -49,6 +49,14 @@ done
 
 QUEUE="$IL_ROOT/verticals.txt"
 
+# --- 0. preflight: the binary must BE the latest release ----------------------
+# Everything downstream builds indexes, and an index built by an older binary is
+# indistinguishable from a fresh one once it is on disk.
+say "## [preflight] sense version"
+if ! bash "$BENCH_DIR/lib/sense-version-check.sh" >&2; then
+  emit SENSE-STALE 69 "" preflight "installed sense is not the latest release"
+fi
+
 # --- 1. select ----------------------------------------------------------------
 say "## [select]"
 if [ -z "$KEY" ]; then

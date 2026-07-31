@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "octobercms/october",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 1,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-30T09:39:19Z",
+  "why": "last push 1d ago (floor 365d)"
+ },
+ "repo": "october",
+ "size": {
+  "ok": true,
+  "prod_files": 1864,
+  "size": "medium",
+  "why": "1864 prod source files = medium (floor 1000)"
+ },
+ "size_class": "medium",
+ "url": "https://github.com/octobercms/october.git",
+ "used": {
+  "ok": true,
+  "stars": 11138,
+  "why": "11138 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

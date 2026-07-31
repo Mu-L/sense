@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "instructure/canvas-lms",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 52\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 91,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-04-30T14:52:10Z",
+  "why": "last push 91d ago (floor 365d)"
+ },
+ "repo": "canvas-lms",
+ "size": {
+  "ok": true,
+  "prod_files": 6275,
+  "size": "big",
+  "why": "6275 prod source files = big (floor 1000)"
+ },
+ "size_class": "big",
+ "url": "https://github.com/instructure/canvas-lms.git",
+ "used": {
+  "ok": true,
+  "stars": 6756,
+  "why": "6756 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

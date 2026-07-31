@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": null,
+  "why": "needs a clone (UNRUN)"
+ },
+ "maintained": {
+  "age_days": 854,
+  "archived": false,
+  "ok": false,
+  "pushed_at": "2024-03-29T00:00:00Z",
+  "why": "last push 854d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "octopress",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/imathis/octopress.git",
+ "used": {
+  "ok": true,
+  "stars": 9237,
+  "why": "9237 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

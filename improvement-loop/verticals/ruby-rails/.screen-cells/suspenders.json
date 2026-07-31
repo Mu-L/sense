@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "thoughtbot/suspenders",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 42,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-06-19T10:15:09Z",
+  "why": "last push 42d ago (floor 365d)"
+ },
+ "repo": "suspenders",
+ "size": {
+  "ok": false,
+  "prod_files": 7,
+  "size": "small",
+  "why": "7 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/thoughtbot/suspenders.git",
+ "used": {
+  "ok": true,
+  "stars": 4046,
+  "why": "4046 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

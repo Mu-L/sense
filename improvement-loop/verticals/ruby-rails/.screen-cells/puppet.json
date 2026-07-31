@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "puppetlabs/puppet",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 3\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 136,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-03-16T11:58:10Z",
+  "why": "last push 136d ago (floor 365d)"
+ },
+ "repo": "puppet",
+ "size": {
+  "ok": true,
+  "prod_files": 1070,
+  "size": "medium",
+  "why": "1070 prod source files = medium (floor 1000)"
+ },
+ "size_class": "medium",
+ "url": "https://github.com/puppetlabs/puppet.git",
+ "used": {
+  "ok": true,
+  "stars": 7914,
+  "why": "7914 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": null,
+  "why": "needs a clone (UNRUN)"
+ },
+ "maintained": {
+  "age_days": 745,
+  "archived": false,
+  "ok": false,
+  "pushed_at": "2024-07-16T00:00:00Z",
+  "why": "last push 745d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "webpacker",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/rails/webpacker.git",
+ "used": {
+  "ok": true,
+  "stars": 5273,
+  "why": "5273 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

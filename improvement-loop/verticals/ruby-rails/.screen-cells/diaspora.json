@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "diaspora/diaspora",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem \"rails\"",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem \"rails\" in Gemfile"
+ },
+ "maintained": {
+  "age_days": 2,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-28T20:36:26Z",
+  "why": "last push 2d ago (floor 365d)"
+ },
+ "repo": "diaspora",
+ "size": {
+  "ok": false,
+  "prod_files": 680,
+  "size": "small",
+  "why": "680 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/diaspora/diaspora.git",
+ "used": {
+  "ok": true,
+  "stars": 13656,
+  "why": "13656 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

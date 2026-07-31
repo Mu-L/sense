@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "aureuserp/aureuserp",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 2,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-29T09:38:16Z",
+  "why": "last push 2d ago (floor 365d)"
+ },
+ "repo": "aureuserp",
+ "size": {
+  "ok": true,
+  "prod_files": 7398,
+  "size": "big",
+  "why": "7398 prod source files = big (floor 1000)"
+ },
+ "size_class": "big",
+ "url": "https://github.com/aureuserp/aureuserp.git",
+ "used": {
+  "ok": true,
+  "stars": 11653,
+  "why": "11653 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

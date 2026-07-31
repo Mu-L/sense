@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": false,
+  "why": "no Gemfile in the repo root (remote)"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T00:00:00Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "homebrew-core",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/Homebrew/homebrew-core.git",
+ "used": {
+  "ok": true,
+  "stars": 15468,
+  "why": "15468 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

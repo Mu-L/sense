@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": null,
+  "why": "needs a clone (UNRUN)"
+ },
+ "maintained": {
+  "age_days": 871,
+  "archived": false,
+  "ok": false,
+  "pushed_at": "2024-03-12T00:00:00Z",
+  "why": "last push 871d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "awesome-rails-gem",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/hothero/awesome-rails-gem.git",
+ "used": {
+  "ok": true,
+  "stars": 2810,
+  "why": "2810 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

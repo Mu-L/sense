@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "grokability/snipe-it",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T06:27:09Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "snipe-it",
+ "size": {
+  "ok": true,
+  "prod_files": 7729,
+  "size": "big",
+  "why": "7729 prod source files = big (floor 1000)"
+ },
+ "size_class": "big",
+ "url": "https://github.com/grokability/snipe-it.git",
+ "used": {
+  "ok": true,
+  "stars": 14650,
+  "why": "14650 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

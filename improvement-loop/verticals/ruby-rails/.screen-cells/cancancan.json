@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "CanCanCommunity/cancancan",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T05:34:57Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "cancancan",
+ "size": {
+  "ok": false,
+  "prod_files": 42,
+  "size": "small",
+  "why": "42 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/CanCanCommunity/cancancan.git",
+ "used": {
+  "ok": true,
+  "stars": 5689,
+  "why": "5689 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

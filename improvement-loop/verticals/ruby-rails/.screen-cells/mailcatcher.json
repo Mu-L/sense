@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": null,
+  "why": "needs a clone (UNRUN)"
+ },
+ "maintained": {
+  "age_days": 797,
+  "archived": false,
+  "ok": false,
+  "pushed_at": "2024-05-25T00:00:00Z",
+  "why": "last push 797d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "mailcatcher",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/sj26/mailcatcher.git",
+ "used": {
+  "ok": true,
+  "stars": 6771,
+  "why": "6771 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

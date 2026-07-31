@@ -1,0 +1,41 @@
+{
+ "banner": [
+  "AGENTS.md:316: - Never attribute work to AI in any artifact: no \"Generated with Claude Code\", \"Assisted by AI\", \"Co-Authored-By: Claude",
+  "CLAUDE.md:316: - Never attribute work to AI in any artifact: no \"Generated with Claude Code\", \"Assisted by AI\", \"Co-Authored-By: Claude"
+ ],
+ "github": "koel/koel",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 5,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-25T23:00:33Z",
+  "why": "last push 5d ago (floor 365d)"
+ },
+ "repo": "koel",
+ "size": {
+  "ok": true,
+  "prod_files": 1221,
+  "size": "medium",
+  "why": "1221 prod source files = medium (floor 1000)"
+ },
+ "size_class": "medium",
+ "url": "https://github.com/koel/koel.git",
+ "used": {
+  "ok": true,
+  "stars": 17198,
+  "why": "17198 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

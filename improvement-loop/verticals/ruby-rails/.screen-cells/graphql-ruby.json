@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "rmosolgo/graphql-ruby",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 2,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-28T11:57:59Z",
+  "why": "last push 2d ago (floor 365d)"
+ },
+ "repo": "graphql-ruby",
+ "size": {
+  "ok": false,
+  "prod_files": 426,
+  "size": "small",
+  "why": "426 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/rmosolgo/graphql-ruby.git",
+ "used": {
+  "ok": true,
+  "stars": 5447,
+  "why": "5447 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

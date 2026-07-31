@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "doorkeeper-gem/doorkeeper",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem \"rails\"",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem \"rails\" in Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-30T20:34:35Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "doorkeeper",
+ "size": {
+  "ok": false,
+  "prod_files": 127,
+  "size": "small",
+  "why": "127 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/doorkeeper-gem/doorkeeper.git",
+ "used": {
+  "ok": true,
+  "stars": 5514,
+  "why": "5514 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

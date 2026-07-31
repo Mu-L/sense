@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "DavyJonesLocker/client_side_validations",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 1,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-30T08:48:50Z",
+  "why": "last push 1d ago (floor 365d)"
+ },
+ "repo": "client_side_validations",
+ "size": {
+  "ok": false,
+  "prod_files": 42,
+  "size": "small",
+  "why": "42 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/DavyJonesLocker/client_side_validations.git",
+ "used": {
+  "ok": true,
+  "stars": 2680,
+  "why": "2680 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "freescout-help-desk/freescout",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T08:20:59Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "freescout",
+ "size": {
+  "ok": false,
+  "prod_files": 785,
+  "size": "small",
+  "why": "785 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/freescout-help-desk/freescout.git",
+ "used": {
+  "ok": true,
+  "stars": 4447,
+  "why": "4447 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

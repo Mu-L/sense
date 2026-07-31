@@ -1,0 +1,48 @@
+# MINI-GOLD (Loop 3a eligibility, not an audited scenario).
+#
+# Every gold row below was verified BY HAND: each carrier line was read in the clone at
+# the pinned commit (`use Jobs;` inside the class body), and the dispatch-mode decision was
+# read in the trait itself. This file exists to answer ONE question - can this cell clear
+# +0.50 at all - and it is freely re-targetable. The audited set is Authoring's job.
+#
+# NOTE ON THE CARRIERS GROUP: `grep -rn "use Jobs"` finds all six in one command, so the
+# control is expected to score ~1.000 there and that group is expected to come back DEAD.
+# It is kept deliberately: a group the baseline aces is the evidence for WHERE the axis is
+# not, and dropping it would flatter the cell.
+name: akaunting job dispatch surface
+repo: akaunting
+description: |
+  Trace how this application dispatches queued work. A shared trait provides the dispatch
+  entry points, and the choice between running a job inline and pushing it onto the queue is
+  made in one place. Identify which classes take on the dispatch behaviour and where the
+  inline-versus-queue decision is resolved.
+steps:
+  - name: dispatch surface
+    prompt: |
+      You are handing off to another engineer who has to change how this application decides
+      whether a job runs inline or goes to the queue.
+
+      Give them the dispatch surface of the `Jobs` trait:
+
+      1. Every class that takes on this trait, each with an exact `path:line` citation.
+      2. Where the inline-versus-queue decision is actually resolved, with `path:line`.
+
+      Cite exact `path:line` for every claim. Do not guess: if you cannot pin a location,
+      say so rather than naming a file you have not opened.
+    checks:
+      - type: contains
+        value: "Jobs"
+        required: true
+      - type: contains
+        value: ".php:"
+        required: true
+gold:
+  # --- carriers: hand-read `use Jobs;` lines at the pinned commit (grep-reachable) ---
+  - {id: 'carrier:import', group: carriers, match: [app/Traits/Import.php]}
+  - {id: 'carrier:emails', group: carriers, match: [app/Traits/Emails.php]}
+  - {id: 'carrier:factory', group: carriers, match: [app/Abstracts/Factory.php]}
+  - {id: 'carrier:job', group: carriers, match: [app/Abstracts/Job.php]}
+  - {id: 'carrier:bulkaction', group: carriers, match: [app/Abstracts/BulkAction.php]}
+  - {id: 'carrier:observer', group: carriers, match: [app/Observers/Transaction.php]}
+  # --- decision: the trait resolves the dispatch mode itself ---
+  - {id: 'decision:dispatch-mode', group: decision, match: [app/Traits/Jobs.php]}

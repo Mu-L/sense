@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "presidentbeef/brakeman",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 45,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-06-15T15:20:22Z",
+  "why": "last push 45d ago (floor 365d)"
+ },
+ "repo": "brakeman",
+ "size": {
+  "ok": false,
+  "prod_files": 179,
+  "size": "small",
+  "why": "179 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/presidentbeef/brakeman.git",
+ "used": {
+  "ok": true,
+  "stars": 7260,
+  "why": "7260 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

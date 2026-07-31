@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": null,
+  "why": "needs a clone (UNRUN)"
+ },
+ "maintained": {
+  "age_days": 576,
+  "archived": false,
+  "ok": false,
+  "pushed_at": "2025-01-01T00:00:00Z",
+  "why": "last push 576d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "derailed_benchmarks",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/zombocom/derailed_benchmarks.git",
+ "used": {
+  "ok": true,
+  "stars": 3060,
+  "why": "3060 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

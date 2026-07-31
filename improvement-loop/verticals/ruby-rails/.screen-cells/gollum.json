@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "gollum/gollum",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 248,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2025-11-24T22:15:31Z",
+  "why": "last push 248d ago (floor 365d)"
+ },
+ "repo": "gollum",
+ "size": {
+  "ok": false,
+  "prod_files": 26,
+  "size": "small",
+  "why": "26 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/gollum/gollum.git",
+ "used": {
+  "ok": true,
+  "stars": 14307,
+  "why": "14307 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

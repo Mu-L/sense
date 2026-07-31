@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "wintercms/winter",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 4,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-26T18:50:34Z",
+  "why": "last push 4d ago (floor 365d)"
+ },
+ "repo": "winter",
+ "size": {
+  "ok": true,
+  "prod_files": 1151,
+  "size": "medium",
+  "why": "1151 prod source files = medium (floor 1000)"
+ },
+ "size_class": "medium",
+ "url": "https://github.com/wintercms/winter.git",
+ "used": {
+  "ok": true,
+  "stars": 1509,
+  "why": "1509 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

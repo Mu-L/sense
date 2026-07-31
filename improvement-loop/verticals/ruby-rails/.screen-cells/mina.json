@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": null,
+  "why": "needs a clone (UNRUN)"
+ },
+ "maintained": {
+  "age_days": 729,
+  "archived": false,
+  "ok": false,
+  "pushed_at": "2024-08-01T00:00:00Z",
+  "why": "last push 729d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "mina",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/mina-deploy/mina.git",
+ "used": {
+  "ok": true,
+  "stars": 4355,
+  "why": "4355 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

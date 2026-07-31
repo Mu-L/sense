@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "chef/chef",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 5\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T11:00:10Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "chef",
+ "size": {
+  "ok": false,
+  "prod_files": 893,
+  "size": "small",
+  "why": "893 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/chef/chef.git",
+ "used": {
+  "ok": true,
+  "stars": 8227,
+  "why": "8227 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

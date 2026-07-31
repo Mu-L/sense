@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "filamentphp/filament",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "docs-assets/app/composer.json",
+  "why": "declares laravel/framework in docs-assets/app/composer.json"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T03:14:31Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "filament",
+ "size": {
+  "ok": true,
+  "prod_files": 4954,
+  "size": "big",
+  "why": "4954 prod source files = big (floor 1000)"
+ },
+ "size_class": "big",
+ "url": "https://github.com/filamentphp/filament.git",
+ "used": {
+  "ok": true,
+  "stars": 31659,
+  "why": "31659 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

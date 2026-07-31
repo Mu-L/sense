@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "carrierwaveuploader/carrierwave",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem \"rails\"",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem \"rails\" in Gemfile"
+ },
+ "maintained": {
+  "age_days": 38,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-06-22T13:57:00Z",
+  "why": "last push 38d ago (floor 365d)"
+ },
+ "repo": "carrierwave",
+ "size": {
+  "ok": false,
+  "prod_files": 50,
+  "size": "small",
+  "why": "50 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/carrierwaveuploader/carrierwave.git",
+ "used": {
+  "ok": true,
+  "stars": 8781,
+  "why": "8781 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

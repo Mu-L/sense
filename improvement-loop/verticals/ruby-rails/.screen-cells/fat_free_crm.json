@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "fatfreecrm/fat_free_crm",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T07:50:03Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "fat_free_crm",
+ "size": {
+  "ok": false,
+  "prod_files": 265,
+  "size": "small",
+  "why": "265 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/fatfreecrm/fat_free_crm.git",
+ "used": {
+  "ok": true,
+  "stars": 3628,
+  "why": "3628 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

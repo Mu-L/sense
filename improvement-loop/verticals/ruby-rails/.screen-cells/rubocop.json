@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "rubocop/rubocop",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T09:52:22Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "rubocop",
+ "size": {
+  "ok": false,
+  "prod_files": 934,
+  "size": "small",
+  "why": "934 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/rubocop/rubocop.git",
+ "used": {
+  "ok": true,
+  "stars": 12892,
+  "why": "12892 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

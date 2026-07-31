@@ -1,0 +1,60 @@
+{
+  "_meta": {
+    "vertical": "php-laravel",
+    "note": "Written by compose_slate.py; verified by slate_check.py."
+  },
+  "akaunting": {
+    "slot": "medium",
+    "anchor": "Jobs",
+    "anchor_file": "app/Traits/Jobs.php",
+    "affected": 729,
+    "precision": 0.1542,
+    "win_signature": true,
+    "backup": {
+      "repo": "lychee",
+      "anchor": "InternalLycheeException",
+      "anchor_file": "app/Contracts/Exceptions/InternalLycheeException.php",
+      "affected": 593,
+      "precision": 0.2069
+    }
+  },
+  "invoiceninja": {
+    "slot": "medium",
+    "anchor": "ActivityRepository",
+    "anchor_file": "app/Repositories/ActivityRepository.php",
+    "affected": 606,
+    "precision": 0.0673,
+    "win_signature": true,
+    "backup": {
+      "repo": "statamic",
+      "anchor": "ContainsQueryableValues",
+      "anchor_file": "src/Contracts/Query/ContainsQueryableValues.php",
+      "affected": 673,
+      "precision": 0.9091
+    }
+  },
+  "filament": {
+    "slot": "framework",
+    "anchor": "HasSchemas",
+    "anchor_file": "packages/schemas/src/Contracts/HasSchemas.php",
+    "affected": 1100,
+    "precision": 0.46,
+    "win_signature": false,
+    "backup": {
+      "repo": "october",
+      "anchor": "Blueprint",
+      "anchor_file": "modules/tailor/classes/Blueprint.php",
+      "affected": 254,
+      "precision": 0.1356
+    }
+  },
+  "snipe-it": {
+    "slot": "big",
+    "anchor": "Presentable",
+    "anchor_file": "app/Presenters/Presentable.php",
+    "affected": 336,
+    "precision": 0.9565,
+    "win_signature": false,
+    "backup": null
+  }
+}

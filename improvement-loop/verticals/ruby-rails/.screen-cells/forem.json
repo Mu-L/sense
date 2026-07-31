@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "forem/forem",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem \"rails\"",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem \"rails\" in Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-30T19:53:23Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "forem",
+ "size": {
+  "ok": true,
+  "prod_files": 2556,
+  "size": "medium",
+  "why": "2556 prod source files = medium (floor 1000)"
+ },
+ "size_class": "medium",
+ "url": "https://github.com/forem/forem.git",
+ "used": {
+  "ok": true,
+  "stars": 22754,
+  "why": "22754 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "seyhunak/twitter-bootstrap-rails",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem 'activesupport'",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem 'activesupport' in Gemfile"
+ },
+ "maintained": {
+  "age_days": 2,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-28T20:18:59Z",
+  "why": "last push 2d ago (floor 365d)"
+ },
+ "repo": "twitter-bootstrap-rails",
+ "size": {
+  "ok": false,
+  "prod_files": 10,
+  "size": "small",
+  "why": "10 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/seyhunak/twitter-bootstrap-rails.git",
+ "used": {
+  "ok": true,
+  "stars": 4465,
+  "why": "4465 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

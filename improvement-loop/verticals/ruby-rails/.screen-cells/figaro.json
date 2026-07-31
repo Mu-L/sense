@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": null,
+  "why": "needs a clone (UNRUN)"
+ },
+ "maintained": {
+  "age_days": 397,
+  "archived": false,
+  "ok": false,
+  "pushed_at": "2025-06-29T00:00:00Z",
+  "why": "last push 397d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "figaro",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/laserlemon/figaro.git",
+ "used": {
+  "ok": true,
+  "stars": 3746,
+  "why": "3746 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

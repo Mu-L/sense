@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "tryzealot/zealot",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem 'rails'",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem 'rails' in Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T09:18:07Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "zealot",
+ "size": {
+  "ok": false,
+  "prod_files": 325,
+  "size": "small",
+  "why": "325 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/tryzealot/zealot.git",
+ "used": {
+  "ok": true,
+  "stars": 1330,
+  "why": "1330 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "collectiveidea/audited",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 254,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2025-11-18T19:05:29Z",
+  "why": "last push 254d ago (floor 365d)"
+ },
+ "repo": "audited",
+ "size": {
+  "ok": false,
+  "prod_files": 22,
+  "size": "small",
+  "why": "22 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/collectiveidea/audited.git",
+ "used": {
+  "ok": true,
+  "stars": 3495,
+  "why": "3495 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

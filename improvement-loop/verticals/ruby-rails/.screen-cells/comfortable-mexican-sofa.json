@@ -1,0 +1,30 @@
+{
+ "banner": [],
+ "in_vertical": {
+  "ok": null,
+  "why": "needs a clone (UNRUN)"
+ },
+ "maintained": {
+  "age_days": 795,
+  "archived": false,
+  "ok": false,
+  "pushed_at": "2024-05-27T00:00:00Z",
+  "why": "last push 795d ago (floor 365d)"
+ },
+ "phase": "api-only",
+ "repo": "comfortable-mexican-sofa",
+ "size": {
+  "ok": null,
+  "prod_files": 0,
+  "size": "unknown",
+  "why": "needs a clone (UNRUN)"
+ },
+ "size_class": "unknown",
+ "url": "https://github.com/comfy/comfortable-mexican-sofa.git",
+ "used": {
+  "ok": true,
+  "stars": 2710,
+  "why": "2710 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

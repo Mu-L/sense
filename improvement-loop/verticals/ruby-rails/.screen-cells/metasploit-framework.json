@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "rapid7/metasploit-framework",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 2\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-30T17:36:47Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "metasploit-framework",
+ "size": {
+  "ok": true,
+  "prod_files": 7677,
+  "size": "big",
+  "why": "7677 prod source files = big (floor 1000)"
+ },
+ "size_class": "big",
+ "url": "https://github.com/rapid7/metasploit-framework.git",
+ "used": {
+  "ok": true,
+  "stars": 38696,
+  "why": "38696 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

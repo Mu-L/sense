@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "invoiceninja/invoiceninja",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 3,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-27T21:14:27Z",
+  "why": "last push 3d ago (floor 365d)"
+ },
+ "repo": "invoiceninja",
+ "size": {
+  "ok": true,
+  "prod_files": 3644,
+  "size": "medium",
+  "why": "3644 prod source files = medium (floor 1000)"
+ },
+ "size_class": "medium",
+ "url": "https://github.com/invoiceninja/invoiceninja.git",
+ "used": {
+  "ok": true,
+  "stars": 9948,
+  "why": "9948 stars (floor 1000)"
+ },
+ "verdict": "ADMIT"
+}

@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "vertical": "ruby-rails",
+    "note": "Written by compose_slate.py; verified by slate_check.py."
+  },
+  "mastodon": {
+    "slot": "medium",
+    "size": "medium",
+    "prod_files": 2303,
+    "stars": 50151,
+    "banner": false,
+    "backup": {
+      "repo": "gitlabhq",
+      "size": "big",
+      "prod_files": 17869,
+      "stars": 24513
+    }
+  },
+  "discourse": {
+    "slot": "big",
+    "size": "big",
+    "prod_files": 7969,
+    "stars": 47568,
+    "banner": false,
+    "backup": {
+      "repo": "openproject",
+      "size": "big",
+      "prod_files": 8032,
+      "stars": 15728
+    }
+  },
+  "chatwoot": {
+    "slot": "medium",
+    "size": "medium",
+    "prod_files": 1908,
+    "stars": 34952,
+    "banner": false,
+    "backup": {
+      "repo": "forem",
+      "size": "medium",
+      "prod_files": 2556,
+      "stars": 22754
+    }
+  },
+  "solidus": {
+    "slot": "framework",
+    "size": "medium",
+    "prod_files": 1306,
+    "stars": 5317,
+    "banner": false,
+    "backup": null
+  }
+}

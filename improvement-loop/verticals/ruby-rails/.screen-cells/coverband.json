@@ -1,0 +1,43 @@
+{
+ "banner": [],
+ "github": "danmayer/coverband",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": "gem \"rails\"",
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": true,
+  "where": "Gemfile",
+  "why": "declares gem \"rails\" in Gemfile"
+ },
+ "maintained": {
+  "age_days": 37,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-06-23T21:19:32Z",
+  "why": "last push 37d ago (floor 365d)"
+ },
+ "repo": "coverband",
+ "size": {
+  "ok": false,
+  "prod_files": 59,
+  "size": "small",
+  "why": "59 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/danmayer/coverband.git",
+ "used": {
+  "ok": true,
+  "stars": 2685,
+  "why": "2685 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

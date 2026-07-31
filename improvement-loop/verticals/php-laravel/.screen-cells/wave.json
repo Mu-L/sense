@@ -1,0 +1,38 @@
+{
+ "banner": [],
+ "github": "thedevdojo/wave",
+ "in_vertical": {
+  "manifest": "composer.json",
+  "matched": "laravel/framework",
+  "needles": [
+   "laravel/framework",
+   "illuminate/support",
+   "illuminate/contracts"
+  ],
+  "ok": true,
+  "where": "composer.json",
+  "why": "declares laravel/framework in composer.json"
+ },
+ "maintained": {
+  "age_days": 0,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-31T07:48:53Z",
+  "why": "last push 0d ago (floor 365d)"
+ },
+ "repo": "wave",
+ "size": {
+  "ok": false,
+  "prod_files": 355,
+  "size": "small",
+  "why": "355 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/thedevdojo/wave.git",
+ "used": {
+  "ok": true,
+  "stars": 6533,
+  "why": "6533 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

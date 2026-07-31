@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "kpumuk/meta-tags",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 1,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-30T01:16:08Z",
+  "why": "last push 1d ago (floor 365d)"
+ },
+ "repo": "meta-tags",
+ "size": {
+  "ok": false,
+  "prod_files": 14,
+  "size": "small",
+  "why": "14 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/kpumuk/meta-tags.git",
+ "used": {
+  "ok": true,
+  "stars": 2800,
+  "why": "2800 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

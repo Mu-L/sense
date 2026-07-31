@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "athityakumar/colorls",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 3,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-07-27T11:41:05Z",
+  "why": "last push 3d ago (floor 365d)"
+ },
+ "repo": "colorls",
+ "size": {
+  "ok": false,
+  "prod_files": 9,
+  "size": "small",
+  "why": "9 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/athityakumar/colorls.git",
+ "used": {
+  "ok": true,
+  "stars": 5130,
+  "why": "5130 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}

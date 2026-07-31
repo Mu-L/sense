@@ -1,0 +1,42 @@
+{
+ "banner": [],
+ "github": "excid3/noticed",
+ "in_vertical": {
+  "manifest": "Gemfile",
+  "matched": null,
+  "needles": [
+   "gem \"rails\"",
+   "gem 'rails'",
+   "gem \"railties\"",
+   "gem 'railties'",
+   "gem \"activesupport\"",
+   "gem 'activesupport'",
+   "gem \"actionpack\"",
+   "gem 'actionpack'"
+  ],
+  "ok": false,
+  "why": "declares none of gem \"rails\"|gem 'rails'|gem \"railties\"|gem 'railties'|gem \"activesupport\"|gem 'activesupport'|gem \"actionpack\"|gem 'actionpack' in 1\u00d7 Gemfile"
+ },
+ "maintained": {
+  "age_days": 113,
+  "archived": false,
+  "ok": true,
+  "pushed_at": "2026-04-08T15:02:46Z",
+  "why": "last push 113d ago (floor 365d)"
+ },
+ "repo": "noticed",
+ "size": {
+  "ok": false,
+  "prod_files": 41,
+  "size": "small",
+  "why": "41 prod source files = small (floor 1000)"
+ },
+ "size_class": "small",
+ "url": "https://github.com/excid3/noticed.git",
+ "used": {
+  "ok": true,
+  "stars": 2699,
+  "why": "2699 stars (floor 1000)"
+ },
+ "verdict": "REJECT"
+}
