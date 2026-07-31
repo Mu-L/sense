@@ -127,5 +127,19 @@ if [ $arc -ne 0 ]; then
     "admit.sh could not compose a standing slate; widen stacks/$KEY.conf hunt queries and re-run with --re-hunt"
 fi
 
+# --- 5. record: the slate half of the bootstrap LEDGER -------------------------
+# ledger.md has declared `bootstrap/slate` as a write point since the table was
+# written, but nothing emitted it: admit.sh printed "write the entry" and left it
+# to a human who was never told. A declared write point no code reaches reads
+# green because it never runs, which is the same failure as a dormant check.
+LEDGER="$IL_ROOT/verticals/$KEY/LEDGER.md"
+if [ -f "$LEDGER" ] && grep -q "bootstrap/slate" "$LEDGER"; then
+  say "## [record] bootstrap/slate already in LEDGER.md, not duplicating"
+else
+  say "## [record] appending bootstrap/slate to LEDGER.md"
+  KEY="$KEY" IL_ROOT="$IL_ROOT" python3 "$BENCH_DIR/bootstrap/slate_ledger.py" >&2 || {
+    emit RECORD-FAILED 72 "$KEY" record "could not write the bootstrap/slate LEDGER entry"; }
+fi
+
 say "## [done] READY-FOR-LOOP"
 emit READY-FOR-LOOP 0 "$KEY" done ""

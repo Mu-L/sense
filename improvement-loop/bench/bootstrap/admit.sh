@@ -137,6 +137,6 @@ if [ -n "$WRITE" ] && [ $rc -eq 0 ]; then
   echo "## [verify]"
   python3 bench/bootstrap/slate_check.py "$VERTICAL"
   rc=$?
-  echo "## [next] write the bootstrap/slate LEDGER entry, then Loop 3"
+  echo "## [next] run.sh records bootstrap/slate, then the per-repo loops"
 fi
 exit $rc
