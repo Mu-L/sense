@@ -5,8 +5,16 @@
 
 ## Goal
 
-**Done when `python3 bench/lib/bootstrap_check.py <key> --lang <lang> --strict` exits 0** - one goal,
-one mechanical stop-condition, nothing a session can talk its way past.
+**Done when `bash bench/drivers/loop1-bootstrap.sh <key> --lang <lang>` returns
+`status: BOOTSTRAPPED`** - one goal, one mechanical stop-condition, nothing a session can talk its
+way past. The driver runs the whole loop: preflight, stamp, evaluate, record, return.
+
+**Calling contract, so this runs anywhere** (an orchestrator, CI, a headless agent): progress goes
+to STDERR and the result JSON is the only thing on STDOUT, so `result=$(loop1-bootstrap.sh ...)` is
+the whole integration. Every exit path returns a JSON, including the failures - a caller never has
+to parse prose to learn what happened. Loop 1 needs no clone root, no GitHub token and no `sense`
+binary; its only environment is this repo and python3, and the preflight says so rather than
+failing three steps later.
 
 ## Product duties (per Sense surface)
 
@@ -34,14 +42,14 @@ one mechanical stop-condition, nothing a session can talk its way past.
 
 | Actor | Who/what | Notes |
 |---|---|---|
-| Generator | `bash bench/drivers/new-vertical.sh <key> --title "<Stack>"` | idempotent; skips every existing file |
-| Evaluator | `python3 bench/lib/bootstrap_check.py <key> --lang <lang> --strict` | a separate pass, never the stamping agent's self-report |
+| Generator | `bash bench/drivers/loop1-bootstrap.sh <key> --lang <lang>` (wraps `new-vertical.sh`) | idempotent; skips every existing file; no model in the path |
+| Evaluator | `python3 bench/lib/bootstrap_check.py <key> --lang <lang> --strict` | a separate pass, never the stamping step's self-report |
 | Mechanical verifier | the same check, plus `new-vertical.sh` idempotence (a second run creates nothing) | |
 | Human | stack confirm (Loop 0 handoff); extractor-readiness verdict when ambiguous | stack confirm is a Loop 0 permanent anchor; the extractor verdict is trust-ledger demotable |
 
 ## Stop conditions
 
-- **Success:** `bootstrap_check.py <key> --lang <lang> --strict` exits 0 - `verticals/<key>/` carries
+- **Success:** the driver returns `BOOTSTRAPPED` because `bootstrap_check.py --strict` exits 0 - `verticals/<key>/` carries
   every stamped element (README tracker, `repos.md` slate, empty `findings/`, `scenarios/`,
   `repos.txt`, `PINNED_COMMITS.json`, `arms.txt`), every path its stamped docs cite resolves, those
   docs hold zero stale previous-stack references, and `internal/extract/<lang>/` exists with
@@ -65,8 +73,12 @@ one mechanical stop-condition, nothing a session can talk its way past.
 - The scaffold itself is the state: `new-vertical.sh` is idempotent and non-destructive, so "where the
   loop is" is readable from what exists on disk.
 - No `.loop-state.json` needed; do not add one.
-- **Readability duty:** append `loop1/scaffold` to `verticals/<key>/LEDGER.md` at scaffold stamp
-  (write-only for the loop; contract in [`00-ledger.md`](00-ledger.md)).
+- **Readability duty:** the driver appends `loop1/scaffold` to `verticals/<key>/LEDGER.md` from the
+  facts it just measured - stamped elements, extractor files, arms - and skips if the entry is
+  already there (write-only for the loop; contract in [`00-ledger.md`](00-ledger.md)). Pass
+  `--reason` to state why this vertical was opened; it is the one field a script cannot measure.
+  The LESSON field stays empty on a clean walk on purpose: a loop that reports a lesson every time
+  it runs is manufacturing them.
 - **A lesson from the previous vertical graduates into its durable home** - a prompt, a one-pager, a
   gate, or a memory - at the moment it is learned. There is no staging file for them and none is to be
   added; `STATUS.md` is the one pickup render.
@@ -102,11 +114,20 @@ one mechanical stop-condition, nothing a session can talk its way past.
 - **The stale-ref scan has teeth:** plant a previous stack's key in a stamped `repos.md` and
   `--stale <that-key> --strict` FAILS with `stale-refs: repos.md: 1× '<that-key>'`; remove it and the
   check goes green.
+- **Every exit path returns JSON:** run the driver with no `--lang`, with a `--lang` that has no
+  extractor, and from outside the sense repo. All three print a parseable verdict on stdout and a
+  distinct exit code. A loop that fails silently cannot be orchestrated.
+- **The record is idempotent:** a second run leaves exactly one `loop1/scaffold` entry.
 
 ## Built vs missing
 
-- **Built:** `bench/drivers/new-vertical.sh` (stamp, idempotent, composes every file it writes);
+- **Built:** `bench/drivers/loop1-bootstrap.sh` (the loop, one command, JSON return);
+  `bench/drivers/new-vertical.sh` (stamp, idempotent, composes every file it writes);
   `bench/lib/bootstrap_check.py` (structure, stale-ref scan - WARN normally, FAIL under `--strict`,
-  over the vertical's own stamped docs - and extractor existence).
+  over the vertical's own stamped docs - and extractor existence); `bench/lib/loop1_ledger.py` (the
+  entry, from measured facts).
+- **Return values:** `BOOTSTRAPPED` (0), `EXTRACTOR-NOT-READY` (65), `USAGE` (64),
+  `PREFLIGHT-FAILED` (70), `STAMP-FAILED` (71), `NOT-BOOTSTRAPPED` (the evaluator's own code),
+  `RECORD-FAILED` (72). On success the JSON carries the next loop and its command.
 - **Missing:** the arm plan has no mechanical check; it is prose in `verticals/<key>/README.md` that a
   human reads. Small wiring, not design work - if it recurs as a miss, it becomes an enforcement item.
