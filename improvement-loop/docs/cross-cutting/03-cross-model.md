@@ -2,7 +2,7 @@
 slug: the-maps-value-scales-with-the-model
 role: "cross-cutting fact pack - how much the same local index helps across the LLM ladder"
 status: current (Rails full 5×13 matrix + Python/Django full 5×6 matrix)
-data: verticals/ruby-rails/results/report.{md,json} + verticals/python-django/results/report.{md,json} + 00-campaign-scorecard.md (private tree)
+data: the product repo's bench/verticals/{ruby-rails,python-django}/results/report.{md,json} + 00-campaign-scorecard.md (private tree)
 byline: "Luc B. Perussault-Diallo"
 rigor: Opus 4.8 hardened ×2 both verticals (headline); Kimi/Qwen/Devstral ×2 (exceptions flagged OPEN); Rails GPT-5.5 mostly ×1 (OPEN)
 ---

@@ -6,7 +6,8 @@
 > "what beats us" map (goal file, sensory system 3). Loop 5 appends a row per new tie/loss at harvest.
 > Discipline: every row cites transcript evidence (headline-arm baseline transcripts) or the
 > design-time measurement doc; no row concludes from a proxy. Backfilled 2026-07-11 from the frozen
-> ruby-rails + python-django boards (headline arm = Claude Code · Opus 4.8, RUNS=2).
+> ruby-rails + python-django boards in the product repo's `bench/verticals/` (the LEGACY tree, not
+> this folder's `verticals/`), headline arm = Claude Code · Opus 4.8, RUNS=2.
 >
 > **Mechanism vocabulary** (bar-3's check list): `window-batching` (bulk sibling reads cover the gold),
 > `covering-declaration` (one declared textual pattern enumerates it), `memorized-API` (recited from

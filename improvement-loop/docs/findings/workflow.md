@@ -38,9 +38,9 @@ agents appear only in the Block D "across agents" strip + one Block H paragraph 
 
 | you need | source |
 |---|---|
-| the canonical board (cited_recall, B-score, related, grounded, verdicts) | regenerate from disk with `python3 bench/lib/scoreboard.py`; cross-model matrix in the product repo's `bench/verticals/ruby-rails/results/report.md` (the top-level `SENSE-SCORING-REPORT.md` was retired) |
-| objective per-run recall (overall + dependents group) | `verticals/ruby-rails/results/<agent>/<arm>/<repo>/run-*/scored.json` → `gold_recall` |
-| per-repo + group deltas | `RESULTS_DIR=verticals/ruby-rails/results/<agent> python3 bench/lib/pergroup.py <repo>` |
+| the canonical board (cited_recall, B-score, related, grounded, verdicts) | regenerate from disk with `python3 bench/lib/scoreboard.py`; cross-model matrix at `verticals/<vertical>/results/report.md` (the top-level `SENSE-SCORING-REPORT.md` was retired) |
+| objective per-run recall (overall + dependents group) | `verticals/<vertical>/results/<agent>/<arm>/<repo>/run-*/scored.json` → `gold_recall` |
+| per-repo + group deltas | `RESULTS_DIR=verticals/<vertical>/results/<agent> python3 bench/lib/pergroup.py <repo>` |
 | repo + index stats (Block A) | `sense status` in the pinned clone: `/Users/luc/Developer/luuuc/oss/sense-benchmark/sense/<repo>` |
 | contract blast fan-out (Block A) | `sense blast <Contract> [--file <path>] --json` in the clone (use `--file` for ambiguous names) |
 | Sense adoption (Block C) | `scored.json` → `mcp_count` / `grep_count` / `read_count` (gems nest these under `metrics.`) |
@@ -67,7 +67,7 @@ When a repo's result changes (re-bench, re-judge, re-aim, re-scan), these all ma
 3. `README.md` (this folder) (the board table + verdict),
 6. `repos.md` (the verdict tracker + reconciliation note),
 8. the canonical board (**regenerate it** - `bench/lib/scoreboard.py` from disk + the cross-model
-   the product repo's `bench/verticals/ruby-rails/results/report.md`; the retired top-level `SENSE-SCORING-REPORT.md` is the step that,
+   matrix at `verticals/<vertical>/results/report.md`; the retired top-level `SENSE-SCORING-REPORT.md` is the step that,
    when skipped, created the redmine discrepancy).
 
 ## Invariants (must always hold)

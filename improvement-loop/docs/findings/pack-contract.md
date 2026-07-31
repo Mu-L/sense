@@ -20,7 +20,7 @@ drops one fails the gate. Their meaning lives below.
 
 - **Numbers come ONLY from the cited snapshot.** Each per-repo file's front-matter `data:` is the **headline
   agent's** bench root (what `check-findings.sh` validates); the `agents:` block lists every agent's root +
-  status (done / pending). Canonical scoreboard: `bench/lib/scoreboard.py` (regen from disk) + the cross-model matrix in the product repo's `bench/verticals/ruby-rails/results/report.md`.
+  status (done / pending). Canonical scoreboard: `bench/lib/scoreboard.py` (regen from disk) + the cross-model matrix at `verticals/<vertical>/results/report.md`.
   Per-run detail: `scored.json`. Repo/index stats: `sense status` on the pinned clone. Narrative color:
   `transcript.json`. If a figure is not in a snapshot, it does not go in the post; pending cells stay "pending."
 - **Narrative color comes ONLY from the transcripts** (the headline agent's, unless a cross-agent point is being

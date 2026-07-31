@@ -2,7 +2,7 @@
 slug: adoption-is-earned-per-harness
 role: "cross-cutting fact pack - Sense rides MCP into any agent, but each harness has to be wired to call it"
 status: seeded (Rails)
-data: verticals/ruby-rails/results/{claude-opus-4-8,gpt-5.5,kimi-for-coding_k2p7}/ + setup memories
+data: the product repo's bench/verticals/ruby-rails/results/{claude-opus-4-8,gpt-5.5,kimi-for-coding_k2p7}/ + setup memories
 byline: "Luc B. Perussault-Diallo"
 rigor: Claude Code hardened; Codex + OpenCode breadth (one harness anecdote each so far)
 ---

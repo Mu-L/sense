@@ -2,7 +2,7 @@
 slug: the-cheap-arm-law-channel-not-model
 role: "cross-cutting fact pack - why a weak benchmark result is usually a subscription/channel artifact, not a model verdict"
 status: seeded (Rails)
-data: verticals/ruby-rails/results/report.md (Qwen, Kimi) + manifesto §10/§11
+data: the product repo's bench/verticals/ruby-rails/results/report.md (Qwen, Kimi) + manifesto §10/§11
 byline: "Luc B. Perussault-Diallo"
 rigor: breadth arms (open models on metered subs); never a headline-tier claim
 ---

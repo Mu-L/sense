@@ -59,7 +59,7 @@ load. Make the task demand exactly that set.
    misses: deps in disjoint dirs, reached via association/concern/derive/delegate, under a token too noisy to
    grep cleanly. Never on enumerable facts (an `include` list, an `ls`-able dir, a naming convention).
 4. **Neutral prompts AND description.** State the task only. Never the answer's shape, locations, symbol names,
-   counts, or which tool to use. Verify with `python3 bench/lib/scenario.py verticals/ruby-rails/scenarios/<repo>.yaml --prompt` and
+   counts, or which tool to use. Verify with `python3 bench/lib/scenario.py verticals/<vertical>/scenarios/<repo>.yaml --prompt` and
    read what the agent sees.
 5. **Verified, default-retrievable gold.** File-path-matched relational targets (so both mention and cited
    score), built from `sense_blast <Model>` at the agent's DEFAULT settings (NOT `--min-confidence 0.3`, or the

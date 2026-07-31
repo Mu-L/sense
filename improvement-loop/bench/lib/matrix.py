@@ -9,7 +9,7 @@ sit side by side. For each (model, repo) it reads the mean cited-recall per arm
 the discriminator `dependents` group delta when the scenario carries one.
 
 Usage: matrix.py <vertical-root> [--format markdown|json]
-  e.g. matrix.py verticals/ruby-rails/results --format markdown
+  e.g. matrix.py verticals/<vertical>/results --format markdown
 """
 import glob
 import json
