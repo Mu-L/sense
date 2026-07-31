@@ -11,7 +11,7 @@
 | # | Loop | One iteration is | Stops when | Human gate | Status |
 |---|---|---|---|---|---|
 | 0 | Program (campaign cadence) | one complete vertical | anchor saturation (discovered, not set) | stack sequence; permanent | doc + human rhythm; never software |
-| 1 | Vertical bootstrap | one scaffold element brought to ready | scaffold valid + carry-forward empty | stack + extractor confirm | ~80% scripted (`new-vertical.sh`) |
+| 1 | Vertical bootstrap | one whole scaffold, one command | `loop1-bootstrap.sh` returns BOOTSTRAPPED | stack + extractor confirm | scripted end to end (`loop1-bootstrap.sh`, JSON return) |
 | 2 | Repo admission | one candidate measured against four repo-level screens | 4 admitted per §7.0 + backups | none - autonomous since 2026-07-29 | `repo_screen.py` + `compose_slate.py` + `slate_check.py`; the seam gate was retired 2026-07-31 |
 | 3 | Per-repo convergence - **four stages**, parent map in [`03-per-repo-convergence.md`](03-per-repo-convergence.md) | one repo taken to a verdict, depth-first | WIN ≥ +0.50 or swap escalated | the scenario-integrity, spend and swap gates | see the four rows below |
 | 3a | [Eligibility](03-a-eligibility.md) | one control probe on one repo, slate-wide and $0 | slate ranked, at least one bound-legal cell | none - a bound kill is arithmetic | `control_bound.py` wired; `probe` ledger key + ranked-slate artifact missing |
