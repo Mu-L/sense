@@ -1,7 +1,7 @@
 {
   "akaunting": {
-    "built_at": "2026-07-29T18:10:43Z",
-    "edges": "13596",
+    "built_at": "2026-07-30T18:25:20Z",
+    "edges": "13655",
     "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
     "git_head": "",
     "sense_version": "",
@@ -23,9 +23,33 @@
     "sense_version": "",
     "symbols": "2113"
   },
+  "chatwoot": {
+    "built_at": "2026-07-31T11:35:37Z",
+    "edges": "70949",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "3347"
+  },
+  "coolify": {
+    "built_at": "2026-07-31T09:50:37Z",
+    "edges": "31300",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "2116"
+  },
+  "discourse": {
+    "built_at": "2026-07-31T11:33:09Z",
+    "edges": "365223",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "12388"
+  },
   "filament": {
-    "built_at": "2026-07-29T18:20:14Z",
-    "edges": "73963",
+    "built_at": "2026-07-30T18:32:08Z",
+    "edges": "74181",
     "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
     "git_head": "",
     "sense_version": "",
@@ -48,8 +72,8 @@
     "symbols": "2957"
   },
   "invoiceninja": {
-    "built_at": "2026-07-29T19:05:29Z",
-    "edges": "73899",
+    "built_at": "2026-07-30T18:36:12Z",
+    "edges": "75403",
     "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
     "git_head": "",
     "sense_version": "",
@@ -87,6 +111,14 @@
     "sense_version": "",
     "symbols": "3258"
   },
+  "mastodon": {
+    "built_at": "2026-07-31T11:21:58Z",
+    "edges": "59525",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "4102"
+  },
   "october": {
     "built_at": "2026-07-29T18:13:03Z",
     "edges": "20668",
@@ -103,13 +135,29 @@
     "sense_version": "",
     "symbols": "1826"
   },
+  "rails": {
+    "built_at": "2026-07-31T12:01:11Z",
+    "edges": "178715",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "4014"
+  },
   "snipe-it": {
-    "built_at": "2026-07-29T18:14:47Z",
-    "edges": "21166",
+    "built_at": "2026-07-30T18:27:03Z",
+    "edges": "21252",
     "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
     "git_head": "",
     "sense_version": "",
     "symbols": "8233"
+  },
+  "solidus": {
+    "built_at": "2026-07-31T11:37:17Z",
+    "edges": "41558",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "2677"
   },
   "statamic": {
     "built_at": "2026-07-29T18:24:53Z",
