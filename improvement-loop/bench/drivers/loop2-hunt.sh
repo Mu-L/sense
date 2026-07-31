@@ -62,31 +62,60 @@ STACK_MARKER="$(sed -n 's/^# *stack: *//p' "$POOL" | head -1)"
   exit 65; }
 echo "## [pool] $POOL  (stack marker: $STACK_MARKER)"
 
-frameworks=""
-while IFS='|' read -r key url isfw; do
+# --- phase 1: everything decidable without a download -------------------------
+# A declared hunt returns a large pool (php-laravel: 156) and cloning it whole is
+# tens of gigabytes to admit four. maintained and used come free from the facts
+# the hunt already recorded; the in-vertical screen then runs against the root
+# manifest over the API. A MISSING manifest rejects, a MATCHING one passes, and a
+# present-but-non-matching one is UNDECIDED and falls through to the clone -
+# never a reject, because a monorepo declares nothing at its root.
+frameworks=""; SURVIVORS=""
+echo "## [screen 1/2] maintained + used, no clone needed"
+while IFS='|' read -r key url isfw stars pushed; do
   case "$key" in ''|\#*) continue ;; esac
+  url="${url%%#*}"; url="${url// /}"
+  isfw="${isfw%%#*}"; isfw="${isfw// /}"
+  facts=""; [ -n "${stars:-}" ] && [ -n "${pushed:-}" ] && facts="--stars ${stars// /} --pushed ${pushed// /}"
   [ -n "${isfw:-}" ] && frameworks="$frameworks,$key"
+  if [ -n "${NO_API:-}" ]; then
+    SURVIVORS="$SURVIVORS $key|$url"; continue
+  fi
+  # shellcheck disable=SC2086
+  v=$(python3 bench/lib/repo_screen.py /dev/null --key "$key" --url "$url" \
+        --api-only $facts --stack "$STACK_MARKER" --json "$CELLS/$key.json" 2>&1 |
+      grep -oE 'SCREEN: [A-Z-]+')
+  case "$v" in
+    "SCREEN: CLONE-ME") SURVIVORS="$SURVIVORS $key|$url" ;;
+    *) printf '   %-22s %s\n' "$key" "${v:-SCREEN FAILED}" ;;
+  esac
+done < "$POOL"
+n_surv=$(echo $SURVIVORS | wc -w | tr -d ' ')
+echo "   $n_surv candidate(s) survive to the clone"
+
+echo "## [clone] both arms, survivors only"
+for pair in $SURVIVORS; do
+  key="${pair%%|*}"; url="${pair#*|}"
   for arm_root in "$CLONES" "$BASELINE"; do
     if [ ! -d "$arm_root/$key" ]; then
       echo "   clone $key -> $(basename "$arm_root")"
       git clone --depth 1 -q "$url" "$arm_root/$key" || echo "   CLONE FAILED: $key"
     fi
   done
-done < "$POOL"
+done
 
-echo "## [screen] four repo-level facts per candidate"
+echo "## [screen 2/2] all four facts on the clone"
 api_flag=""; [ -n "${NO_API:-}" ] && api_flag="--no-api"
 ADMITTED=""
-while IFS='|' read -r key url isfw; do
-  case "$key" in ''|\#*) continue ;; esac
+for pair in $SURVIVORS; do
+  key="${pair%%|*}"; url="${pair#*|}"
   [ -d "$CLONES/$key" ] || continue
   # shellcheck disable=SC2086
   v=$(python3 bench/lib/repo_screen.py "$CLONES/$key" --key "$key" --url "$url" \
         --stack "$STACK_MARKER" --json "$CELLS/$key.json" $api_flag 2>&1 |
       grep -oE 'SCREEN: [A-Z]+')
-  printf '   %-18s %s\n' "$key" "${v:-SCREEN FAILED}"
+  printf '   %-22s %s\n' "$key" "${v:-SCREEN FAILED}"
   [ "$v" = "SCREEN: ADMIT" ] && ADMITTED="$ADMITTED $key"
-done < "$POOL"
+done
 [ -z "$ADMITTED" ] && { echo "no repo cleared the screens - widen pool.txt (try-harder law)" >&2; exit 1; }
 
 echo "## [compose]"

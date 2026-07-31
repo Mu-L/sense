@@ -198,9 +198,94 @@ def screen(clone, key, url, stack, use_api=True):
     return out
 
 
+def remote_manifest(slug, manifest):
+    """The repo's root manifest over the API, no clone. Returns the text, or
+    None when the repo has no such file at all."""
+    p = subprocess.run(["gh", "api", f"repos/{slug}/contents/{manifest}",
+                        "--jq", ".content"], capture_output=True, text=True,
+                       timeout=60)
+    if p.returncode != 0 or not p.stdout.strip():
+        return None
+    import base64
+    try:
+        return base64.b64decode(p.stdout.strip()).decode("utf-8", "ignore")
+    except Exception:
+        return None
+
+
+def screen_in_vertical_remote(slug, stack):
+    """Cheap in-vertical triage before anything is downloaded.
+
+    Three outcomes, and the third one matters: a MISSING manifest is a real
+    reject (not a project of this ecosystem at all), a MATCHING one is a real
+    pass, and a present-but-non-matching one is UNDECIDED, never a reject,
+    because a monorepo declares nothing at its root - filament's root
+    composer.json is empty of requirements and every one lives in
+    packages/*/composer.json. Undecided falls through to the clone."""
+    manifest, _, needles = stack.partition(":")
+    alts = [n for n in needles.split("|") if n]
+    text = remote_manifest(slug, manifest)
+    if text is None:
+        return {"ok": False, "why": f"no {manifest} in the repo root (remote)"}
+    hit = next((n for n in alts if n in text), None)
+    if hit:
+        return {"ok": True, "why": f"declares {hit} in {manifest} (remote)"}
+    return {"ok": None, "why": f"root {manifest} declares none of them; "
+                               "a monorepo may still, so clone and look"}
+
+
+def screen_from_facts(key, url, stars, pushed):
+    """maintained + used from facts the HUNT already paid for. The search that
+    found a repo returns its stars and pushed_at, so re-asking the API 156 times
+    is a minute of latency for data already on disk."""
+    meta = {"archived": False, "stargazers_count": int(stars),
+            "pushed_at": f"{pushed}T00:00:00Z"}
+    out = {"repo": key, "url": url, "phase": "api-only",
+           "maintained": screen_maintained(meta), "used": screen_used(meta),
+           "in_vertical": {"ok": None, "why": "needs a clone (UNRUN)"},
+           "size": {"ok": None, "prod_files": 0, "size": "unknown",
+                    "why": "needs a clone (UNRUN)"},
+           "banner": [], "size_class": "unknown"}
+    out["verdict"] = "REJECT" if False in (out["maintained"]["ok"],
+                                           out["used"]["ok"]) else "CLONE-ME"
+    return out
+
+
+def triage(key, url, stars, pushed, stack):
+    """Phase 1: everything decidable without a download."""
+    r = screen_from_facts(key, url, stars, pushed)
+    if r["verdict"] == "REJECT" or not stack:
+        return r
+    slug = gh_repo(url)
+    if slug:
+        r["in_vertical"] = screen_in_vertical_remote(slug, stack)
+        if r["in_vertical"]["ok"] is False:
+            r["verdict"] = "REJECT"
+    return r
+
+
+def screen_api_only(key, url):
+    """The two screens that read the API and never the disk. A 156-candidate
+    pool is 120 clones; most die on maintained-or-used, and those two facts cost
+    one API call each. Anything that survives here still faces the full screen."""
+    meta = gh_api(gh_repo(url) or "") if gh_repo(url) else None
+    out = {"repo": key, "url": url, "github": gh_repo(url), "phase": "api-only",
+           "maintained": screen_maintained(meta), "used": screen_used(meta),
+           "in_vertical": {"ok": None, "why": "needs a clone (UNRUN)"},
+           "size": {"ok": None, "prod_files": 0, "size": "unknown",
+                    "why": "needs a clone (UNRUN)"},
+           "banner": []}
+    out["size_class"] = "unknown"
+    verdicts = [out["maintained"]["ok"], out["used"]["ok"]]
+    out["verdict"] = "REJECT" if False in verdicts else "CLONE-ME"
+    return out
+
+
 def render(r):
     L = [f"### {r['repo']} - {r['verdict']} ({r['size_class']})"]
     for k in ("in_vertical", "maintained", "size", "used"):
+        if r[k]["ok"] is None and r.get("phase") == "api-only":
+            continue
         mark = {True: "pass", False: "FAIL", None: "UNRUN"}[r[k]["ok"]]
         L.append(f"- {k:12s} {mark:5s} {r[k]['why']}")
     if r["banner"]:
@@ -217,17 +302,29 @@ def main():
     ap.add_argument("--stack", default=os.environ.get("STACK_MARKER", ""))
     ap.add_argument("--json", dest="json_out", default=None)
     ap.add_argument("--no-api", action="store_true")
+    ap.add_argument("--stars", default="")
+    ap.add_argument("--pushed", default="", help="YYYY-MM-DD, from the hunt")
+    ap.add_argument("--api-only", action="store_true",
+                    help="run only the two screens that need no clone "
+                         "(maintained, used), so a large pool is thinned for "
+                         "free before anything is downloaded")
     args = ap.parse_args()
 
-    if not os.path.isdir(args.clone):
-        sys.exit(f"repo_screen: no such clone: {args.clone}")
-    r = screen(args.clone, args.key, args.url, args.stack, use_api=not args.no_api)
+    if args.api_only:
+        if args.stars and args.pushed:
+            r = triage(args.key, args.url, args.stars, args.pushed, args.stack)
+        else:
+            r = screen_api_only(args.key, args.url)
+    else:
+        if not os.path.isdir(args.clone):
+            sys.exit(f"repo_screen: no such clone: {args.clone}")
+        r = screen(args.clone, args.key, args.url, args.stack, use_api=not args.no_api)
     print(render(r))
     print(f"SCREEN: {r['verdict']}")
     if args.json_out:
         with open(args.json_out, "w", encoding="utf-8") as fh:
             json.dump(r, fh, indent=1, sort_keys=True)
-    return 0 if r["verdict"] == "ADMIT" else 1
+    return 0 if r["verdict"] in ("ADMIT", "CLONE-ME") else 1
 
 
 if __name__ == "__main__":
