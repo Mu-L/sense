@@ -30,9 +30,7 @@ and it is one command, [`loops/00-bootstrap.md`](loops/00-bootstrap.md).
    (`bash improvement-loop/bench/lib/render-status.sh <key>`), then continue from
    its pickup pointer." STATUS.md is the session-pickup state (Readability Phase 2, ratified
    severable 2026-07-16). `LEDGER.md` (the why) is opened ON DEMAND, at the step being executed,
-   never wholesale at pickup. The go campaign's `next-steps.md` is FROZEN history in
-   the go-vertical legacy tree (private; go-vertical reset 2026-07-17): read-only provenance,
-   never a pickup surface, never updated again.
+   never wholesale at pickup.
 2. **Starting a NEW vertical**: you confirm the stack by putting it in
    `verticals.txt` and writing its `stacks/<key>.conf` (the two hand-written prerequisites), then:
 

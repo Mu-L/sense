@@ -1,12 +1,9 @@
-# LAWS - product-independent laws carried out of the go-legacy campaign
+# LAWS - product-independent laws carried out of past campaigns
 
-> **What this is.** The distillation ordered by the go-vertical reset (LEDGER
-> `ruling/go-vertical-reset`, 2026-07-17): the laws that survive the campaign because they are
-> facts about scorers, language shape, and gold construction - NOT positions, verdicts, or
-> product state. Everything else from that campaign is history kept outside this folder, and per the
-> owner's explicit amendment carries **no re-run prohibition**. One law per bullet: statement, then legacy
-> provenance. Bootstrap reads this file at slate composition and Authoring reads it at
-> scenario time; it is a checklist, not a narrative.
+> **What this is.** The laws that survive a campaign because they are facts about scorers, language
+> shape, and gold construction - NOT positions, verdicts, or product state. They carry **no re-run
+> prohibition**. One law per bullet: statement, then its provenance. Bootstrap reads this file at
+> slate composition and Authoring reads it at scenario time; it is a checklist, not a narrative.
 
 ## Admission and axis screening
 
@@ -54,8 +51,8 @@
 - **MEMORIZATION DISCRIMINATOR.** Famous repos are memorized; the discriminator is obscure
   internals, and on a famous repo the module path gets rewritten (the `gitea.dev` pattern) so
   recall cannot come from training data.
-  _Provenance: memory `feedback_memorization_confound_famous_repos`; gitea module-path rewrite
-  in the legacy campaign; grpc-go carried an open bar-5 memorization ruling for exactly this._
+  _Provenance: memory `feedback_memorization_confound_famous_repos`; the gitea module-path
+  rewrite; grpc-go carried an open bar-5 memorization ruling for exactly this._
 
 ## Scenario and gold construction
 
