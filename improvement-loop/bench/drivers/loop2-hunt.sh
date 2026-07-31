@@ -76,6 +76,7 @@ while IFS='|' read -r key url isfw stars pushed; do
   url="${url%%#*}"; url="${url// /}"
   isfw="${isfw%%#*}"; isfw="${isfw// /}"
   facts=""; [ -n "${stars:-}" ] && [ -n "${pushed:-}" ] && facts="--stars ${stars// /} --pushed ${pushed// /}"
+  [ "$isfw" = "framework" ] && facts="$facts --declared"
   [ -n "${isfw:-}" ] && frameworks="$frameworks,$key"
   if [ -n "${NO_API:-}" ]; then
     SURVIVORS="$SURVIVORS $key|$url"; continue
@@ -109,9 +110,11 @@ ADMITTED=""
 for pair in $SURVIVORS; do
   key="${pair%%|*}"; url="${pair#*|}"
   [ -d "$CLONES/$key" ] || continue
+  decl=""; case ",$frameworks," in *",$key,"*) decl="--declared" ;; esac
+  # shellcheck disable=SC2086
   # shellcheck disable=SC2086
   v=$(python3 bench/lib/repo_screen.py "$CLONES/$key" --key "$key" --url "$url" \
-        --stack "$STACK_MARKER" --json "$CELLS/$key.json" $api_flag 2>&1 |
+        --stack "$STACK_MARKER" --json "$CELLS/$key.json" $api_flag $decl 2>&1 |
       grep -oE 'SCREEN: [A-Z]+')
   printf '   %-22s %s\n' "$key" "${v:-SCREEN FAILED}"
   [ "$v" = "SCREEN: ADMIT" ] && ADMITTED="$ADMITTED $key"

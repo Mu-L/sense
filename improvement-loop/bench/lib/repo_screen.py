@@ -77,6 +77,9 @@ def size_class(n):
     return "big" if n >= SIZE_BIG_FLOOR else "medium" if n >= SIZE_MEDIUM_FLOOR else "small"
 
 
+DECLARED = {"ok": True, "why": "framework-role, declared in the stack profile"}
+
+
 def screen_in_vertical(clone, stack):
     """The repo declares the stack in its OWN manifest, not in our pool file.
 
@@ -251,10 +254,17 @@ def screen_from_facts(key, url, stars, pushed):
     return out
 
 
-def triage(key, url, stars, pushed, stack):
+def triage(key, url, stars, pushed, stack, declared=False):
     """Phase 1: everything decidable without a download."""
     r = screen_from_facts(key, url, stars, pushed)
     if r["verdict"] == "REJECT" or not stack:
+        return r
+    if declared:
+        # The screen filters the hunt's greedy output; it does not second-guess
+        # a short, reviewed list someone wrote by hand. rails/rails declares no
+        # rails dependency in its own Gemfile, and laravel/framework is not a
+        # laravel APP either - a framework does not depend on itself.
+        r["in_vertical"] = dict(DECLARED)
         return r
     slug = gh_repo(url)
     if slug:
@@ -302,6 +312,9 @@ def main():
     ap.add_argument("--stack", default=os.environ.get("STACK_MARKER", ""))
     ap.add_argument("--json", dest="json_out", default=None)
     ap.add_argument("--no-api", action="store_true")
+    ap.add_argument("--declared", action="store_true",
+                    help="this repo is declared framework-role in the stack "
+                         "profile, so the in-vertical screen passes by declaration")
     ap.add_argument("--stars", default="")
     ap.add_argument("--pushed", default="", help="YYYY-MM-DD, from the hunt")
     ap.add_argument("--api-only", action="store_true",
@@ -312,13 +325,19 @@ def main():
 
     if args.api_only:
         if args.stars and args.pushed:
-            r = triage(args.key, args.url, args.stars, args.pushed, args.stack)
+            r = triage(args.key, args.url, args.stars, args.pushed, args.stack,
+                       declared=args.declared)
         else:
             r = screen_api_only(args.key, args.url)
     else:
         if not os.path.isdir(args.clone):
             sys.exit(f"repo_screen: no such clone: {args.clone}")
         r = screen(args.clone, args.key, args.url, args.stack, use_api=not args.no_api)
+        if args.declared:
+            r["in_vertical"] = dict(DECLARED)
+            if r["verdict"] == "REJECT" and r["size"]["ok"] and r["maintained"]["ok"] \
+                    and r["used"]["ok"]:
+                r["verdict"] = "ADMIT"
     print(render(r))
     print(f"SCREEN: {r['verdict']}")
     if args.json_out:

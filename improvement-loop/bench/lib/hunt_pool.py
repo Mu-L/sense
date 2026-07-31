@@ -73,6 +73,20 @@ def run_query(query, limit):
         return None
 
 
+def fetch_repo(slug):
+    """One repo by name, shaped like a search hit."""
+    p = subprocess.run(["gh", "api", f"repos/{slug}", "--jq",
+                        "{fullName:.full_name,stargazersCount:.stargazers_count,"
+                        "pushedAt:.pushed_at,isArchived:.archived}"],
+                       capture_output=True, text=True, timeout=60)
+    if p.returncode != 0:
+        return None
+    try:
+        return json.loads(p.stdout)
+    except json.JSONDecodeError:
+        return None
+
+
 def key_for(full_name):
     """Repo key = the repo half of owner/name, lowercased. `cms` and `framework`
     and `panel` are meaningless on their own, so those keep the owner."""
@@ -91,6 +105,16 @@ def hunt(conf_path, limit):
         sys.exit(f"hunt_pool: {conf_path} declares no `hunt:` queries")
 
     found, per_query, failed = {}, [], 0
+    # A DECLARED framework repo is a candidate by declaration, never by search
+    # luck. rails/rails was absent from a 138-candidate ruby hunt: it is not
+    # topic-tagged `rails` and it loses a keyword search to its own ecosystem.
+    for fn in sorted(frameworks):
+        meta = fetch_repo(fn)
+        if meta:
+            found[meta["fullName"]] = meta
+            print(f"   seeded declared framework: {fn}", file=sys.stderr)
+        else:
+            print(f"   DECLARED FRAMEWORK NOT FOUND: {fn}", file=sys.stderr)
     for q in queries:
         rows = run_query(q, limit)
         if rows is None:
