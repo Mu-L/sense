@@ -1,7 +1,0 @@
-# Go vertical: repo membership (one repo key per line).
-# FINAL SET, 2026-07-20: 4 repos = 2 big + 2 medium (no usable Go framework seat).
-# All four are PAID WINS.
-dolt
-consul
-pebble
-nomad

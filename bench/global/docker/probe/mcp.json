@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "probe": {
-      "command": "probe",
-      "args": ["mcp"]
-    }
-  }
-}
