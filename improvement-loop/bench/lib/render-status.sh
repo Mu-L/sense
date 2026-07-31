@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # render-status.sh - regenerate a vertical's STATUS.md from disk. Readability
-# artifact per 00-ledger.md: humans read it, loops NEVER do (write-only law).
+# artifact per ledger.md: humans read it, loops NEVER do (write-only law).
 # Every section is recomputed from the authoritative sources (results tree,
 # report-matrix.sh, next-steps.md, repos.md); the file is replaced wholesale so
 # it can never drift into hand-edited state.
@@ -124,17 +124,27 @@ ledger_section() {
   else
     echo "_no LEDGER.md yet_"
   fi
-  local open
-  # exclude the entry template's literal "Status: open | protocolized" line
-  open=$(grep 'Status: open' "$IL_ROOT/docs/decision-errors.md" 2>/dev/null | grep -cv 'open | protocolized') || open=0
-  echo "- decision-errors intake: $open open incident(s) (\`../../docs/decision-errors.md\`)"
+  local intake="$IL_ROOT/docs/decision-errors.md" open
+  # A MISSING file must not render as a healthy zero. The file was absent for an unknown
+  # stretch and this line kept printing "0 open incident(s)", which reads exactly like a
+  # clean intake - the same dormancy shape as ledger_check rule 10 over an untracked
+  # instrument. A check that cannot fire is worse than a short list.
+  if [ ! -f "$intake" ]; then
+    echo "- decision-errors intake: **MISSING** (\`../../docs/decision-errors.md\` does not exist - the count is unverifiable, not zero)"
+  else
+    # An open incident is an ENTRY bullet, so anchor on the bullet: prose that merely
+    # mentions the phrase (the file's own header describes this very count) is not an
+    # incident, and the template's "Status: open | protocolized" is not one either.
+    open=$(grep -E '^[-*] .*Status: open' "$intake" | grep -cv 'open | protocolized') || open=0
+    echo "- decision-errors intake: $open open incident(s) (\`../../docs/decision-errors.md\`)"
+  fi
 }
 
 {
   echo "# ${KEY} - STATUS (auto-rendered)"
   echo
   echo "> AUTO-RENDERED ${STAMP} by \`bench/lib/render-status.sh ${KEY}\`."
-  echo "> Do not edit by hand; do not use for loop decisions (write-only law, \`00-ledger.md\`)."
+  echo "> Do not edit by hand; do not use for loop decisions (write-only law, \`ledger.md\`)."
   echo "> Position is authoritative ON DISK: the results tree, \`repos.md\`, \`LEDGER.md\`."
   echo
   if [ -f "$NEXT_STEPS" ]; then
