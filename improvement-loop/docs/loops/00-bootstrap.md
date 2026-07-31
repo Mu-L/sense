@@ -37,7 +37,7 @@ a headless agent.
 
 | status | exit | stage | means |
 |---|---|---|---|
-| `READY-FOR-LOOP3` | 0 | done | the JSON names the slate to read |
+| `READY-FOR-LOOP` | 0 | done | the JSON names the slate to read |
 | `SENSE-STALE` | 69 | preflight | installed binary is not the latest release |
 | `NO-QUEUE` | 66 | select | `verticals.txt` missing |
 | `QUEUE-EXHAUSTED` | 3 | select | every queued key already has a directory |
@@ -56,7 +56,7 @@ a headless agent.
     3 scaffold      stamp verticals/<key>/, evaluate it, record        scaffold.sh
     4 hunt          run the declared queries -> pool.txt               hunt.py
     5 admit         screen, compose, pin, clone, index, verify         admit.sh
-    -> READY-FOR-LOOP3
+    -> READY-FOR-LOOP
 
 **Scaffold.** `stamp.sh` writes `verticals/<key>/`: `repos.txt`, `scenarios/`,
 `PINNED_COMMITS.json`, `arms.txt`, a README tracker, a `repos.md` slate, an empty `findings/`. Then
@@ -101,7 +101,7 @@ before one exists.
 
 ## Stop
 
-- **Done:** `READY-FOR-LOOP3`. 4 repos admitted with a backup each, SHAs pinned, both arms at those
+- **Done:** `READY-FOR-LOOP`. 4 repos admitted with a backup each, SHAs pinned, both arms at those
   SHAs, indexes built, per-repo numbers in `repos.md`.
 - **Extractor not ready:** a **sequencing decision, not a bootstrap task**. The lane parks until
   language support lands, or the gap becomes a Loop 7 work item first. Verticals are parallel lanes,

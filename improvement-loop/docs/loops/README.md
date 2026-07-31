@@ -7,7 +7,7 @@
 
 ## Start here
 
-    bash bench/bootstrap/run.sh          # -> READY-FOR-LOOP3
+    bash bench/bootstrap/run.sh          # -> READY-FOR-LOOP
 
 One command takes the next queued stack from nothing to a verified slate of 4 indexed repos:
 [`00-bootstrap.md`](00-bootstrap.md). No human and no model in it. It needs the latest `sense`

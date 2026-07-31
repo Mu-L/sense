@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # run.sh - everything Loop 3 needs before it can start.
 #
-#   select -> scaffold -> hunt -> admit -> READY-FOR-LOOP3
+#   select -> scaffold -> hunt -> admit -> READY-FOR-LOOP
 #
 # This is scripted automation, not a loop: it converges on the first pass or it
 # stops with a reason. Nothing here iterates and no model is in the path.
@@ -29,8 +29,8 @@ import json, sys
 a = sys.argv + [""] * 6
 out = {"pipeline": "bootstrap", "status": a[1], "vertical": a[3],
        "stage": a[4], "note": a[5]}
-if a[1] == "READY-FOR-LOOP3":
-    out["next"] = {"loop": "3-per-repo-convergence",
+if a[1] == "READY-FOR-LOOP":
+    out["next"] = {"loop": "1-repo-authoring",
                    "reads": f"verticals/{a[3]}/slate.json"}
 print(json.dumps(out, indent=1, sort_keys=True))
 PY
@@ -127,5 +127,5 @@ if [ $arc -ne 0 ]; then
     "admit.sh could not compose a standing slate; widen stacks/$KEY.conf hunt queries and re-run with --re-hunt"
 fi
 
-say "## [done] READY-FOR-LOOP3"
-emit READY-FOR-LOOP3 0 "$KEY" done ""
+say "## [done] READY-FOR-LOOP"
+emit READY-FOR-LOOP 0 "$KEY" done ""

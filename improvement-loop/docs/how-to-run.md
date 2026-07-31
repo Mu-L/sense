@@ -34,7 +34,7 @@ and it is one command, [`loops/00-bootstrap.md`](loops/00-bootstrap.md).
 2. **Starting a NEW vertical**: you confirm the stack by putting it in
    `verticals.txt` and writing its `stacks/<key>.conf` (the two hand-written prerequisites), then:
 
-       bash bench/bootstrap/run.sh          # -> READY-FOR-LOOP3
+       bash bench/bootstrap/run.sh          # -> READY-FOR-LOOP
 
    That is bootstrap, repo hunt, screening, composition, pinning and indexing in one command, with a
    JSON verdict on stdout. It stops with a named status if a precondition fails (a stale `sense`
