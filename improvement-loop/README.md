@@ -37,12 +37,9 @@ matches the small private allowlist:
 | Journal | `LEDGER.md`, `decision-errors.md` | **no** - candid self-directed reasoning; worth more than the transparency |
 | Results | run cells, transcripts | **no** - large, and provider model output |
 
-## Its relationship to the other two benches
+## Its relationship to the global bench
 
 - `bench/global/` - competition analysis (Sense vs competitors on the held-out anchor). Separate
   purpose, separate scoring core, untouched by this folder. The two never compare numbers, so an
   independent scorer here costs no correctness.
-- The **legacy** vertical loop (`bench/verticals/` in the Sense repo) was REMOVED from the repo on
-  2026-07-31 and is kept in an external backup. Findings sourced from it - the cross-model matrix,
-  the provider law, the loss-anatomy boards - stay valid as banked history but can no longer be
-  re-derived here. This folder is now the only vertical loop.
+- This folder is the vertical loop. There is no other.
