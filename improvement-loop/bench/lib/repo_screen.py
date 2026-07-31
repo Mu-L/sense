@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Loop 2's four repo-level screens (docs/loops/02-repo-admission.md).
 
-    repo_screen.py <clone_dir> --key <repo-key> [--url URL] [--stack composer.json:laravel/framework]
+    repo_screen.py <clone_dir> --key <repo-key> [--url URL] [--stack composer.json:a|b]
                    [--json OUT] [--no-api]
 
 Facts about the repo, never guesses about a scenario. Nothing here opens an
@@ -10,9 +10,10 @@ scenario that exists. The gate this replaced measured seams before any scenario
 existed and, backtested, rejected 4 of 4 banked wins.
 
   in_vertical  the repo DECLARES the stack in its own dependency manifest.
-               --stack is `<manifest>:<needle>`; the needle is matched as a
-               substring of the manifest text. The pool file's say-so does not
-               count, because a pool line is an assertion and a manifest is not.
+               --stack is `<manifest>:<needle>[|<needle>...]`, matched as ANY,
+               at the root or one/two levels down for a monorepo. The pool
+               file's say-so does not count, because a pool line is an
+               assertion and a manifest is not.
   maintained   not archived, pushed within MAINTAINED_DAYS.
   size         prod source files on the clone. < SIZE_MEDIUM_FLOOR = small =
                reject (the small slot was removed by ruling). Also assigns the
