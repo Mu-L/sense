@@ -142,8 +142,8 @@ policy. This is the most demotable loop in the registry.
   `codex-run.sh`, `opencode-run.sh` (offload gate + contamination guard), `report-matrix.sh`, the per-arm
   status format, the durable-handoff pattern. The full Django matrix (5 arms × 6 repos) ran on these.
 - **Missing → BUILT 2026-07-11:** the `matrix-plan.yaml` format exists
-  (the product repo's `bench/verticals/_matrix-plan.template.yaml`) with the python-django plan back-filled as the worked
-  example (the product repo's `bench/verticals/python-django/matrix-plan.yaml`: arms, runners, the ollama-weekly shared
+  (`_matrix-plan.template.yaml` in the retired legacy bench tree) with the python-django plan
+  back-filled as the worked example (that tree's `python-django/matrix-plan.yaml`: arms, runners, the ollama-weekly shared
   pool with the ~34%/big-run note, adoption preflights, prompt files, repo tiers). Go's plan needs
   the owner's arm/ceiling decisions (the standing open question). `sweep-resume.sh` reading it is optional
   later wiring; the file already makes rule 2 checkable from disk. The two opencode-run.sh hardening

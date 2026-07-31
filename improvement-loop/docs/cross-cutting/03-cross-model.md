@@ -2,7 +2,7 @@
 slug: the-maps-value-scales-with-the-model
 role: "cross-cutting fact pack - how much the same local index helps across the LLM ladder"
 status: current (Rails full 5×13 matrix + Python/Django full 5×6 matrix)
-data: the product repo's bench/verticals/{ruby-rails,python-django}/results/report.{md,json} + 00-campaign-scorecard.md (private tree)
+data: ruby-rails + python-django results/report.{md,json} in the retired legacy bench tree (removed from the repo 2026-07-31, external backup) + 00-campaign-scorecard.md (private tree)
 byline: "Luc B. Perussault-Diallo"
 rigor: Opus 4.8 hardened ×2 both verticals (headline); Kimi/Qwen/Devstral ×2 (exceptions flagged OPEN); Rails GPT-5.5 mostly ×1 (OPEN)
 ---
@@ -86,7 +86,7 @@ the small model lacks, and multiplies the ability the big model has - whichever 
 
 ### Ruby/Rails (seed, closed) - the per-repo cross-model texture
 
-- **The matrix closed at 5×13** (the product repo's `bench/verticals/ruby-rails/results/report.md`): Opus +0.26/+0.48 ×2;
+- **The matrix closed at 5×13** (ruby-rails `results/report.md`, retired legacy bench tree): Opus +0.26/+0.48 ×2;
   Devstral +0.25/+0.36 ×2 (chatwoot +0.74 ×1 - OPEN - and redmine +0.58, but raix −0.20, its one real loss);
   Qwen +0.18/+0.24 ×2 (redmine −0.03 the one negative left after settling); GPT-5.5 +0.13/+0.29 with
   langchainrb −0.03 (mostly ×1 - OPEN); Kimi +0.14/+0.18 ×2, no negative cell (floor +0.00 on redmine).
@@ -104,9 +104,9 @@ the small model lacks, and multiplies the ability the big model has - whichever 
 
 ### Python/Django (2026-07, closed) - the inversion, arm by arm
 
-Sources: the product repo's `bench/verticals/python-django/results/report.md` (5×6 matrix + efficiency),
+Sources: python-django `results/report.md` (5×6 matrix + efficiency) in the retired legacy bench tree,
 `00-campaign-scorecard.md` (private tree) (canonical boards, hand-verified
-2026-07-11), the product repo's `bench/verticals/python-django/matrix-plan.yaml` (retrospective plan).
+2026-07-11), and that tree's `python-django/matrix-plan.yaml` (retrospective plan).
 
 - **Opus 4.8 (headline, ×2, board 3W/3T/0L):** saleor WIN +0.15 (deps 0.50→1.00), netbox sense-ahead +0.11
   (deps 0.67→1.00), sentry ◆ efficiency-at-parity (+0.03 at −7% billed, deps 0.90→1.00), and three control
