@@ -37,6 +37,11 @@ Usage:
 """
 import json, os, subprocess, sys, collections
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mcp_probe import probe  # noqa: E402
+
+SENSE_BIN = os.environ.get("SENSE_BIN", os.path.expanduser("~/.local/bin/sense"))
+
 # Per-language scout config. Adding a stack = adding a row here. The Ruby row
 # reproduces v2 exactly (grep roots app+lib, spec/test as tests, db/config as
 # non-app), so existing Rails scouting is unchanged.
@@ -96,14 +101,29 @@ def detect_lang(clone):
     return "ruby"  # default preserves v2 behavior for unknown trees
 
 
+def sense_call(clone, tool, args):
+    """One Sense tool over MCP. Never the CLI - campaign-laws, MCP IS THE ONLY SURFACE."""
+    results, _ = probe(clone, [{"name": tool, "arguments": args}], SENSE_BIN)
+    return json.loads(results[0][1]) if results else {}
+
+
 def collect_callers(clone, symbol, conf, hops, file_hint):
-    """Union of blast direct/indirect callers and 2-deep graph callers."""
-    file_flag = ["--file", file_hint] if file_hint else []
+    """Union of blast direct/indirect callers and 2-deep graph callers.
+
+    `conf`/`hops` are passed only when the caller set them: unset means the MCP
+    defaults, which are what the benched agent actually gets.
+    """
+    base = {"symbol": symbol}
+    if file_hint:
+        base["file"] = file_hint
     callers = {}  # file -> set(caller symbols)
-    bl = run(["sense", "blast", symbol, "--min-confidence", conf,
-              "--max-hops", hops, "--json"] + file_flag, clone)
+    blast_args = dict(base)
+    if conf is not None:
+        blast_args["min_confidence"] = float(conf)
+    if hops is not None:
+        blast_args["max_hops"] = int(hops)
     try:
-        d = json.loads(bl.stdout)
+        d = sense_call(clone, "sense_blast", blast_args)
         for key in ("direct_callers", "indirect_callers"):
             for c in d.get(key, []):
                 f = c.get("file")
@@ -111,10 +131,8 @@ def collect_callers(clone, symbol, conf, hops, file_hint):
                     callers.setdefault(f, set()).add(c.get("symbol"))
     except Exception as e:
         print(f"[blast parse err] {e}", file=sys.stderr)
-    gr = run(["sense", "graph", symbol, "--direction", "callers",
-              "--depth", "2", "--json"] + file_flag, clone)
     try:
-        d = json.loads(gr.stdout)
+        d = sense_call(clone, "sense_graph", dict(base, direction="callers", depth=2))
         for c in d.get("edges", {}).get("called_by", []):
             f = c.get("file")
             if f:
@@ -176,8 +194,8 @@ def main():
     symbol = args[1]
     rest = args[2:]
     token = None
-    hops = "3"
-    conf = "0.3"
+    hops = None   # unset = the MCP default, i.e. what the agent gets
+    conf = None
     lang = "auto"
     file_hint = None
     propose = False
@@ -213,7 +231,8 @@ def main():
     grep_n = len(grep_files)
     prec = (len(app_callers) / grep_n) if grep_n else 0.0
 
-    print(f"=== {symbol}  (lang={lang}, token='{token}', hops={hops}, conf={conf}) ===")
+    shown = f"hops={hops or 'mcp-default'}, conf={conf or 'mcp-default'}"
+    print(f"=== {symbol}  (lang={lang}, token='{token}', {shown}) ===")
     print(f"  app caller files : {len(app_callers)}   (total incl test/non-app: {len(callers)})")
     print(f"  SCATTER (dirs)   : {len(dirs)}   -> {dict(dirs.most_common(8))}")
     print(f"  GREP-NOISE       : '{token}' in {grep_n} app files   PRECISION={prec:.2f}  (lower=grep-hostile)")

@@ -2,10 +2,11 @@
 """Drive `sense mcp` over stdio and print the agent-facing tool results.
 
 The scenario-crafting rule this serves: gold must be verified retrievable in
-the SHOWN budgeted output the AGENT sees - over MCP stdio, at BOTH
-min_confidence 0.3 and 0.7 - because the CLI diverges by design and the
-blast eviction runs both ways (0.7 drops low-confidence riders; 0.3 admits
-more competitors to the caller cap and can evict 0.7-confidence gold).
+the SHOWN budgeted output the AGENT sees, over MCP stdio at the arm's own
+defaults - because the CLI diverges by design, and because the shown set is
+cap-limited, so a threshold change does not add rows, it changes which ones
+win the same slots (measured on rails: 80 resolved either way, 276 competitors
+at 0.3 vs 144 at 0.7).
 Every scenario session was re-writing this probe in its scratchpad; now it
 is one command (craft prompt step 4).
 

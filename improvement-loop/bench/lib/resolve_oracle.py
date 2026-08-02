@@ -2,23 +2,28 @@
 """Tier-0 resolution oracle - deterministic, $0, no LLM, no scenario, no judge.
 
 The isolated product unit-test the vertical bench is too coarse to be. For each
-repo's CENTRAL contract symbol it runs the LIVE `sense` CLI against the repo's
+repo's CENTRAL contract symbol it calls the LIVE Sense MCP server against the repo's
 pinned `.sense` index and asserts two things mechanically:
 
-  COVERAGE - does `sense blast <symbol>` at min_confidence 0.3 (the AGENT's
-    default: the MCP schema default since 16b20de; the bare CLI defaults to 0.7 and
-    diverges by design) actually return the gold DISCRIMINATOR dependents the
-    scenario says it must? Missing gold here is a LIVE-CONFIRMED resolver miss
-    (stronger than the transcript_miss inference, which only saw what the agent
-    happened to query). Instrument matches the Go-vertical gold law (the scenario-integrity gate ruling
+  COVERAGE - does `sense_blast <symbol>` at the arm's own defaults actually return
+    the gold DISCRIMINATOR dependents the scenario says it must? Missing gold here is
+    a LIVE-CONFIRMED resolver miss (stronger than the transcript_miss inference, which
+    only saw what the agent happened to query). Instrument matches the Go-vertical gold law (the scenario-integrity gate ruling
     + amended rail (a), 2026-07-13): citable = SHOWN by the budgeted tools at any
     band, hand-audited - so the oracle measures the same union the law names.
 
-  AMBIGUITY - does the naive `sense graph/blast <symbol>` (no --file) resolve, or
-    does it error/empty while the --file form returns a real set? That is the exact
+  AMBIGUITY - does the naive `sense_graph`/`sense_blast <symbol>` (no `file`) resolve,
+    or does it come back `ambiguous` while the `file` form returns a real set? That is the exact
     gap transcript_miss surfaced (graph(Status)→0 vs graph(Status,file=)→111). When
     the graph-disambiguation fix lands, this flag clears - so the oracle doubles as
     the regression net for that fix.
+
+Every call goes over MCP (campaign-laws, MCP IS THE ONLY SURFACE). It ran the CLI until
+2026-08-01, and the graph limb had been DEAD the whole time: `sense graph` has no
+`--min-confidence` flag (it exists only on `blast`, and never existed on `graph`), so
+those calls exited 1 with empty stdout, `graph_files` was always empty, `resolved` was
+always just the blast set, and BUDGET_EVICTED could never fire. Over MCP the call works,
+so the resolution-truth signal this docstring describes runs for the first time.
 
 This is the unit the piking loop gates on: change Sense → re-run the oracle → a
 deterministic diff, for free, before any bench token is spent. It is a DETECTOR and
@@ -40,9 +45,12 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 import yaml  # noqa: E402
 
-SENSE_REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))  # oss/sense
-CLONES = os.path.join(os.path.dirname(SENSE_REPO), "sense-benchmark", "sense")     # per-repo clones + .sense
-VERTICALS = os.path.join(SENSE_REPO, "verticals")  # verticals/<stack>/scenarios/
+from mcp_probe import probe  # noqa: E402
+
+IL_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))  # improvement-loop
+SENSE_REPO = os.path.dirname(IL_ROOT)                                           # oss/sense
+CLONES = os.path.join(os.path.dirname(SENSE_REPO), "sense-benchmark", "sense")  # clones + .sense
+VERTICALS = os.path.join(IL_ROOT, "verticals")  # verticals/<stack>/scenarios/
 SENSE_BIN = os.environ.get("SENSE_BIN", os.path.expanduser("~/.local/bin/sense"))
 
 ANCHOR_GROUPS = {"contract", "context", "surface", "teardown"}
@@ -96,20 +104,24 @@ def discover_contracts(stack):
     return out
 
 
-def run_sense(clone, args):
-    """Run `sense <args>` in the clone. Returns (exit_code, parsed_json_or_None)."""
+def run_sense(clone, tool, args):
+    """Call one Sense tool over MCP in the clone. Returns the parsed payload or None.
+
+    MCP, never the CLI: the arm is wired to the clone's `.mcp.json`, so the CLI would
+    measure a surface no arm touches (campaign-laws, MCP IS THE ONLY SURFACE). No
+    `min_confidence` is passed - the MCP defaults ARE the agent defaults, which is
+    exactly what the old CLI calls were hand-correcting for.
+    """
     try:
-        p = subprocess.run([SENSE_BIN, *args], cwd=clone, capture_output=True,
-                           text=True, timeout=120)
+        results, _ = probe(clone, [{"name": tool, "arguments": args}], SENSE_BIN)
     except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-        return (-1, {"_error": str(e)})
-    out = p.stdout.strip()
-    if not out:
-        return (p.returncode, None)
+        return {"_error": str(e)}
+    if not results:
+        return None
     try:
-        return (p.returncode, json.loads(out))
+        return json.loads(results[0][1])
     except json.JSONDecodeError:
-        return (p.returncode, None)
+        return None
 
 
 def harvest_files(obj):
@@ -173,27 +185,21 @@ def check_repo(stack, repo, spec):
     symbol = spec["symbol"]
     file_arg = spec.get("file")
 
-    # 1) canonical blast (with --file if the symbol is ambiguous) → coverage.
-    # Explicit 0.3 = the MCP/agent default; the bare CLI defaults to 0.7 and would
-    # under-measure the agent-facing surface (CLI diverges by design).
-    blast_args = ["blast", symbol, "--json", "--min-confidence", "0.3"]
+    # 1) canonical blast (with `file` if the symbol is ambiguous) → coverage.
+    base = {"symbol": symbol}
     if file_arg:
-        blast_args += ["--file", file_arg]
-    bcode, bjson = run_sense(clone, blast_args)
+        base["file"] = file_arg
+    bjson = run_sense(clone, "sense_blast", dict(base))
     blast_files = harvest_files(bjson) if bjson else set()
     direct = len(bjson.get("direct_callers", [])) if isinstance(bjson, dict) else 0
 
     expected, group = discriminator_gold(stack, repo)
 
-    # 2) uncapped graph edges (--direction both) = the RESOLUTION-truth signal.
-    # blast's direct_callers are budget-capped (~60); graph called_by/composes/etc
-    # are not - so coverage must be measured against blast ∪ graph, else the cap
-    # gets misread as a resolver miss (two different product axes).
-    gboth_args = ["graph", symbol, "--direction", "both", "--json",
-                  "--min-confidence", "0.3"]
-    if file_arg:
-        gboth_args += ["--file", file_arg]
-    _gc, gboth = run_sense(clone, gboth_args)
+    # 2) graph edges (direction=both) = the RESOLUTION-truth signal. blast's
+    # direct_callers are budget-capped; graph called_by/composes/etc are reached by a
+    # different path - so coverage is measured against blast ∪ graph, else the cap gets
+    # misread as a resolver miss (two different product axes).
+    gboth = run_sense(clone, "sense_graph", dict(base, direction="both"))
     graph_files = harvest_files(gboth) if gboth else set()
 
     resolved = blast_files | graph_files
@@ -204,22 +210,22 @@ def check_repo(stack, repo, spec):
     missing = sorted(expected - hit_resolved)          # GENUINE resolver-miss candidates
     budget_evicted = sorted((hit_resolved - hit_blast)) # resolved but cap-evicted from blast
 
-    # 3) ambiguity probe - naive graph (no --file) vs disambiguated
-    gnaive_code, gnaive = run_sense(clone, ["graph", symbol, "--direction", "callers", "--json"])
+    # 3) ambiguity probe - naive graph (no `file`) vs disambiguated
+    gnaive = run_sense(clone, "sense_graph", {"symbol": symbol, "direction": "callers"})
     naive_cb = len(gnaive.get("edges", {}).get("called_by", [])) if isinstance(gnaive, dict) else 0
     if file_arg:
-        gdis_code, gdis = run_sense(clone, ["graph", symbol, "--direction", "callers",
-                                            "--file", file_arg, "--json"])
+        gdis = run_sense(clone, "sense_graph",
+                         dict(base, direction="callers"))
         dis_cb = len(gdis.get("edges", {}).get("called_by", [])) if isinstance(gdis, dict) else 0
     else:
-        gdis_code, dis_cb = gnaive_code, naive_cb
+        dis_cb = naive_cb
     # AMBIGUOUS = naive errors/empties while a real set exists (disambiguated or blast)
     ambiguous = (naive_cb == 0) and (dis_cb > 0 or direct > 0)
 
     # verdict
     status = "PASS"
     flags = []
-    if bcode == 2 and not file_arg:
+    if isinstance(bjson, dict) and bjson.get("ambiguous") and not file_arg:
         flags.append("BLAST_AMBIGUOUS")
     if symbol and direct == 0 and not blast_files:
         status, note = "FAIL", "symbol resolved to 0 callers/files (wrong symbol or resolver miss)"
