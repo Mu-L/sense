@@ -124,6 +124,10 @@ sense.yml
 #
 # Results: run cells and transcripts. Large, and provider model output.
 improvement-loop/verticals/*/results/
+# Run cells moved OUT of the results tree keep the results policy. A retired validation
+# pair is archived rather than deleted (it is the evidence a reuse happened), and it is
+# the same transcripts under a different path - 1.5MB of model output, still private.
+improvement-loop/verticals/*/archive/
 # The global (non-vertical) results tree: loopA-scan.sh writes gap logs here, and
 # bench-paths.sh points the non-VERTICAL bench at it. Same policy as the per-vertical
 # tree - it is run output, so it stays private.
