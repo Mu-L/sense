@@ -56,20 +56,71 @@
 
 ## Scenario and gold construction
 
-- **RETENTION-SHAPE.** The grep-dark axis is retention: what retains X transitively, including
-  behind interface-typed fields (`sense_blast` retained_via_interfaces). And axis-dead is
-  NEVER repo-dead - a kill is the agent's failure to find the axis, not the repo's failure to
-  have one.
-  _Provenance: owner ruling 2026-07-15 (memory `project_retention_shape_law_gitea_dead`); the
-  pebble retention win and PR #212 both came from digging past an axis kill._
-- **GO-NAMING / MEMBER-NAME LAW.** Gold anchored on a member whose name greps cleanly via
-  qualified tokens (`pebble.Batch`) dies at the $0 gate; pick subjects whose references are
-  receiver-typed or implicit, not name-searchable. The qualified-token illusion is the same
-  law from the caller side.
-  _Provenance: pebble/Batch $0 gate kill 2026-07-14 (memory
-  `project_3109_pebble_batch_gate_kill`); qualified-token-illusion, PR #210 window._
-- **GOLD RAILS (all of them, every scenario).** Gold is one item per FILE; every SHOWN blast
-  row survives BOTH min_confidence 0.3 AND 0.7; every chain is construction-site hand-audited;
+- **RUN vs DECIDE - every loop step is one or the other.**
+  **RUN** (index, gates, stamping, rendering, ledger_check, the driver's phase order): follow it
+  exactly. No improvising a substitute, no hand-rolling what a script already does. If the step
+  looks wrong, SAY SO AND STOP - do not route around it.
+  **DECIDE** (authoring, anchor choice, gold curation, diagnosis routing): judgment is the job.
+  Every factual claim leaving a DECIDE step is either **quoted command output** or is labelled an
+  assumption. **Before stating a finding, quote the output that shows it; if you cannot quote it,
+  you have not verified it.** Negative claims - *cannot, no, never, dead, nonexistent, not
+  reached* - need a second, DIFFERENT probe before they are stated at all.
+  _Provenance: 2026-08-01. Both halves failed in one session. RUN: the loop was hand-walked from
+  the docs while `vertical-loop.sh` sat unrun (no state file existed for the vertical). DECIDE:
+  five findings were asserted from inferences never checked - "no lexical link" (read one line,
+  never grepped the file), "Sense cannot reach it" (one call; the arm chains several, 2 of 5 were
+  reachable), "grep-clean so the seam is dead" (banked +0.54), "blast radius zero" (it moved
+  scored efficiency). Each was one command from being checked._
+- **THE DISCRIMINATOR IS CITATION COST, NOT DISCOVERY.** The metric is CITED recall -
+  `path:line`. A baseline can grep a filename cheaply; what it cannot afford is opening
+  sixteen files to pin sixteen exact lines. Measured on the banked mastodon cell:
+
+  | arm | mention recall | cited recall |
+  |---|---|---|
+  | baseline | **0.61** | **0.26** |
+  | sense | 0.96 | 0.83 |
+
+  The baseline FOUND 61% of the gold and could only CITE 26%. But pinning alone is not the
+  cost: a 2026-08-01 adversary probe pinned 67 files with ~135 `path:line` citations - it
+  reported `grep -n` gives locations FREE - and still covered only **4 of 16** discriminator
+  rows (0.25). Two baselines, two different bottlenecks, the same score: one found the set
+  and could not pin it, the other pinned everything it found and never found the periphery.
+  **The discriminator is the scattered periphery, and it survives both failure modes** -
+  at session budget an agent goes deep on the contract centre OR wide across the periphery,
+  never both. So: curate gold from the periphery (the backup exporter, the annual-report
+  presenter, the permalink redirector), keep the centre as non-scoring anchors, demand
+  `path:line`, and NEVER judge a shape by whether grep finds the file.
+  AXIS-DEAD IS NEVER REPO-DEAD.
+  _Provenance: owner ruling 2026-07-15 (retention shape); pebble/Batch $0 gate kill
+  2026-07-14 (name-searchable half). Corrected 2026-08-01 from the banked mastodon
+  `scored.json`: a session read grep-reachability as the test, scored mastodon's `Status`
+  "grep-clean", ran an adversary probe graded at MENTION level, and twice concluded the
+  repo had no seam - for a cell with a banked +0.54. A predictor script written to
+  automate that reading (`assembly_cost.py`) was DELETED the same day under NO PREDICTORS:
+  it scored repos before a scenario existed and produced exactly the false kills the law
+  predicts._
+- **COSTING MORE IS A PRODUCT FINDING, NOT A STOPPER.** A cell that wins its
+  discriminator at a cost premium has told you something about Sense, not about the
+  bench: the arm is not reaching at parity, and the reason is a lever. It routes to
+  Loop 5 harvest with `context_cost_audit.py`, never to a halt. The cost axis is
+  `token_total_priced` (every BILLED token in input-token equivalents), never
+  `token_total_billed` (the uncached remainder, which misses ~97% of what is paid
+  for). Enforced by `cost_parity.py`, printed on every cell by the `report` phase.
+  _Provenance: LEDGER `loop2/rails/run-1` + `stopper/billed-tokens-exclude-cache`
+  2026-08-01 - the rails cell won +0.56 at 1.30x cost and the session routed it to
+  the stopper lane as a measurement question, so harvest never asked why the sense
+  arm's context was 27% bigger. The audit later showed a **9.9x re-read multiplier**
+  and `sense_blast` at 41% of injected context: a real, trimmable product lever that
+  the stopper framing buried._
+- **MCP IS THE ONLY SURFACE.** Every loop check that queries Sense goes through the MCP server
+  (`mcp_probe.probe`), never the CLI. The arm is wired to the clone's `.mcp.json`, and the CLI
+  diverges from it by design - different defaults, different caps, different budget - so a CLI
+  call measures a surface no arm touches. Enforced by `mcp_only_check.py`.
+  _Provenance: LEDGER `stopper/gold-confidence-check-wrong-threshold` 2026-07-31 - the gold gate
+  ran `sense blast` at the CLI's documented 0.7 default while the arm runs MCP at 0.3, and would
+  have failed every discriminator row in the rails scenario._
+- **GOLD RAILS (all of them, every scenario).** Gold is one item per FILE; every blast-sourced
+  row appears in the output the agent is SHOWN over MCP; every chain is construction-site hand-audited;
   per-dep credits are hand-audited (the gold.py basename false-credit burned 28% of the
   corpus); gold is the grep-DARK residue - dark to the union of ALL grep patterns AND the
   import dump.

@@ -103,7 +103,7 @@ bootstrap began composing it.
 | Vertical start | Stack confirm (before bootstrap) | the stack choice + sequencing | yes |
 | Scaffold stamped | Prompt-refresh review (bootstrap) | stamped prompts, no stale stack refs | demotable |
 | ~~Slate composed~~ | ~~the admission sign-off~~ | retired 2026-07-29 - bootstrap admits its own slate; read it after the fact in `repos.md` + the `bootstrap/slate` ledger entry | no |
-| ~~Scenario drafted~~ | ~~the scenario-integrity gate~~ | retired 2026-07-31 - Loop 1 checks its own gold (leak check, 0.3/0.7, per-dep audit) | no |
+| ~~Scenario drafted~~ | ~~the scenario-integrity gate~~ | retired 2026-07-31 - Loop 1 checks its own gold (leak check, shown-over-MCP, per-dep audit) | no |
 | ~~Before paid runs~~ | ~~the spend gate~~ | retired 2026-07-31 - Loop 2 spends on its validation run's verdict; nothing checkpoints the weekly quota | no |
 | ~~Repo unwinnable~~ | ~~the swap gate~~ | retired 2026-07-31 - Loop 3 swaps on six cycles without movement, or a measured-absent seam | no |
 | ~~Tie diagnosed~~ | ~~Tie-diagnosis review~~ | retired 2026-07-31 - the branch stands on its detector's output alone | no |

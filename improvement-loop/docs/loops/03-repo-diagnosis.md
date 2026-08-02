@@ -4,6 +4,11 @@
 > [run](02-repo-run.md) → diagnosis). The laws all three share live in
 > [`campaign-laws.md`](campaign-laws.md) and are not repeated here.
 
+**RUN:** the credit table, the fingerprint/cycle counter, `transcript_miss.py`,
+`rescore_diff.py`. **DECIDE:** which branch the cell belongs to, and whether a probe's kill is
+real - a probe graded at mention level is not a kill. Claims leaving a DECIDE step are quoted
+output or labelled assumptions ([`campaign-laws.md`](campaign-laws.md), RUN vs DECIDE).
+
 ## Goal
 
 Read every run this repo produces and turn it into the next move: the material for a better scenario,
@@ -97,12 +102,12 @@ otherwise.*
 | # | Cause | Detector | Lever | Cost |
 |---|---|---|---|---|
 | 1 | Gold mis-curation | per-dependency tally from `scored.json` | re-target gold, then re-score the existing transcripts with `scorer.py` | $0 |
-| 2 | Scenario shape wrong (fan instead of chain, satisficing-friendly prompt) | tally pattern + transcript read | re-author → re-bench | paid |
+| 2 | Scenario shape wrong: assembly cost too low. NOT "fan vs chain" - both fail their own way (a fan whose members are each locally decidable is batchable; a chain that is short and all-nameable is two-hop-greppable, the tied mastodon draft). Also satisficing-friendly prompts. | tally pattern + transcript read | re-author so the answer needs `path:line` the baseline cannot afford to pin → re-bench | paid |
 | 3a | Sense returned it, the agent dropped it | `transcript_miss.py` (cited-not-returned, fallback reads, empties), `mcp_count` | fix the harness or the output shape upstream - **never the scorer** | $0 |
 | 3b | The agent misused the tool: wrong tool for the question shape, wrong params, abandoned after one empty result, ignored hints | `tool_use_audit.py` over `sense-io.jsonl` | product meta-surface fix (contract, hint, setup) ledgered for Loop 7; harness compensation allowed meanwhile | cheap |
 | 4 | Judge or scorer error | hand-audit the per-dependency credits (basename false-credit guard), `relationship_audit.py` | fix the scorer **with a guard test** | $0 |
 | 5 | Genuine product gap | `resolve_oracle.py` fact-check on known-true edges | append to that vertical's gap list (`verticals/<stack>/results/loopA-gaps.md`), which Loop 7 reads as a set via `verticals/*/results/loopA-gaps.md`, **parked** for Loop 7's window | $0 now |
-| 6 | Seam measurably nonexistent | existence measurement on the index | swap, with the numbers attached | $0 |
+| 6 | Seam measurably nonexistent | existence measurement on the index. AXIS-DEAD IS NOT REPO-DEAD, and an adversary probe graded at MENTION level is not a kill - re-grade it at `path:line` before believing it | swap, with the numbers attached and the axes tried named | $0 |
 
 Branch 6 is the one branch that ends the repo, and it is a measurement, never an impression: nothing
 screens seams before a scenario exists any more, so the existence check is made here or nowhere.
@@ -199,9 +204,18 @@ The evaluator must rediscover what the humans found, and must not invent problem
   `test_tool_use_audit.py` covering the contract-bug replay and the deliberate-narrowing negative side),
   `transcript_miss.py`, `resolve_oracle.py`, `relationship_audit.py`, `rescore_diff.py`,
   `loss-anatomy.md`.
-- **Missing, deferred by decision 2026-07-30:** the budget-trim audit stays a **hand check**. It needs
+- **BUILT 2026-08-01 (was deferred 2026-07-30):** the budget-trim audit is now
+  `bench/lib/context_cost_audit.py`, pinned by `test_context_cost_audit.py`. It reads
+  `sense-io.jsonl` + both arms' `scored.json` and reports injected context per tool,
+  the cache-read delta, the **re-read multiplier** (a response is injected once and
+  re-read on every later turn, so its cost is size x turns-remaining), and ranked trim
+  candidates. It runs from the `report` phase whenever `cost_parity.py` prints a MISS.
+  The deferral's own stated cost came true: on 2026-08-01 the rails cell won at a 26%
+  premium with no instrument to ask why, and the finding went to the stopper lane
+  instead of harvest. The superseded reasoning is kept below.
+- ~~**Missing, deferred by decision 2026-07-30:**~~ the budget-trim audit stays a **hand check**. It needs
   per-run gold cross-referenced against the full captured responses - real work - and it affects
-  diagnosis *routing*, which no longer has a human reviewing it at all. The 0.3/0.7
+  diagnosis *routing*, which no longer has a human reviewing it at all. The shown-over-MCP
   gold check in [Authoring](01-repo-authoring.md) was scripted first because it gates whether a WIN is real.
   **The cost of this deferral, stated plainly:** the check most able to falsify "send the RIGHT info"
   remains the easiest one to skip, so every sub-floor verdict this vertical rests on someone actually

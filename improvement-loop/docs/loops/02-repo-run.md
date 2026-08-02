@@ -4,6 +4,10 @@
 > [diagnosis](03-repo-diagnosis.md)). The laws all three share live in
 > [`campaign-laws.md`](campaign-laws.md) and are not repeated here.
 
+**RUN:** everything. Validation run, paid pair, capture, `pergroup.py`, `cost_parity.py`, the
+DoD checks. This loop is a scheduler - the judgment happened upstream, so improvising here is
+always a defect ([`campaign-laws.md`](campaign-laws.md), RUN vs DECIDE).
+
 ## Goal
 
 Run the scenario twice over: once unscored to find out whether it is the right scenario, then, if it

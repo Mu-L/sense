@@ -4,6 +4,25 @@
 > [diagnosis](03-repo-diagnosis.md)). The laws all three share live in
 > [`campaign-laws.md`](campaign-laws.md) and are not repeated here.
 
+**Start by running the driver, not by reading this page.** The loop is an executable state machine
+(`vertical-loop.sh`, phases `index → scout → preflight → validate → bench → report → harvest`, state
+in `verticals/<vertical>/.loop-state.json`), and it names the phase you are actually in:
+
+```
+VERTICAL=<vertical> REPO=<repo> bash bench/drivers/vertical-loop.sh
+```
+
+Read this page for the judgment the driver cannot make; take the ORDER from the driver. Hand-walking
+the steps from the docs is how a session ends up working whatever blocker shouts loudest instead of
+the loop - the 2026-08-01 session hand-ran Loop 1 from this page, never started the driver (there was
+no state file for the vertical at all), and spent itself on an instrument fix while the draft's gold
+sat unaudited.
+
+**RUN:** `index`, the gold-audit gate, `scenario.py --prompt`, `gold_confidence_check.py`, the
+driver's phase order. **DECIDE:** the anchor, the axis, the ask, and every gold row - judgment is
+the job here, and every claim leaving it is quoted output or a labelled assumption
+([`campaign-laws.md`](campaign-laws.md), RUN vs DECIDE).
+
 **One repo at a time, to a verdict.** A repo enters the sequence here and does not leave it until it
 wins, parks or is swapped. No second repo's scenario is authored while the first is mid-diagnosis.
 
@@ -25,12 +44,28 @@ passes through here ([`03-repo-diagnosis.md`](03-repo-diagnosis.md)).
 
 ## Product duties (per Sense surface)
 
-- **blast:** the gold must survive **both** `min_confidence` 0.3 and 0.7. A gold set that only holds at
-  0.3 turns a documented default into a scoring artifact, and the contract defect around that param is a
-  known live one - gold curated blind to it manufactures a win.
-- **graph:** the target hop is chosen for structural surplus, not for grep-hostility alone. If a plain
-  two-hop grep reaches the answer, the scenario is not measuring Sense, it is measuring patience.
-- **search / status:** record at authoring time whether the shape *needs* them. If the winning shape
+- **blast:** every blast-sourced gold row must appear in the output the agent is **shown over MCP**, at
+  the arm's defaults, budget truncation included. A row the arm never sees earns a delta no agent can
+  reproduce. Check the CLI instead and the gate measures a surface the bench never runs - that is the
+  2026-07-31 stopper, and `mcp_only_check.py` now blocks it.
+- **graph: how to draft a scenario that wins.** The bar is CITED recall - `path:line`.
+  A baseline greps a filename cheaply and cannot afford to open sixteen files to pin
+  sixteen lines. That gap is the whole win (banked mastodon: baseline found 0.61, cited
+  0.26). So:
+  1. **Pick the repo's central contract** - the model or type everything hangs off
+     (`Status`, `Inbox`, `Upload`, `MergeRequest`, `Order`). Not a clever corner.
+  2. **Ask for a teardown audit**: "what depends on this before I rework it". Real,
+     recurring, and it forces enumeration rather than a single lookup.
+  3. **Take the dependents from `sense_blast` and keep the boring ones a hand audit
+     never thinks of** - the backup exporter, the annual-report presenter, the permalink
+     redirector. One row per FILE.
+  4. **Split the gold**: `contract` + `write-path` are the obvious pieces both arms get
+     (they are anchors, NOT the discriminator); `dependents` is the scattered residue
+     that decides the cell.
+  5. **Demand `file:line` in every step prompt.** Without it the task grades at mention
+     level and both arms tie.
+  Do NOT screen anchors by whether grep finds the files - that reads a discovery bar on
+  a citation metric, and it is how a session talked itself out of a banked +0.54 repo.- **search / status:** record at authoring time whether the shape *needs* them. If the winning shape
   never asks for either, that is a feature-coverage blind spot to hand Loop 5, not a verdict.
 - **conventions:** nothing here. The slate sweep belongs to bootstrap.
 
@@ -49,7 +84,7 @@ passes through here ([`03-repo-diagnosis.md`](03-repo-diagnosis.md)).
 |---|---|---|
 | Generator | session agent, authoring serially - never forked onto shared files | fork swarms on one scenario file confabulate |
 | Evaluator | the **adversary probe**: one frontier subagent in the baseline clone, grep and read only, Sense forbidden, headline task only | separate from the author; it is trying to beat the scenario, not improve it |
-| Mechanical verifier | `scenario.py --prompt` leak check, `audit_scenarios.py`, `gold_confidence_check.py` (0.3 vs 0.7), per-dependency hand audit of gold credits | the basename false-credit trap is real: a script tally alone has passed wrong gold before |
+| Mechanical verifier | `scenario.py --prompt` leak check, `gold_confidence_check.py` (shown over MCP), `gold_audit.py` per-dependency hand audit of gold credits | the basename false-credit trap is real: a script tally alone has passed wrong gold before |
 | Human | none - the loop authors and checks its own scenario | ground truth is held by the mechanical verifiers above, not by a reviewer |
 
 ## The adversary probe (design-time kill, $0)
@@ -92,9 +127,9 @@ Gold is built here from scratch for the shape the adversary probe disclaimed, an
 
 ## Stop conditions
 
-- **Success:** scenario plus rubric stamped, `scenario.py --prompt` leak check clean, `audit_scenarios.py`
-  clean, every gold dependency hand-audited, gold verified at 0.3 and 0.7, adversary probe failed to
-  assemble the answer.
+- **Success:** scenario plus rubric stamped, `scenario.py --prompt` leak check clean, every gold
+  dependency hand-audited (`gold_audit.py verify` green), every blast-sourced row verified shown
+  over MCP, adversary probe failed to assemble the answer.
 - **Budget:** $0 in dollars; capped by session turns. Park with the draft on disk - a half-authored
   scenario resumes, it never restarts.
 - **Failure:** the adversary probe assembled the answer and no undisclaimed axis remains after the
@@ -111,8 +146,8 @@ Gold is built here from scratch for the shape the adversary probe disclaimed, an
 
 The scenario-integrity sign-off was REMOVED 2026-07-31. What stood in its place is mechanical and
 must all pass before the scenario leaves this loop: the adversary probe failing to assemble the
-answer, `scenario.py --prompt` proving no leak, `audit_scenarios.py`, `gold_confidence_check.py` at
-both 0.3 and 0.7, and the per-dependency hand audit. **The audit is the load-bearing one** - a
+answer, `scenario.py --prompt` proving no leak, `gold_confidence_check.py` over MCP, and the
+per-dependency hand audit (`gold_audit.py`). **The audit is the load-bearing one** - a
 script tally alone has passed wrong gold before - so it is done here, in full, with nobody
 downstream to catch it.
 
@@ -153,15 +188,31 @@ downstream to catch it.
 
 ## Built vs missing
 
-- **Built:** `scenario.py` (with `--prompt`), `audit_scenarios.py`, `gold.py` (with the basename guard),
+- **Built:** `scenario.py` (with `--prompt`), `gold.py` (with the basename guard),
   `anchor_rank.py` (a LISTING for whoever writes the scenario, never a gate; its docstring records
   the three rankings that all buried the biggest banked win), the crafting and sourcing docs.
   `compose.py` no longer emits an anchor: choosing it is this stage's judgment call, made
   while the scenario is written.
-- **Built 2026-07-30:** `gold_confidence_check.py` (pinned by `test_gold_confidence_check.py`) runs
-  `sense blast` at both `min_confidence` values and fails any gold row that exists only at 0.3 - the
-  manufactured-win shape, since agents pass the documented 0.7. Rows reachable by neither threshold are
-  reported, never failed: graph/search/hand-sourced gold is legitimately not in a blast set, and failing
-  it would narrow the bench to one tool. It was prioritised over the blast trim audit because a fake win
-  propagates into Loops 4/5/6 and a published article before anyone re-reads it.
-- **First live use:** the first php-laravel repo off the slate.
+- **Built 2026-07-30, re-aimed 2026-08-01:** `gold_confidence_check.py` (pinned by
+  `test_gold_confidence_check.py`) calls `sense_blast` over MCP at the arm's defaults and fails any gold
+  row missing from the output the agent is SHOWN. It shipped measuring the CLI at `min_confidence` 0.7
+  on the premise that agents pass the documented default; the arm runs MCP at 0.3 and is told not to
+  raise it, so the gate was failing true gold (STOPPER, 2026-07-31). Scope it with `--group` to the
+  blast-sourced group: handed the whole gold it would fail every graph/search/hand-sourced row and
+  narrow the bench to one tool.
+- **NOT a Loop 1 tool:** `audit_scenarios.py` reads "both sense and baseline scored/transcript/
+  judged for one scenario" - it is a POST-run tool and cannot pass before a run exists. It was
+  listed here as a pre-run verifier and a stop condition until 2026-08-01, i.e. a gate that
+  could only ever be skipped or faked. It belongs to [Diagnosis](03-repo-diagnosis.md).
+- **Built 2026-08-01:** `gold_audit.py` (pinned by `test_gold_audit.py`) makes the per-dependency
+  hand audit a recorded artefact: `stamp` writes one row per gold item marked TODO, `verify`
+  fails while any TODO remains or when the gold has changed under a finished sheet. `do_scout`
+  blocks on it, so a draft found on disk is no longer treated as a draft that was checked.
+- **DELETED 2026-08-01:** `assembly_cost.py`, a scout that scored anchors on grep
+  reachability before a scenario existed. It violated NO PREDICTORS and produced the
+  false kill that law predicts, twice, within an hour of being written. The judgment it
+  tried to automate is the drafting guide above; the loop keeps the guide and drops the
+  script.
+- **Built 2026-08-01:** `mcp_only_check.py` (pinned by `test_mcp_only_check.py`) fails any script in
+  `bench/` that shells a CLI query subcommand, so the surface defect above cannot recur silently.
+- **First live use:** `rails`, the first ruby-rails repo off the slate.
