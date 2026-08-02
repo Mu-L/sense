@@ -14,6 +14,11 @@ CLAUDE.md
 # Exception: bench/global/docker/**/CLAUDE.md are baked into docker images
 # at build time, not the user's local AI context.
 !bench/global/docker/**/CLAUDE.md
+# Exception: improvement-loop/CLAUDE.md is the bench loop's own rule-book, read by
+# the headless phase agents the driver spawns. Same reason the four bench agents are
+# tracked: it is load-bearing instructions, not one person's local AI context. The
+# ROOT CLAUDE.md stays private - that one is the local context.
+!improvement-loop/CLAUDE.md
 
 # ALLOWLIST, not a blocklist: the four bench agents the loop actually spawns are
 # tracked, every other agent stays local. These carry load-bearing rubrics - the
@@ -145,11 +150,6 @@ improvement-loop/bench/lib/placement-lint.sh
 # by exposing the raw journal.
 improvement-loop/verticals/**/LEDGER.md
 improvement-loop/docs/**/decision-errors.md
-# The bench session's own instructions. Same policy as the root CLAUDE.md: agent
-# instructions are local-only. The bare `CLAUDE.md` rule at the top already covers
-# it, but everything under improvement-loop/ is tracked unless it is named in THIS
-# block, so it is named here rather than left to a rule 120 lines away.
-improvement-loop/CLAUDE.md
 
 # ----------------------------------------------------------------------------
 # Bench harness (per-run results)
