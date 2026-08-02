@@ -10,7 +10,7 @@ and what did that actually cost once the context was re-read on every later turn
 
 ## WHY THIS EXISTS
 
-This is the budget-trim audit. `03-repo-diagnosis.md` recorded it as *"Missing,
+This is the budget-trim audit. the diagnosis one-pager recorded it as *"Missing,
 deferred by decision 2026-07-30: stays a hand check"*, and named the cost itself:
 *"the check most able to falsify 'send the RIGHT info' remains the easiest one to
 skip."* It was skipped. On 2026-08-01 the rails cell won at a 26% priced-token

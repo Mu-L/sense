@@ -4,7 +4,7 @@
     scaffold_check.py <key> --lang <extract-dir> [--prev <key>] [--stale tok1,tok2]
 
 Four file-level checks (the scaffold's un-fakeable list,
-docs/loops/00-bootstrap.md); nothing here can
+docs/bootstrap.md); nothing here can
 be gamed by prose:
 
   structure   verticals/<key>/ has every stamped element: the tracker, the slate,

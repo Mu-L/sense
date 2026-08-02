@@ -15,7 +15,7 @@ Three things, all checked before anything is created:
    selection rule: you decide the order by editing the file, the script decides nothing.
 3. **`stacks/<key>.conf` for that key** - the manifest marker for the in-vertical screen, the `gh`
    hunt queries, and the framework-role repos. Format and the measurements behind each rule:
-   [`../../stacks/README.md`](../../stacks/README.md); validate with
+   [`../stacks/README.md`](../stacks/README.md); validate with
    `python3 bench/bootstrap/stack_profile_check.py <key>`.
 
 Those two files are the only hand-written inputs, and neither is generated on purpose: the queries
@@ -110,7 +110,7 @@ before one exists.
   boundary" or ballast. It means the **hunt is too narrow**. Add an axis to `stacks/<key>.conf` and
   `--re-hunt`. Measured: a name-and-topic hunt produced exactly ONE big non-framework app across 28
   php candidates, and adding `--size` found three more.
-- **A screen bounds exactly what it measured** (Class-5, [`../decision-errors.md`](../decision-errors.md)):
+- **A screen bounds exactly what it measured** (Class-5, [`../decision-errors.md`](decision-errors.md)):
   "rejected: 340 prod files, below the 1,000 floor" is a size verdict and nothing else. A $0 screen
   never shrinks the program order - bank its saving, never its verdict.
 
@@ -163,7 +163,7 @@ index per slate repo.
 - **Retired, do not rebuild:** the seven-bar seam gate - `admission_gate.py`, `gate_backtest.py`,
   `anchor_rank.py` AS A GATE. Backtested against the four banked go wins it rejected 4 of 4, after
   running four verticals without producing a win (`LEDGER.md` `bootstrap/gate-backtest`; the general rule
-  is trap 5 in [`../cross-cutting/01-methodology.md`](../cross-cutting/01-methodology.md)).
+  is trap 5 in [`cross-cutting/01-methodology.md`](cross-cutting/01-methodology.md)).
 - **Moved to Loop 1, still built:** `anchor_rank.py`, `seam_hunt.py`, `structural_surplus.py`,
   `resolve_oracle.py`, `memorization_probe.py`.
 - **Missing:** the extractor check asks whether `internal/extract/<lang>/` exists with production

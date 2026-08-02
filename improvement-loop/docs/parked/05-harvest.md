@@ -84,7 +84,7 @@ dossier; the fix decisions they seed belong to Loop 7's authorization gate, not 
 - the retired carry-forward staging file - staging with the graduation rule: nothing stays once it has a durable home;
   empty carry-forward = next vertical bootstrappable.
 - **Readability duty:** append `loop5/<repo-or-tier>` entries to `verticals/<vertical>/LEDGER.md` as
-  each harvest tier completes (write-only for the loop; contract in [`ledger.md`](ledger.md)).
+  each harvest tier completes (write-only for the loop; contract in [`ledger.md`](../ledger.md)).
 
 ## Un-fakeable check
 
@@ -118,7 +118,7 @@ dossier; the fix decisions they seed belong to Loop 7's authorization gate, not 
   land with the Go vertical; the frozen-board catches are staged in the loss-anatomy/goal docs meanwhile).
   BUILT 2026-07-11: `tool_use_audit.py` (detectors + `--coverage` feature-check + degraded
   `--from-transcript` mode, fixtures in `test_tool_use_audit.py`; validated against all 38 frozen
-  headline sense-arm transcripts). The loss-anatomy ledger backfill is in [`loss-anatomy.md`](loss-anatomy.md).
+  headline sense-arm transcripts). The loss-anatomy ledger backfill is in [`loss-anatomy.md`](../loss-anatomy.md).
   The resolution-gap side is complete. Wiring the per-vertical tier as a `vertical-loop.sh`
   end-of-vertical phase is optional polish, not a gap.
 - **First live use:** already live (it ran through Django); first Go use fires with the first Go win.

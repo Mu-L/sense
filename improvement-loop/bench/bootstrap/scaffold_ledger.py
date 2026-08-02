@@ -39,7 +39,7 @@ TEMPLATE = """
 - **Scores:** n/a: scaffold, no runs.
 - **Cost:** $0 API. Subscription: one session, no paid arms; fleet: no spawns
   (0 spawns, main session only).
-- **Links:** `docs/loops/00-bootstrap.md`, `bench/bootstrap/scaffold.sh`.
+- **Links:** `docs/bootstrap.md`, `bench/bootstrap/scaffold.sh`.
 """
 
 CLEAN_LESSON = ("none owed - the stamp was clean on the first walk and the "
@@ -50,7 +50,7 @@ CLEAN_LESSON = ("none owed - the stamp was clean on the first walk and the "
 HEADER = """# {key} - LEDGER
 
 Append-only narrative for the {key} vertical. Entry schema and write points:
-[`../../docs/loops/ledger.md`](../../docs/loops/ledger.md). Never edited
+[`../../docs/ledger.md`](../../docs/ledger.md). Never edited
 after the fact; never committed.
 """
 

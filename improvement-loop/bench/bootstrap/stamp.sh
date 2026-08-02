@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # stamp.sh - stamp the directory structure for a new stack vertical
-# (docs/loops/00-bootstrap.md). It scaffolds the MECHANICAL skeleton; it deliberately
+# (docs/bootstrap.md). It scaffolds the MECHANICAL skeleton; it deliberately
 # does NOT choose repos, pin commits, or author scenarios - those are the human
 # judgment gates: it never chooses repos, pins commits, or authors scenarios.
 #
@@ -87,7 +87,7 @@ Vertical scaffolded by \`bench/bootstrap/stamp.sh\`.
 > **Authorities** (this folder never overrides them):
 > [\`../../docs/manifesto.md\`](../../docs/manifesto.md) (rules),
 > [\`../../docs/vertical-program.md\`](../../docs/vertical-program.md) (sequence),
-> [\`../../docs/loops/00-bootstrap.md\`](../../docs/loops/00-bootstrap.md) (the bootstrap).
+> [\`../../docs/bootstrap.md\`](../../docs/bootstrap.md) (the bootstrap).
 
 ## Status
 

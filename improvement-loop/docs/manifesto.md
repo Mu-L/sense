@@ -281,7 +281,7 @@ the repo).** Before swapping a repo that won't separate, exhaust the two fixes t
 Only when BOTH are exhausted and the repo still won't separate do you swap 1–2 repos mid-campaign for a same-type
 backup. **Swap risk is accepted, but swapping too fast is the failure mode** - it discards winnable repos and
 reads as cherry-picking. Mitigation is choosing wisely up front (sourcing with a misfire in mind), exhausting the
-fixes, THEN swapping. This is why repo selection is the load-bearing human gate (§8.2, `loops/00-bootstrap.md`).
+fixes, THEN swapping. This is why repo selection is the load-bearing human gate (§8.2, `bootstrap.md`).
 
 **Per-arm runs across the published matrix.** Every LLM runs on every one of the 4 repos (honest cross-model
 scorecard - no asymmetric coverage). Run counts differ by arm: **headline ×2** (the §8 hardening loop
@@ -320,7 +320,7 @@ quota, is what caps the set at 6. Don't pad with cheap-to-RUN repos that are exp
 > **Automated by `bash bench/drivers/vertical-loop.sh <repo>`** (a phase machine that runs the mechanical steps
 > and PAUSES for the two judgment steps - scenario authoring + tie diagnosis, which the AI agent DRAFTS and the
 > human REVIEWS adversarially - plus the one blocking human cost-confirm before the paid sweep). The steps below
-> are what it runs; see `loops/00-bootstrap.md` for the driver + the per-repo scenario anatomy.
+> are what it runs; see `bootstrap.md` for the driver + the per-repo scenario anatomy.
 
 1. **Ensure index fresh.** `bash bench/lib/ensure-index.sh <repo>` (rebuilds only if the scan engine changed).
    Scan-layer fixes need a full rescan to verify; query-layer fixes don't.

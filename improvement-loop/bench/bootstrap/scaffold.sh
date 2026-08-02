@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scaffold.sh - the scaffold stage of bootstrap (docs/loops/00-bootstrap.md).
+# scaffold.sh - the scaffold stage of bootstrap (docs/bootstrap.md).
 #
 #   preflight -> stamp -> evaluate -> record -> return
 #

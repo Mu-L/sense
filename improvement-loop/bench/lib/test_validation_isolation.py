@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Behaviour pins for Loop 2's unscored validation run (docs/loops/02-repo-run.md).
+"""Behaviour pins for the unscored validation run (plans/02-validate.md).
 
 The load-bearing pin is `test_the_scorer_cannot_see_a_validation_run`: the isolation is the
 RESULTS ROOT, not a flag a measurement instrument has to honour. That choice is deliberate -

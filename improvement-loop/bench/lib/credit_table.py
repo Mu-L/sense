@@ -4,7 +4,7 @@
     python3 credit_table.py <repo> [--json] [--fingerprint]
 
 This is the one mechanical input Loop 3's struggle read stands on
-(`docs/loops/03-repo-diagnosis.md`): for every gold item, did each arm CITE it,
+(the diagnosis read): for every gold item, did each arm CITE it,
 in how many of its runs. `pergroup.py` answers the same question one level up,
 per group, which is the right shape for a verdict and the wrong shape for
 "which rows did the baseline miss, and what did it do instead".

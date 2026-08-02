@@ -6,7 +6,7 @@
 > round-2 review.
 
 > **RULING 2026-07-19 (the owner: "go") - RUN-FIRST INVERSION.** Full text in
-> `loops/campaign-laws.md`. Operator's summary: a candidate cell gets its scenario and an
+> `campaign-laws.md`. Operator's summary: a candidate cell gets its scenario and an
 > unscored validation run early (run first, explain after); a lane session ends
 > with a run artifact or the lane parks; only money and repo-slot life-or-death reach the owner;
 > the dry-run pipeline is batched to cheap agents across a slate. Where any one-pager below
@@ -22,7 +22,7 @@ advances to the next vertical on its own: the program cadence is a human rhythm,
 starts only when you say so.
 
 Standing the vertical up is not a loop: it converges on the first pass or stops with a named status,
-and it is one command, [`loops/00-bootstrap.md`](loops/00-bootstrap.md).
+and it is one command, [`bootstrap.md`](bootstrap.md).
 
 ## Starting
 
@@ -39,7 +39,7 @@ and it is one command, [`loops/00-bootstrap.md`](loops/00-bootstrap.md).
    That is bootstrap, repo hunt, screening, composition, pinning and indexing in one command, with a
    JSON verdict on stdout. It stops with a named status if a precondition fails (a stale `sense`
    binary, a missing stack profile, an extractor that is not ready) and creates nothing in those
-   cases. Full status table: [`loops/00-bootstrap.md`](loops/00-bootstrap.md).
+   cases. Full status table: [`bootstrap.md`](bootstrap.md).
 3. **Everything downstream reads its position from disk** (scaffold files, `repos.md`, `slate.json`,
    the results tree). There is no hidden state: if you wonder "where are we?", the answer is on disk, and
    `report-matrix.sh` re-renders the matrix from it.
@@ -172,8 +172,11 @@ stall dressed as deference. (Ratified 2026-07-15.)
 
 ## Where to read more
 
-- Registry + operating rules: [`README.md`](README.md). The goal above all loops: [`goal.md`](goal.md).
-- One page per loop: `01`..`07` (identity, actors, stop conditions, fixtures, built-vs-missing).
-- Deep design of the per-repo loops: `loops/01-repo-authoring.md`, `loops/02-repo-run.md`,
-  `loops/03-repo-diagnosis.md`; their shared laws: `loops/campaign-laws.md`. Bench law: the manifesto
-  (`manifesto.md`), which wins every conflict.
+- The phase map and who runs what: [`README.md`](README.md). The goal above it all:
+  [`goal.md`](goal.md).
+- **What a phase actually does is its plan, not a page here**: [`../plans/`](../plans) -
+  `01-scout.md`, `01-curate.md`, `02-validate.md`, and the one-line law list `laws.md`. The
+  driver hands them to the agent; you read them to know what it was told.
+- Standing laws with their provenance: [`campaign-laws.md`](campaign-laws.md). How cells lose,
+  and the vertex fixture record: [`loss-anatomy.md`](loss-anatomy.md). Loops that are not live:
+  [`parked/`](parked). Bench law: the manifesto (`manifesto.md`), which wins every conflict.

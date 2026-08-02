@@ -16,11 +16,17 @@ improvement-loop/
 │   ├── bootstrap/        one command that stands a vertical up: bash bench/bootstrap/run.sh
 │   ├── lib/              orchestration, gates, scoring
 │   └── drivers/          the loop drivers
-├── docs/                 the rule-book: manifesto, judging contract, loop one-pagers,
-│                         cross-cutting fact-packs, scenario + findings method
+├── plans/                what the driver HANDS AN AGENT: one file per judgment phase,
+│                         plus laws.md. Authority at runtime.
+├── docs/                 the rule-book a HUMAN reads: manifesto, judging contract,
+│   │                     campaign laws, cross-cutting fact-packs, method. Authority on
+│   └── parked/           design. Loop one-pagers that are not live.
 └── verticals/<key>/      ONE home per vertical: repos.txt, scenarios/, results/ (private),
                           README, repos.md, articles/, LEDGER.md (private), STATUS.md
 ```
+
+Three folders, three jobs: `plans/` is handed to an agent, `docs/` is read by a human,
+`bench/` is run by bash.
 
 A vertical is not split across a data half and a docs half. `verticals/<key>/` is the whole thing,
 so a campaign is one folder to open, one folder to archive, and one folder to delete.

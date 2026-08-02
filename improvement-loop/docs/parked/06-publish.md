@@ -77,7 +77,7 @@ Exit state: the vertical is closed in the program ledger and nothing published c
   separately; the packs + scorecard ARE the durable output.
 - **Readability duty:** append `loop6/event-e` to `verticals/<vertical>/LEDGER.md` at vertical close;
   `ledger_check.py` runs here, advisory, alongside the closing review (contract in
-  [`ledger.md`](ledger.md)).
+  [`ledger.md`](../ledger.md)).
 
 ## Un-fakeable check
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Behaviour pins for the per-gold-item credit table (docs/loops/03-repo-diagnosis.md).
+"""Behaviour pins for the per-gold-item credit table (the diagnosis read; branches in .claude/agents/bench-evaluator.md).
 
 Two pins carry the weight.
 

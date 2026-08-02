@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# admit.sh - the admit stage of bootstrap, no human in it (docs/loops/00-bootstrap.md).
+# admit.sh - the admit stage of bootstrap, no human in it (docs/bootstrap.md).
 #
 #   pool -> clone -> screen -> compose -> pin -> index the admitted -> verify
 #

@@ -281,7 +281,7 @@ meta = {
     "sense_link": link or None,
     "scenario_version": scen_ver or None,
     "scenario_file": scen_file or None,
-    # Loop 2's validation run is unscored by law (02-repo-run.md); the results root
+    # the validation run is unscored by law; the results root
     # already isolates it, this says so on the artifact itself.
     "scoring": os.environ.get("BENCH_SCORING", "1") != "0",
     # OBSERVATION, not verdict - see bench-sense-local.sh for the full rule.

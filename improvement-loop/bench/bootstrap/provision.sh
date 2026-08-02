@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# provision.sh - clone-day provisioning for a vertical (docs/loops/00-bootstrap.md).
+# provision.sh - clone-day provisioning for a vertical (docs/bootstrap.md).
 # For each repo: shallow-fetch the PINNED_COMMITS SHA into BOTH arms (baseline + sense),
 # scan for an anti-LLM banner (the lobsters fairness rule), and optionally build the
 # sense-arm index. Matches the existing depth-1 clone layout (commit count = 1).

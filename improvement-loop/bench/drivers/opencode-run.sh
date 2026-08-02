@@ -463,7 +463,7 @@ meta = {
     "sense_release": srel or None,
     "sense_release_exact": (srel_exact == "true") if srel else None,
     "sense_build_key": os.environ.get("SENSE_BUILD_KEY") or None,
-    # Loop 2's validation run is unscored by law (02-repo-run.md): a x1 unscored number
+    # the validation run is unscored by law: a x1 unscored number
     # is a sample and may not settle a win, a tie, or an article. The results root already
     # isolates it; this says so on the artifact itself, for anything copied out of the tree.
     "scoring": os.environ.get("BENCH_SCORING", "1") != "0",

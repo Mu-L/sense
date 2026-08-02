@@ -5,7 +5,7 @@ Vertical scaffolded by `bench/bootstrap/stamp.sh`.
 > **Authorities** (this folder never overrides them):
 > [`../../docs/manifesto.md`](../../docs/manifesto.md) (rules),
 > [`../../docs/vertical-program.md`](../../docs/vertical-program.md) (sequence),
-> [`../../docs/loops/00-bootstrap.md`](../../docs/loops/00-bootstrap.md) (the bootstrap).
+> [`../../docs/bootstrap.md`](../../docs/bootstrap.md) (the bootstrap).
 
 ## Status
 

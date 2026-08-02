@@ -111,7 +111,7 @@ policy. This is the most demotable loop in the registry.
 - Cap handoffs live in the arm's matching prompt file (state + resume command), the durable-handoff rule.
 - **Readability duty:** append `loop4/<arm>/{done,parked}` entries (per arm, never per cell) to
   `verticals/<vertical>/LEDGER.md`; `STATUS.md` stays a render (`render-status.sh`), never a source,
-  which preserves the rule above (contract in [`ledger.md`](ledger.md)).
+  which preserves the rule above (contract in [`ledger.md`](../ledger.md)).
 
 ## Un-fakeable check
 

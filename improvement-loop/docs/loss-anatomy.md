@@ -2,7 +2,7 @@
 
 > **What this is.** One row per recorded tie / killed slot across all verticals: the transcript-level
 > reason the baseline reached parity (or the design-time reason the slot died). the admission screens'
-> recalibration input ([`00-bootstrap.md`](00-bootstrap.md)) and the standing
+> recalibration input ([`00-bootstrap.md`](bootstrap.md)) and the standing
 > "what beats us" map (goal file, sensory system 3). Loop 5 appends a row per new tie/loss at harvest.
 > Discipline: every row cites transcript evidence (headline-arm baseline transcripts) or the
 > design-time measurement doc; no row concludes from a proxy. Backfilled 2026-07-11 from the frozen
@@ -285,3 +285,23 @@ edges (`repos.md` line 211/1011); LangChain scoped out (slim live core, max memo
    surfaces (serializer, slack-builder) both runs while faithfully relaying blast's deps - the
    agent-drops-context sibling of the known drops-retrieved-deps pollution. A misuse-audit angle
    (context-vs-relay balance), not a scorer fix.
+
+## Vertex fixture record (carried over when the per-repo one-pagers were dissolved)
+
+Every judgment vertex is fixture-tested standalone at $0 against frozen artifacts, and must
+BOTH rediscover what the humans found AND refuse to invent problems. What each one was run
+against, and the outcome:
+
+| Vertex | Fixture | Outcome |
+|---|---|---|
+| adversary probe | the dry-run that killed five framework shapes only after two days of battery reasoning had cleared them - the probe must kill them in one $0 pass | that incident is why the vertex exists |
+| adversary probe | negative control: a scenario whose gold is already sound | must sign off and stop; a probe that always finds something to re-shape is over-tuned |
+| scenario authoring | the chatwoot shape: re-author a fan-shaped ask into a chain, discriminator moves from sub-floor to +0.60 | hand it the pre-shape scenario; it must propose the chain |
+| `bench-win-confirm` | the pre-verified chatwoot cell (+0.91 dependencies, +0.68 overall) | must return WIN CONFIRMED with all five checks numbered **and stop**; any fault-finding on a clean win means the prompt is over-tuned |
+| `bench-win-confirm` | the netbox run whose 32,097-character inline answer tripped a detector-level false positive | must confirm the cell stands and reproduce `channels.json` from the raw transcript, not be fooled by the opencode parsing gap |
+| `bench-evaluator` branch 1 | the pre-retarget `scored.json` + transcripts of the relation cell | **passed** - found 14 of 17 diluters plus three canceling swing items, named the sense-only cited files as the retarget pool, ruled out 3a/3b/4/5/6 with detector output, refused the paid branch |
+| `bench-evaluator` branch 3a | positive replay is corpus-impossible (zero surviving offload transcripts on disk or in git history); the **negative** control ran instead | **passed** - confirmed the cell stands, not fooled by the opencode parsing gap |
+| `bench-evaluator` branch 3b | the blast `min_confidence` contract bug replayed as a `sense-io.jsonl` | must flag a **contract defect on the product surface**, not agent error, and must not flag the deliberate narrowing |
+| `bench-evaluator` branch 6 | the haystack record | **passed** - swap with fresh mechanical evidence, branch 5 correctly parked, no grinding on a dead seam |
+| `bench-evaluator` negative control | a winning cell | **passed** on the chatwoot cell. A separate attempt **redirected** instead and caught a real provenance break, resolved the same day - not over-tuning, every claim was verified |
+| provenance control (run phase) | a report whose headline delta does not derive from the on-disk runs | must be caught before anything downstream; has happened once and was found only by recomputing from disk |

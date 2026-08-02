@@ -166,7 +166,7 @@ not to Sense's `main`.
   window.
 - **Readability duty:** append `loop7/<window>/{open,<fix>-shipped,<fix>-reverted,close}` entries to
   `verticals/<vertical>/LEDGER.md`, shipped fixes with before/after incl. side-effect benches
-  (write-only for the loop; contract in [`ledger.md`](ledger.md)).
+  (write-only for the loop; contract in [`ledger.md`](../ledger.md)).
 
 ## Un-fakeable check
 
@@ -184,7 +184,7 @@ not to Sense's `main`.
 - **Produces:** merged fixes + version bumps, closed ledger entries, the re-index flag for bootstrap, revert
   records (as valuable as ships: they close dead ends permanently), and - **decided 2026-07-30** - the
   **probe-expiry trigger**: every shipped fix marks every `loop3/<repo>/probe` verdict measured on the
-  previous Sense version as STALE, so [Diagnosis](03-repo-diagnosis.md) re-verifies instead of standing on
+  previous Sense version as STALE, so [Diagnosis](../loss-anatomy.md) re-verifies instead of standing on
   an expired kill. A fix that makes a dead cell live is a *success* of this loop, and the only way the
   program notices is if this loop invalidates the old measurement. A revert fires the trigger too: it also
   moves the version.

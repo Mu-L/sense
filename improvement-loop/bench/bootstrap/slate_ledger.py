@@ -40,7 +40,7 @@ TEMPLATE = """
 - **Cost:** $0 API. Subscription: index wall-clock only; fleet: no spawns
   (0 spawns, main session only).
 - **Links:** `repos.md` (per-candidate verdicts), `slate.json`, `pool.txt`,
-  `stacks/{key}.conf`, `docs/loops/00-bootstrap.md`.
+  `stacks/{key}.conf`, `docs/bootstrap.md`.
 """
 
 CLEAN_LESSON = ("none owed - the pool screened cleanly and the composition check "
@@ -50,7 +50,7 @@ CLEAN_LESSON = ("none owed - the pool screened cleanly and the composition check
 HEADER = """# {key} - LEDGER
 
 Append-only narrative for the {key} vertical. Entry schema and write points:
-[`../../docs/loops/ledger.md`](../../docs/loops/ledger.md). Never edited
+[`../../docs/ledger.md`](../../docs/ledger.md). Never edited
 after the fact; never committed.
 """
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The four repo-level admission screens (docs/loops/00-bootstrap.md).
+"""The four repo-level admission screens (docs/bootstrap.md).
 
     screen.py <clone_dir> --key <repo-key> [--url URL] [--stack composer.json:a|b]
                    [--json OUT] [--no-api]

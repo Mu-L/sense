@@ -42,7 +42,7 @@ all). Residual until first live sweep: `codex exec resume` flag acceptance is un
 (failure mode is a logged WARN, never a lost run).
 
 **Loop wiring (who enforces what):** Loop 3 generates (automatic inside `bench-sense-local.sh`; noted in
-`02-repo-run.md` Actors), Loop 4 generates on claude cells only (caveat in
+the run phase), Loop 4 generates on claude cells only (caveat in
 `04-matrix-fill.md`), Loop 5 reads at loop close (`05-harvest.md` per-repo tier), Loop 7 consumes filed
 FRICTION.md rows and records their exit (`07-product-fix-window.md` Position).
 

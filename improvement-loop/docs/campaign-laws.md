@@ -184,7 +184,7 @@ the other three became loops in their own right, so the laws they all shared liv
   `ledger_check.py` rule 10 + `bench/lib/rescore_diff.py`. It halts all three per-repo loops
   immediately: no new cells, no verdicts, no swap dossiers, no kills, until the owner rules.
 - **Gate-fidelity law** (the adversary probe must be stronger than the production arm) and the
-  **agent dry-run gate before any paid bench**: `00-bootstrap.md` / `02-repo-run.md` + memory
+  **agent dry-run gate before any paid bench**: `bootstrap.md` + `../plans/02-validate.md` + memory
   `feedback_agent_dryrun_gate_before_bench`.
 - **Instruments that carry** (bench/lib, not vertical docs): `screen.py`, `mcp_probe.py`,
   `rescore_diff.py`, `select_final.py`, `scaffold_check.py`.

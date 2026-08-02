@@ -92,7 +92,7 @@ Entries follow the natural grain of the stage that writes them, not every heartb
 | - | `stopper/<slug>` | **a measurement-instrument bug (rule 10).** Fires the moment it is FOUND, not when it is fixed. MUST carry the re-score blast radius ("N of M runs", `bench/lib/rescore_diff.py`) and what it retro-invalidates. `ledger_check.py` rule 10 blocks a quiet scorer change. |
 
 **Class-6 protocol - read this schema, then RUN `ledger_check.py`, before claiming a session is
-recorded** (an available check left unrun, [`decision-errors.md`](../decision-errors.md); ratified
+recorded** (an available check left unrun, [`decision-errors.md`](decision-errors.md); ratified
 2026-07-15). **"It's written" and "it's recorded" are different claims**, and only the checker settles
 the second. Writing entries from a mental model of what a ledger entry looks like is the error: it
 produced a malformed key, four invented field names, a codename-law trip, and a Cost field failing rule 8
