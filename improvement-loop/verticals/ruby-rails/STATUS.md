@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-02 12:31 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-02 13:45 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -66,7 +66,7 @@ _Full report with methodology: `verticals/ruby-rails/results/report.md`_
 
 ## Ledger
 
-- latest entry: 2026-08-02 | ruling/mastodon-rubric-unjudgeable | the rubric had no gate; NOT a stopper
+- latest entry: 2026-08-02 | ruling/mastodon-no-axis-after-regold | park: two shapes killed at $0, probe ASSEMBLED then NO-AXIS
 - full narrative: `LEDGER.md` (this folder)
 - decision-errors intake: 0 open incident(s) (`../../docs/decision-errors.md`)
 
