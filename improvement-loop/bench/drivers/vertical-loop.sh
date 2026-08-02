@@ -133,7 +133,16 @@ do_index() {
 
 do_scout() {
   if [ -f "$YAML" ] && [ -f "$RUBRIC" ]; then
-    echo "## [scout] scenario present ($REPO.yaml + .rubric.yaml) - advancing"
+    echo "## [scout] scenario present ($REPO.yaml + .rubric.yaml)"
+    # A draft found on disk is NOT a draft that was audited. Before 2026-08-01 this
+    # short-circuited straight to preflight, so an unaudited gold (and a comment citing
+    # transcripts that did not exist) sailed through untouched. The per-dependency hand
+    # audit is Loop 1's load-bearing check and nobody downstream catches it.
+    if ! python3 "$LIB/gold_audit.py" verify "$YAML"; then
+      echo "[scout] Loop 1 does not advance until this gold is hand-audited."
+      exit 1
+    fi
+    echo "## [scout] gold audited - advancing"
     NEXT=preflight; return
   fi
   echo "## [scout] propose the contract + candidate gold (advisory)"
@@ -142,7 +151,11 @@ do_scout() {
   if [ -n "$sym" ]; then
     local fflag=(); [ -n "$fh" ] && fflag=(--file "$fh")
     # ${arr[@]+...} guards the empty-array case under `set -u` on bash 3.2 (macOS).
-    python3 "$LIB/seam_hunt.py" "$CLONE" "$sym" --conf 0.7 --propose ${fflag[@]+"${fflag[@]}"} 2>&1 || true
+    # No --conf: the scout must see the band the ARM sees (MCP defaults). It passed
+    # --conf 0.7 until 2026-08-01, the retired CLI default - so it scouted a set the
+    # benched agent never gets. Same defect family as the gold gate (MCP IS THE ONLY
+    # SURFACE); the flag survived because seam_hunt still accepts it.
+    python3 "$LIB/seam_hunt.py" "$CLONE" "$sym" --propose ${fflag[@]+"${fflag[@]}"} 2>&1 || true
   else
     echo "  (no --symbol given and no scenario yet; pick the central abstraction from"
     echo "   repos.md, then: vertical-loop.sh $REPO --symbol <Sym> [--file <path>])"
@@ -153,8 +166,9 @@ do_scout() {
     "  - $RUBRIC   (matching rubric)" \
     "  - gold: + contract_symbol:/contract_file: in the yaml (curate the candidate above)" \
     "Guidance: docs/loops/01-repo-authoring.md + docs/scenarios/crafting.md." \
-    "Before it leaves Loop 1: adversary probe, scenario.py --prompt, audit_scenarios.py," \
-    "gold_confidence_check.py at 0.3 AND 0.7, and the per-dependency hand audit."
+    "Before it leaves Loop 1: adversary probe, scenario.py --prompt," \
+    "gold_confidence_check.py --group <blast-sourced group>, and the per-dependency hand" \
+    "audit (gold_audit.py stamp <yaml>, then read every credit and replace each TODO)."
 }
 
 do_preflight() {
@@ -164,19 +178,32 @@ do_preflight() {
   python3 "$LIB/scenario.py" "$YAML" --prompt 2>&1 | sed 's/^/  /' || true
   echo "---- Loop-A preflight (gold must be default-blast-retrievable, manifesto §10) ----"
   bash "$LIB/loopA-scan.sh" preflight "$VERTICAL" "$REPO" 2>&1 || true
+  # MCP IS THE ONLY SURFACE (campaign-laws): a check that queries Sense through the CLI
+  # measures a surface no arm runs. Blocking - a wrong instrument is worse than no check.
+  echo "---- mcp-only law ----"
+  python3 "$LIB/mcp_only_check.py" || { state_set "$REPO" scout; exit 1; }
 
   # The COST GATE was REMOVED 2026-07-31: loops 1-3 have no human gate. Runs go
   # through a subscription by default, so what a cycle spends is quota against the
   # weekly reset. The leak check and the oracle above are what decide now.
-  NEXT=bench
+  #
+  # NEXT=validate, not bench: the unscored both-arms validation run is the spend-time
+  # go/no-go (02-repo-run.md, "between preflight and the paid bench"). This said
+  # NEXT=bench until 2026-08-01, which made `validate` unreachable from the chain -
+  # it could only be entered by hand with --phase validate, so every driver-run cycle
+  # went straight from preflight to the paid bench with no unscored check.
+  NEXT=validate
 }
 
 do_validate() {
   # Loop 2's validation run (docs/loops/02-repo-run.md): both arms, ONE run each,
   # unscored, before anything paid. BENCH_VALIDATION=1 routes it to a separate
   # results root and stamps "scoring": false, so no scorer can ever see it.
-  local vdir_out="$VDIR/results/validation"
-  if [ -d "$vdir_out" ] && [ -n "$(find "$vdir_out" -name 'transcript.json' 2>/dev/null | head -1)" ]; then
+  # Look wherever a validation transcript can land: RESULTS_DIR is model-scoped, so the
+  # tree is results/<model>/validation/, not results/validation/. Probing the latter (as
+  # this did until 2026-08-01) never finds an existing run, so every entry re-spends.
+  local vdir_out="$VDIR/results"
+  if [ -n "$(find "$vdir_out" -path '*/validation/*' -name 'transcript.json' 2>/dev/null | head -1)" ]; then
     echo "## [validate] a validation run already exists for this scenario - not re-running"
     echo "   (delete $vdir_out to force a fresh one)"
     NEXT=bench; return
@@ -186,6 +213,14 @@ do_validate() {
     bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || {
       echo "[validate] the validation run FAILED - that is a result, not an obstacle."
       echo "           Read the transcripts before re-running (02-repo-run.md)."; exit 1; }
+  # POST-CONDITION, not just the exit code: runs-variance.sh returned 0 on 2026-08-01
+  # while the run had actually failed, and this phase advanced to the PAID bench on it.
+  # An exit code is a claim; the transcript on disk is the fact.
+  if [ -z "$(find "$vdir_out" -path '*/validation/*' -name 'transcript.json' 2>/dev/null | head -1)" ]; then
+    echo "[validate] the runner exited 0 but wrote NO transcript - treating as a FAILED"
+    echo "           validation. Nothing advances to a paid bench on an absent artefact."
+    exit 1
+  fi
   echo "## [validate] done. Read it before paying:"
   echo "   RESULTS_DIR=$vdir_out python3 bench/lib/credit_table.py $REPO"
   echo "   If the baseline assembled the set, DO NOT PAY - go back to Loop 1 authoring."
@@ -209,8 +244,25 @@ do_report() {
   rdir="$VDIR/results/$msan"
   out="$(RESULTS_DIR="$rdir" python3 "$LIB/pergroup.py" "$REPO" 0.50 2>&1)"
   echo "$out" | sed 's/^/  /'
+
+  # Cost parity, on EVERY cell. Reach had an arbiter and cost had none, so a
+  # cell could win the headline at a 30% premium and nothing would say so.
+  # Printed before the verdict routes, because a parity MISS is a product
+  # finding for harvest - never a reason to halt (see cost_parity.py).
+  echo "## [report] cost parity (priced tokens, sense vs baseline)"
+  local cost_out
+  cost_out="$(RESULTS_DIR="$rdir" python3 "$LIB/cost_parity.py" "$REPO" 2>&1)"
+  echo "$cost_out" | sed 's/^/  /'
+
   if echo "$out" | grep -q '^VERDICT: WIN'; then
     echo "  -> WIN (discriminator >= +0.50). Banking Loop-A harvest."
+    if echo "$cost_out" | grep -q '^COST_PARITY: MISS'; then
+      echo "  -> COST-PARITY MISS on a winning cell. Sense is NOT reaching parity."
+      echo "     This is a PRODUCT finding: harvest owes an answer to WHY the sense"
+      echo "     arm's context is larger, and what can be trimmed. Do NOT treat it"
+      echo "     as a measurement defect and stop - that is the 2026-08-01 error."
+      echo "     Required in harvest: RESULTS_DIR=$rdir python3 bench/lib/context_cost_audit.py $REPO"
+    fi
     state_set "$REPO#cycle" 0
     NEXT=harvest; return
   fi
@@ -256,10 +308,22 @@ do_harvest() {
   echo "## [harvest] Loop-A transcript_miss over the paid transcripts (\$0, advisory)"
   bash "$LIB/loopA-scan.sh" harvest "$VERTICAL" "$HEADLINE_MODEL" 2>&1 || true
   echo ""
+  # The product half. Printing the instruction in `report` was not enough - an
+  # instruction nobody executes is how the budget-trim audit sat deferred from
+  # 2026-07-30 to 2026-08-01 while a 26% premium went unexplained. Harvest RUNS it.
+  local msan rdir
+  msan="$(printf '%s' "$HEADLINE_MODEL" | tr '/:' '__')"
+  rdir="$VDIR/results/$msan"
+  echo "## [harvest] context cost audit - WHY the sense arm costs what it costs"
+  RESULTS_DIR="$rdir" python3 "$LIB/cost_parity.py" "$REPO" 2>&1 | sed 's/^/  /' || true
+  RESULTS_DIR="$rdir" python3 "$LIB/context_cost_audit.py" "$REPO" 2>&1 | sed 's/^/  /' || true
+  echo ""
   echo "## $REPO - Definition of Done (manifesto §14), confirm by hand:"
-  echo "   [ ] discriminator >= +0.50 (favored +0.80) on Opus 4.8 x$RUNS"
+  echo "   [ ] discriminator >= +0.50 (favored +0.80) on the headline arm x$RUNS"
   echo "   [ ] Sense adopted its tools (mcp_count>0), no hallucinated cites, baseline floor legit"
   echo "   [ ] efficiency reported, scenario human-readable + leak-free, article matches the numbers"
+  echo "   [ ] COST PARITY: either PASS above, or a MISS carrying a named trim candidate"
+  echo "       and a Loop 7 pitch. A premium with no lever is an unfinished harvest."
   NEXT=done
 }
 
