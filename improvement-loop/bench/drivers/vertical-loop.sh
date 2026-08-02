@@ -1,25 +1,27 @@
 #!/usr/bin/env bash
-# vertical-loop.sh - the mechanical per-repo loop of the vertical bench (manifesto
-# docs/loops/01-repo-authoring.md .. 03-repo-diagnosis.md), with the human gates kept load-bearing.
+# vertical-loop.sh - the mechanical per-repo loop of the vertical bench.
 #
-# It chains the FREE/mechanical steps and PAUSES where someone must act. The line
-# goal.md draws: Loop A (the product-gap detectors) and the run
-# mechanics are automated; Loop B (the scenario + the tie diagnosis) is DRAFTED and
-# tuned by the AI agent running this loop, and the human REVIEWS it adversarially,
-# asynchronously (anomalies / inconsistencies). The human is the integrity anchor,
-# not the author. The script cannot write a scenario itself, so at the scout pause it
-# hands control back to the AI agent to author <repo>.yaml + <repo>.rubric.yaml +
-# gold, then resumes once those exist. The only true HUMAN decision is the cost
-# NOTE: loops 1-3 have had NO human gate since 2026-07-31; --yes is retained as a
-# no-op so existing invocations keep working.
+# THE SCRIPT OWNS THE ORDER, THE STATE, THE GATES AND EVERY SPAWN. It never judges.
+# Where a phase needs judgment it spawns a headless agent on one file from plans/,
+# and refuses to advance until that agent's artifact is on disk, its verifier exits 0
+# and its verdict JSON parses (`require_verdict`, backed by lib/verdict_check.py).
+# An exit code is a claim; the artifact is the fact. That guard used to exist once,
+# by hand, in do_validate, because that defect happened to bite there - it bites once
+# per phase otherwise.
+#
+# A phase agent never chooses the next phase and never spawns its own judge: the
+# adversary probe is a separate `probe` phase spawned from here, so the author of a
+# shape cannot grade it. --yes is retained as a no-op (loops 1-3 have no human gate).
 #
 # Phases (a state file resumes at the next one; re-run to advance):
 #   index      ensure-index.sh                                    [auto]
-#   scout      seam_hunt.py --propose  ->  GATE: draft+review scenario+gold
+#   scout      AGENT plans/01-scout.md   -> shape.md              [SHAPE|NO-AXIS]
+#   probe      AGENT adversary probe on the shape, Sense forbidden [DISCLAIMED|ASSEMBLED]
+#   curate     AGENT plans/01-curate.md  -> yaml+rubric+gold, then COMMIT them
 #   preflight  render prompt + loopA preflight (resolve_oracle)   [auto]
-#   validate   both arms x1, UNSCORED (BENCH_VALIDATION=1)        [auto]
+#   validate   both arms x1 UNSCORED, then AGENT plans/02-validate.md  [PAY|DO-NOT-PAY]
 #   bench      runs-variance.sh Opus x2 (PAID)                    [auto]
-#   report     pergroup.py verdict; WIN -> harvest, else          -> Loop 3
+#   report     pergroup.py verdict; WIN -> harvest, else diagnosis
 #   harvest    loopA-scan.sh harvest (mine the paid transcripts)  [auto] -> done
 #
 # Usage:
@@ -53,10 +55,12 @@ CLONES="${SENSE_CLONES:-$HOME/Developer/luuuc/oss/sense-benchmark/sense}"
 # bench/ (bench-paths.sh says so): before this was factored out, two sites here still used
 # the pre-move $BENCH_DIR/verticals and silently read a directory that cannot exist - the
 # preflight gate found no scenario and pergroup.py found no runs.
-VDIR="$BENCH_DIR/../verticals/$VERTICAL"
+IL_ROOT="$(cd "$BENCH_DIR/.." && pwd)"
+VDIR="$IL_ROOT/verticals/$VERTICAL"
 SCEN_DIR="$VDIR/scenarios"
+PLANS="$IL_ROOT/plans"
 STATE="$VDIR/.loop-state.json"
-PHASES=(index scout preflight validate bench report harvest done)
+PHASES=(index scout probe curate preflight validate bench report harvest done)
 
 # ---- args -------------------------------------------------------------------
 REPO=""; SYMBOL=""; FILE_HINT=""; YES=0; FORCE_PHASE=""; STATUS=0; RESET=0
@@ -108,12 +112,17 @@ fi
 CLONE="$CLONES/$REPO"
 YAML="$SCEN_DIR/$REPO.yaml"
 RUBRIC="$SCEN_DIR/$REPO.rubric.yaml"
+# Where a phase agent writes its verdict, and where the design-time ($0, pre-scenario)
+# artifacts live. Both are under results/, which is private by policy - the scenario is
+# the only thing this driver commits.
+LOOPDIR="$VDIR/results/loop/$REPO"
+DRYRUN="$VDIR/results/dryrun/$REPO"
+# Where the unscored validation run lands, mirroring bench-paths.sh: the results root
+# is model-scoped and BENCH_VALIDATION=1 appends /validation to it.
+VALIDATION_DIR="$VDIR/results/$(printf '%s' "$HEADLINE_MODEL" | tr '/:' '__')/validation"
 
 if [ "$STATUS" = 1 ]; then echo "[$VERTICAL/$REPO] phase: $(state_get "$REPO" || echo index)"; exit 0; fi
 if [ "$RESET" = 1 ]; then state_set "$REPO" index; echo "[$VERTICAL/$REPO] reset to phase 'index'"; exit 0; fi
-
-# yaml field reader (contract_symbol / contract_file), no yaml dep needed
-yaml_field() { grep -E "^$1:" "$YAML" 2>/dev/null | head -1 | sed -E "s/^$1:[[:space:]]*//" | tr -d '"'"'"; }
 
 gate() { # message... - record we're parked at the current phase and stop
   echo ""
@@ -122,6 +131,96 @@ gate() { # message... - record we're parked at the current phase and stop
   echo "=============================================================="
   echo "Re-run: bash bench/drivers/vertical-loop.sh $REPO   (resumes at this phase)"
   exit 0
+}
+
+# ---- headless agents --------------------------------------------------------
+# Every agent in this system is spawned HERE. A phase agent is told so in its plan,
+# and runs with Agent disallowed, so it cannot delegate its own grading.
+#
+# PLAN_MODEL overrides the operator model; unset means the CLI default. It is
+# deliberately NOT $MODELS: that is the model being MEASURED, and the two roles
+# drifting into one is how a bench ends up grading itself.
+headless() { # <cwd> <out.json> <prompt> [extra claude args...]
+  local cwd="$1" out="$2" prompt="$3"; shift 3
+  mkdir -p "$(dirname "$out")"
+  (
+    cd "$cwd" || exit 1
+    export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1
+    IS_SANDBOX=1 claude -p "$prompt" \
+      --output-format json \
+      --permission-mode bypassPermissions \
+      --disallowed-tools "Agent" \
+      ${PLAN_MODEL:+--model "$PLAN_MODEL"} \
+      "$@"
+  ) > "$out" 2> "${out%.json}.log"
+}
+
+# spawn_plan <plan-file> - hand one plan to a headless agent, laws first.
+# The laws are PREPENDED rather than linked: a plan that ends in "see the laws" is
+# the documentation-as-runtime-prompt bug this split exists to remove.
+# The agent's transcript is named for the PHASE, not the plan file: require_verdict
+# points a stuck operator at "<phase>.agent.log", and a name that does not match is a
+# dead end at exactly the moment someone is debugging.
+spawn_plan() {
+  local plan="$PLANS/$1" name="$PHASE"
+  [ -f "$plan" ] || { echo "[$PHASE] missing plan: $plan" >&2; exit 1; }
+  mkdir -p "$LOOPDIR" "$DRYRUN"
+  echo "## [$PHASE] spawning the phase agent on plans/$1"
+  local prompt
+  prompt="$(cat "$PLANS/laws.md"; echo; cat "$plan"; cat <<EOF
+
+# CONTEXT (resolved; these are also exported in your shell)
+
+    VERTICAL = $VERTICAL
+    REPO     = $REPO
+    CLONE    = $CLONE
+    VDIR     = $VDIR
+    YAML     = $YAML
+    RUBRIC   = $RUBRIC
+    RDIR     = $VALIDATION_DIR
+    SYMBOL   = ${SYMBOL:-(none - pick the contract yourself)}
+    FILE     = ${FILE_HINT:-(none)}
+
+Work from $IL_ROOT. Write the artifact and the verdict JSON, then stop.
+EOF
+)"
+  VERTICAL="$VERTICAL" REPO="$REPO" CLONE="$CLONE" VDIR="$VDIR" \
+  YAML="$YAML" RUBRIC="$RUBRIC" RDIR="$VALIDATION_DIR" \
+    headless "$IL_ROOT" "$LOOPDIR/$name.agent.json" "$prompt"
+  echo "   agent transcript: $LOOPDIR/$name.agent.json (stderr in $name.agent.log)"
+}
+
+# require_verdict <phase> <allowed-csv> [verifier...] - the guard. Sets VERDICT.
+# No advance unless the JSON parses, names this phase and repo, carries an allowed
+# verdict, its named artifact EXISTS, and any verifier passed here exits 0.
+require_verdict() {
+  local phase="$1" allowed="$2"; shift 2
+  VERDICT="$(python3 "$LIB/verdict_check.py" "$LOOPDIR/$phase.verdict.json" \
+      --phase "$phase" --repo "$REPO" --allow "$allowed" --root "$IL_ROOT")" || {
+    echo "[$phase] no usable verdict on disk - NOT advancing."
+    echo "         Read $LOOPDIR/$phase.agent.log, then re-run this phase."
+    exit 1; }
+  if [ $# -gt 0 ]; then
+    "$@" || { echo "[$phase] verdict says $VERDICT but its verifier FAILED - NOT advancing."; exit 1; }
+  fi
+  echo "## [$phase] verdict: $VERDICT"
+}
+
+# invalidate <phase>... - drop a phase's verdict so re-entry RE-SPAWNS instead of
+# re-approving what was just rejected. Without this, every routed lever loops: the
+# probe kills a shape, the driver sends it back to scout, and scout finds its own
+# stale verdict on disk and waves the same dead shape through.
+invalidate() {
+  local p
+  for p in "$@"; do rm -f "$LOOPDIR/$p.verdict.json"; done
+}
+
+# have_verdict <phase> <allowed-csv> - true when a usable verdict is already on disk.
+# Phases are idempotent on resume: a park re-enters the phase, and re-spawning would
+# overwrite a good artifact with a fresh guess.
+have_verdict() {
+  VERDICT="$(python3 "$LIB/verdict_check.py" "$LOOPDIR/$1.verdict.json" \
+      --phase "$1" --repo "$REPO" --allow "$2" --root "$IL_ROOT" 2>/dev/null)"
 }
 
 # ---- phase implementations (echo the next phase on success, or gate+exit) ----
@@ -134,41 +233,138 @@ do_index() {
 do_scout() {
   if [ -f "$YAML" ] && [ -f "$RUBRIC" ]; then
     echo "## [scout] scenario present ($REPO.yaml + .rubric.yaml)"
-    # A draft found on disk is NOT a draft that was audited. Before 2026-08-01 this
-    # short-circuited straight to preflight, so an unaudited gold (and a comment citing
-    # transcripts that did not exist) sailed through untouched. The per-dependency hand
-    # audit is Loop 1's load-bearing check and nobody downstream catches it.
+    # A draft found on disk is NOT a draft that was audited. This once short-circuited
+    # straight to preflight, so an unaudited gold (and a comment citing transcripts that
+    # did not exist) sailed through untouched. The per-dependency hand audit is
+    # authoring's load-bearing check and nobody downstream catches it.
     if ! python3 "$LIB/gold_audit.py" verify "$YAML"; then
-      echo "[scout] Loop 1 does not advance until this gold is hand-audited."
+      echo "[scout] authoring does not advance until this gold is hand-audited."
       exit 1
     fi
     echo "## [scout] gold audited - advancing"
     NEXT=preflight; return
   fi
-  echo "## [scout] propose the contract + candidate gold (advisory)"
-  local sym="$SYMBOL"; [ -z "$sym" ] && sym="$(yaml_field contract_symbol)"
-  local fh="$FILE_HINT"; [ -z "$fh" ] && fh="$(yaml_field contract_file)"
-  if [ -n "$sym" ]; then
-    local fflag=(); [ -n "$fh" ] && fflag=(--file "$fh")
-    # ${arr[@]+...} guards the empty-array case under `set -u` on bash 3.2 (macOS).
-    # No --conf: the scout must see the band the ARM sees (MCP defaults). It passed
-    # --conf 0.7 until 2026-08-01, the retired CLI default - so it scouted a set the
-    # benched agent never gets. Same defect family as the gold gate (MCP IS THE ONLY
-    # SURFACE); the flag survived because seam_hunt still accepts it.
-    python3 "$LIB/seam_hunt.py" "$CLONE" "$sym" --propose ${fflag[@]+"${fflag[@]}"} 2>&1 || true
-  else
-    echo "  (no --symbol given and no scenario yet; pick the central abstraction from"
-    echo "   repos.md, then: vertical-loop.sh $REPO --symbol <Sym> [--file <path>])"
+  # No seam_hunt here: the plan tells the agent to run it, and running it twice would
+  # print a listing into a terminal nobody is reading. --symbol/--file ride along as
+  # operator hints in the agent's context block. Choosing the anchor is the agent's
+  # judgment, which is exactly why this phase exists.
+  have_verdict scout "SHAPE,NO-AXIS" || spawn_plan 01-scout.md
+  require_verdict scout "SHAPE,NO-AXIS"
+  if [ "$VERDICT" = NO-AXIS ]; then
+    gate \
+      "NO AXIS proposed for $REPO. This is a routed lever, never a loss." \
+      "Read $DRYRUN/shape.md for the anchors that were tried, then either widen the" \
+      "pool and re-run this phase, or swap the slot for its OWN declared backup in" \
+      "slate.json (never the next slate repo):" \
+      "  bash bench/drivers/vertical-loop.sh <backup-repo> --reset"
   fi
-  gate \
-    "LOOP 1 AUTHORING - the agent running this loop authors these now; no human review:" \
-    "  - $YAML            (7 neutral steps, audit step forces per-dep file:line)" \
-    "  - $RUBRIC   (matching rubric)" \
-    "  - gold: + contract_symbol:/contract_file: in the yaml (curate the candidate above)" \
-    "Guidance: docs/loops/01-repo-authoring.md + docs/scenarios/crafting.md." \
-    "Before it leaves Loop 1: adversary probe, scenario.py --prompt," \
-    "gold_confidence_check.py --group <blast-sourced group>, and the per-dependency hand" \
-    "audit (gold_audit.py stamp <yaml>, then read every credit and replace each TODO)."
+  # A shape missing a heading is not a shape. The probe is spawned against the
+  # headline ask, so an absent one silently probes nothing.
+  local h
+  for h in "Contract" "Axis" "Headline ask" "Periphery pool" "Anchors" "Import battery"; do
+    grep -qE "^# +$h" "$DRYRUN/shape.md" || {
+      echo "[scout] shape.md carries no '$h' heading - NOT advancing."; exit 1; }
+  done
+  NEXT=probe
+}
+
+do_probe() {
+  # The design-time kill, $0, and it is spawned HERE so the author of the shape never
+  # grades it. Same conditions as the BASELINE arm - the clone, no Sense, full tools
+  # otherwise - because a gate weaker than the production arm passes shapes the arm
+  # cannot survive.
+  if ! have_verdict probe "DISCLAIMED,ASSEMBLED"; then
+    local ask
+    ask="$(awk '/^# +Headline ask/{f=1;next} /^# /{f=0} f' "$DRYRUN/shape.md")"
+    [ -n "$(printf '%s' "$ask" | tr -d '[:space:]')" ] || {
+      echo "[probe] the shape carries an empty headline ask - back to scout."
+      state_set "$REPO" scout; exit 1; }
+    echo "## [probe] spawning the adversary probe in the baseline clone (Sense forbidden)"
+    headless "$CLONE" "$LOOPDIR/probe.agent.json" "$(cat <<EOF
+You are an adversary. Your job is to BEAT a benchmark scenario before it is written,
+using nothing but what is in this repository clone. There is no code-intelligence
+server available to you and you may not install one: grep, find, read and the shell
+are what you have. Answer this in full, at the bar stated.
+
+--- THE ASK ---
+$ask
+--- END ---
+
+GRADING BAR: every location you report is an exact path:line. A filename alone scores
+nothing. Be exhaustive - a missed dependent is a regression shipped.
+
+When you are done, write these two files (absolute paths, outside this clone):
+
+1. $DRYRUN/adversary-probe.md, with exactly these headings:
+   # Result       SURVIVES or ASSEMBLED, one sentence
+   # Method       what you searched, in what order, and how many tool calls it took
+   # Covered      every path:line you are confident in
+   # Disclaimed   VERBATIM and specific: what you could NOT establish, what you never
+                  looked at, and where you know your answer is thin. This section is
+                  the most valuable thing you produce. "I pinned the class line and
+                  nothing else" is the shape of it.
+
+2. $LOOPDIR/probe.verdict.json:
+   {"phase":"probe","repo":"$REPO","verdict":"ASSEMBLED",
+    "artifact":"verticals/$VERTICAL/results/dryrun/$REPO/adversary-probe.md",
+    "notes":"one line"}
+
+   ASSEMBLED means you believe you produced the answer at path:line and a scenario
+   built on this ask would not discriminate. DISCLAIMED means you did not - name the
+   axis you could not reach. Do not flatter yourself in either direction: an overclaim
+   kills a good scenario, an underclaim ships a bad one.
+EOF
+)" --strict-mcp-config --mcp-config "$LIB/baseline-mcp.json"
+  fi
+  require_verdict probe "DISCLAIMED,ASSEMBLED"
+  if [ "$VERDICT" = ASSEMBLED ]; then
+    invalidate scout probe
+    state_set "$REPO" scout
+    gate \
+      "THE PROBE ASSEMBLED THE ANSWER - this shape cannot be benched." \
+      "Its method is the list of dead shapes: anything it reached without Sense is out," \
+      "and the next scout reads $DRYRUN/adversary-probe.md before proposing an axis." \
+      "Re-run to author a different one."
+  fi
+  NEXT=curate
+}
+
+do_curate() {
+  have_verdict curate "GOLD,NO-AXIS" || spawn_plan 01-curate.md
+  require_verdict curate "GOLD,NO-AXIS"
+  if [ "$VERDICT" = NO-AXIS ]; then
+    invalidate scout probe curate
+    state_set "$REPO" scout
+    gate \
+      "The probe disclaimed no gold-able axis on this shape. Back to scout." \
+      "Read $DRYRUN/adversary-probe.md - the disclaimer IS the axis, so an empty one" \
+      "means the ask was answerable without Sense."
+  fi
+  # The per-dependency hand audit is the load-bearing check and nobody downstream
+  # catches it, so it is re-run HERE rather than taken on the agent's word.
+  python3 "$LIB/gold_audit.py" verify "$YAML" || {
+    echo "[curate] the verdict says GOLD but the hand audit is not finished - NOT advancing."
+    exit 1; }
+  # And the rubric, against the judge's own contract. The gold had two gates and the
+  # rubric had none, so a rubric authored in an invented shape passed authoring, passed
+  # preflight, and died at judge time - with both arms already spent.
+  python3 "$LIB/rubric_check.py" "$YAML" || {
+    echo "[curate] the rubric does not satisfy the judge - NOT advancing."; exit 1; }
+  commit_scenario
+  NEXT=preflight
+}
+
+# The scenario is the ONE thing this driver commits: validate and report write into
+# results/, which is private by policy. It is committed here, after the audit passes,
+# so a benched cell always has its scenario in history at the version it ran.
+commit_scenario() {
+  local root files
+  root="$(cd "$IL_ROOT/.." && pwd)"
+  files=("$YAML" "$RUBRIC" "$SCEN_DIR/$REPO.gold-audit.json")
+  git -C "$root" add -- "${files[@]}" >/dev/null 2>&1 || return 0
+  git -C "$root" diff --cached --quiet -- "${files[@]}" && return 0
+  git -C "$root" commit -q -m "bench($VERTICAL): author the $REPO scenario with hand-audited gold" \
+    -- "${files[@]}" && echo "## [curate] scenario committed"
 }
 
 do_preflight() {
@@ -182,13 +378,20 @@ do_preflight() {
   # measures a surface no arm runs. Blocking - a wrong instrument is worse than no check.
   echo "---- mcp-only law ----"
   python3 "$LIB/mcp_only_check.py" || { state_set "$REPO" scout; exit 1; }
+  # The judge's rubric contract, checked BEFORE the money rather than at judge time.
+  # A scenario authored before this gate existed reaches preflight without ever having
+  # been checked, so preflight runs it too - not only curate.
+  echo "---- rubric contract ----"
+  python3 "$LIB/rubric_check.py" "$YAML" || {
+    echo "[preflight] the rubric does not satisfy the judge. Nothing runs on a scenario"
+    echo "            whose answers cannot be judged."; exit 1; }
 
   # The COST GATE was REMOVED 2026-07-31: loops 1-3 have no human gate. Runs go
   # through a subscription by default, so what a cycle spends is quota against the
   # weekly reset. The leak check and the oracle above are what decide now.
   #
   # NEXT=validate, not bench: the unscored both-arms validation run is the spend-time
-  # go/no-go (02-repo-run.md, "between preflight and the paid bench"). This said
+  # go/no-go (the validation run is the spend-time go/no-go). This said
   # NEXT=bench until 2026-08-01, which made `validate` unreachable from the chain -
   # it could only be entered by hand with --phase validate, so every driver-run cycle
   # went straight from preflight to the paid bench with no unscored check.
@@ -196,34 +399,75 @@ do_preflight() {
 }
 
 do_validate() {
-  # Loop 2's validation run (docs/loops/02-repo-run.md): both arms, ONE run each,
+  # The validation run: both arms, ONE run each,
   # unscored, before anything paid. BENCH_VALIDATION=1 routes it to a separate
   # results root and stamps "scoring": false, so no scorer can ever see it.
   # Look wherever a validation transcript can land: RESULTS_DIR is model-scoped, so the
-  # tree is results/<model>/validation/, not results/validation/. Probing the latter (as
-  # this did until 2026-08-01) never finds an existing run, so every entry re-spends.
+  # tree is results/<model>/validation/, not results/validation/. Probing the latter
+  # never finds an existing run, so every entry re-spends.
+  #
+  # AND SCOPE IT TO THIS REPO. The probe used to match any `*/validation/*` transcript
+  # in the vertical, so the FIRST repo to run a validation satisfied it for every repo
+  # after it: mastodon skipped its own unscored go/no-go and would have entered the PAID
+  # bench on rails' evidence. The runner writes <results>/<model>/validation/<tool>/<repo>/run-N.
   local vdir_out="$VDIR/results"
-  if [ -n "$(find "$vdir_out" -path '*/validation/*' -name 'transcript.json' 2>/dev/null | head -1)" ]; then
-    echo "## [validate] a validation run already exists for this scenario - not re-running"
-    echo "   (delete $vdir_out to force a fresh one)"
-    NEXT=bench; return
+  validation_runs() {
+    find "$vdir_out" -path "*/validation/*/$REPO/*" -name 'transcript.json' 2>/dev/null | head -1
+  }
+  if [ -n "$(validation_runs)" ]; then
+    echo "## [validate] a validation run already exists for $REPO - not re-running"
+    echo "   (delete $VALIDATION_DIR to force a fresh one)"
+  else
+    echo "## [validate] unscored validation run, both arms x1 (BENCH_VALIDATION=1)"
+    BENCH_VALIDATION=1 VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS=1 \
+      bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || {
+        echo "[validate] the validation run FAILED - that is a result, not an obstacle."
+        echo "           Read the transcripts before re-running."; exit 1; }
+    # POST-CONDITION, not just the exit code: the runner has returned 0 with the run
+    # actually failed, and this phase advanced to the PAID bench on it. An exit code is
+    # a claim; the transcript on disk is the fact. Generalised into require_verdict for
+    # every agent phase - this one guards a runner, so it stays here too.
+    if [ -z "$(validation_runs)" ]; then
+      echo "[validate] the runner exited 0 but wrote NO transcript for $REPO - treating as a FAILED"
+      echo "           validation. Nothing advances to a paid bench on an absent artefact."
+      exit 1
+    fi
   fi
-  echo "## [validate] unscored validation run, both arms x1 (BENCH_VALIDATION=1)"
-  BENCH_VALIDATION=1 VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS=1 \
-    bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || {
-      echo "[validate] the validation run FAILED - that is a result, not an obstacle."
-      echo "           Read the transcripts before re-running (02-repo-run.md)."; exit 1; }
-  # POST-CONDITION, not just the exit code: runs-variance.sh returned 0 on 2026-08-01
-  # while the run had actually failed, and this phase advanced to the PAID bench on it.
-  # An exit code is a claim; the transcript on disk is the fact.
-  if [ -z "$(find "$vdir_out" -path '*/validation/*' -name 'transcript.json' 2>/dev/null | head -1)" ]; then
-    echo "[validate] the runner exited 0 but wrote NO transcript - treating as a FAILED"
-    echo "           validation. Nothing advances to a paid bench on an absent artefact."
-    exit 1
+  # ARITHMETIC BEFORE JUDGMENT. pergroup declares WIN when a group's delta reaches the
+  # floor, and recall caps at 1.00, so a group whose baseline already sits at B can never
+  # deliver more than 1.00-B. If no group can reach the floor, there is no judgment left
+  # to make and no agent is spawned. Measured: a cell whose baseline held 10 of 16
+  # scattered rows discriminated clearly (+0.31) and was still incapable of a WIN
+  # (ceiling +0.375) - the judgment phase correctly answered "does it discriminate?" and
+  # had no reason to ask "can it clear the bar?". A floor is not a judgment call.
+  echo "## [validate] arithmetic ceiling (can any group still reach the floor?)"
+  if ! RESULTS_DIR="$VALIDATION_DIR" python3 "$LIB/pay_ceiling.py" "$REPO" 0.50; then
+    invalidate scout probe curate validate
+    state_set "$REPO" scout
+    gate \
+      "DO NOT PAY on $REPO - no gold group can reach +0.50 however well the sense arm" \
+      "does. This is arithmetic on the validation pair, not a judgment." \
+      "The lever is the GOLD, not the wall: re-gold from what the baseline MISSED." \
+      "The scenario is COMMITTED, so authoring will not re-enter until it is out of the" \
+      "way. Move it aside, then re-run to resume at scout:" \
+      "  git rm -q $YAML $RUBRIC $SCEN_DIR/$REPO.gold-audit.json"
   fi
-  echo "## [validate] done. Read it before paying:"
-  echo "   RESULTS_DIR=$vdir_out python3 bench/lib/credit_table.py $REPO"
-  echo "   If the baseline assembled the set, DO NOT PAY - go back to Loop 1 authoring."
+  # The pay decision. It is the last thing standing between a scenario and the money,
+  # and nothing reviews it afterwards, so it is a judgment phase and gets an agent.
+  have_verdict validate "PAY,DO-NOT-PAY" || spawn_plan 02-validate.md
+  require_verdict validate "PAY,DO-NOT-PAY"
+  if [ "$VERDICT" = DO-NOT-PAY ]; then
+    invalidate scout probe curate validate
+    state_set "$REPO" scout
+    gate \
+      "DO NOT PAY on $REPO - the validation run says this scenario does not discriminate." \
+      "The read is in $LOOPDIR/validate.md, with the lever for the next draft." \
+      "The scenario is COMMITTED, so authoring will not re-enter until it is out of the" \
+      "way. Move it aside, then re-run to resume at scout:" \
+      "  git rm -q $YAML $RUBRIC $SCEN_DIR/$REPO.gold-audit.json" \
+      "This step is deliberately yours: deleting a benched scenario is a git decision," \
+      "and the version that ran stays in history either way."
+  fi
   NEXT=bench
 }
 
@@ -288,20 +532,20 @@ do_report() {
 
   if [ "$cycle" -ge 6 ]; then
     gate \
-      "SIX CYCLES WITH NO MOVEMENT - swap this repo (docs/loops/03-repo-diagnosis.md)." \
+      "SIX CYCLES WITH NO MOVEMENT - swap this repo." \
       "The slot takes its OWN declared backup from slate.json, not the next slate repo." \
       "Write the swap dossier to LEDGER.md as loop3/$REPO/swap, then reset:" \
       "  bash bench/drivers/vertical-loop.sh <backup-repo> --reset"
   fi
   gate \
-    "BELOW +0.50 - hand the cell to Loop 3 diagnosis (docs/loops/03-repo-diagnosis.md)." \
+    "BELOW +0.50 - this cell goes to diagnosis. The loop cannot record a loss." \
     "1. STRUGGLE READ (every run): spawn the bench-struggle-read agent on the table above." \
     "   It returns scenario material - the rows the baseline missed and what it spent instead." \
     "2. TAXONOMY (sub-floor only): spawn bench-evaluator; branches in order, cheapest first." \
     "   \$0 gold-retarget re-scores without re-benching:" \
     "     python3 bench/lib/scorer.py <run_dir> $YAML bench" \
     "   Branch 2 (re-author + re-bench) is the only paid lever and needs 1/3/4 exhausted." \
-    "Then re-enter Loop 1: bash bench/drivers/vertical-loop.sh $REPO --phase scout"
+    "Then re-enter authoring: bash bench/drivers/vertical-loop.sh $REPO --phase scout"
 }
 
 do_harvest() {
@@ -338,6 +582,8 @@ while :; do
   case "$PHASE" in
     index)     do_index ;;
     scout)     do_scout ;;
+    probe)     do_probe ;;
+    curate)    do_curate ;;
     preflight) do_preflight ;;
     validate)  do_validate ;;
     bench)     do_bench ;;
