@@ -465,6 +465,29 @@ EFFICIENCY_CEILINGS = {
 
 DEFAULT_EFFICIENCY_CEILING = 30_000
 
+# PRICED ceilings - the same ceilings expressed in the priced-token unit
+# (`priced_tokens()`), which is what `token_efficiency` is measured against
+# since 2026-08-01.
+#
+# ⚠️ This is a UNIT CONVERSION, not a raised ceiling. The standing rule below
+# ("do not raise a ceiling to rescue an arm") is intact: no arm's standing
+# improves here. The old ceilings were calibrated against uncached input +
+# output, which is ~10x smaller than the priced total, so reusing them would
+# pin token_efficiency to 0 for EVERY arm and silently delete half of the
+# efficiency signal - the axis would stop discriminating rather than start.
+# Each value is its uncached-unit ceiling x10.67, the ratio measured on the
+# rails cell (178k priced vs 16.7k uncached), rounded to 10k.
+PRICED_EFFICIENCY_CEILINGS = {
+    "flask": 160_000,
+    "gin": 160_000,
+    "javalin": 160_000,
+    "axum": 210_000,
+    "discourse": 320_000,
+    "nextjs": 430_000,
+}
+
+DEFAULT_PRICED_EFFICIENCY_CEILING = 320_000
+
 # Wall-time ceilings, in seconds - the "code map" advantage shows up as
 # faster sessions, so time is half of efficiency. Picked at ~3-4× a healthy
 # Sense session for each repo, so a fast tool scores ~0.7 and a slow one
@@ -587,6 +610,35 @@ def estimate_cost(usage):
     ) / 1_000_000
 
 
+def priced_tokens(usage):
+    """Every BILLED token, in input-token equivalents - the parity axis.
+
+    `token_total_billed` (uncached input + output) is NOT what a caller pays for:
+    cache reads bill at 0.1x input and cache writes at 1.25x (Anthropic's prompt-
+    caching contract, and the rates `estimate_cost` above already uses). Excluding
+    them drops ~97% of the tokens moved, and on the rails cell that turned a 1.30x
+    cost premium into a 1.07x "near parity" (LEDGER stopper/billed-tokens-exclude-
+    cache, 2026-08-01). This is the same arithmetic as estimate_cost, expressed in
+    input-token units so the axis stays a TOKEN measure - `help-the-ai.md` defines
+    success as reach "at held-or-better billed-token cost", and a dollar figure
+    would also drift every time list prices change.
+
+    PRICE-TIER INVARIANT, which is why it can be trusted while PRICE_PER_M is
+    stale: only the RATIOS to input price are used, and they are the same on
+    every current tier (output 5x, cache_read 0.1x, cache_write 1.25x - identical
+    at 15/75 and at Opus 5's 5/25). PRICE_PER_M itself is Opus-4.x-era and now
+    over-states `estimate_cost`; that only affects partial-run fallbacks and
+    cost_tracker.py, since a healthy run reads `cost_usd` from the transcript.
+    """
+    p = PRICE_PER_M
+    return round(
+        usage.get("input_tokens", 0)
+        + usage.get("output_tokens", 0) * (p["output"] / p["input"])
+        + usage.get("cache_read_input_tokens", 0) * (p["cache_read"] / p["input"])
+        + usage.get("cache_creation_input_tokens", 0) * (p["cache_write"] / p["input"])
+    )
+
+
 def _repo_file_list(checkout):
     """Repo-relative file paths under a checkout, for the gold path-compaction
     oracle (gold.py). Prunes VCS/index/vendor dirs. Returns [] if the checkout
@@ -639,7 +691,9 @@ def score_transcript(transcript_path, scenario, repo_path=None, repo_checkout=No
     tool_calls = t["tool_calls"]
     usage = t["usage"]
 
+    # Kept for continuity of the reported metric; NOT the parity axis any more.
     billed_tokens = usage["input_tokens"] + usage["output_tokens"]
+    priced = priced_tokens(usage)   # every billed token, input-token equivalents
 
     # Optional pre-session overhead (e.g. serena's onboarding pre-run that
     # writes .serena/memories/ at image build time). Add it to the billed
@@ -672,6 +726,7 @@ def score_transcript(transcript_path, scenario, repo_path=None, repo_checkout=No
 
     repo = scenario.get("repo", "")
     ceiling = EFFICIENCY_CEILINGS.get(repo, DEFAULT_EFFICIENCY_CEILING)
+    priced_ceiling = PRICED_EFFICIENCY_CEILINGS.get(repo, DEFAULT_PRICED_EFFICIENCY_CEILING)
     time_ceiling = TIME_CEILINGS.get(repo, DEFAULT_TIME_CEILING)
 
     wall_time = round((t.get("duration_ms", 0) or 0) / 1000, 1)
@@ -681,10 +736,14 @@ def score_transcript(transcript_path, scenario, repo_path=None, repo_checkout=No
     # overhead, these equal the session-only numbers.
     eff_billed = billed_tokens + overhead_billed
     eff_wall   = wall_time + overhead_wall
+    # Overhead blocks record only `token_total_billed` (no cache breakdown), so
+    # they are added to the priced total at face value. That UNDER-counts a
+    # cache-heavy setup step; it never over-counts, so it cannot flatter an arm.
+    eff_priced = priced + overhead_billed
 
     # Zero tokens or zero wall-time means no measurable work - treat each as
     # a zero in its half of efficiency, not as perfect efficiency.
-    token_eff = max(0.0, 1.0 - (eff_billed / ceiling)) if eff_billed > 0 else 0.0
+    token_eff = max(0.0, 1.0 - (eff_priced / priced_ceiling)) if eff_priced > 0 else 0.0
     time_eff = max(0.0, 1.0 - (eff_wall / time_ceiling)) if eff_wall > 0 else 0.0
     efficiency = 0.5 * token_eff + 0.5 * time_eff
 
@@ -793,6 +852,13 @@ def score_transcript(transcript_path, scenario, repo_path=None, repo_checkout=No
             "effective_token_total_billed": eff_billed,
             "effective_wall_time_seconds": round(eff_wall, 1),
             "efficiency_ceiling": ceiling,
+            # The parity axis: every billed token in input-token equivalents.
+            # `token_total_priced` is what token_efficiency is measured against;
+            # `token_total_billed` above is the uncached remainder, kept for
+            # continuity and NOT a cost measure.
+            "token_total_priced": priced,
+            "effective_token_total_priced": eff_priced,
+            "priced_efficiency_ceiling": priced_ceiling,
             "time_ceiling_seconds": time_ceiling,
             "token_efficiency": round(token_eff, 4),
             "time_efficiency": round(time_eff, 4),
