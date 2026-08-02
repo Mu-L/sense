@@ -1,0 +1,221 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# WHY specificity carries weight here: the Mastodon win is a CITATION-COST axis, not a
+# discovery one. Every read of the instance-configuration store writes the same literal
+# token, so naming the area is cheap; what is expensive is opening eighteen files
+# scattered over seventeen directories and pinning the one line in each that reads a
+# value, plus the decision that value drives. An answer that lists areas or filenames
+# without file:line has done the cheap half. A filename alone does not count.
+#
+# Step names MUST match scenarios/mastodon.yaml exactly (the judge pairs by name).
+
+audience: |
+  An AI coding agent that will use this answer to safely rework how Mastodon stores and
+  reads instance-level configuration, with only small, targeted follow-up lookups, not a
+  fresh exploration of the codebase. Score for that audience, not a human reader, not a
+  docs page. A perfect answer leaves the agent able to change the storage and read path
+  knowing every dependent that must be reviewed, each pinned to an exact file:line, and
+  what decision each one makes with the value it reads - including the dependents that
+  live in features that are not about configuration at all (validation rules, workers
+  and schedulers, API gates, response headers, retention, onboarding, service-discovery
+  documents, static assets, and the historical migrations that still read a retired
+  value). A weak answer stops at the settings admin form, the settings screen and the
+  settings CLI, or names areas and filenames without lines, forcing the agent to open
+  dozens of files before it can act safely.
+
+steps:
+  - name: Orient in the codebase
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer hand the agent a usable map: that this is Mastodon (a Ruby on
+          Rails social server), how the app is laid out, and specifically where
+          instance-level configuration lives - the key/value store a feature asks
+          whether it is switched on, what the instance is called, or how long data is
+          kept? Could the agent pick an entry point and start working with only small,
+          targeted lookups?
+      specificity:
+        weight: 0.25
+        question: |
+          Are the cited paths concrete files (the configuration model, its defaults
+          file, the app directories that hold controllers/models/serializers/workers)
+          rather than vague ("the settings layer")? Are claims tied to actual paths and
+          class names?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain WHY the code is shaped this way (a Rails app with a
+          cached database-backed key/value store layered over YAML defaults), not just
+          NAME the pieces?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer flag what it has not verified or where it is guessing, rather
+          than presenting an orientation sweep as complete?
+
+  - name: Map the configuration contract and how a value is read
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer map the read path end to end: how a key is asked for, that the
+          lookup is dynamically dispatched rather than a declared method per key, the
+          cache in front of it, the database row behind it, and the YAML file that
+          supplies the default when no row exists? Would the agent know what it is
+          changing?
+      specificity:
+        weight: 0.25
+        question: |
+          Is there a file:line for the store itself and for each layer the read passes
+          through (dispatch, cache, record, defaults)? A named layer with no line is the
+          cheap half.
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain WHY the read path matters to the rework - that dynamic
+          dispatch means there is no per-key method to follow, and that the cache and the
+          defaults hash change what a caller sees - not just list the layers?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer say which parts of the read path it confirmed by reading code
+          versus inferred from naming?
+
+  - name: Trace how a configuration value is written
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer trace the write side from the surface an operator edits through
+          to the persisted value, and does it find the OTHER surfaces that can write one
+          (not just the single obvious form)?
+      specificity:
+        weight: 0.25
+        question: |
+          Is each write layer pinned to file:line, and is the order they run stated
+          concretely rather than gestured at?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain WHY the write path is structured this way (a form
+          object validating and persisting arbitrary keys, cache invalidation on write)
+          rather than only naming it?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer flag write surfaces it suspects but did not confirm?
+
+  - name: Audit every dependent of the configuration contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          THIS IS THE CORE STEP. How complete is the dependent set, and how scattered?
+          Credit breadth across unrelated features - validation rules, background workers
+          and schedulers, API enable/disable gates, response headers, data retention,
+          onboarding follow lists, service-discovery documents, static assets served from
+          a stored value, and historical data migrations that still read a retired value.
+          Penalise an answer that stops at the settings admin form, the settings screen
+          and the settings CLI, or that covers one or two areas deeply and leaves the
+          rest unnamed. Would the agent be able to change the contract without silently
+          breaking a dependent it was never shown?
+      specificity:
+        weight: 0.25
+        question: |
+          Is EVERY dependent pinned to an exact file:line, and is the line the one that
+          actually reads a configuration value (not the enclosing class or method
+          header)? A filename with no line number does not count. Does each entry state
+          which decision is made with the value it reads, concretely enough to act on?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain how these dependents were found and why the set should
+          be believed complete - and does it reason about which reads would be missed by
+          the obvious approach (dynamic dispatch, reads of the stored record rather than
+          the accessor, reads of values that no longer appear in any settings screen)?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer state honestly where its enumeration is thin - areas it did not
+          sweep, transitive readers it did not follow - rather than presenting a partial
+          list as exhaustive?
+
+  - name: Trace the dependents that read the stored record rather than the value
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer find the dependents that bypass the normal read path - code
+          reading the stored row directly, code reading a value that was retired from the
+          settings surfaces, and code reading a shape of the storage table that no longer
+          exists at runtime? Are the historical data migrations among them?
+      specificity:
+        weight: 0.25
+        question: |
+          Is each one pinned to file:line, with the exact expression that reaches the
+          storage quoted or described precisely?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain what specifically would break each one - that
+          preserving the accessor API is not enough if the row shape or the retired key
+          disappears?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer flag which of these it verified by reading the file versus
+          assumed from the filename or the migration's title?
+
+  - name: Assess the blast radius of the contract change
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the risk assessment cover every area the audit found, including the
+          scattered one-line dependents in features that are not about configuration, or
+          does it collapse back onto the settings surfaces? Is the ranking coherent -
+          does it identify what actually breaks loudly versus silently?
+      specificity:
+        weight: 0.25
+        question: |
+          Are the ranked dependents cited at file:line rather than by area or filename,
+          and is the failure mode named per dependent?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer justify the ranking with a mechanism (a silent nil, a cached
+          stale value, a migration that no longer finds its row) rather than asserting
+          severity?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer name what it could not assess and what it would need to check
+          before shipping?
+
+  - name: Produce the change + verification map
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Is this a map a teammate could land the change from alone: the pieces of the
+          store to edit, every dependent to review grouped by area, and the tests or
+          fixtures to update or add? Is anything from the earlier steps silently dropped?
+      specificity:
+        weight: 0.25
+        question: |
+          Is file:line used throughout, including for the tests and fixtures? A plan that
+          says "update the specs" without paths has not done the work.
+      justification:
+        weight: 0.20
+        question: |
+          Does the plan explain the ordering and why each verification step catches a
+          specific failure, rather than listing tasks?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the plan mark the steps that are uncertain or that need a decision from a
+          maintainer before they can be executed?
