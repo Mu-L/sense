@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
-"""Behaviour pins for the 0.3-vs-0.7 gold check.
+"""Behaviour pins for the gold-shown check.
 
-The load-bearing pin is `test_a_row_that_only_exists_at_0_3_fails`: that row is the shape of a
-manufactured win. `sense blast` documents min_confidence 0.7 and agents pass the documented
-default, so a gold row visible only in a 0.3 sweep earns a delta no agent can reproduce.
+The load-bearing pin is `test_a_row_the_agent_is_not_shown_fails`: that row is the shape of a
+manufactured win. Gold the sense arm never sees earns a delta no agent can reproduce, and the
+only surface that can answer "does it see this" is MCP, the one the arm runs.
 
-The negative pin matters just as much: `test_rows_unreachable_at_both_thresholds_pass`. Gold
-sourced from graph, search or a hand read is not in ANY blast set, and failing it would push
-curators toward blast-only gold - narrowing the bench to one tool.
+`test_mcp_is_the_only_surface` pins the engine itself: this check shells `sense mcp`, never a
+CLI query subcommand. Measuring the CLI is the defect this file was rewritten for.
 """
+import json
 import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from gold_confidence_check import _paths, classify, gold_rows, parse_args, row_reached
+import gold_confidence_check
+from gold_confidence_check import (_paths, classify, gold_rows, parse_args, report,
+                                   row_reached)
 
 BLAST_JSON = {
     "symbol": "Repository",
@@ -65,29 +68,61 @@ class RowMatchTest(unittest.TestCase):
 
 
 class ClassifyTest(unittest.TestCase):
-    def test_a_row_that_only_exists_at_0_3_fails(self):
-        """The manufactured-win shape: retrievable while curating, gone when benched."""
+    def test_a_row_the_agent_is_not_shown_fails(self):
+        """The manufactured-win shape: retrievable while curating, absent when benched."""
         rows = [_row("dep:wide", "internal/wide.go")]
-        both, low_only, neither = classify(rows, {"internal/wide.go"}, set())
-        self.assertEqual((len(both), len(low_only), len(neither)), (0, 1, 0))
+        shown, missing = classify(rows, set())
+        self.assertEqual((len(shown), len(missing)), (0, 1))
 
-    def test_a_row_present_at_0_7_survives(self):
+    def test_a_row_in_the_shown_output_passes(self):
         rows = [_row("dep:solid", "internal/solid.go")]
-        both, low_only, neither = classify(
-            rows, {"internal/solid.go"}, {"internal/solid.go"})
-        self.assertEqual((len(both), len(low_only), len(neither)), (1, 0, 0))
+        shown, missing = classify(rows, {"internal/solid.go"})
+        self.assertEqual((len(shown), len(missing)), (1, 0))
 
-    def test_rows_unreachable_at_both_thresholds_pass(self):
-        """Graph/search/hand-sourced gold is not in any blast set and is not a defect."""
-        rows = [_row("ctx:doc", "docs/architecture.md")]
-        both, low_only, neither = classify(rows, {"internal/x.go"}, {"internal/x.go"})
-        self.assertEqual((len(both), len(low_only), len(neither)), (0, 0, 1))
+    def test_report_exit_codes(self):
+        rows = [_row("dep:a", "a.go"), _row("dep:b", "b.go")]
+        shown, missing = classify(rows, {"a.go"})
+        self.assertEqual(report(rows, shown, missing, "Sym", "dependents"), 1)
+        self.assertEqual(report(rows, rows, [], "Sym", None), 0)
 
-    def test_a_high_only_row_counts_as_surviving(self):
-        """0.7 is the threshold that matters; being absent at 0.3 is not a defect."""
-        rows = [_row("dep:strict", "internal/strict.go")]
-        both, low_only, _ = classify(rows, set(), {"internal/strict.go"})
-        self.assertEqual((len(both), len(low_only)), (1, 0))
+
+class SurfaceTest(unittest.TestCase):
+    def test_mcp_is_the_only_surface(self):
+        """The engine must drive `sense mcp`. A CLI query subcommand is the old defect."""
+        captured = {}
+
+        def fake_probe(repo, calls, bin_path):
+            captured.update(repo=repo, calls=calls, bin_path=bin_path)
+            return [(1, json.dumps({"direct_callers": [{"file": "a/b.rb"}]}))], None
+
+        with tempfile.TemporaryDirectory() as t:
+            os.mkdir(os.path.join(t, ".sense"))
+            with mock.patch.object(gold_confidence_check, "probe", fake_probe):
+                paths = gold_confidence_check.shown_paths("/bin/sense", "Sym",
+                                                          file_sub="rel.rb", repo_dir=t)
+        self.assertEqual(paths, {"a/b.rb"})
+        self.assertEqual(captured["calls"],
+                         [{"name": "sense_blast",
+                           "arguments": {"symbol": "Sym", "file": "rel.rb"}}])
+
+    def test_no_min_confidence_is_ever_passed(self):
+        """The arm passes no threshold, so neither may the gate."""
+        captured = {}
+
+        def fake_probe(repo, calls, bin_path):
+            captured.update(calls=calls)
+            return [(1, "{}")], None
+
+        with tempfile.TemporaryDirectory() as t:
+            os.mkdir(os.path.join(t, ".sense"))
+            with mock.patch.object(gold_confidence_check, "probe", fake_probe):
+                gold_confidence_check.shown_paths("/bin/sense", "Sym", repo_dir=t)
+        self.assertNotIn("min_confidence", captured["calls"][0]["arguments"])
+
+    def test_an_unindexed_clone_is_a_clean_error(self):
+        with tempfile.TemporaryDirectory() as t:
+            with self.assertRaises(SystemExit):
+                gold_confidence_check.shown_paths("/bin/sense", "Sym", repo_dir=t)
 
 
 class ScenarioIoTest(unittest.TestCase):

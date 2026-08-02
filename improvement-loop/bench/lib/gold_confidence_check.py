@@ -1,55 +1,67 @@
 #!/usr/bin/env python3
-"""gold_confidence_check.py -- does this gold survive the min_confidence an agent ACTUALLY uses?
+"""gold_confidence_check.py -- is this gold in the output the benched agent is SHOWN?
 
     python3 gold_confidence_check.py <scenario.yaml> <symbol> [--file SUB] [--repo DIR]
                                      [--bin PATH] [--group NAME]
 
-Exit 0 = every blast-reachable gold row survives BOTH thresholds (the gold is honest).
-Exit 1 = at least one gold row is reachable at 0.3 and GONE at 0.7 -- a manufactured win.
+Exit 0 = every gold row in the checked group appears in the shown output.
+Exit 1 = at least one row does not -- a manufactured win.
 
 ## WHY
 
-`sense blast` documents `--min-confidence` default 0.7, and agents in the wild pass the
-documented default. Gold curated against a 0.3 sweep can therefore contain rows the benched
-agent CANNOT retrieve at the default it actually uses. Those rows do not measure Sense's
-reach; they measure the curator's threshold. A cell can then post a delta that no agent could
-reproduce - which is the most expensive error in the program, because a fake win propagates
-into the confirmation matrix, the harvest and a published article before anyone re-reads it.
+Gold the sense arm cannot retrieve earns a delta no agent can reproduce, and a fake win
+propagates into the confirmation matrix, the harvest and a published article before anyone
+re-reads it. So the one question is: does the arm SEE this row?
 
-This is the hand step the Loop 3 split priced and scripted first (01-repo-authoring.md).
+That question has exactly one honest instrument, the MCP server, because that is the only
+surface the sense arm ever touches (`bench-sense-local.sh` wires the clone's `.mcp.json`).
+This script used to answer it by running the `sense` CLI at `--min-confidence` 0.3 vs 0.7,
+on the premise that agents pass the CLI's documented 0.7 default. That premise was false for
+the benched arm: MCP defaults to 0.3 (`internal/profile/profile.go`), and the tool description
+tells the agent not to raise it. A gate that measures the CLI can only fail true gold.
+
+There is no threshold comparison here any more, because no arm runs the raised threshold.
+Measured on the pinned rails clone, lowering the threshold does not add rows to the shown
+output at all - both sides resolve the same 80 slots, and 0.3 simply admits more competitors
+(276 vs 144) so the cap evicts different ones. The shown, budgeted output IS the measurement.
 
 ## WHAT IT DOES NOT DO
 
 It does not judge whether a row BELONGS in the gold: blast-radius gold != edit-impact gold,
-and that is the hand-audit's job (the gitea case: 32 of 42 rows were
-answering a different question, and no threshold check would have caught it). This script
-answers one narrow question: of the rows blast can reach, do any of them vanish at 0.7?
+and that is the hand-audit's job (the gitea case: 32 of 42 rows were answering a different
+question, and no reachability check would have caught it).
 
-Rows unreachable at BOTH thresholds are reported, never failed: gold legitimately sourced
-from graph, search or a hand read is not blast-reachable and is not a defect.
+It has no opinion on gold sourced from graph, search or a hand read. Scope it with `--group`
+to the blast-sourced group and run it once per such group. Handed the whole gold it would
+fail every non-blast row, which would narrow the bench to one tool.
 """
 import json
 import os
-import subprocess
 import sys
 
 import yaml
 
+from mcp_probe import probe
 from sense_build import default_bin
 
-LOW, HIGH = "0.3", "0.7"   # the curation sweep, and the documented default agents pass
 
+def shown_paths(bin_path, symbol, file_sub=None, repo_dir=None):
+    """Every file path `sense_blast` SHOWS the agent over MCP, at the arm's defaults.
 
-def blast_files(bin_path, symbol, min_confidence, file_sub=None, repo_dir=None):
-    """Every file path `sense blast` returns at this threshold, as a set."""
-    cmd = [bin_path, "blast", symbol, "--json", "--min-confidence", min_confidence]
+    No `min_confidence` is passed, because the arm does not pass one: the MCP default is
+    what the benched agent gets, and the budget/cap truncation is part of what it gets.
+    """
+    args = {"symbol": symbol}
     if file_sub:
-        cmd += ["--file", file_sub]
-    out = subprocess.run(cmd, capture_output=True, text=True, cwd=repo_dir or None)
-    if out.returncode != 0:
-        raise SystemExit(f"gold_confidence_check: blast failed at {min_confidence}: "
-                         f"{(out.stderr or out.stdout).strip()[:400]}")
-    return _paths(json.loads(out.stdout))
+        args["file"] = file_sub
+    repo = repo_dir or os.getcwd()
+    if not os.path.isdir(os.path.join(repo, ".sense")):
+        raise SystemExit(f"gold_confidence_check: no .sense index under {repo}")
+    results, proc = probe(repo, [{"name": "sense_blast", "arguments": args}], bin_path)
+    if not results:
+        raise SystemExit("gold_confidence_check: sense_blast returned nothing over MCP: "
+                         f"{(proc.stderr or proc.stdout).strip()[:400]}")
+    return _paths(json.loads(results[0][1]))
 
 
 def _paths(node, found=None):
@@ -89,38 +101,26 @@ def row_reached(row, paths):
     return False
 
 
-def classify(rows, low_paths, high_paths):
-    """Split the gold into: survives both, 0.3-only (the defect), reachable by neither."""
-    both, low_only, neither = [], [], []
+def classify(rows, paths):
+    """Split the gold into: shown to the agent, and missing from what it is shown."""
+    shown, missing = [], []
     for row in rows:
-        at_low, at_high = row_reached(row, low_paths), row_reached(row, high_paths)
-        if at_high:
-            both.append(row)
-        elif at_low:
-            low_only.append(row)
-        else:
-            neither.append(row)
-    return both, low_only, neither
+        (shown if row_reached(row, paths) else missing).append(row)
+    return shown, missing
 
 
-def report(rows, both, low_only, neither, symbol):
-    print(f"## gold confidence check - {symbol}: min_confidence {LOW} vs {HIGH}")
-    print(f"   gold rows: {len(rows)}   survive {HIGH}: {len(both)}   "
-          f"{LOW}-only: {len(low_only)}   blast-unreachable: {len(neither)}")
+def report(rows, shown, missing, symbol, group):
+    scope = group or "ALL groups"
+    print(f"## gold shown check - {symbol} over MCP, arm defaults (group: {scope})")
+    print(f"   gold rows: {len(rows)}   shown: {len(shown)}   missing: {len(missing)}")
     print()
-    if neither:
-        print(f"   not blast-reachable at either threshold ({len(neither)}) - reported, NOT")
-        print("   failed: graph/search/hand-sourced gold is legitimately not in a blast set.")
-        for row in neither:
-            print(f"     - {row.get('id', '?'):<28} {', '.join(map(str, row.get('match') or []))}")
-        print()
-    if not low_only:
-        print(f"   PASS - every blast-reachable row survives {HIGH}, the default agents pass.")
+    if not missing:
+        print("   PASS - every row appears in the output the benched agent is shown.")
         return 0
-    print(f"   FAIL - {len(low_only)} row(s) exist only at {LOW}. The benched agent cannot")
-    print(f"   retrieve them at the documented default, so the delta they earn is not")
-    print("   reproducible. Re-target the gold, or make the ask name the threshold.")
-    for row in low_only:
+    print(f"   FAIL - {len(missing)} row(s) are not in what the agent is shown, so the")
+    print("   delta they earn is not reproducible. Re-target the gold, or re-scope the")
+    print("   ask so the call that reaches them is the one the scenario rests on.")
+    for row in missing:
         print(f"     - {row.get('id', '?'):<28} {', '.join(map(str, row.get('match') or []))}")
     return 1
 
@@ -128,10 +128,8 @@ def report(rows, both, low_only, neither, symbol):
 def check(scenario, symbol, bin_path=None, file_sub=None, repo_dir=None, group=None):
     bin_path = os.path.abspath(bin_path or default_bin())
     rows = gold_rows(scenario, group)
-    low = blast_files(bin_path, symbol, LOW, file_sub, repo_dir)
-    high = blast_files(bin_path, symbol, HIGH, file_sub, repo_dir)
-    both, low_only, neither = classify(rows, low, high)
-    return report(rows, both, low_only, neither, symbol)
+    shown, missing = classify(rows, shown_paths(bin_path, symbol, file_sub, repo_dir))
+    return report(rows, shown, missing, symbol, group)
 
 
 def parse_args(argv):
