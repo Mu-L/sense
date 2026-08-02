@@ -305,6 +305,11 @@ scenarios=()
 scenario_files=()
 for scenariofile in "$SCENARIOS_DIR"/*.yaml; do
   [[ -f "$scenariofile" ]] || continue
+  # A rubric is NOT a scenario. Discovery used to accept any *.yaml carrying a `repo:`
+  # key, so a rubric that happened to declare one was handed to scenario.py as a
+  # scenario and killed the whole run on "missing required field: name". It only
+  # worked because one rubric happened to omit the field - that is luck, not a rule.
+  [[ "$scenariofile" == *.rubric.yaml ]] && continue
   name="$(basename "$scenariofile" .yaml)"
   repo=$(python3 -c "import yaml; print(yaml.safe_load(open('$scenariofile'))['repo'])" 2>/dev/null || echo "")
   [[ -z "$repo" ]] && continue
@@ -614,7 +619,7 @@ meta = {
     "sense_dirty": sdirty == "true",
     "sense_release": srel or None,
     "sense_build_key": os.environ.get("SENSE_BUILD_KEY") or None,
-    # Loop 2's validation run is unscored by law (02-repo-run.md): a x1 unscored number
+    # the validation run is unscored by law: a x1 unscored number
     # is a sample and may not settle a win, a tie, or an article. The results root already
     # isolates it; this says so on the artifact itself, for anything copied out of the tree.
     "scoring": os.environ.get("BENCH_SCORING", "1") != "0",
