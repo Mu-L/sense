@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""probe_score.py - does the adversary probe's answer actually cover the pool? Arithmetic.
+"""probe_score.py - how much of the pool did the adversary probe actually pin? Arithmetic.
 
 The `probe` phase asks a Sense-less agent to beat a shape before it is written, then asks
 that same agent to grade itself: "ASSEMBLED means you BELIEVE you produced the answer".
@@ -8,20 +8,26 @@ claim about its own exhaustiveness - which is the exact belief this whole bench 
 measure. A cold agent that finds a quarter of the dependents and calls the audit finished
 is the finding, not the instrument.
 
-So score it. `shape.md` already carries the pool at `path:line`, one row per FILE, and
-`adversary-probe.md` already carries what the probe pinned under `# Covered`. Intersect
-them and the self-grade becomes a number.
+So score it. `shape.md` carries the pool at `path:line`, one row per FILE, and
+`adversary-probe.md` carries what the probe pinned under `# Covered`. Intersect them and
+the self-grade becomes a number.
 
-The threshold is not a new knob. `pergroup.py` declares WIN at a delta of +0.50 on a gold
-group and recall caps at 1.00, so a baseline holding fraction C of the group caps the
-delta at `1.00 - C`. The probe stands in for that baseline. It kills the shape when its
-measured coverage leaves no room for the floor - the same arithmetic as `pay_ceiling.py`,
-run at $0 instead of after a validation pair.
+THE NUMBER IS RECORDED, NOT ENFORCED. The probe does not estimate the benched arm, so
+this script does not kill a shape and no caller should treat it as a gate. Two calibration
+points on ruby-rails, both large and opposite: on the parked cell the probe reached 4 of 16
+where the arm reached 10; on the banked cell an unleaked probe reached at most 7 of 16
+where the arm reached 2.5, and a leaked one reached 15 of 16 over that same arm. Coverage
+here is the probe's, and only the validation pair measures the arm's.
+
+The ceiling it prints is `pay_ceiling.py`'s arithmetic applied to the probe: `pergroup.py`
+declares WIN at +0.50 on a gold group and recall caps at 1.00, so a baseline holding
+fraction C caps the delta at `1.00 - C`. Read it as "what the ceiling would be IF the arm
+matched the probe" - a hypothesis the validation run then tests.
 
   probe_score.py <adversary-probe.md> <shape.md> [floor]
 
-Exit 0 = the shape survives (the ceiling still reaches the floor).
-Exit 1 = the probe covered the pool; the shape cannot clear the floor. Do not bench it.
+Exit 0 = thin coverage; the shape has room even if the arm matches the probe.
+Exit 1 = the probe covered the pool. A signal to curate carefully, NOT a kill.
 Exit 64 = neither section could be read; a missing measurement is not a pass.
 
 Matching mirrors the scorer's path-fragment rule: a pool file counts as covered when the
@@ -104,12 +110,15 @@ def main(argv):
             print("  %s" % p)
 
     if ceiling >= floor:
-        print("\nPROBE_SCORE: SURVIVES - the probe pinned %.0f%% of the pool, so a group "
-              "curated from it can still reach +%.2f." % (coverage * 100, floor))
+        print("\nPROBE_SCORE: THIN - the probe pinned %.0f%% of the pool, leaving room for "
+              "+%.2f even if the arm matches it." % (coverage * 100, floor))
         return 0
-    print("\nPROBE_SCORE: DEAD - the probe pinned %.0f%% of the pool, capping any delta at "
-          "%+.3f against a +%.2f floor." % (coverage * 100, ceiling, floor))
-    print("Its Method section is the assembly route; the next shape must not re-use it.")
+    print("\nPROBE_SCORE: COVERED - the probe pinned %.0f%% of the pool. An arm matching the "
+          "probe would cap the delta at %+.3f against a +%.2f floor."
+          % (coverage * 100, ceiling, floor))
+    print("RECORDED, NOT A KILL. The arm is not the probe: on the banked cell a probe pinned")
+    print("15 of 16 gold rows over an arm that pinned 2.5. Curate from the rows above that")
+    print("the probe missed FIRST, and let the validation pair measure the arm.")
     return 1
 
 

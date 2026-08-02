@@ -17,10 +17,11 @@ If a script here is broken, write one line naming it in `notes` and stop; do not
 `$CLONE`, `$REPO`, `$VERTICAL` and `$VDIR` are exported. Work from `improvement-loop/`.
 
 0. If archived probes exist (`$VDIR/results/dryrun/$REPO/adversary-probe*.md`), read them
-   FIRST - as evidence of what assembly COSTS in this repo, never as a ban list. An axis is
-   closed only when `probe_score.py` measured the probe covering the pool; probe prose about
-   what it "reached" is a claim, and on the record here it has been wrong by six rows in both
-   directions. Re-run the score yourself if you want the number:
+   FIRST - as evidence of what assembly COSTS in this repo, never as a ban list. **No probe
+   closes an axis.** It does not estimate the arm: on the record here it has been wrong by
+   six rows in both directions, and on the banked cell a probe pinning 15 of 16 gold rows sat
+   over an arm that pinned 2.5. A high-coverage probe is a reason to curate carefully, not a
+   reason to abandon the anchor. Re-run the score yourself if you want the number:
 
        python3 bench/lib/probe_score.py <archived probe> <the shape it ran against>
 

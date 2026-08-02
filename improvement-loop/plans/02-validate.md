@@ -40,6 +40,15 @@ not fix the harness.
 
        python3 bench/lib/transcript_miss.py --stack "$VERTICAL" --repo "$REPO"
 
+5. The calibration row. The probe stopped being a gate because it does not estimate the arm;
+   this run is the only place the two are ever measured on the same shape, so record the pair:
+
+       cat "$VDIR/results/loop/$REPO/probe.score.txt"      # probe coverage of the pool
+
+   Put both numbers in your report - probe coverage against the baseline's measured
+   `dependents` recall from step 1, and which way it erred. One row per cell is how the loop
+   earns the right to re-arm that gate, or to retire the probe entirely.
+
 ## DECIDE
 
 **The bar is +0.50 on a gold GROUP, not a visible gap.** The driver has already proved

@@ -88,11 +88,15 @@ they are not re-argued at runtime.
   the line: no new cells, no verdicts, no swaps, no kills, until the human rules. Continue
   without a ruling only on a re-score diff proving zero impact. A mitigation is not a
   resolution.
-- **GATE FIDELITY.** The adversary probe must be stronger than the production arm, or the gate
-  passes shapes the arm cannot survive. Being stronger makes it strict, so its kill must be
-  REVERSIBLE and MEASURED: its verdict is scored against the shape pool (`probe_score.py`,
-  same arithmetic as `pay_ceiling.py`), never self-graded - a probe grading its own
-  exhaustiveness is running the exact belief this bench exists to measure.
+- **THE PROBE IS A LEAD, NOT A GATE.** It does not estimate the benched arm in either
+  direction, so it may not kill a shape. Two calibration points, both large and opposite: on
+  the parked cell the probe reached 4 of 16 where the arm reached 10; on the banked cell an
+  unleaked probe reached at most 7 of 16 where the arm reached 2.5. One question with no
+  watchdog is not a seven-step session at a wall. Score it (`probe_score.py`) and record the
+  number, take its Disclaimed section as the authoring lead, and let the validation pair -
+  which measures the arm - decide the spend. A probe grading its own exhaustiveness is
+  running the exact belief this bench exists to measure; a loop that believes it kills repos
+  it can win, mastodon at four shapes and counting.
 - **A PROBE NEVER READS ANOTHER PROBE.** The Disclaimed section of an earlier run is a list of
   the answers it missed, and a re-run working down that list holds a key the benched baseline
   never gets. Measured on mastodon: the checklist was worth 8 of 16 gold rows and turned a

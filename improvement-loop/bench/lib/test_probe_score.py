@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Behaviour pins for the scored probe gate.
+"""Behaviour pins for the probe score.
 
-Both directions are pinned, because the gate this replaces could only ever say DEAD.
-`test_a_thin_probe_survives` is the one that matters: a probe that pins the contract
-centre and two peripheral rows out of twelve is the shape a bench WANTS, and the
-self-graded verdict called that ASSEMBLED on the record.
+The score is RECORDED, never enforced - the probe does not estimate the benched arm - so
+what these pin is the arithmetic and the matching rules, not a pass/fail. Both directions
+are pinned because a number that only ever comes back one way measures nothing.
 """
 import os
 import sys
@@ -47,8 +46,8 @@ POOL = ["app/lib/feed_manager.rb:104",
 
 
 class ScoreTest(unittest.TestCase):
-    def test_a_thin_probe_survives(self):
-        """2 of 12 pinned leaves a +0.833 ceiling - the shape a bench wants."""
+    def test_thin_coverage_leaves_room(self):
+        """2 of 12 pinned leaves a +0.833 ceiling if the arm matches the probe."""
         _, covered, coverage, ceiling = score(
             probe("ASSEMBLED - I pinned the whole contract.", POOL[:2]), shape(POOL))
         self.assertEqual(len(covered), 2)
@@ -56,8 +55,8 @@ class ScoreTest(unittest.TestCase):
         self.assertAlmostEqual(ceiling, 1 - 2 / 12)
         self.assertGreaterEqual(ceiling, 0.50)
 
-    def test_a_covering_probe_is_dead(self):
-        """7 of 12 pinned caps the delta at +0.417, under the +0.50 floor."""
+    def test_high_coverage_caps_the_hypothetical_ceiling(self):
+        """7 of 12 pinned caps an arm-matches-probe delta at +0.417, under the floor."""
         _, covered, coverage, ceiling = score(
             probe("DISCLAIMED - the workers beat me.", POOL[:7]), shape(POOL))
         self.assertEqual(len(covered), 7)
@@ -78,7 +77,7 @@ class ScoreTest(unittest.TestCase):
         self.assertIsNone(coverage)
 
     def test_a_bare_basename_does_not_credit_the_probe(self):
-        """Loose matching would kill good shapes, so `feed.rb` alone scores nothing."""
+        """Loose matching would overstate the probe, so `feed.rb` alone scores nothing."""
         self.assertFalse(covers("app/models/feed.rb", "feed.rb"))
         self.assertTrue(covers("app/models/feed.rb", "models/feed.rb"))
         self.assertTrue(covers("concerns/account/merging.rb",
@@ -90,7 +89,7 @@ class ScoreTest(unittest.TestCase):
         self.assertEqual(paths("- app/models/feed.rb:41"), {"app/models/feed.rb"})
 
     def test_an_empty_pool_is_not_a_pass(self):
-        """A shape with no pool cannot be scored, and unscored is not survived."""
+        """A shape with no pool cannot be scored, and unscored is not zero."""
         pool, _, coverage, _ = score(probe("ASSEMBLED", POOL), shape([]))
         self.assertEqual(pool, [])
         self.assertIsNone(coverage)

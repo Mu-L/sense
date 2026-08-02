@@ -294,13 +294,15 @@ do_scout() {
 }
 
 do_probe() {
-  # The design-time kill, $0, and it is spawned HERE so the author of the shape never
-  # grades it. Same TOOLS as the baseline arm - the clone, no Sense - but not the same
-  # conditions: it answers one question with no watchdog while the arm answers a seven-step
-  # session against a wall, so it is deliberately STRONGER than the arm and this gate is
-  # deliberately strict. Measured on mastodon, an unleaked probe pinned <=7 of 16 gold rows
-  # where the benched baseline pinned 2.5. Strict is fine; unreversible is not, which is why
-  # the kill is scored, the record is archived and no axis is closed by prose.
+  # The design-time SIGNAL, $0, spawned HERE so the author of the shape never grades it.
+  # It is no longer a kill, and the reason is measured: the probe does not estimate the
+  # benched baseline in either direction. Two calibration points on this vertical, both
+  # large and opposite - on the parked cell the probe reached 4 of 16 where the arm reached
+  # 10; on the banked cell an unleaked probe reached <=7 of 16 where the arm reached 2.5.
+  # Same tools as the baseline arm, but one question with no watchdog against a seven-step
+  # session at a wall is not the same exam. What the probe produces is an authoring lead
+  # (its Disclaimed section) and a number for the calibration series. The gate that decides
+  # spend is the UNSCORED VALIDATION PAIR, which measures the arm itself.
   if ! have_verdict probe "DISCLAIMED,ASSEMBLED"; then
     local ask
     ask="$(awk '/^# +Headline ask/{f=1;next} /^# /{f=0} f' "$DRYRUN/shape.md")"
@@ -357,28 +359,24 @@ EOF
 )" --strict-mcp-config --mcp-config "$LIB/baseline-mcp.json"
   fi
   require_verdict probe "DISCLAIMED,ASSEMBLED"
-  # The verdict is a CLAIM and the score is the fact. The probe never sees the pool it is
-  # graded against, so "ASSEMBLED" means it believes it was exhaustive - the belief this
-  # bench exists to measure. probe_score.py intersects its citations with the shape's pool
-  # and applies the same arithmetic as pay_ceiling.py, at $0 instead of after a pair.
+  # The verdict is a CLAIM and the score is the fact, so score it - then RECORD it. The
+  # number goes to disk beside the verdict so plans/02-validate.md can pair it with the
+  # measured baseline recall and the calibration series grows a row per cell.
   local rc
-  python3 "$LIB/probe_score.py" "$DRYRUN/adversary-probe.md" "$DRYRUN/shape.md"; rc=$?
+  python3 "$LIB/probe_score.py" "$DRYRUN/adversary-probe.md" "$DRYRUN/shape.md" \
+    2>&1 | tee "$LOOPDIR/probe.score.txt"
+  rc=${PIPESTATUS[0]}
   if [ "$rc" -ge 2 ]; then
     echo "[probe] the probe could not be scored against the pool - NOT advancing."
-    echo "         An unscored probe is not a passed probe. Fix the headings and re-run."
+    echo "         A shape whose pool cannot be read is a scout defect, not a probe result."
     exit 1
   fi
   if [ "$rc" = 1 ]; then
-    invalidate scout probe
-    state_set "$REPO" scout
-    gate \
-      "THE PROBE COVERED THE POOL - this shape cannot clear the floor." \
-      "Its Method section is the assembly route; a shape reaching the same rows the same" \
-      "way is out. Archived probes are evidence of assembly COST, never a ban list -" \
-      "only a scored kill closes an axis. Re-run to author a different one."
+    echo "## [probe] the probe covered the pool. RECORDED, NOT A KILL."
+    echo "   A probe covering the pool is compatible with a large win: on the banked cell a"
+    echo "   probe pinned 15 of 16 gold rows and the benched arm still pinned 2.5. Curate"
+    echo "   from the Disclaimed section first; the validation pair decides the spend."
   fi
-  [ "$VERDICT" = ASSEMBLED ] && echo "## [probe] the probe claimed ASSEMBLED and the score" \
-    "does not support it - shape survives, calibration noted."
   NEXT=curate
 }
 
@@ -389,9 +387,10 @@ do_curate() {
     invalidate scout probe curate
     state_set "$REPO" scout
     gate \
-      "The probe disclaimed no gold-able axis on this shape. Back to scout." \
-      "Read $DRYRUN/adversary-probe.md - the disclaimer IS the axis, so an empty one" \
-      "means the ask was answerable without Sense."
+      "The POOL on this shape could not yield twelve heterogeneous rows, one file each." \
+      "Back to scout for a wider pool. Note what this verdict is NOT: an empty probe" \
+      "disclaimer is not a reason to reach it - the probe is a lead, not a gate, and it" \
+      "has been measured pinning the whole pool over an arm that pinned a sixth of it."
   fi
   # The per-dependency hand audit is the load-bearing check and nobody downstream
   # catches it, so it is re-run HERE rather than taken on the agent's word.

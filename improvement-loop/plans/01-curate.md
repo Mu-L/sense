@@ -7,9 +7,13 @@ its hand-audited gold.
 
 ## SCOPE
 
-You curate gold for the axis the probe DISCLAIMED, and nothing else. **Out of scope:** picking
-a new contract, re-running the probe, running the bench, editing a script, any other repo. If
-the probe disclaimed no usable axis, say so in the verdict and stop - do not invent one.
+You curate gold for the shape you were handed, and nothing else. **Out of scope:** picking a
+new contract, re-running the probe, running the bench, editing a script, any other repo.
+
+An empty disclaimer is NOT a reason to return `NO-AXIS`. The probe is a lead, not a gate, and
+a probe that pinned the whole pool has been measured sitting over an arm that pinned a sixth
+of it. `NO-AXIS` here means the POOL cannot yield twelve heterogeneous rows one file each -
+a property of the shape, not of what the probe managed to find.
 
 ## RUN
 
@@ -23,8 +27,10 @@ the probe disclaimed no usable axis, say so in the verdict and stop - do not inv
 
    The probe's **honesty disclaimer is the strongest lead on the discriminator axis**. What
    it says it could not establish is the first place to look for gold. What it reached is a
-   warning, not a verdict: the shape got here because `probe_score.py` measured the probe
-   NOT covering the pool, and a row it happened to pin is still gold if the axis holds.
+   warning, not a verdict - read `$VDIR/results/loop/$REPO/probe.score.txt` for how much of
+   the pool it actually pinned, then curate from the rest FIRST. A row the probe pinned is
+   still gold if the axis holds: on the banked cell the probe pinned 15 of 16 gold rows and
+   the benched arm pinned 2.5, so "the probe found it" has never once meant "the arm will".
 
 2. Pull the dependent set the arm is SHOWN, and read every candidate row's real line:
 
