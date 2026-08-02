@@ -79,6 +79,15 @@ Every gold row. The rails, all of them:
   the tally, then read the credits - the tally alone has passed wrong gold.
 - **The prompt is neutral.** No paths, no class names, no counts, no tool names, no answer
   shape. Both arms get the identical prompt and gold is never rendered into it.
+- **The ask names the MECHANISM, never the INVENTORY.** `scenario.py --prompt` reads tokens,
+  so a list of functional categories passes it clean and still hands over the answer. Steering
+  the agent off the anchors ("do not stop at the admin form") is fine; naming what to look for
+  instead is not. Say HOW dependents hide - through a concern, an association, a value passed
+  as an argument, a derived query - never WHERE they live.
+- **Every gold row must cost a READ.** For each drafted row, write down the one command a
+  baseline would run and ask whether its output already contains the scored `path:line`.
+  `grep -rn` prints line numbers, so a row whose dependency IS the token occurrence is free.
+  A row earns its place when the line can only be identified by opening the file.
 - **Every step prompt demands `file:line`**, and the audit step says a filename alone does not
   count.
 
@@ -115,6 +124,10 @@ Then write `$VDIR/results/loop/$REPO/curate.verdict.json`:
 - `gold_audit.py verify` exits 0: zero TODO rows remain and the gold has not changed under a
   finished sheet.
 - `dependents` holds at least twelve rows across at least six areas, one file each.
+- Every `dependents` row carries, in your report, the one command a baseline would run and why
+  that command's output does NOT already contain the scored `path:line`.
+- The ask has been read back as an inventory check: no phrase in it identifies a single gold
+  row's file. Quote any phrase that names a one-file area and rewrite it as a mechanism.
 - The verdict JSON exists and parses.
 
 ## DO NOT

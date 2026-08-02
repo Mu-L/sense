@@ -40,7 +40,16 @@ not fix the harness.
 
        python3 bench/lib/transcript_miss.py --stack "$VERTICAL" --repo "$REPO"
 
-5. The calibration row. The probe stopped being a gate because it does not estimate the arm;
+5. How the BASELINE assembled its answer - the route, not the number:
+
+       python3 bench/lib/baseline_route.py "$RDIR"/baseline/"$REPO"/run-1/transcript.json
+
+   Read it against the ask. One search that returned the candidate set, then reads of files
+   the ask named by function, means the cell measured the PROMPT and not the tool - that is a
+   DO-NOT-PAY whose lever is the ask, not the gold and not the wall. The precedent: nine tool
+   calls, one `grep -rn "Setting\."`, 17 of 18 dependents, 157 seconds.
+
+6. The calibration row. The probe stopped being a gate because it does not estimate the arm;
    this run is the only place the two are ever measured on the same shape, so record the pair:
 
        cat "$VDIR/results/loop/$REPO/probe.score.txt"      # probe coverage of the pool

@@ -33,6 +33,21 @@ they are not re-argued at runtime.
   files to pin sixteen lines. Curate gold from the scattered periphery, keep the contract
   centre as non-scoring anchors, demand `path:line`, and never judge a shape by whether grep
   finds the file.
+- **A GOLD ROW MUST COST A READ.** The sharp form of the law above, and the one that was
+  lost. `grep -rn` prints `path:line`, so if one pattern emits the SCORED line, that row is
+  free - the search result IS the citation and no file is ever opened. Measured: a gold set
+  whose eighteen rows were each a single `Setting.<key>` read scored **17 of 18 to a baseline
+  in nine tool calls and 157 seconds**, one `grep -rn "Setting\."` among them. Ask of every
+  drafted row: what must be OPENED to know this line is the dependency?
+- **THE ASK NAMES THE MECHANISM, NEVER THE INVENTORY.** Describing HOW a dependent hides is
+  the task; listing WHERE dependents live is the answer. "A shared concern, an association, a
+  service that derives something from the model rather than naming the class plainly" is a
+  mechanism. "Validation rules, background workers and schedulers, response headers, the
+  data-retention policy, the onboarding follow list, service-discovery documents, static
+  assets served from a stored value, and the historical data migrations" is an inventory: nine
+  categories that between them name almost every gold row's job, and the baseline transcript
+  shows it working down them. The neutrality gate reads TOKENS - paths, symbols, counts, tool
+  names - so a semantic inventory passes it clean. This one is caught by hand or not at all.
 - **GOLD RAILS, all of them, every scenario.** One item per FILE; every blast-sourced row
   appears in the output the agent is SHOWN over MCP; every chain is hand-audited at its
   construction site; per-dependency credits are hand-audited, never taken from a script tally;
