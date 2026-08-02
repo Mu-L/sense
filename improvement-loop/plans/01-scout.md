@@ -16,9 +16,13 @@ If a script here is broken, write one line naming it in `notes` and stop; do not
 
 `$CLONE`, `$REPO`, `$VERTICAL` and `$VDIR` are exported. Work from `improvement-loop/`.
 
-0. If `$VDIR/results/dryrun/$REPO/adversary-probe.md` exists, read it FIRST. A previous
-   shape was assembled without Sense, and every axis its Method section reached is dead.
-   Do not propose one of them again.
+0. If archived probes exist (`$VDIR/results/dryrun/$REPO/adversary-probe*.md`), read them
+   FIRST - as evidence of what assembly COSTS in this repo, never as a ban list. An axis is
+   closed only when `probe_score.py` measured the probe covering the pool; probe prose about
+   what it "reached" is a claim, and on the record here it has been wrong by six rows in both
+   directions. Re-run the score yourself if you want the number:
+
+       python3 bench/lib/probe_score.py <archived probe> <the shape it ran against>
 
 1. Candidate anchors, as a LISTING - never a gate, never a ranking you defer to:
 
@@ -30,6 +34,9 @@ If a script here is broken, write one line naming it in `notes` and stop; do not
 
    LOWER precision is better: it means grepping the token returns far more files than the
    real structural callers, so a baseline cannot cleanly enumerate the set by text search.
+   Read SCATTER as the signal and `VERDICT: grep-clean` as a note, never a kill - the banked
+   +0.72 cell in this vertical is grep-clean at the file level. A precision ABOVE 1.00 means
+   false caller edges, not darkness; check a sample by hand before believing it.
 
 3. What the arm is actually SHOWN for the winning candidate, at MCP defaults:
 
@@ -39,12 +46,16 @@ If a script here is broken, write one line naming it in `notes` and stop; do not
    Pass no `min_confidence`. The shown set is cap-limited, so raising it does not add rows,
    it changes which rows win the same slots.
 
-4. The import battery, against the candidate axis:
+4. The import battery, against the candidate axis - RECORDED, never a gate here:
 
-       grep -rln '<the contract token or module path>' "$CLONE" | wc -l
+       grep -rln '<the module path a dependent must IMPORT to use the contract>' "$CLONE" | wc -l
 
-   If an importer dump covers the dependent set you are aiming at, the axis is dead: those
-   files score for free. Pick another axis.
+   IMPORT-LAW kills an axis whose dependents must each write an import of the contract, because
+   that import line hands the baseline a `path:line` for free. It is an IMPORT dump, not a token
+   grep. In a stack with no import statement - Ruby, and anything autoloaded - the battery
+   degenerates into "does the token appear in the file", which is a DISCOVERY bar on a CITATION
+   metric and is exactly what the DECIDE section below forbids. Record the number in the shape
+   and let the probe and the validation run decide.
 
 ## DECIDE
 
@@ -66,8 +77,12 @@ Watch the context radius, not the hit count: a judgment repeated across many hit
 by a baseline when each hit is decidable locally. A narrow per-hit context radius means an
 unwinnable ask however many hits it has.
 
-Do NOT screen an anchor by whether grep finds its files. That reads a discovery bar on a
-citation metric and it kills repos that bank wins.
+Do NOT screen an anchor by whether grep finds its files, and do NOT screen a dependent by
+whether its line writes the anchor token. That reads a discovery bar on a citation metric and
+it kills repos that bank wins. Measured, in this vertical: a banked cell scored `dependents`
++0.72 (baseline 2.5 of 16, sense 14 of 16, n=2 per arm) on a gold set where **16 of 16 files
+carry the anchor token** and one `grep -rl` returns all of them. Token-brightness predicted
+nothing. The rows the baseline missed were bright, scattered, and too expensive to open.
 
 ## ARTIFACT
 
@@ -91,14 +106,18 @@ Then write `$VDIR/results/loop/$REPO/scout.verdict.json`:
     }
 
 `NO-AXIS` only after the contract hunt was deepened and the pool widened on at least three
-candidate anchors. It is not a tie and it is not a boundary; it is a routed lever.
+candidate anchors. It is not a tie and it is not a boundary; it is a routed lever. Every
+anchor rejected on the way there carries the measurement that rejected it, and **"its
+dependents write the anchor token" is not a measurement** - a scored probe or a real import
+cover is. `NO-AXIS` reached by a battery of token greps is a report about grep, not about
+the repo.
 
 ## DONE WHEN
 
 - `shape.md` exists and carries all six headings.
 - The periphery pool holds at least twelve FILES, each with a `path:line`.
 - No pool file appears in the anchors list.
-- The import battery hit count is recorded and the pool is not covered by it.
+- The import battery hit count is recorded.
 - The verdict JSON exists and parses.
 
 ## DO NOT

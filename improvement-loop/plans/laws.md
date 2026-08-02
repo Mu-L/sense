@@ -36,10 +36,17 @@ they are not re-argued at runtime.
 - **GOLD RAILS, all of them, every scenario.** One item per FILE; every blast-sourced row
   appears in the output the agent is SHOWN over MCP; every chain is hand-audited at its
   construction site; per-dependency credits are hand-audited, never taken from a script tally;
-  gold is the grep-dark residue - dark to the union of all grep patterns AND the import dump.
+  gold is the scattered periphery, selected for CITATION COST and never for token-darkness.
+- **TOKEN-DARKNESS IS NOT THE MECHANISM.** A dependent whose line writes the anchor token is
+  still gold. Measured: a banked cell scored `dependents` +0.72 (baseline 2.5 of 16, n=2) on
+  a gold set where 16 of 16 files carry the token and one `grep -rl` returns all of them,
+  while a cell curated FOR darkness put the baseline at 10 of 16 and died on its ceiling.
+  Darkness was one mechanism on one repo; it was read as the law and it inverts the result.
 - **IMPORT-LAW.** An axis is dead if an importer dump covers its gold: `grep -rln '<module
   path>'` is a one-command adversary, and any gold whose files import the subject's package
-  scores about 1.00 for free. Screen the axis with it before drafting.
+  scores about 1.00 for free. It is an IMPORT dump: in a stack with no import statement it
+  degenerates into a token grep, which is a discovery bar and kills wins. Run it by hand
+  against the drafted gold.
 - **THE IMPORT-COVER GATE IS NOT BUILT.** Its old home ran before a scenario existed and
   rejected four of four banked wins. Run the law by hand against the drafted scenario; do not
   rebuild it as a pre-scenario screen.
@@ -82,7 +89,15 @@ they are not re-argued at runtime.
   without a ruling only on a re-score diff proving zero impact. A mitigation is not a
   resolution.
 - **GATE FIDELITY.** The adversary probe must be stronger than the production arm, or the gate
-  passes shapes the arm cannot survive.
+  passes shapes the arm cannot survive. Being stronger makes it strict, so its kill must be
+  REVERSIBLE and MEASURED: its verdict is scored against the shape pool (`probe_score.py`,
+  same arithmetic as `pay_ceiling.py`), never self-graded - a probe grading its own
+  exhaustiveness is running the exact belief this bench exists to measure.
+- **A PROBE NEVER READS ANOTHER PROBE.** The Disclaimed section of an earlier run is a list of
+  the answers it missed, and a re-run working down that list holds a key the benched baseline
+  never gets. Measured on mastodon: the checklist was worth 8 of 16 gold rows and turned a
+  bench-able shape into a NO-AXIS. The driver archives, never overwrites; the results tree is
+  gitignored, so an overwritten probe is a destroyed record.
 - **ONE REPO AT A TIME, TO A VERDICT.** No second repo's scenario is authored while the first
   is mid-diagnosis. A parked repo resumes from state, it never restarts.
 - **A PHASE IS SELF-CONTAINED.** Its input is a file on disk and its output is a file plus a

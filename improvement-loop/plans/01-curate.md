@@ -21,9 +21,10 @@ the probe disclaimed no usable axis, say so in the verdict and stop - do not inv
        $VDIR/results/dryrun/$REPO/shape.md
        $VDIR/results/dryrun/$REPO/adversary-probe.md
 
-   The probe's **honesty disclaimer is the discriminator axis, verbatim**. What it says it
-   could not establish is what the scenario asks for. What it reached is dead - a shape it
-   assembled without Sense cannot be benched.
+   The probe's **honesty disclaimer is the strongest lead on the discriminator axis**. What
+   it says it could not establish is the first place to look for gold. What it reached is a
+   warning, not a verdict: the shape got here because `probe_score.py` measured the probe
+   NOT covering the pool, and a row it happened to pin is still gold if the axis holds.
 
 2. Pull the dependent set the arm is SHOWN, and read every candidate row's real line:
 
@@ -59,8 +60,15 @@ Every gold row. The rails, all of them:
 - **One item per FILE.** A group listing several symbols from one file rewards a single read.
 - **Three groups.** `contract` and `write-path` are the anchors both arms reach and they do
   NOT score. `dependents` is the scattered residue that decides the cell.
-- **Only probe-disclaimed territory enters `dependents`.** Anything the probe pinned is an
-  anchor at best.
+- **The probe disclaimer is a LEAD, not a filter.** Prefer the territory it disclaimed. Do
+  not exclude a row because the probe pinned it. The probe is one unscored simulation of the
+  baseline and this vertical has it wrong by six rows in BOTH directions on the record: it
+  disclaimed rows the benched baseline then found, and pinned rows the benched baseline then
+  missed. A `dependents` group built as the complement of one probe run is a group selected
+  for what that run happened to miss - which is how a cell reached validation with the
+  baseline holding 10 of 16 and a dead ceiling. Select for citation cost: scatter across
+  areas, one file each, a line that must be opened to be pinned. `pay_ceiling.py` at
+  validation is the only measurement of what the baseline actually holds.
 - **Hand-audit every credit.** Basename matching has awarded credit for the wrong file. Run
   the tally, then read the credits - the tally alone has passed wrong gold.
 - **The prompt is neutral.** No paths, no class names, no counts, no tool names, no answer
@@ -105,6 +113,6 @@ Then write `$VDIR/results/loop/$REPO/curate.verdict.json`:
 
 ## DO NOT
 
-- Do not put a row in `dependents` that the adversary probe reached - that is an anchor.
+- Do not build `dependents` as the complement of the probe run. The probe is not the baseline.
 - Do not take a credit from a script tally; open the file and read the line, every row.
 - Do not spawn a subagent. Every agent in this system is spawned by the driver.
