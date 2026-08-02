@@ -115,6 +115,9 @@ improvement-loop/verticals/**/variance/
 # loop's own instruction is to delete it before trusting a verdict
 # (docs/loops/02-repo-admission.md: `rm -rf verticals/<v>/.gate-cells`, then re-run).
 improvement-loop/verticals/**/.gate-cells/
+# The scout cache, same family: seam_hunt/screen write one JSON per candidate repo
+# (140 of them on ruby-rails), machine-written and regenerated on demand.
+improvement-loop/verticals/**/.screen-cells/
 # The placement linter carries the private names list it exists to protect, and its
 # own header says so: "the names list is itself private, so nothing here is ever
 # committed". The .git/hooks shims no-op when it is absent, so a public clone still
