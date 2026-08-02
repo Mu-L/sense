@@ -1,0 +1,110 @@
+# PLAN 01-curate
+
+## TASK
+
+Turn the shape and the adversary probe's disclaimer into one stamped scenario, its rubric and
+its hand-audited gold.
+
+## SCOPE
+
+You curate gold for the axis the probe DISCLAIMED, and nothing else. **Out of scope:** picking
+a new contract, re-running the probe, running the bench, editing a script, any other repo. If
+the probe disclaimed no usable axis, say so in the verdict and stop - do not invent one.
+
+## RUN
+
+`$CLONE`, `$REPO`, `$VERTICAL`, `$VDIR`, `$YAML`, `$RUBRIC` are exported. Work from
+`improvement-loop/`.
+
+1. Read both inputs before writing anything:
+
+       $VDIR/results/dryrun/$REPO/shape.md
+       $VDIR/results/dryrun/$REPO/adversary-probe.md
+
+   The probe's **honesty disclaimer is the discriminator axis, verbatim**. What it says it
+   could not establish is what the scenario asks for. What it reached is dead - a shape it
+   assembled without Sense cannot be benched.
+
+2. Pull the dependent set the arm is SHOWN, and read every candidate row's real line:
+
+       python3 bench/lib/mcp_probe.py "$CLONE" \
+         '[{"name":"sense_blast","arguments":{"symbol":"<Symbol>"}}]'
+
+   The blast payload gives the enclosing `def`, NOT the line that touches the contract. Open
+   the file and pin the line that actually uses it.
+
+3. Memorization, per candidate row, on a famous repo:
+
+       python3 bench/lib/memorization_probe.py "$CLONE" <Symbol> --json <out>.json
+
+   Cut what comes back recited. A famous repo is not disqualified; a memorized row is.
+
+4. After writing the yaml and rubric, in this order:
+
+       python3 bench/lib/scenario.py "$YAML" --prompt
+       python3 bench/lib/rubric_check.py "$YAML"
+       python3 bench/lib/gold_confidence_check.py "$YAML" <Symbol> --repo "$CLONE" --group dependents
+       python3 bench/lib/gold_audit.py stamp "$YAML"
+       python3 bench/lib/gold_audit.py verify "$YAML"
+
+   `--group dependents` scopes the shown-over-MCP check to the blast-sourced group. Handed the
+   whole gold it fails every hand-sourced row and narrows the bench to one tool.
+   `stamp` writes one TODO row per gold item; you replace each TODO by opening the file and
+   reading the credit. `verify` fails while any TODO remains.
+
+## DECIDE
+
+Every gold row. The rails, all of them:
+
+- **One item per FILE.** A group listing several symbols from one file rewards a single read.
+- **Three groups.** `contract` and `write-path` are the anchors both arms reach and they do
+  NOT score. `dependents` is the scattered residue that decides the cell.
+- **Only probe-disclaimed territory enters `dependents`.** Anything the probe pinned is an
+  anchor at best.
+- **Hand-audit every credit.** Basename matching has awarded credit for the wrong file. Run
+  the tally, then read the credits - the tally alone has passed wrong gold.
+- **The prompt is neutral.** No paths, no class names, no counts, no tool names, no answer
+  shape. Both arms get the identical prompt and gold is never rendered into it.
+- **Every step prompt demands `file:line`**, and the audit step says a filename alone does not
+  count.
+
+## ARTIFACT
+
+Write `$YAML` and `$RUBRIC`. The yaml carries `name`, `repo`, `contract_symbol`,
+`contract_file`, `description`, `steps` (each with `name`, `prompt`, `checks`), `scoring` and
+`gold`. The rubric carries exactly two top-level keys, `audience` and `steps`, with one rubric
+step per scenario step, **names matching verbatim and in order**, and every step declaring
+`map_quality`, `specificity`, `justification` and `uncertainty`. It carries no `repo:` key.
+A gold row is:
+
+    - {id: d:<slug>, group: dependents, match: [<path fragment>], relation: "<path>:<line> <the exact expression> - one phrase on HOW it uses the contract"}
+
+`gold_audit.py stamp` writes `$VDIR/scenarios/$REPO.gold-audit.json` alongside them.
+
+Then write `$VDIR/results/loop/$REPO/curate.verdict.json`:
+
+    {
+      "phase":    "curate",
+      "repo":     "<repo>",
+      "verdict":  "GOLD" | "NO-AXIS",
+      "artifact": "verticals/<vertical>/scenarios/<repo>.yaml",
+      "notes":    "one line"
+    }
+
+## DONE WHEN
+
+- `scenario.py --prompt` shows no path, symbol, count or tool name in the rendered prompt.
+- `rubric_check.py` exits 0: the rubric satisfies the judge's contract. An unjudgeable
+  rubric is not caught until after both arms are spent, so it is caught here.
+- `gold_confidence_check.py --group dependents` exits 0: every blast-sourced row appears in
+  the output the agent is SHOWN over MCP, at the arm's defaults, truncation included.
+- `gold_audit.py verify` exits 0: zero TODO rows remain and the gold has not changed under a
+  finished sheet.
+- `dependents` holds at least twelve rows across at least six areas, one file each.
+- The verdict JSON exists and parses.
+
+## DO NOT
+
+- Do not put a row in `dependents` that the adversary probe reached - that is an anchor.
+- Do not take a credit from a script tally; open the file and read the line, every row.
+- Do not spawn a subagent. Every agent in this system is spawned by the driver.
