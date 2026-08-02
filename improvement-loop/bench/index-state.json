@@ -1,1 +1,34 @@
-{}
+{
+  "chatwoot": {
+    "built_at": "2026-07-31T17:34:04Z",
+    "edges": "70949",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "3347"
+  },
+  "discourse": {
+    "built_at": "2026-07-31T17:31:30Z",
+    "edges": "365223",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "12388"
+  },
+  "mastodon": {
+    "built_at": "2026-07-31T17:19:53Z",
+    "edges": "59525",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "4102"
+  },
+  "rails": {
+    "built_at": "2026-07-31T17:17:00Z",
+    "edges": "178715",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "4014"
+  }
+}

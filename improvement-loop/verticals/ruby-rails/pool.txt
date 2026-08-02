@@ -1,0 +1,164 @@
+# ruby-rails candidate pool - one `repo-key|git-url|framework?|stars|pushed`
+# per line. stars and pushed come from the search that found the repo, so
+# the maintained and used screens cost ZERO API calls: a 156-candidate pool
+# is thinned to the handful worth cloning for free. A hand-added line may
+# omit them, and then those two screens fall back to one API call for it.
+#
+# WRITTEN BY hunt.py from the declared queries in stacks/ruby-rails.conf.
+# Re-running the hunt reproduces it; widening it means editing that conf,
+# or adding a line here by hand, which the hunt will not overwrite without
+# --force.
+#
+# The third field marks a FRAMEWORK-role repo (something others build ON):
+# eligible for the framework slot, never for the big slot, because the
+# pillar rule keeps the framework from being the campaign's sole win.
+#
+# stack: Gemfile:gem "rails"|gem 'rails'|gem "railties"|gem 'railties'|gem "activesupport"|gem 'activesupport'|gem "actionpack"|gem 'actionpack'
+#
+# Queries run, and what each contributed:
+#    60 hits,  57 new  --language ruby --topic rails --stars ">1000"
+#    60 hits,  31 new  rails --language ruby --stars ">2000"
+#    60 hits,  42 new  --language ruby --size ">40000" --stars ">300"
+#     8 hits,   5 new  --language ruby --topic self-hosted --stars ">1000"
+
+# 140 candidates
+rails|https://github.com/rails/rails.git|framework|58657|2026-07-31
+jekyll|https://github.com/jekyll/jekyll.git||51602|2026-06-22
+mastodon|https://github.com/mastodon/mastodon.git||50151|2026-07-31
+brew|https://github.com/Homebrew/brew.git||49007|2026-07-31
+discourse|https://github.com/discourse/discourse.git||47570|2026-07-31
+fastlane|https://github.com/fastlane/fastlane.git||41915|2026-07-31
+metasploit-framework|https://github.com/rapid7/metasploit-framework.git||38696|2026-07-31
+chatwoot|https://github.com/chatwoot/chatwoot.git||35038|2026-07-31
+vagrant|https://github.com/hashicorp/vagrant.git||27196|2026-07-27
+gitlabhq|https://github.com/gitlabhq/gitlabhq.git||24513|2026-07-31
+devise|https://github.com/heartcombo/devise.git||24346|2026-06-22
+ruby|https://github.com/ruby/ruby.git||23665|2026-07-31
+forem|https://github.com/forem/forem.git||22754|2026-07-30
+homebrew-cask|https://github.com/Homebrew/homebrew-cask.git||22133|2026-07-31
+docuseal|https://github.com/docusealco/docuseal.git||18163|2026-07-27
+openproject|https://github.com/opf/openproject.git||15730|2026-07-31
+spree|https://github.com/spree/spree.git|framework|15591|2026-07-31
+homebrew-core|https://github.com/Homebrew/homebrew-core.git||15469|2026-07-31
+cocoapods|https://github.com/CocoaPods/CocoaPods.git||14828|2026-07-06
+gollum|https://github.com/gollum/gollum.git||14307|2025-11-24
+diaspora|https://github.com/diaspora/diaspora.git||13656|2026-07-28
+linguist|https://github.com/github-linguist/linguist.git||13615|2026-07-30
+rubocop|https://github.com/rubocop/rubocop.git||12892|2026-07-31
+dawarich|https://github.com/Freika/dawarich.git||9946|2026-07-31
+wpscan|https://github.com/wpscanteam/wpscan.git||9718|2026-07-23
+activeadmin|https://github.com/activeadmin/activeadmin.git||9704|2026-07-31
+gumroad|https://github.com/antiwork/gumroad.git||9501|2026-07-31
+octopress|https://github.com/imathis/octopress.git||9237|2024-03-29
+sure|https://github.com/we-promise/sure.git||9208|2026-07-31
+carrierwave|https://github.com/carrierwaveuploader/carrierwave.git||8781|2026-06-22
+kaminari|https://github.com/kaminari/kaminari.git||8675|2026-02-20
+simple_form|https://github.com/heartcombo/simple_form.git||8229|2026-04-01
+chef|https://github.com/chef/chef.git||8227|2026-07-31
+factory_bot|https://github.com/thoughtbot/factory_bot.git||8183|2026-07-24
+fizzy|https://github.com/basecamp/fizzy.git||8015|2026-07-31
+rails_admin|https://github.com/railsadminteam/rails_admin.git||7958|2025-09-14
+puppet|https://github.com/puppetlabs/puppet.git||7914|2026-03-16
+jazzy|https://github.com/realm/jazzy.git||7383|2026-06-30
+brakeman|https://github.com/presidentbeef/brakeman.git||7260|2026-06-15
+paper_trail|https://github.com/paper-trail-gem/paper_trail.git||7028|2026-05-08
+mailcatcher|https://github.com/sj26/mailcatcher.git||6771|2024-05-25
+canvas-lms|https://github.com/instructure/canvas-lms.git||6756|2026-04-30
+searchkick|https://github.com/ankane/searchkick.git||6718|2026-07-24
+friendly_id|https://github.com/norman/friendly_id.git||6225|2026-07-12
+dnsmasq-china-list|https://github.com/felixonmars/dnsmasq-china-list.git||6102|2026-07-31
+administrate|https://github.com/thoughtbot/administrate.git|framework|6034|2026-07-29
+redmine|https://github.com/redmine/redmine.git||6005|2026-07-31
+ransack|https://github.com/activerecord-hackery/ransack.git||5864|2026-05-31
+zammad|https://github.com/zammad/zammad.git||5817|2026-07-31
+dependabot-core|https://github.com/dependabot/dependabot-core.git||5706|2026-07-31
+will_paginate|https://github.com/mislav/will_paginate.git||5689|2025-11-24
+cancancan|https://github.com/CanCanCommunity/cancancan.git||5689|2026-07-31
+doorkeeper|https://github.com/doorkeeper-gem/doorkeeper.git||5515|2026-07-31
+graphql-ruby|https://github.com/rmosolgo/graphql-ruby.git||5447|2026-07-28
+active_model_serializers|https://github.com/rails-api/active_model_serializers.git||5342|2025-12-08
+solidus|https://github.com/solidusio/solidus.git|framework|5317|2026-07-29
+draper|https://github.com/drapergem/draper.git||5278|2026-05-29
+webpacker|https://github.com/rails/webpacker.git||5273|2024-07-16
+rspec-rails|https://github.com/rspec/rspec-rails.git||5272|2026-06-23
+aasm|https://github.com/aasm/aasm.git||5228|2026-07-05
+react_on_rails|https://github.com/shakacode/react_on_rails.git||5190|2026-07-31
+rails-api|https://github.com/rails-api/rails-api.git||5130|2021-05-02
+colorls|https://github.com/athityakumar/colorls.git||5130|2026-07-27
+sequel|https://github.com/jeremyevans/sequel.git||5091|2026-07-24
+pagy|https://github.com/ddnexus/pagy.git||4982|2026-07-27
+simplecov|https://github.com/simplecov-ruby/simplecov.git||4915|2026-07-30
+explore|https://github.com/github/explore.git||4838|2026-07-29
+prawn|https://github.com/prawnpdf/prawn.git||4817|2026-04-18
+lobsters|https://github.com/lobsters/lobsters.git||4810|2026-07-30
+annotate_models|https://github.com/ctran/annotate_models.git||4491|2024-08-05
+octobox|https://github.com/octobox/octobox.git||4476|2026-07-31
+ahoy|https://github.com/ankane/ahoy.git||4470|2026-06-29
+twitter-bootstrap-rails|https://github.com/seyhunak/twitter-bootstrap-rails.git||4465|2026-07-28
+once-campfire|https://github.com/basecamp/once-campfire.git||4459|2026-07-31
+mina|https://github.com/mina-deploy/mina.git||4355|2024-08-01
+blackcandy|https://github.com/blackcandy-org/blackcandy.git||4333|2026-07-30
+ruby_llm|https://github.com/crmne/ruby_llm.git||4278|2026-07-26
+rails_best_practices|https://github.com/flyerhzm/rails_best_practices.git||4164|2026-04-23
+rails-erd|https://github.com/voormedia/rails-erd.git||4105|2026-07-21
+suspenders|https://github.com/thoughtbot/suspenders.git||4046|2026-06-19
+rails-i18n|https://github.com/svenfuchs/rails-i18n.git||4033|2026-06-21
+flipper|https://github.com/flippercloud/flipper.git||3963|2026-07-29
+rubygems|https://github.com/ruby/rubygems.git||3945|2026-07-30
+jruby|https://github.com/jruby/jruby.git||3910|2026-07-29
+refinerycms|https://github.com/refinery/refinerycms.git||3907|2026-05-11
+styles|https://github.com/citation-style-language/styles.git||3860|2026-07-28
+homeland|https://github.com/ruby-china/homeland.git||3857|2026-07-27
+docs|https://github.com/railsbridge/docs.git||3832|2024-03-18
+figaro|https://github.com/laserlemon/figaro.git||3746|2025-06-29
+clearance|https://github.com/thoughtbot/clearance.git||3736|2026-07-16
+aws-sdk-ruby|https://github.com/aws/aws-sdk-ruby.git||3658|2026-07-31
+fat_free_crm|https://github.com/fatfreecrm/fat_free_crm.git||3628|2026-07-31
+scenic|https://github.com/scenic-views/scenic.git||3624|2026-06-29
+shoulda-matchers|https://github.com/thoughtbot/shoulda-matchers.git||3583|2026-07-24
+wicked_pdf|https://github.com/mileszs/wicked_pdf.git||3576|2025-07-24
+devise_token_auth|https://github.com/lynndylanhurley/devise_token_auth.git||3570|2026-07-31
+audited|https://github.com/collectiveidea/audited.git||3495|2025-11-18
+timecop|https://github.com/travisjeffery/timecop.git||3426|2026-04-12
+rails-composer|https://github.com/RailsApps/rails-composer.git||3363|2019-05-30
+ruby-openai|https://github.com/alexrudall/ruby-openai.git||3224|2026-05-01
+truffleruby|https://github.com/truffleruby/truffleruby.git||3216|2026-07-30
+factory_bot_rails|https://github.com/thoughtbot/factory_bot_rails.git||3137|2026-07-21
+passwordpusher|https://github.com/pglombardo/PasswordPusher.git||3135|2026-07-30
+kubelabs|https://github.com/collabnix/kubelabs.git||3114|2026-03-20
+gon|https://github.com/gazay/gon.git||3100|2026-07-31
+elasticsearch-rails|https://github.com/elastic/elasticsearch-rails.git||3084|2025-10-08
+inspec|https://github.com/inspec/inspec.git||3079|2026-07-30
+cells|https://github.com/trailblazer/cells.git||3076|2024-12-02
+derailed_benchmarks|https://github.com/zombocom/derailed_benchmarks.git||3060|2025-01-01
+public_activity|https://github.com/public-activity/public_activity.git||2991|2026-06-08
+good_job|https://github.com/bensheldon/good_job.git||2987|2026-07-20
+paranoia|https://github.com/rubysherpas/paranoia.git||2916|2025-11-07
+canine|https://github.com/CanineHQ/canine.git||2910|2026-07-31
+foreman|https://github.com/theforeman/foreman.git||2898|2026-07-31
+homebrew-emacs-plus|https://github.com/d12frosted/homebrew-emacs-plus.git||2898|2026-07-31
+google-api-ruby-client|https://github.com/googleapis/google-api-ruby-client.git||2893|2026-07-26
+spring|https://github.com/rails/spring.git||2814|2026-06-30
+awesome-rails-gem|https://github.com/hothero/awesome-rails-gem.git||2810|2024-03-12
+meta-tags|https://github.com/kpumuk/meta-tags.git||2800|2026-07-30
+openstreetmap-website|https://github.com/openstreetmap/openstreetmap-website.git||2789|2026-07-31
+danbooru|https://github.com/danbooru/danbooru.git||2772|2026-07-23
+bootsnap|https://github.com/rails/bootsnap.git||2738|2026-06-28
+inherited_resources|https://github.com/activeadmin/inherited_resources.git||2714|2026-07-31
+comfortable-mexican-sofa|https://github.com/comfy/comfortable-mexican-sofa.git||2710|2024-05-27
+split|https://github.com/splitrb/split.git||2709|2026-07-27
+noticed|https://github.com/excid3/noticed.git||2699|2026-04-08
+apartment|https://github.com/influitive/apartment.git||2686|2024-06-12
+coverband|https://github.com/danmayer/coverband.git||2685|2026-06-23
+client_side_validations|https://github.com/DavyJonesLocker/client_side_validations.git||2680|2026-07-30
+devise_invitable|https://github.com/scambra/devise_invitable.git||2675|2026-05-22
+apipie-rails|https://github.com/Apipie/apipie-rails.git||2509|2026-06-26
+turbo-rails|https://github.com/hotwired/turbo-rails.git||2383|2026-07-01
+sorcery|https://github.com/NoamB/sorcery.git||2299|2016-12-29
+pay|https://github.com/pay-rails/pay.git||2249|2026-07-30
+ckeditor|https://github.com/galetahub/ckeditor.git||2223|2025-01-23
+manyfold|https://github.com/manyfold3d/manyfold.git||2102|2026-07-31
+snibox|https://github.com/snibox/snibox.git||1813|2022-12-12
+decidim|https://github.com/decidim/decidim.git|framework|1796|2026-07-31
+multiwoven|https://github.com/Multiwoven/multiwoven.git||1666|2026-07-31
+zealot|https://github.com/tryzealot/zealot.git||1330|2026-07-31

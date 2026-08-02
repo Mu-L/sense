@@ -1,0 +1,102 @@
+# Judging rubric for mastodon. NEVER rendered to the agent - it grades the answer.
+#
+# The discriminator is the SCATTERED PERIPHERY, not the contract centre. A frontier probe
+# at this pin pinned 67 files with ~135 exact line citations - a strong, correct audit of
+# status.rb's association graph, the teardown pipeline, serializers and policies - and still
+# reached only 4 of the 16 peripheral dependents. So an answer that maps the centre
+# beautifully is NOT a good answer to this ticket, and the rubric must not reward it as one.
+scenario: mastodon
+repo: mastodon
+judge:
+  intro: |
+    You are grading a maintainer's pre-rework audit of how a content record is stored,
+    referenced and cleaned up. The deliverable is an audit a teammate could act on without
+    re-exploring the codebase, so an exact `file:line` is the unit of a correct answer. A
+    filename with no line number is an incomplete finding, not a complete one - grade it as
+    such, however confident the surrounding prose sounds.
+  steps:
+  - name: Orient in the codebase
+    criteria:
+      coverage:
+        weight: 0.5
+        question: |
+          Does the answer identify the central content model and locate it with file:line,
+          and sketch how the app is organised (models / services / workers / lib / presenters)
+          well enough that the next step can do targeted lookups?
+      specificity:
+        weight: 0.5
+        question: Are locations exact (file:line), not bare filenames?
+  - name: Map the contract and what is mixed into it
+    criteria:
+      coverage:
+        weight: 0.6
+        question: |
+          Does it name the model plus the shared pieces mixed into it (visibility scoping,
+          reply threading, edit snapshots) with file:line for each, and say what a teammate
+          must preserve when changing storage?
+      relationship:
+        weight: 0.4
+        question: |
+          For each piece, does the answer state HOW it participates in the contract, rather
+          than only naming it?
+  - name: Trace the write and teardown paths
+    criteria:
+      coverage:
+        weight: 0.6
+        question: |
+          Does it trace creation through to persistence and removal through to cleanup, with
+          file:line and the order things run - including what is deliberately NOT cleaned up?
+      specificity:
+        weight: 0.4
+        question: Exact locations, and the ordering claim actually supported?
+  - name: Audit every dependent of the storage contract
+    criteria:
+      coverage:
+        weight: 0.55
+        question: |
+          THE DECIDING CRITERION. Does the answer reach the dependents that sit FAR from the
+          model, each with an exact file:line? The areas that matter are background
+          maintenance and retention, reporting and metrics, moderation, search indexing,
+          account lifecycle, import/export, federation, and command-line tooling.
+
+          Two shapes are especially load-bearing and an answer that misses both has not done
+          the audit: (a) code holding only raw ids with NO foreign key, which must also see
+          soft-deleted rows; (b) code that receives the CLASS ITSELF as an argument, so no
+          call edge names one of its methods.
+
+          Grade coverage of that periphery. An answer that maps the model, its associations
+          and its obvious create/teardown services thoroughly - and stops there - is
+          INCOMPLETE for this ticket no matter how precise those locations are. Do not award
+          coverage for depth at the centre.
+      specificity:
+        weight: 0.25
+        question: |
+          Is every dependent pinned to an exact file:line a teammate could jump to? Count a
+          bare filename as not found.
+      relationship:
+        weight: 0.20
+        question: |
+          For each dependent, is the stated relationship correct - how that code actually
+          touches the record (prunes it, counts it, re-points it, resolves it, indexes it)?
+  - name: Assess the blast radius of the storage change
+    criteria:
+      coverage:
+        weight: 0.5
+        question: |
+          Does the risk assessment span the same breadth, including the far-from-the-model
+          dependents, rather than re-listing the centre?
+      judgment:
+        weight: 0.5
+        question: |
+          Does it distinguish dependents that fail LOUDLY from ones that fail SILENTLY (a
+          stale count, a skipped prune, a broken backfill), and rank by risk with reasons?
+  - name: Produce the change + verification map
+    criteria:
+      coverage:
+        weight: 0.6
+        question: |
+          Could a teammate land the change from this map alone - what to edit, every
+          dependent to review grouped by area, and the tests to update - all with file:line?
+      specificity:
+        weight: 0.4
+        question: Exact locations throughout, including the tests?
