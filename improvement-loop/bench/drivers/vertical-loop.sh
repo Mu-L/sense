@@ -161,6 +161,23 @@ headless() { # <cwd> <out.json> <prompt> [extra claude args...]
 # The agent's transcript is named for the PHASE, not the plan file: require_verdict
 # points a stuck operator at "<phase>.agent.log", and a name that does not match is a
 # dead end at exactly the moment someone is debugging.
+# archive_dryrun <mv|cp> - move the previous shape/probe pair aside under a shared index,
+# before anything rewrites either. A re-run must never overwrite the run it disagrees with:
+# the results tree is gitignored, so an overwrite is the only copy, and a probe without the
+# shape it ran against cannot be re-scored by probe_score.py. The argument is what happens to
+# the SHAPE - `mv` when the scout is about to rewrite it, `cp` when only the probe is.
+archive_dryrun() {
+  local how="$1" n=1
+  [ -f "$DRYRUN/adversary-probe.md" ] || [ -f "$DRYRUN/shape.md" ] || return 0
+  while [ -f "$DRYRUN/shape.$n.md" ] || [ -f "$DRYRUN/adversary-probe.$n.md" ]; do
+    n=$((n + 1))
+  done
+  [ -f "$DRYRUN/shape.md" ] && "$how" "$DRYRUN/shape.md" "$DRYRUN/shape.$n.md"
+  [ -f "$DRYRUN/adversary-probe.md" ] &&
+    mv "$DRYRUN/adversary-probe.md" "$DRYRUN/adversary-probe.$n.md"
+  echo "## [$PHASE] archived the previous shape/probe pair under index $n"
+}
+
 spawn_plan() {
   local plan="$PLANS/$1" name="$PHASE"
   [ -f "$plan" ] || { echo "[$PHASE] missing plan: $plan" >&2; exit 1; }
@@ -248,7 +265,7 @@ do_scout() {
   # print a listing into a terminal nobody is reading. --symbol/--file ride along as
   # operator hints in the agent's context block. Choosing the anchor is the agent's
   # judgment, which is exactly why this phase exists.
-  have_verdict scout "SHAPE,NO-AXIS" || spawn_plan 01-scout.md
+  have_verdict scout "SHAPE,NO-AXIS" || { archive_dryrun mv; spawn_plan 01-scout.md; }
   require_verdict scout "SHAPE,NO-AXIS"
   if [ "$VERDICT" = NO-AXIS ]; then
     gate \
@@ -270,15 +287,25 @@ do_scout() {
 
 do_probe() {
   # The design-time kill, $0, and it is spawned HERE so the author of the shape never
-  # grades it. Same conditions as the BASELINE arm - the clone, no Sense, full tools
-  # otherwise - because a gate weaker than the production arm passes shapes the arm
-  # cannot survive.
+  # grades it. Same TOOLS as the baseline arm - the clone, no Sense - but not the same
+  # conditions: it answers one question with no watchdog while the arm answers a seven-step
+  # session against a wall, so it is deliberately STRONGER than the arm and this gate is
+  # deliberately strict. Measured on mastodon, an unleaked probe pinned <=7 of 16 gold rows
+  # where the benched baseline pinned 2.5. Strict is fine; unreversible is not, which is why
+  # the kill is scored, the record is archived and no axis is closed by prose.
   if ! have_verdict probe "DISCLAIMED,ASSEMBLED"; then
     local ask
     ask="$(awk '/^# +Headline ask/{f=1;next} /^# /{f=0} f' "$DRYRUN/shape.md")"
     [ -n "$(printf '%s' "$ask" | tr -d '[:space:]')" ] || {
       echo "[probe] the shape carries an empty headline ask - back to scout."
       state_set "$REPO" scout; exit 1; }
+    # A re-run must not overwrite the run it disagrees with, and the next probe must not READ
+    # it. The Disclaimed section of a prior probe is a list of the answers it missed, and a
+    # probe working down that list holds a key the benched baseline never gets: measured on
+    # mastodon, the checklist was worth 8 of 16 gold rows and it is the whole difference
+    # between a bench-able shape and a NO-AXIS. The shape is copied, not moved - this probe
+    # still needs it.
+    archive_dryrun cp
     echo "## [probe] spawning the adversary probe in the baseline clone (Sense forbidden)"
     headless "$CLONE" "$LOOPDIR/probe.agent.json" "$(cat <<EOF
 You are an adversary. Your job is to BEAT a benchmark scenario before it is written,
@@ -292,6 +319,11 @@ $ask
 
 GRADING BAR: every location you report is an exact path:line. A filename alone scores
 nothing. Be exhaustive - a missed dependent is a regression shipped.
+
+WORK ONLY FROM THIS CLONE. Do not open anything under the directory you are told to write
+to: it holds earlier probes of this repo, and the Disclaimed section of an earlier probe is
+a list of the answers it could not find. Working down that list hands you a key the benched
+baseline never gets, which is the one way this gate can lie about a scenario.
 
 When you are done, write these two files (absolute paths, outside this clone):
 
@@ -317,15 +349,28 @@ EOF
 )" --strict-mcp-config --mcp-config "$LIB/baseline-mcp.json"
   fi
   require_verdict probe "DISCLAIMED,ASSEMBLED"
-  if [ "$VERDICT" = ASSEMBLED ]; then
+  # The verdict is a CLAIM and the score is the fact. The probe never sees the pool it is
+  # graded against, so "ASSEMBLED" means it believes it was exhaustive - the belief this
+  # bench exists to measure. probe_score.py intersects its citations with the shape's pool
+  # and applies the same arithmetic as pay_ceiling.py, at $0 instead of after a pair.
+  local rc
+  python3 "$LIB/probe_score.py" "$DRYRUN/adversary-probe.md" "$DRYRUN/shape.md"; rc=$?
+  if [ "$rc" -ge 2 ]; then
+    echo "[probe] the probe could not be scored against the pool - NOT advancing."
+    echo "         An unscored probe is not a passed probe. Fix the headings and re-run."
+    exit 1
+  fi
+  if [ "$rc" = 1 ]; then
     invalidate scout probe
     state_set "$REPO" scout
     gate \
-      "THE PROBE ASSEMBLED THE ANSWER - this shape cannot be benched." \
-      "Its method is the list of dead shapes: anything it reached without Sense is out," \
-      "and the next scout reads $DRYRUN/adversary-probe.md before proposing an axis." \
-      "Re-run to author a different one."
+      "THE PROBE COVERED THE POOL - this shape cannot clear the floor." \
+      "Its Method section is the assembly route; a shape reaching the same rows the same" \
+      "way is out. Archived probes are evidence of assembly COST, never a ban list -" \
+      "only a scored kill closes an axis. Re-run to author a different one."
   fi
+  [ "$VERDICT" = ASSEMBLED ] && echo "## [probe] the probe claimed ASSEMBLED and the score" \
+    "does not support it - shape survives, calibration noted."
   NEXT=curate
 }
 
