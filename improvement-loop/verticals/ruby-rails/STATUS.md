@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-01 20:05 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-02 12:31 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -8,7 +8,7 @@
 
 | repo | phase |
 |---|---|
-| mastodon | preflight |
+| mastodon | scout |
 | rails | done |
 
 Resume: `VERTICAL=ruby-rails bash bench/drivers/vertical-loop.sh <repo>`
@@ -55,7 +55,7 @@ Full per-repo tables and the citation check for each model:
 
 Run-to-run spread per repo (is the headline stable or noise?):
 
-[rails](variance/rails.md)
+[mastodon](variance/mastodon.md) · [rails](variance/rails.md)
 
 _Full report with methodology: `verticals/ruby-rails/results/report.md`_
 
@@ -66,7 +66,7 @@ _Full report with methodology: `verticals/ruby-rails/results/report.md`_
 
 ## Ledger
 
-- latest entry: 2026-08-01 | loop1/mastodon/event-b | gold hand-audited: 23 of 23, one row cut, one flagged
+- latest entry: 2026-08-02 | ruling/mastodon-rubric-unjudgeable | the rubric had no gate; NOT a stopper
 - full narrative: `LEDGER.md` (this folder)
 - decision-errors intake: 0 open incident(s) (`../../docs/decision-errors.md`)
 
