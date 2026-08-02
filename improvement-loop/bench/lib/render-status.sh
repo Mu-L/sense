@@ -143,6 +143,13 @@ ledger_section() {
 # Where each repo stands in the driver's phase machine. Without this the pickup file
 # cannot answer "where am I?" - the state lives in .loop-state.json, and a session reading
 # only STATUS.md would have to guess, or redo work already done.
+#
+# The phase ALONE is not the position, and reading it as one has already cost a session. A
+# repo parked at `scout` looks identical whether the scout will re-run or whether a stored
+# verdict decides without spawning anything: `have_verdict` is idempotent, so a phase holding
+# a verdict skips its agent entirely. That session re-ran the loop, watched the driver replay
+# a two-day-old NO-AXIS, and reported it as a fresh result. So the verdict on disk renders
+# beside the phase, and the cell says which way the next run goes.
 loop_position_section() {
   local st="$IL_ROOT/verticals/$KEY/.loop-state.json"
   if [ ! -f "$st" ]; then
@@ -150,17 +157,40 @@ loop_position_section() {
     return
   fi
   python3 -c "
-import json,sys
+import json,os,sys
 d=json.load(open(sys.argv[1]))
+loopdir=sys.argv[2]
+root=sys.argv[3]
+# The phases that spawn an agent and store its verdict; the rest are automatic.
+AGENT_PHASES=('scout','probe','curate','validate')
 p={k:v for k,v in d.items() if '#' not in k}
 if not p:
     print('_state file present, no repo phases recorded._')
 else:
-    print('| repo | phase |'); print('|---|---|')
-    for k in sorted(p): print(f'| {k} | {p[k]} |')
+    print('| repo | phase | verdict on disk |'); print('|---|---|---|')
+    for k in sorted(p):
+        ph=p[k]
+        if ph not in AGENT_PHASES:
+            cell='- (no agent at this phase)'
+        else:
+            try:
+                with open(os.path.join(loopdir,k,ph+'.verdict.json')) as fh:
+                    data=json.load(fh)
+                v=data.get('verdict','?')
+                # verdict_check.py refuses a verdict whose artifact is gone, and the driver
+                # then re-spawns. A scout verdict outlives its shape.md the moment a later
+                # re-entry archives the pair, so this is the realistic case, not a corner.
+                art=data.get('artifact')
+                if art and os.path.exists(os.path.join(root,art)):
+                    cell='\`%s\` stored - the %s agent will NOT re-run' % (v,ph)
+                else:
+                    cell='\`%s\` stored but its artifact is GONE - the %s agent re-runs' % (v,ph)
+            except (OSError,ValueError):
+                cell='none - the next run RE-SPAWNS the %s agent' % ph
+        print('| %s | %s | %s |' % (k,ph,cell))
     print()
     print('Resume: \`VERTICAL=$KEY bash bench/drivers/vertical-loop.sh <repo>\`')
-" "$st"
+" "$st" "$RESULTS/loop" "$IL_ROOT"
 }
 
 {

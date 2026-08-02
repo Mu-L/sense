@@ -1,15 +1,15 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-02 15:54 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-02 16:09 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
 ## Loop position (`.loop-state.json`)
 
-| repo | phase |
-|---|---|
-| mastodon | scout |
-| rails | done |
+| repo | phase | verdict on disk |
+|---|---|---|
+| mastodon | scout | none - the next run RE-SPAWNS the scout agent |
+| rails | done | - (no agent at this phase) |
 
 Resume: `VERTICAL=ruby-rails bash bench/drivers/vertical-loop.sh <repo>`
 
