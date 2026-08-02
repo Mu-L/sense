@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-02 14:40 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-02 15:54 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -66,7 +66,7 @@ _Full report with methodology: `verticals/ruby-rails/results/report.md`_
 
 ## Ledger
 
-- latest entry: 2026-08-02 | ruling/probe-gate-manufactured-the-no-axis | the design-time gate killed a measured +0.72
+- latest entry: 2026-08-02 | ruling/no-axis-verdict-replayed-instead-of-rescouting | the re-scout never ran
 - full narrative: `LEDGER.md` (this folder)
 - decision-errors intake: 0 open incident(s) (`../../docs/decision-errors.md`)
 
