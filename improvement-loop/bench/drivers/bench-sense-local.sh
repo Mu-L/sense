@@ -439,17 +439,10 @@ for tool in "${TOOLS[@]}"; do
     # Scenario version = sha256 of the scored files (yaml + rubric sibling). Scoped
     # to the bytes that get scored, so unrelated repo edits do not move it; distinct
     # across every reshape (dolt v1..v3.2) that a shared filename otherwise hid.
+    # ONE recipe, in lib: vertical-loop.sh matches validation runs on this value, and
+    # two copies of a hash are how the stamper and the matcher stop agreeing.
     rubric_file="${scenario_file%.yaml}.rubric.yaml"
-    scenario_version=$(python3 - "$scenario_file" "$rubric_file" <<'PY'
-import hashlib, os, sys
-h = hashlib.sha256()
-for p in sys.argv[1:]:
-    if os.path.exists(p):
-        with open(p, "rb") as f:
-            h.update(f.read())
-print("sha256:" + h.hexdigest()[:16])
-PY
-)
+    scenario_version=$(python3 "$LIB_DIR/scenario_version.py" "$scenario_file" "$rubric_file")
     repo=$(python3 -c "import yaml; print(yaml.safe_load(open('$scenario_file'))['repo'])")
     repo_dir="$SENSE_BENCH_ROOT/$tool/$repo"
 

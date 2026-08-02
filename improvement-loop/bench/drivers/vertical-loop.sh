@@ -462,9 +462,37 @@ do_validate() {
   # in the vertical, so the FIRST repo to run a validation satisfied it for every repo
   # after it: mastodon skipped its own unscored go/no-go and would have entered the PAID
   # bench on rails' evidence. The runner writes <results>/<model>/validation/<tool>/<repo>/run-N.
-  local vdir_out="$VDIR/results"
+  local vdir_out="$VDIR/results" scen_ver
+  # AND SCOPE IT TO THIS SCENARIO. model+repo was still too coarse: a re-authored shape
+  # inherited the previous shape's pair, so the loop read a DEAD ceiling off a baseline
+  # that had answered a different scenario, and the number in the ruling was not a
+  # measurement of the gold it was attached to. run_meta.json has carried
+  # scenario_version all along; it gated nothing.
+  scen_ver="$(python3 "$LIB/scenario_version.py" "$YAML")" || {
+    echo "[validate] cannot compute the scenario version for $YAML - NOT advancing."
+    echo "           A validation pair that cannot be tied to a scenario is not evidence."
+    exit 1; }
+  echo "## [validate] scenario $scen_ver"
   validation_runs() {
-    find "$vdir_out" -path "*/validation/*/$REPO/*" -name 'transcript.json' 2>/dev/null | head -1
+    python3 - "$vdir_out" "$REPO" "$scen_ver" <<'PY'
+import json, os, sys
+root, repo, want = sys.argv[1], sys.argv[2], sys.argv[3]
+for dirpath, _, filenames in os.walk(root):
+    if "run_meta.json" not in filenames or "transcript.json" not in filenames:
+        continue
+    parts = dirpath.split(os.sep)
+    if "validation" not in parts or repo not in parts:
+        continue
+    try:
+        with open(os.path.join(dirpath, "run_meta.json")) as fh:
+            meta = json.load(fh)
+    except (OSError, ValueError):
+        continue
+    if meta.get("scenario_version") != want:
+        continue
+    print(os.path.join(dirpath, "transcript.json"))
+    break
+PY
   }
   if [ -n "$(validation_runs)" ]; then
     echo "## [validate] a validation run already exists for $REPO - not re-running"
