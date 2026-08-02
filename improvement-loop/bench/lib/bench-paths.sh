@@ -49,7 +49,15 @@ fi
 # BENCH_SCORING rides along for run_meta.json, so a file copied out of the tree still
 # says what it is.
 if [ "${BENCH_VALIDATION:-0}" = 1 ]; then
-  RESULTS_DIR="$RESULTS_DIR/validation"
+  # IDEMPOTENT: RESULTS_DIR is exported and this file is sourced once per driver in the
+  # chain (vertical-loop -> runs-variance -> bench-sense-local -> reporter), so an
+  # unconditional append nested it once per hop - runs landed in .../validation/validation
+  # while the reporter looked in .../validation/validation/validation and died. The run
+  # itself was fine; only the paths disagreed.
+  case "$RESULTS_DIR" in
+    */validation) : ;;
+    *) RESULTS_DIR="$RESULTS_DIR/validation" ;;
+  esac
   BENCH_SCORING=0
 else
   BENCH_SCORING=1

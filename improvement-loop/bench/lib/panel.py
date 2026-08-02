@@ -18,8 +18,10 @@ import subprocess
 import sys
 
 LIB = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.normpath(os.path.join(LIB, "..", ".."))
-VERTICALS = os.path.join(REPO_ROOT, "bench", "verticals")
+# verticals/ is a SIBLING of bench/, at the improvement-loop root - not under bench/.
+# This read `bench/verticals` and died with FileNotFoundError on every report phase.
+IL_ROOT = os.path.normpath(os.path.join(LIB, "..", ".."))
+VERTICALS = os.path.join(IL_ROOT, "verticals")
 import arms
 MODEL = os.environ.get("BENCH_MODEL") or arms.headline()
 
@@ -76,8 +78,8 @@ def parse(vert, repo, out):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--json", default=os.path.join(REPO_ROOT, "bench", "results", "panel", "panel.jsonl"))
-    ap.add_argument("--md", default=os.path.join(REPO_ROOT, "bench", "results", "panel", "panel.md"))
+    ap.add_argument("--json", default=os.path.join(IL_ROOT, "bench", "results", "panel", "panel.jsonl"))
+    ap.add_argument("--md", default=os.path.join(IL_ROOT, "bench", "results", "panel", "panel.md"))
     args = ap.parse_args()
     os.makedirs(os.path.dirname(args.json), exist_ok=True)
 
