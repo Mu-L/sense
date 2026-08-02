@@ -140,6 +140,29 @@ ledger_section() {
   fi
 }
 
+# Where each repo stands in the driver's phase machine. Without this the pickup file
+# cannot answer "where am I?" - the state lives in .loop-state.json, and a session reading
+# only STATUS.md would have to guess, or redo work already done.
+loop_position_section() {
+  local st="$IL_ROOT/verticals/$KEY/.loop-state.json"
+  if [ ! -f "$st" ]; then
+    echo "_no \`.loop-state.json\` yet - the loop has never been run for this vertical._"
+    return
+  fi
+  python3 -c "
+import json,sys
+d=json.load(open(sys.argv[1]))
+p={k:v for k,v in d.items() if '#' not in k}
+if not p:
+    print('_state file present, no repo phases recorded._')
+else:
+    print('| repo | phase |'); print('|---|---|')
+    for k in sorted(p): print(f'| {k} | {p[k]} |')
+    print()
+    print('Resume: \`VERTICAL=$KEY bash bench/drivers/vertical-loop.sh <repo>\`')
+" "$st"
+}
+
 {
   echo "# ${KEY} - STATUS (auto-rendered)"
   echo
@@ -164,6 +187,10 @@ ledger_section() {
     echo "_later steps supersede earlier ones). Overtaken steps are labelled above._"
     echo
   fi
+  echo "## Loop position (\`.loop-state.json\`)"
+  echo
+  loop_position_section
+  echo
   echo "## Matrix (report-matrix.sh, VERTICAL=${KEY})"
   echo
   matrix_section
