@@ -268,12 +268,20 @@ do_scout() {
   have_verdict scout "SHAPE,NO-AXIS" || { archive_dryrun mv; spawn_plan 01-scout.md; }
   require_verdict scout "SHAPE,NO-AXIS"
   if [ "$VERDICT" = NO-AXIS ]; then
+    # NO-AXIS is the one routed lever that parks at the phase that PRODUCED it, so unlike
+    # SHAPE it must not be idempotent. Without this the gate below is unachievable by the
+    # command it prints: the re-run finds this verdict on disk, have_verdict succeeds, the
+    # spawn is skipped and the same park replays forever - a parked repo could never be
+    # re-scouted, and a re-run under NEW rules silently replays a verdict authored under the
+    # old ones. Every other routed lever (probe, curate, validate) already invalidates.
+    invalidate scout
     gate \
       "NO AXIS proposed for $REPO. This is a routed lever, never a loss." \
-      "Read $DRYRUN/shape.md for the anchors that were tried, then either widen the" \
-      "pool and re-run this phase, or swap the slot for its OWN declared backup in" \
-      "slate.json (never the next slate repo):" \
-      "  bash bench/drivers/vertical-loop.sh <backup-repo> --reset"
+      "Read $DRYRUN/shape.md for the anchors that were tried, then either:" \
+      "  - re-run this phase to RE-SCOUT. The verdict just shown has been cleared, so the" \
+      "    next run re-spawns the scout and archives this shape/probe pair beside it." \
+      "  - or swap the slot for its OWN declared backup in slate.json (never the next" \
+      "    slate repo):  bash bench/drivers/vertical-loop.sh <backup-repo> --reset"
   fi
   # A shape missing a heading is not a shape. The probe is spawned against the
   # headline ask, so an absent one silently probes nothing.

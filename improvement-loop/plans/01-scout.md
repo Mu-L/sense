@@ -84,6 +84,13 @@ it kills repos that bank wins. Measured, in this vertical: a banked cell scored 
 carry the anchor token** and one `grep -rl` returns all of them. Token-brightness predicted
 nothing. The rows the baseline missed were bright, scattered, and too expensive to open.
 
+That ban covers the COVERAGE form of the same screen - "one grep reproduces N of the blast
+rows inside their line spans, so citation is free". It is not a different measurement and it
+is not a run: gold is file-matched, and on the banked +0.72 cell every gold file carries the
+anchor token, so a coverage battery reports that cell covered too. What a grep COULD produce
+is not what the benched baseline DOES produce; that is what the probe and the validation pair
+are for, and a screen answering it before a scenario exists is the banned predictor.
+
 ## ARTIFACT
 
 Write `$VDIR/results/dryrun/$REPO/shape.md` with exactly these six headings:
