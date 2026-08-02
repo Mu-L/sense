@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-02 16:42 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-02 18:28 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -66,7 +66,7 @@ _Full report with methodology: `verticals/ruby-rails/results/report.md`_
 
 ## Ledger
 
-- latest entry: 2026-08-02 | ruling/probe-demoted-to-lead | the scored gate over-kills; the arm is not the probe
+- latest entry: 2026-08-02 | ruling/three-authoring-theories-killed | shape 6 is honestly DEAD; one confound is left
 - full narrative: `LEDGER.md` (this folder)
 - decision-errors intake: 0 open incident(s) (`../../docs/decision-errors.md`)
 
