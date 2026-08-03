@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Behaviour pins for the unscored validation run (plans/02-validate.md).
+"""Behaviour pins for the unscored validation run (plans/04-validate.md).
 
 The load-bearing pin is `test_the_scorer_cannot_see_a_validation_run`: the isolation is the
 RESULTS ROOT, not a flag a measurement instrument has to honour. That choice is deliberate -
@@ -70,6 +70,45 @@ class ValidationRoutingTest(unittest.TestCase):
             d, scoring = _paths(VERTICAL="php-laravel", RESULTS_DIR=t, BENCH_VALIDATION=1)
             self.assertEqual(d, os.path.join(t, "validation"))
             self.assertEqual(scoring, "0")
+
+
+class MinibenchRoutingTest(unittest.TestCase):
+    """The two-step probe run (plans/02-minibench.md) is unscored like a validation run and
+    lands in its own root. The two CANNOT share one: both write <root>/<arm>/<repo>/run-1,
+    so the seven-step pair would overwrite the two-step pair at the same path and
+    plans/04-validate.md's session row would compare a run against itself."""
+
+    def test_a_minibench_run_lands_under_minibench(self):
+        d, scoring = _paths(VERTICAL="php-laravel", BENCH_MODEL="claude-opus-5",
+                            BENCH_MINIBENCH=1)
+        self.assertTrue(d.endswith("results/claude-opus-5/minibench"), d)
+        self.assertEqual(scoring, "0")
+
+    def test_minibench_and_validation_are_different_roots(self):
+        mini, _ = _paths(VERTICAL="php-laravel", BENCH_MODEL="claude-opus-5",
+                         BENCH_MINIBENCH=1)
+        val, _ = _paths(VERTICAL="php-laravel", BENCH_MODEL="claude-opus-5",
+                        BENCH_VALIDATION=1)
+        self.assertNotEqual(mini, val)
+        self.assertEqual(os.path.dirname(mini), os.path.dirname(val))
+
+    def test_minibench_wins_when_both_flags_are_set(self):
+        """runs-variance.sh re-sources bench-paths.sh per model with the driver's whole
+        environment, so a stale BENCH_VALIDATION must not pull a mini-bench run into the
+        validation tree."""
+        d, scoring = _paths(VERTICAL="php-laravel", BENCH_MODEL="claude-opus-5",
+                            BENCH_MINIBENCH=1, BENCH_VALIDATION=1)
+        self.assertTrue(d.endswith("results/claude-opus-5/minibench"), d)
+        self.assertEqual(scoring, "0")
+
+    def test_the_append_is_idempotent(self):
+        """bench-paths.sh is sourced once per driver in the chain; an unconditional append
+        nested it once per hop and the reporter looked one level too deep."""
+        with tempfile.TemporaryDirectory() as t:
+            root = os.path.join(t, "minibench")
+            os.makedirs(root)
+            d, _ = _paths(VERTICAL="php-laravel", RESULTS_DIR=root, BENCH_MINIBENCH=1)
+            self.assertEqual(d, root)
 
 
 class ScorerBlindnessTest(unittest.TestCase):

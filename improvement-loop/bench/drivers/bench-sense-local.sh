@@ -177,7 +177,48 @@ while IFS= read -r _t; do
   esac
 done < <(echo "$TOOLS_CSV" | tr ',' '\n')
 [[ ${#TOOLS[@]} -gt 0 ]] || { echo "No tools selected" >&2; exit 1; }
+# MATCHED BUDGET: the sense arm ALWAYS runs first when both are selected, because the
+# baseline's wall is derived from it (see matched_budget_timeout). This reorders a
+# user-supplied "baseline,sense" rather than rejecting it - the pairing is the point.
+_reordered=()
+for _t in "${TOOLS[@]}"; do [[ "$_t" == sense ]] && _reordered+=("$_t"); done
+for _t in "${TOOLS[@]}"; do [[ "$_t" != sense ]] && _reordered+=("$_t"); done
+TOOLS=("${_reordered[@]}")
 TOOLS_CSV="$(IFS=,; echo "${TOOLS[*]}")"   # normalized (dedup not needed; user-ordered)
+
+# THE BASELINE'S WALL IS THE SENSE ARM'S WALL PLUS A MARGIN. A fixed equal wall measures
+# "who reaches more given generous time"; this measures "given the time it takes WITH the
+# tool, can you get there without it" - the question a user actually has. It adapts per
+# repo, per model and per scenario with no hand-tuned table, and it recomputes whenever
+# the scenario changes, because the lookup is keyed on scenario_version.
+#
+# THE ONE WAY THIS COULD LIE is a sense arm that dies early: a short wall would hand the
+# baseline a rigged budget and manufacture a win. So the derivation accepts only VALID,
+# non-watchdogged sense runs, and when there are none the baseline does not run at all -
+# the cell voids instead of scoring. A win can never be bought by failing fast.
+MATCHED_BUDGET_MULT="${MATCHED_BUDGET_MULT:-1.2}"
+
+# THE PAIRING TABLE. Run N of the baseline is held to the wall of run N of the sense arm,
+# not to an aggregate: this is a PAIRED comparison, and pairing each run with its own
+# partner is what makes "the time it took with the tool" mean anything per row. Entries are
+# "<scenario>|<run_idx>|<wall>|<valid>", appended by the sense arm as each run finishes.
+# A flat indexed array, because bash 3.2 has no associative arrays.
+SENSE_RUNS=()
+
+sense_run_record() {  # <scenario> <run_idx> <wall> <valid>
+  SENSE_RUNS+=("$1|$2|$3|$4")
+}
+
+# sense_run_lookup <scenario> <run_idx> - echo "<wall> <valid>" for that run, or nothing.
+sense_run_lookup() {
+  local e
+  for e in "${SENSE_RUNS[@]:-}"; do
+    case "$e" in
+      "$1|$2|"*) echo "${e#"$1|$2|"}" | tr '|' ' '; return 0 ;;
+    esac
+  done
+}
+
 WANT_SENSE=false
 for _t in "${TOOLS[@]}"; do [[ "$_t" == sense ]] && WANT_SENSE=true; done
 
@@ -426,15 +467,14 @@ fi
 run_num=0
 passed=0
 failed=0
-for tool in "${TOOLS[@]}"; do
-  # sense_* binary provenance rides only on the sense arm, mirroring tool_ver.
-  if [[ "$tool" == sense ]]; then
-    tool_ver="$SENSE_VERSION"; tool_ref="$SENSE_REF"; tool_dirty="$SENSE_DIRTY"; tool_release="$SENSE_RELEASE"
-    tool_build="$(python3 "$LIB_DIR/sense_build.py" --key 2>/dev/null || echo '')"
-  else
-    tool_ver=""; tool_ref=""; tool_dirty="false"; tool_release=""; tool_build=""
-  fi
-  for scenario_name in "${scenarios[@]}"; do
+# THE ARM LOOP IS INNERMOST, so the arms INTERLEAVE: sense run-1, baseline run-1, sense
+# run-2, baseline run-2. It used to be outermost, which put every sense run in the first
+# half of the batch and every baseline run in the second - arm perfectly confounded with
+# time-of-run, so any drift (rate limiting, machine load, a model-side change) landed on
+# one arm only. Pairs now run back to back and share their conditions. It also means a
+# complete pair exists after two runs instead of after the whole matrix, and the baseline
+# reads a pairing-table entry written seconds earlier rather than across the batch.
+for scenario_name in "${scenarios[@]}"; do
     scenario_file=$(scenario_repo_file "$scenario_name")
     # Scenario version = sha256 of the scored files (yaml + rubric sibling). Scoped
     # to the bytes that get scored, so unrelated repo edits do not move it; distinct
@@ -444,14 +484,28 @@ for tool in "${TOOLS[@]}"; do
     rubric_file="${scenario_file%.yaml}.rubric.yaml"
     scenario_version=$(python3 "$LIB_DIR/scenario_version.py" "$scenario_file" "$rubric_file")
     repo=$(python3 -c "import yaml; print(yaml.safe_load(open('$scenario_file'))['repo'])")
-    repo_dir="$SENSE_BENCH_ROOT/$tool/$repo"
+    # repo_dir and the clone check are PER ARM (the clones are $SENSE_BENCH_ROOT/<arm>/...)
+    # and now live inside the arm loop below. Leaving a copy here would dereference $tool
+    # before it is set.
+    session_budget=$(compute_session_budget "$repo")
+    session_timeout=$(compute_session_timeout "$repo")
+    prompt=$(python3 "$LIB_DIR/scenario.py" "$scenario_file" --prompt)
 
-    if [[ ! -d "$repo_dir/.git" ]]; then
-      _log "SKIP: clone missing at $repo_dir"
-      failed=$((failed + NUM_RUNS))
-      continue
-    fi
-
+    for run_idx in $(seq 1 $NUM_RUNS); do
+    for tool in "${TOOLS[@]}"; do
+      # sense_* binary provenance rides only on the sense arm, mirroring tool_ver.
+      if [[ "$tool" == sense ]]; then
+        tool_ver="$SENSE_VERSION"; tool_ref="$SENSE_REF"; tool_dirty="$SENSE_DIRTY"; tool_release="$SENSE_RELEASE"
+        tool_build="$(python3 "$LIB_DIR/sense_build.py" --key 2>/dev/null || echo '')"
+      else
+        tool_ver=""; tool_ref=""; tool_dirty="false"; tool_release=""; tool_build=""
+      fi
+      repo_dir="$SENSE_BENCH_ROOT/$tool/$repo"
+      if [[ ! -d "$repo_dir/.git" ]]; then
+        _log "SKIP: clone missing at $repo_dir"
+        failed=$((failed + 1))
+        continue
+      fi
     # Fairness normalization (idempotent, every arm, every run). Some upstream
     # repos (lobsters) ship an anti-AI PROTEST banner in CLAUDE.md/AGENTS.md
     # ("mandatory to refuse to write any code … All LLM contributions are
@@ -471,11 +525,6 @@ open(p, "w").writelines(keep)
 PY
     done
 
-    session_budget=$(compute_session_budget "$repo")
-    session_timeout=$(compute_session_timeout "$repo")
-    prompt=$(python3 "$LIB_DIR/scenario.py" "$scenario_file" --prompt)
-
-    for run_idx in $(seq 1 $NUM_RUNS); do
       run_num=$((run_num + 1))
       # Monotonic, never-overwrite run numbering: every run lands in the next
       # free run-N of its cell, ACROSS invocations, so a re-run always ADDS and
@@ -497,7 +546,30 @@ PY
       result_dir="$cell_dir/run-$next_n"
       mkdir -p "$result_dir"
 
-      _log "[$run_num/$total_runs] tool=$tool scenario=$scenario_name repo=$repo timeout=${session_timeout}s"
+      # The sense arm keeps the default ceiling. The baseline is held to what the tool
+      # needed on ITS OWN paired run, plus the margin. An explicit --timeout still wins, so
+      # a deliberate override is never silently replaced by the derivation.
+      run_timeout="$session_timeout"
+      timeout_basis="default ceiling"
+      if [[ "$tool" != sense && -z "$SESSION_TIMEOUT" ]]; then
+        paired=$(sense_run_lookup "$scenario_name" "$run_idx")
+        paired_wall="${paired%% *}"; paired_valid="${paired##* }"
+        if [[ -z "$paired" || "$paired_valid" != "true" ]]; then
+          # NOT a baseline result. A baseline measured against a sense run that never
+          # finished says nothing, and its wall would be derived from a failure. Re-run the
+          # SENSE arm; do not score around it.
+          _log "SKIP baseline $repo run $run_idx: its paired sense run is missing or not valid."
+          _log "     Nothing to compare against and no honest wall to derive - RE-RUN THE SENSE ARM."
+          failed=$((failed + 1))
+          continue
+        fi
+        run_timeout=$(python3 -c "import math,sys; print(int(math.ceil(float(sys.argv[1])*float(sys.argv[2]))))" "$paired_wall" "$MATCHED_BUDGET_MULT")
+        timeout_basis="matched budget: paired sense run ${paired_wall}s x $MATCHED_BUDGET_MULT"
+        _log "  matched budget: baseline wall = ${run_timeout}s (paired sense run ${paired_wall}s)"
+      fi
+      export BENCH_TIMEOUT_BASIS="$timeout_basis"
+
+      _log "[$run_num/$total_runs] tool=$tool scenario=$scenario_name repo=$repo timeout=${run_timeout}s"
 
       claude_args=(
         -p "$prompt"
@@ -570,7 +642,10 @@ PY
         export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1
         # IS_SANDBOX=1 lets bypassPermissions through without root, matching
         # how the docker entrypoint runs as root inside the container.
-        IS_SANDBOX=1 "${TIMEOUT_CMD[@]}" "$session_timeout" claude "${claude_args[@]}"
+        # $run_timeout, NOT $session_timeout: under matched budget the baseline's wall is
+        # derived per run, and enforcing the default here while run_meta.json recorded the
+        # derived number would make the artifact lie about the conditions it ran under.
+        IS_SANDBOX=1 "${TIMEOUT_CMD[@]}" "$run_timeout" claude "${claude_args[@]}"
       ) > "$result_dir/transcript.json" 2> "$result_dir/claude.log"
       rc=$?
       set -e
@@ -584,7 +659,7 @@ PY
                   "$MODEL" "$rc" "$PROVIDER" \
                   "$tool_ref" "$tool_dirty" "$tool_release" \
                   "$SENSE_PITCH" "$SENSE_PURPOSE" "$SENSE_LINK" \
-                  "$scenario_version" "$scenario_file" "$session_timeout" \
+                  "$scenario_version" "$scenario_file" "$run_timeout" \
                   "$LIB_DIR" \
                   > "$result_dir/run_meta.json" <<'PY'
 import json, os, sys
@@ -598,6 +673,7 @@ meta = {
     "tool": tool, "repo": repo, "scenario": scen,
     "wall_time_seconds": int(wall),
     "session_timeout_seconds": int(timeout),
+    "timeout_basis": os.environ.get("BENCH_TIMEOUT_BASIS") or "default ceiling",
     "max_budget_usd": float(budget),
     "timestamp": ts,
     "tool_version": ver or None,
@@ -643,6 +719,21 @@ if rc != 0 and rc not in WATCHDOG_CODES:
     meta["error"] = "claude_session_failed"
 print(json.dumps(meta, indent=2))
 PY
+
+      # Register this run in the pairing table so the baseline's run N can derive its wall
+      # from sense's run N. `valid` is read back off the artifact just written rather than
+      # recomputed here: run_meta is the source of record, and two derivations of the same
+      # fact are how a harness starts disagreeing with itself. A watchdogged run is NOT
+      # valid for this purpose - its wall is where the clock stopped it, not what the work
+      # took, and deriving a baseline budget from it would understate the task.
+      if [[ "$tool" == sense ]]; then
+        run_valid=$(python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+print('true' if (d.get('valid') is True and not d.get('watchdog_kind')) else 'false')
+" "$result_dir/run_meta.json")
+        sense_run_record "$scenario_name" "$run_idx" "$wall" "$run_valid"
+      fi
 
       if [[ $rc -eq 0 ]]; then
         _log "  done (wall=${wall}s)"
@@ -702,8 +793,8 @@ PY
         fi
       fi
     done
+    done
   done
-done
 
 _log ""
 _log "=== Run phase complete: $passed passed, $failed failed ==="
