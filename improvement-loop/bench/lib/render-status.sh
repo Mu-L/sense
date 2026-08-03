@@ -162,7 +162,7 @@ d=json.load(open(sys.argv[1]))
 loopdir=sys.argv[2]
 root=sys.argv[3]
 # The phases that spawn an agent and store its verdict; the rest are automatic.
-AGENT_PHASES=('scout','probe','curate','validate')
+AGENT_PHASES=('author','minibench','expand','validate')
 p={k:v for k,v in d.items() if '#' not in k}
 if not p:
     print('_state file present, no repo phases recorded._')
@@ -178,8 +178,8 @@ else:
                     data=json.load(fh)
                 v=data.get('verdict','?')
                 # verdict_check.py refuses a verdict whose artifact is gone, and the driver
-                # then re-spawns. A scout verdict outlives its shape.md the moment a later
-                # re-entry archives the pair, so this is the realistic case, not a corner.
+                # then re-spawns. A measuring phase's verdict outlives its read the moment a
+                # later re-entry archives it, so this is the realistic case, not a corner.
                 art=data.get('artifact')
                 if art and os.path.exists(os.path.join(root,art)):
                     cell='\`%s\` stored - the %s agent will NOT re-run' % (v,ph)
