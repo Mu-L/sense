@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Behaviour pins for the cross-run difficulty ranking (row_difficulty.py).
+"""Behaviour pins for the cross-run difficulty ranking (inverse_frequency.py).
 
 The ranking decides which gold rows the NEXT scenario is built from, so the pins guard
 the two ways it could quietly mislead: counting a row as hard when it was simply seen in
@@ -11,7 +11,7 @@ import os
 import tempfile
 import unittest
 
-from row_difficulty import runs_for, tally
+from inverse_frequency import runs_for, tally
 
 
 def make_run(root, arm, repo, run, rows):

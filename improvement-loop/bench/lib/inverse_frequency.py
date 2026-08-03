@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""row_difficulty.py - rank gold rows by how often the arms actually cite them.
+"""inverse_frequency.py - rank gold rows by INVERSE CITATION FREQUENCY.
 
-    row_difficulty.py <repo> <results-root> [<results-root> ...] [--min-runs 2]
+The rarely-cited rows sort to the top; those are the ones worth building gold from.
+
+    inverse_frequency.py <repo> <results-root> [<results-root> ...] [--min-runs 2]
 
 WHY THIS EXISTS. Each authoring cycle reads ONE credit table and rewrites the question
 against it, so difficulty is never accumulated: a row that eleven runs have never cited
@@ -83,7 +85,7 @@ def main():
         print(f"no scored runs for {args.repo} under {', '.join(args.roots)}")
         return 1
     by_arm = collections.Counter(a for a, _ in runs)
-    print(f"# row difficulty - {args.repo}  ({len(runs)} runs: "
+    print(f"# inverse-frequency ranking (rarest cited first) - {args.repo}  ({len(runs)} runs: "
           + ", ".join(f"{a} x{n}" for a, n in sorted(by_arm.items())) + ")\n")
 
     rows = tally(runs)
