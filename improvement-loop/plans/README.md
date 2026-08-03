@@ -25,17 +25,29 @@ the driver prepends to every plan.
 
 | File | Phase it runs | Verdicts |
 |---|---|---|
-| `01-scout.md` | pick the contract, the axis and the headline ask | `SHAPE`, `NO-AXIS` |
-| `01-curate.md` | gold on the axis the adversary probe disclaimed | `GOLD`, `NO-AXIS` |
-| `02-validate.md` | read the unscored run, rule on paying | `PAY`, `DO-NOT-PAY` |
+| `01-author.md` | anchor, question, two-step probe scenario, gold | `DRAFT`, `NO-ANCHOR` |
+| `02-minibench.md` | read the two-arm run, rule on expanding | `PROCEED`, `REQUESTION`, `NO-ANCHOR` |
+| `03-expand.md` | the seven-step session on the measured question | `SCENARIO`, `REQUESTION` |
+| `04-validate.md` | read the unscored full run, rule on paying | `PAY`, `DO-NOT-PAY` |
+| `05-handoff.md` | after six cycles, the human's plain-language one page | `HANDOFF` |
 | `laws.md` | not a plan - prepended to all of them | - |
 
-Plan files carry the loop number they replace, so the start point stays visible. `laws.md` and
-this file take no prefix.
+Plan files are numbered in the order the driver runs them. `laws.md` and this file take no
+prefix.
+
+Authoring is a cycle, not a line, and the driver runs it unattended: `NO-ANCHOR`,
+`REQUESTION` and `DO-NOT-PAY` all re-enter `01-author.md` immediately, with the credit table
+that rejected the question, and the anchor stays. The scenario is rewritten in place; it is
+never deleted and re-scouted. The loop parks for a human only after six cycles on one repo, and when it does it writes
+`05-handoff.md` first: a plain-language read of all six attempts, so what reaches the human is
+a decision to make, not a dead end to debug.
+
+So a verdict here is not a report filed for later. The artifact you write is read by the next
+authoring agent within the minute, and it is the only thing that agent has to improve on.
 
 Phases with no plan have no judgment in them: `index`, `preflight`, `bench` and `harvest` are
-bash, and `probe` and `report` are bash spawning a vertex agent whose prompt is fixed. A phase
-gets a plan when it stalls, never in advance.
+bash, and `report` is bash spawning a vertex agent whose prompt is fixed. A phase gets a plan
+when it stalls, never in advance.
 
 ## The two rules that keep this from rotting
 

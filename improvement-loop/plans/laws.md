@@ -15,6 +15,40 @@ they are not re-argued at runtime.
 - **NO PREDICTORS BEFORE A SCENARIO EXISTS.** A win is crafted, never detected by a script
   beforehand. A killer runs against a scenario that exists and may kill it; a predictor
   guesses before one does and is banned.
+- **THE FIRST MEASUREMENT IS A REAL BASELINE ARM.** Nothing kills a draft before a two-arm run
+  has answered its question at a real wall. Every cheaper substitute this bench has built - the
+  token-cover battery, the import screen, the scored adversary probe, the hand-run read-cost
+  census - was measured wrong, and each one killed a repo that a benched scenario then won.
+  A hand estimate of a baseline is not evidence about a baseline.
+- **PRECISION RANKS, IT NEVER KILLS.** Dependents divided by grep hits is the one profile
+  figure that has separated wins from ties across three verticals: 0.078 preceded a +1.00 cell,
+  0.78 was a deliberate control tie, and a cell near 0.94 handed its baseline 17 of 18 rows in
+  one grep. Use it to order candidates. It orders; the run decides.
+- **THE AUTHORING CYCLE IS UNATTENDED AND BOUNDED.** A routed lever re-enters authoring
+  immediately, up to six cycles on one repo, then parks. Your artifact is not a report filed
+  for later: the next authoring agent reads it within the minute and it is the only thing that
+  agent has to improve on. A verdict with no named rows and no route is a wasted cycle.
+- **AN OCCURRENCE-LIST QUESTION CAN WIN, AND THE SESSION IS PART OF WHY.** "Find every place
+  that depends on X" is the shape of the banked mastodon cell: baseline 7 of 23, sense 19 of 23,
+  +0.53. So the kind is not disqualifying, and a law saying otherwise was written on 2026-08-03
+  from five failures and retracted the same day against that cell. What differs is the SESSION:
+  the banked ask sits at step 4 of 7, so both arms arrive with wall and context already spent,
+  while the five failures asked it cold at step 2 of 2 and the plain arm scored 0.81, 0.16,
+  0.09, 1.00, 1.00. Budget pressure is a candidate cause, under test, not yet established.
+- **"WHAT HOLDS THIS" NEEDS A RING, AND RUBY HAS NONE.** The strongest measured kind is +0.58 to
+  +1.00 on four Go cells, but it needs a non-empty retention ring: `ring_sweep.py` measured ZERO
+  rings on both Ruby repos swept (2026-08-03, top twelve anchors each, mastodon and the banked
+  rails winner). A kind that cannot fire in the stack is not an option, it is an unanswerable
+  question.
+- **AIM AT THE WINDOW, NOT AT THE OPPOSITE OF THE LAST FAILURE.** Both conditions at once: the
+  plain arm at or below 0.50 AND ours at least 0.50 above. Correcting only the last cycle's
+  complaint lands on the far side and burns a cycle proving it. Read every previous cycle, not
+  the latest one.
+- **ITERATE ON THE QUESTION, KEEP THE ANCHOR.** A sub-floor cell is a question that the
+  baseline's route answered, not a dead contract. Measured both ways: a tied `serialize_payload`
+  axis became a winning teardown audit on the same repo, and a dead dispatch axis became a
+  winning retention audit on the SAME TYPE. Re-scouting a new contract discards the only
+  measured thing the loop owns.
 - **TRY HARDER.** The default stance is "there is an unfound win axis here; prove otherwise",
   starting at proposal time. No phase offers a tie, a boundary framing or ballast; it deepens
   the contract hunt and widens the pool first.
@@ -33,12 +67,13 @@ they are not re-argued at runtime.
   files to pin sixteen lines. Curate gold from the scattered periphery, keep the contract
   centre as non-scoring anchors, demand `path:line`, and never judge a shape by whether grep
   finds the file.
-- **A GOLD ROW MUST COST A READ.** The sharp form of the law above, and the one that was
-  lost. `grep -rn` prints `path:line`, so if one pattern emits the SCORED line, that row is
-  free - the search result IS the citation and no file is ever opened. Measured: a gold set
-  whose eighteen rows were each a single `Setting.<key>` read scored **17 of 18 to a baseline
-  in nine tool calls and 157 seconds**, one `grep -rn "Setting\."` among them. Ask of every
-  drafted row: what must be OPENED to know this line is the dependency?
+- **A GOLD ROW SHOULD COST A READ - AND THE RUN IS WHAT CHARGES IT.** `grep -rn` prints
+  `path:line`, so a row whose dependency IS the token occurrence can be free: a gold set whose
+  eighteen rows were each a single `Setting.<key>` read scored 17 of 18 to a baseline in nine
+  tool calls and 157 seconds. Prefer rows that must be opened. But this is a hand estimate of a
+  baseline, it is not a measurement of one, and run as a per-row census it killed four shapes
+  on a repo that banks +0.53. It is an authoring preference. It may not kill a draft, and it
+  never belongs in a phase that runs before the two-arm bench.
 - **THE ASK NAMES THE MECHANISM, NEVER THE INVENTORY.** Describing HOW a dependent hides is
   the task; listing WHERE dependents live is the answer. "A shared concern, an association, a
   service that derives something from the model rather than naming the class plainly" is a
@@ -57,17 +92,14 @@ they are not re-argued at runtime.
   a gold set where 16 of 16 files carry the token and one `grep -rl` returns all of them,
   while a cell curated FOR darkness put the baseline at 10 of 16 and died on its ceiling.
   Darkness was one mechanism on one repo; it was read as the law and it inverts the result.
-- **IMPORT-LAW.** An axis is dead if an importer dump covers its gold: `grep -rln '<module
-  path>'` is a one-command adversary, and any gold whose files import the subject's package
-  scores about 1.00 for free. It is an IMPORT dump: in a stack with no import statement it
-  degenerates into a token grep, which is a discovery bar and kills wins. Run it by hand
-  against the drafted gold.
-- **THE IMPORT-COVER GATE IS NOT BUILT.** Its old home ran before a scenario existed and
-  rejected four of four banked wins. Run the law by hand against the drafted scenario; do not
-  rebuild it as a pre-scenario screen.
-- **ONE-TOKEN-COVER KILLS ARE SIZE-CONDITIONED.** "A covering grep exists" is not "the agent
-  runs it to closure". Valid as a kill at enumerable scale (15k symbols or fewer); above that
-  it is a hypothesis and the run decides.
+- **NO GREP SCREEN IS A GATE, IN ANY FORM.** Not a token cover, not an importer dump, not a
+  per-row coverage census, not a darkness scan. Every one of them answers "a covering grep
+  exists", and the metric is "the agent runs it to closure at `path:line` inside its wall" -
+  a different question that only a run answers. The import screen in its old home rejected four
+  of four banked wins. Two verticals disagree on the mechanism outright: a Rails cell banks
+  +0.53 with 16 of 16 gold files carrying the anchor token, and a Go cell banks +1.00 on
+  dependents that never name the type at all. Record what a grep prints in the yaml header;
+  never let it decide.
 - **MEMORIZATION IS A GOLD-TIME CONSTRAINT, NEVER AN ADMISSION VERDICT.** A famous repo is not
   disqualified; a memorized gold row is. Every target is churn-dated after the model snapshot
   or is a line-level structural fact the model cannot recite.
@@ -76,6 +108,11 @@ they are not re-argued at runtime.
 
 ## Spending
 
+- **THE MINI-BENCH COMES FIRST, BOTH ARMS, ONCE.** The two-step probe scenario is run before
+  any seven-step session is written, at a real wall, unscored. It passes only when the baseline
+  holds at or below 0.50 of `dependents` AND sense beats it by at least +0.50. The precedent it
+  reproduces: a banked +1.00 cell was authored in full only after its mini run measured
+  baseline 0 of 5 against sense 5 of 5.
 - **THE VALIDATION RUN IS UNSCORED, BOTH ARMS, ONCE**, at the cell's real wall, before
   anything paid. A hand-grep is not a run. A baseline-only validation tells you the scenario
   is hard, not that Sense reaches.
@@ -103,20 +140,12 @@ they are not re-argued at runtime.
   the line: no new cells, no verdicts, no swaps, no kills, until the human rules. Continue
   without a ruling only on a re-score diff proving zero impact. A mitigation is not a
   resolution.
-- **THE PROBE IS A LEAD, NOT A GATE.** It does not estimate the benched arm in either
-  direction, so it may not kill a shape. Two calibration points, both large and opposite: on
-  the parked cell the probe reached 4 of 16 where the arm reached 10; on the banked cell an
-  unleaked probe reached at most 7 of 16 where the arm reached 2.5. One question with no
-  watchdog is not a seven-step session at a wall. Score it (`probe_score.py`) and record the
-  number, take its Disclaimed section as the authoring lead, and let the validation pair -
-  which measures the arm - decide the spend. A probe grading its own exhaustiveness is
-  running the exact belief this bench exists to measure; a loop that believes it kills repos
-  it can win, mastodon at four shapes and counting.
-- **A PROBE NEVER READS ANOTHER PROBE.** The Disclaimed section of an earlier run is a list of
-  the answers it missed, and a re-run working down that list holds a key the benched baseline
-  never gets. Measured on mastodon: the checklist was worth 8 of 16 gold rows and turned a
-  bench-able shape into a NO-AXIS. The driver archives, never overwrites; the results tree is
-  gitignored, so an overwritten probe is a destroyed record.
+- **THE SIMULATED ADVERSARY PROBE IS RETIRED.** It never estimated the benched arm in either
+  direction: on the parked cell it reached 4 of 16 where the arm reached 10; on the banked cell
+  it reached at most 7 of 16 where the arm reached 2.5, and a leaked run reached 15 of 16 over
+  that same arm. No correction factor fits points that disagree by 2.5x one way and 0.36x the
+  other. The mini-bench measures the same thing with a real baseline at a real wall and costs
+  about the same. Do not rebuild it.
 - **ONE REPO AT A TIME, TO A VERDICT.** No second repo's scenario is authored while the first
   is mid-diagnosis. A parked repo resumes from state, it never restarts.
 - **A PHASE IS SELF-CONTAINED.** Its input is a file on disk and its output is a file plus a
