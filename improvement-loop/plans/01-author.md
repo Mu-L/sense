@@ -31,6 +31,29 @@ If a script here is broken, write one line naming it in `notes` and stop; do not
    the latest read is how six attempts oscillated between "the plain search got everything"
    and "neither arm got anything" without ever landing in between.
 
+0c. What the arms have ACTUALLY cited, per gold row, across every run on disk:
+
+       python3 bench/lib/inverse_frequency.py "$REPO" \
+         "$VDIR/results/$(ls "$VDIR/results" | grep -v -e dryrun -e loop -e variance -e minibench -e validation | head -1)/validation"
+
+   Rarest-cited first. Scope it to the HEADLINE model's results root, not every root:
+   mixing model generations reorders the middle and hides the split, measured 2026-08-03
+   (a weak model's near-total failure lifts rows the headline model finds easily).
+
+   Three classes, and only one of them is worth gold:
+   - **baseline low, sense high** - the discriminator. Build the group from these.
+   - **cited by every run, both arms** - free. Each one hands the baseline a row before
+     it does any work; ten such rows put a floor of 0.43 under the baseline on the
+     measured mastodon gold, which no rewording can undo.
+   - **0/N on BOTH arms** - hard or unreachable. Check the row against the blast payload
+     before keeping it: absent from the payload means the tool cannot serve it and the row
+     can only ever score zero. Two mastodon spec rows sat at 0/12 across two models for
+     exactly that reason.
+
+   n matters here and the ranking says what it has. At n=2 one row looked like a perfect
+   discriminator (baseline 0/2) and was 4/5 by n=5. Do not re-gold off fewer than ~5 runs
+   per arm; below that the ordering is noise.
+
 0b. The retention listing, for the KIND of question you may ask (see DECIDE):
 
        python3 bench/lib/ring_sweep.py "$CLONE" --top 12
@@ -130,6 +153,10 @@ and the loop has been wrong about this before in both directions.
    reach them and they do NOT score. The scattered residue is the `dependents` group and it
    decides everything.
 6. **One row per FILE.** A group listing several symbols from one file rewards a single read.
+6b. **Drop what the ranking says is free or unreachable.** A row every run cites is a gift to
+   the baseline; a row no run has ever cited, and that the blast payload does not carry, is
+   dead weight that only dilutes the group. Both are measured facts from step 0c, not
+   estimates, and they are the one place a row may be cut without a run.
 7. **The ask names the MECHANISM, never the INVENTORY.** `scenario.py --prompt` reads tokens,
    so a list of functional categories passes it clean and still hands over the answer. Say HOW
    dependents hide, never WHERE they live. Steering off the anchors is fine.

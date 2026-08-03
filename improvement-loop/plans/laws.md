@@ -44,6 +44,15 @@ they are not re-argued at runtime.
   plain arm at or below 0.50 AND ours at least 0.50 above. Correcting only the last cycle's
   complaint lands on the far side and burns a cycle proving it. Read every previous cycle, not
   the latest one.
+- **A FREE ROW IS A GIFT TO THE BASELINE, AND THE RANKING NAMES THEM.** Citation rate per
+  gold row across every run (`inverse_frequency.py`) sorts gold into three classes: rows the
+  baseline never cites and sense always does (the discriminator), rows every run cites (free,
+  and they put a floor under the baseline no wording can lift), and rows nobody ever cites
+  (hard, or unreachable if the blast payload does not carry them). Measured on mastodon at
+  n=5: ten of twenty-three rows free, two unreachable across two models, one row
+  discriminating. Scope the ranking to the HEADLINE model - mixing generations reorders the
+  middle - and do not re-gold below ~5 runs per arm: a row that looked like a perfect
+  discriminator at n=2 was 4/5 at n=5.
 - **ITERATE ON THE QUESTION, KEEP THE ANCHOR.** A sub-floor cell is a question that the
   baseline's route answered, not a dead contract. Measured both ways: a tied `serialize_payload`
   axis became a winning teardown audit on the same repo, and a dead dispatch axis became a
