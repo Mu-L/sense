@@ -83,6 +83,29 @@ Before acting on it, the same discipline that killed the line-level proposal:
   `citation_grounding` only asks whether a `path:line` resolves, not whether it is the right
   line. Both arms produced resolving citations ~180 lines from the dependency today.
 
+### Tomorrow, in order
+
+1. **Build the completeness re-score as a REPORTING tool** (like `parity_rescore.py`: reads
+   `scored.json`, writes nothing, changes no artifact). Per run, per group: was the group
+   complete, yes or no.
+
+       new: bench/lib/completeness.py  <repo> <results-root>...   + its test
+
+2. **Run it over EVERY cell on disk**, not just mastodon - `verticals/*/results/*/validation`,
+   `.../minibench`, and the paid roots. Report linear delta beside gated delta per cell.
+
+3. **Read the three killers before believing it.**
+   - does it hold on the banked rails cell, or turn +0.72 into noise?
+   - does it flip any TIE into a win? (that would be the metric inventing a result)
+   - at n<5, how often does one miss swing a cell? quote the number.
+
+4. **Only then** decide whether it becomes the headline. If yes it is a STOPPER change:
+   re-score diff first, then re-measure every banked number, then update `laws.md`.
+
+5. **Fix the grounded-but-wrong gap before gating ships.** Under gating, a citation that
+   resolves to the wrong line counts toward "complete". Both arms produced citations ~180
+   lines off today. `citation_grounding` cannot see it.
+
 ## Three fixes queued, none started
 
 1. **Stop the transcript wipe.** `FORCE_WIPE=1` on the unscored roots (added today so cycles
@@ -128,11 +151,14 @@ Before acting on it, the same discipline that killed the line-level proposal:
 
 ## State on disk
 
-- Loop parked mid-run at `author`, cycle 3 of 6, on `Account`. It will finish its budget and
-  write a handoff, or can be reset.
+- Loop STOPPED by hand at `minibench`, cycle 3 of 6, on `Account`. Cycle 10's baseline was
+  mid-run when it was stopped, so that pair is incomplete: resuming re-runs it, `--reset`
+  starts clean. Nine cycles measured, eight on the FAR side, one negative.
+- Nine authoring attempts kept as `.bak`, named for what each tried (six from the morning,
+  three more from the evening: assembly-map, inherited-helpers, line-pin-no-shape).
 - `scenarios/mastodon.yaml.banked-status-control.bak` - the June winner, byte-identical.
-- Six authoring attempts kept as `.bak`, named for what each tried.
-- Cycle 9's transcripts snapshotted outside the results tree; cycles 1-8 are gone (see fix 1).
+- Cycles 9 and 10 snapshotted to the session scratchpad (`cycle-snapshots/`); cycles 1-8
+  are gone (see fix 1). Copy them somewhere durable before that scratchpad is cleared.
 - Results tree is gitignored by policy; everything else is committed.
 
 
