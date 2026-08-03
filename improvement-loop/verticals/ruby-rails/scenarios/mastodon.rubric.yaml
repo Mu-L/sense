@@ -1,0 +1,234 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Audience block is shared across all steps. This rubric OPTS INTO the fifth
+# `relationship` criterion (judge_prompt.v2.md); weights per step sum to 1.0:
+# map_quality 0.35 / specificity 0.20 / justification 0.15 / uncertainty 0.10 /
+# relationship 0.20. Mirrors the chatwoot/forem/discourse win shape.
+#
+# Step names MUST match scenarios/mastodon.yaml exactly (the judge pairs by name).
+
+audience: |
+  An AI coding agent that will use this answer to safely rework Mastodon's Status
+  model contract with only small, targeted follow-up lookups, not a fresh
+  exploration of the codebase. Score for that audience, not a human reader. A
+  perfect answer leaves the agent able to change the Status contract knowing every
+  dependent that must be reviewed AND how each one is connected; a weak answer
+  forces the agent to re-grep a token that appears across the whole app first.
+
+steps:
+  - name: Orient in the codebase
+    criteria:
+      map_quality:
+        weight: 0.35
+        question: |
+          Does the answer hand the agent a usable map: that this is Mastodon (a
+          federated social server), how the Rails app is organized (app/models,
+          app/services, app/workers, app/lib, app/serializers), and specifically where
+          the Status model sits, the central content record feeds, notifications,
+          federation and moderation revolve around? Could the agent start with only
+          small, targeted lookups?
+      specificity:
+        weight: 0.20
+        question: |
+          Are the cited paths concrete (app/models/status.rb, app/lib/feed_manager.rb)
+          rather than vague ("the model layer")?
+      justification:
+        weight: 0.15
+        question: |
+          Does the answer explain WHY the architecture is shaped this way (a Status is
+          the hub feeds/federation/moderation revolve around), not just NAME pieces?
+      uncertainty:
+        weight: 0.10
+        question: |
+          Where unsure how the layers connect, does it flag that?
+      relationship:
+        weight: 0.20
+        question: |
+          Does the orientation state the CONNECTING RELATIONSHIPS, that feeds reference
+          statuses, federation wraps them, moderation acts on them, behavior is pulled
+          in through concerns, rather than only listing where things live?
+
+  - name: Map the Status contract and what it is built on
+    criteria:
+      map_quality:
+        weight: 0.35
+        question: |
+          Does the answer map the Status model's contract with file:line: the concerns
+          it includes (visibility, threading, search, etc.), the associations records
+          hang off it through, and what a change must preserve?
+      specificity:
+        weight: 0.20
+        question: |
+          Are the contract pieces named concretely by file (the Visibility and
+          Threading concerns) rather than "the concerns and associations"?
+      justification:
+        weight: 0.15
+        question: |
+          Does the answer explain WHY the contract is shaped this way (behavior split
+          across concerns), not just LIST the pieces?
+      uncertainty:
+        weight: 0.10
+        question: |
+          Does the answer flag any part of the contract it could not confirm?
+      relationship:
+        weight: 0.20
+        question: |
+          For each contract piece, does the answer state the RELATION by which it binds
+          to Status (which concern supplies what), not merely name the file?
+
+  - name: Trace how a status is created and distributed
+    criteria:
+      map_quality:
+        weight: 0.35
+        question: |
+          Does the answer trace, with file:line and in order, how a status is posted
+          (the post service), persisted, and distributed (feeds, notifications,
+          federation), naming which run inline versus asynchronously?
+      specificity:
+        weight: 0.20
+        question: |
+          Are the pieces named exactly (the post service, the feed manager, the
+          distribution workers) with file:line?
+      justification:
+        weight: 0.15
+        question: |
+          Does the answer explain WHY distribution is pushed async (fan-out scale)?
+      uncertainty:
+        weight: 0.10
+        question: |
+          Does the answer flag where distribution is async and not fully opened?
+      relationship:
+        weight: 0.20
+        question: |
+          Does the answer assemble creation as an explicit CHAIN, post -> service ->
+          persist -> feeds/notifications/federation, rather than a set of files?
+
+  - name: Audit every dependent of the Status contract
+    criteria:
+      map_quality:
+        weight: 0.35
+        question: |
+          Does the answer enumerate the FULL scattered dependent set of the Status
+          model, grouped by area: feeds and timelines (the feed manager clearing
+          statuses, the redis feed hydration, the link feed), federation (the AP
+          Announce activity, the link-processing service, the permalink redirector),
+          moderation (account warnings, moderation actions, the report service),
+          account lifecycle / import-export / backup (account merging, the backup
+          service exporting favourites, the annual-reports presenter), and background
+          maintenance (the email-distribution worker, the user-cleanup scheduler, the
+          unfilter-notifications worker, media attachments)? This fan-out is the heart
+          of the ticket, the dependents are scattered across lib/models/services/
+          workers/presenters, several reach Status in non-obvious ways (a concern, an
+          association, deriving something from a status), and the bare token recurs
+          across the whole app, so a text search both misses some and drowns the rest.
+          A strong answer names that breadth with file:line.
+      specificity:
+        weight: 0.20
+        question: |
+          Are the dependents named concretely by file and symbol (app/lib/feed_manager.rb,
+          app/lib/permalink_redirector.rb, app/services/backup_service.rb) with
+          file:line and one phrase on how each uses the status, rather than "various
+          services"?
+      justification:
+        weight: 0.15
+        question: |
+          Does the answer explain WHY each dependent is affected, grouping by area
+          rather than just LISTING files?
+      uncertainty:
+        weight: 0.10
+        question: |
+          Does the answer acknowledge what a static pass can miss (dependents reached
+          only through a concern/association or that derive something from a status)?
+      relationship:
+        weight: 0.20
+        question: |
+          For each dependent, does the answer state HOW it reaches Status, the
+          concern/association or the derive route, ESPECIALLY for the non-obvious
+          feed/backup/annual-report/permalink dependents a text search can name but not
+          connect? A correct file list with no connecting relationship per dependent
+          scores low.
+
+  - name: Trace how status identity and visibility are guarded
+    criteria:
+      map_quality:
+        weight: 0.35
+        question: |
+          Does the answer give file:line for how work confirms it is operating on a
+          real, current, visible status before acting (the visibility concern,
+          presence checks in the feed, federation, moderation and backup paths)?
+      specificity:
+        weight: 0.20
+        question: |
+          Are the guards/visibility checks named exactly with file:line?
+      justification:
+        weight: 0.15
+        question: |
+          Does the answer explain WHY work must re-confirm visibility (a status may be
+          private, discarded, or deleted)?
+      uncertainty:
+        weight: 0.10
+        question: |
+          Does the answer flag where a guard is missing or implicit?
+      relationship:
+        weight: 0.20
+        question: |
+          Does the answer state the path by which each guard protects a dependent,
+          rather than naming methods in isolation?
+
+  - name: Assess the blast radius of the contract change
+    criteria:
+      map_quality:
+        weight: 0.35
+        question: |
+          Does the answer assess the full blast radius of changing the Status contract:
+          which dependents are at risk across every area (feeds, federation,
+          notifications, moderation, account lifecycle, backup, maintenance), which are
+          most likely to break, and what must be re-verified, with file:line and a risk
+          ranking?
+      specificity:
+        weight: 0.20
+        question: |
+          Are the at-risk dependents named concretely by file with a stated reason for
+          the risk level?
+      justification:
+        weight: 0.15
+        question: |
+          Does the answer explain WHY a given dependent is high vs low risk?
+      uncertainty:
+        weight: 0.10
+        question: |
+          Does the answer flag the dependents it is least sure about?
+      relationship:
+        weight: 0.20
+        question: |
+          Does the risk assessment tie each at-risk dependent to the RELATIONSHIP that
+          makes it risky, rather than a ranked file list with no connecting route?
+
+  - name: Produce the change + verification map
+    criteria:
+      map_quality:
+        weight: 0.35
+        question: |
+          Does the answer produce a complete, actionable map: the model and shared
+          pieces to edit (status.rb, the relevant concerns), every dependent that must
+          be reviewed grouped by area, and the specs/fixtures to update or add, with
+          file:line?
+      specificity:
+        weight: 0.20
+        question: |
+          Are the files and insertion points concrete (app/models/status.rb, the
+          specs under spec/models and spec/services) rather than "edit the model and
+          add tests"?
+      justification:
+        weight: 0.15
+        question: |
+          Does the answer explain WHY each file is in the map?
+      uncertainty:
+        weight: 0.10
+        question: |
+          Does the answer flag the parts it is least sure about?
+      relationship:
+        weight: 0.20
+        question: |
+          Does the map connect each file to the change via its relationship, so the
+          chain from the Status contract change to each edited/verified file is explicit?

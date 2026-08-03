@@ -1,0 +1,319 @@
+name: Mastodon work session - audit the account-record contract before a rework
+repo: mastodon
+contract_symbol: Account
+contract_file: app/models/account.rb
+# TWO-STEP PROBE SCENARIO (plans/01-author.md), CYCLE 5 - a RE-QUESTION on a live anchor.
+# It exists so the next phase can run the mini-bench - both arms, once, at the real wall,
+# unscored - against a real baseline. Nothing here is a verdict: no delta is claimed and
+# none has been measured on this shape.
+#
+# Single-prompt session bench (bench/drivers/bench-sense-local.sh): every step is presented
+# in ONE prompt and worked in order. Rendered to the agent: the description + each step's
+# name and prompt ONLY (checks and gold are NEVER shown). Everything rendered is kept
+# NEUTRAL - it states the task, never the answer's shape, file paths, class or method
+# names, counts, or which tool to reach for.
+#
+# ------------------------------------------------------------------------------------
+# THE SUPERSEDED QUESTION, AND THE NUMBER THAT KILLED IT
+# ------------------------------------------------------------------------------------
+# Previous yaml kept at `mastodon.yaml.names-the-class.bak` (cycle 4). Cycle 3's is at
+# `mastodon.yaml.table-altitude.bak`, cycle 2's at `mastodon.yaml.line-not-file.bak`,
+# cycle 1's at `mastodon.yaml.class-call-sites.bak`.
+#
+# Cycle 4's step 2 defined a dependent as a line that "name[s] the class itself in source"
+# and then listed the five things it can do with it: call a class-level method, chain a
+# query scope, read a constant, type-test against it, hand it along as a value.
+#
+#   MEASURED (results/loop/mastodon/minibench.md, both arms x1, exit 0, no watchdog,
+#   292s and 352s of a 480s wall, both `valid: true`):
+#     baseline `dependents`  24 of 24 = 1.000   (gate: at or below 0.50)  FAILS
+#     sense    `dependents`  24 of 24 = 1.000
+#     delta                           = 0.000   (gate: at least +0.50)    FAILS
+#
+# WHAT WENT WRONG WAS THE DEFINITION, NOT THE ALTITUDE. `baseline_route.py` on that run:
+# seventeen tool calls, all `Bash`, fourteen of them searches. Call 4 was one token sweep,
+# `grep -rn "\bAccount\b" app lib config db`, and calls 8, 9, 13, 15 and 16 were the five
+# shapes the prompt had enumerated, typed back as five filters over that sweep. The ask
+# defined the dependency relation as "writes this token", which is a regular expression in
+# prose, and `grep -rn` prints `path:line` for free - so the citation cost the metric
+# charges was never charged. Every gold row was a `both` row; `sense-only` and
+# `baseline-only` were both ZERO.
+#
+# WHAT CHANGED THIS CYCLE (anchor kept, per laws.md ITERATE ON THE QUESTION, KEEP THE ANCHOR):
+#   1. THE CALL FORM IS OUT OF SCOPE, EXPLICITLY. The ticket is a move-and-rename of the
+#      class, and the ask says in as many words that the dependents which simply ask it for
+#      something and get an answer back are not what is wanted. That removes the dominant,
+#      most greppable form from the gold: a filtered dump of `<Class>.<method>` lines, which
+#      is exactly what cycle 4's baseline handed in, scores ZERO here.
+#   2. NO SHAPE IS ENUMERATED. The ask states the relation semantically - the dependency is
+#      taken on the class ITSELF rather than on anything it does - and never says how such a
+#      line is written. Cycle 4's five-shape list was the search strategy handed over.
+#   3. GOLD IS RE-SELECTED to the thirteen rows that are dependencies of that kind, and only
+#      those. Every row was opened and its line read by hand. THREE of them do not write the
+#      class as a bare token at all: they write its NAME AS A STRING, so the one anchored
+#      regex that covers the other ten (`[^A-Za-z_.:'"]Account[^A-Za-z_]`) misses them and a
+#      second, differently-quoted search is needed to reach them.
+#   4. THE ROWS THE CALL FORM REACHES MOVE TO THE NON-SCORING ANCHOR GROUP - the two
+#      bare-class scope chains (`account_suggestions/source.rb`, the favourited-by listing)
+#      among them. They are dependencies; they are just the kind this ticket says it is not
+#      worried about, so they anchor rather than score.
+#
+# HONEST RISK ON THIS DRAFT, STATED AT AUTHORING TIME AND NOT A VERDICT. On this repo every
+# one of the 107 app caller files `sense_blast` resolves for this contract also writes the
+# literal token - checked this cycle, `comm -23` of the caller list against
+# `grep -rl 'Account' app --include='*.rb'` returns EMPTY - so the sense arm's reach is a
+# subset of what one token grep can print, and recall scoring cannot punish a dump. What
+# this draft can still charge is the FILTER: the wanted rows are a minority of that sweep,
+# no single quoting of the search covers them, and the ask no longer says which lines to
+# keep. Whether that is enough is exactly what the two-arm run decides, and if a fifth
+# measured baseline again sits at or above 0.50 the honest route is a swap, not a sixth
+# question - this contract's dependents may simply not be grep-hostile at the line.
+#
+# ------------------------------------------------------------------------------------
+# THE CONTRACT
+# ------------------------------------------------------------------------------------
+# `Account` (app/models/account.rb) is the record every other model, service, worker and
+# controller in Mastodon hangs off: local users and remote actors are both rows in it. It is
+# the thing a maintainer reworking identity would actually open first. Anchor UNCHANGED from
+# cycle 1 - the loop does not re-scout a contract that has been measured. This is NOT a
+# NO-ANCHOR: the shown blast set alone yields thirteen dependent files across ten areas.
+#
+# SEAM PROFILE (bench/lib/seam_hunt.py, `Account --file app/models/account.rb`, RE-RUN this
+# cycle at the current checkout, unchanged from cycles 2, 3 and 4):
+#   app caller files : 107   (total incl test/non-app: 107)
+#   SCATTER (dirs)   : 34
+#   GREP-NOISE       : 'Account' in 257 app files   PRECISION=0.42
+#   VERDICT          : SCATTERED + GREP-NOISY
+# Candidates profiled in earlier cycles, kept on the record so they are not re-profiled;
+# none beat 0.42:
+#   Account                 0.42  (107 callers / 257 grep files, 34 dirs)  <- kept
+#   ActivityPub::TagManager 0.53  (75 callers / 141 grep files, 22 dirs)
+#   ResolveAccountService   0.94  (16 callers / 17 grep files, 9 dirs) - near-transcription,
+#     the profile laws.md records as handing a baseline 17 of 18 rows in one grep. REJECTED.
+#   AccountReachFinder      1.17  (7 callers / 6 grep files, 3 dirs) - above 1.00 means false
+#     caller edges, and 7 files cannot yield twelve rows anyway. REJECTED.
+#   AccountStat             RESOLVER-GAP (0 app caller files).
+# Facet hunts, re-run and still dead, kept on the record:
+#   - `Account::Interactions`: `sense_blast` returns ZERO direct callers.
+#   - Instance-method dispatch does not resolve across app files. Re-probed this cycle over
+#     MCP: `sense_graph Account#local? --direction callers` returns 12 depth-1 callers, ALL
+#     inside account.rb; `Account::Suspensions#suspended?` returns 8 files, 7 of them specs;
+#     `Account::Interactions#following?` returns 18 files, 17 of them specs. There is no
+#     method-level facet on this contract, so no axis can be built on one.
+#
+# ------------------------------------------------------------------------------------
+# THE AXIS (the whole thesis, and what the mini-bench measures)
+# ------------------------------------------------------------------------------------
+# The dependents this ticket is about do not USE the class - they depend on its IDENTITY.
+# None of them asks it for anything: the class is compared against, handed to something
+# generic to be dispatched on later, written down by name in a string that some other layer
+# resolves back into it, or read from for a pattern or a limit it publishes for others to
+# reuse. So they share no entry point AND no call: enumerating what calls the class, which
+# is what every route on this repo has done for four cycles, walks straight past all
+# thirteen. And because most of these files are not about the record's own concerns, its
+# name recurs in them for reasons that have nothing to do with the dependency, so finding
+# the file is not finding the dependency - one line is.
+#
+# MEASURED SUPPORT FOR THE MECHANISM, on this gold set, per row and by hand:
+#   - 3 rows depend on the class's NAME AS A STRING: `'Account'` handed to a webhook worker
+#     (user.rb:493), `when 'Account'` dispatching on `klass.name` (tag_manager.rb:288),
+#     `target_type: 'Account'` in a polymorphic filter table (action_log_filter.rb:58). A
+#     fourth string form, `class_name: 'Account'` in status.rb, is CUT as memorized (below).
+#   - 6 rows read a constant the class publishes: `MENTION_RE` (extractor.rb:28,
+#     account_search_service.rb:8, note_length_validator.rb:19), `USERNAME_RE`
+#     (resolve_url_service.rb:7), `URL_PREFIX_RE`
+#     (followers_synchronizations_controller.rb:20), `DISPLAY_NAME_LENGTH_HARD_LIMIT`
+#     (process_account_service.rb:142).
+#   - 4 rows compare against or hand over the class itself: `is_a?(Account)`
+#     (fetch_remote_account_service.rb:7, signature_verification.rb:48), `when Account`
+#     (authorize_interactions_controller.rb:11), and the class passed as an argument to a
+#     generic URI resolver (activity.rb:75).
+# ZERO of the thirteen is a class-level call, a scope chain, a finder or an aggregate. The
+# rows that ARE those things sit in the non-scoring anchor group.
+#
+# WHAT A GREP PRINTS, RECORDED AND NEVER A GATE (laws.md: NO GREP SCREEN IS A GATE, IN ANY
+# FORM). `Account` appears in 257 app files against 107 real caller files - precision 0.42,
+# the lowest profiled on this repo. The cycle-4 baseline's own anchored regex over that
+# sweep covers ten of these thirteen rows and misses the three string-name rows. This is
+# RECORDED; it decides nothing, and the two-arm run in the next phase is what decides.
+#
+# WHAT THE ARM IS SHOWN. `sense_blast Account` is AMBIGUOUS at MCP defaults (13 symbols named
+# Account; the tool returns a hint naming the `file` parameter plus top matches, so an arm
+# pays one extra call to disambiguate). `sense_blast Account --file app/models/account.rb`,
+# re-probed this cycle via bench/lib/mcp_probe.py at MCP defaults with no `min_confidence`,
+# returns 60 shown direct-caller rows of 200 over 30 areas, risk high, truncated. All
+# thirteen `dependents` files appear in that shown payload. Ten of the thirteen rows sit
+# INSIDE the enclosing `def` range the payload names; THREE do not - tag_manager.rb:288
+# (payload names `#uris_to_local_accounts` 250-261), action_log_filter.rb:58 (payload names
+# `#scope_for` 107-122) and process_account_service.rb:142 (payload names `#call` 21-82).
+# Those three are shown at FILE level: the arm is handed the file and its ref and opens it.
+# Stated rather than hidden - it is a weaker guarantee than the other ten carry.
+#
+# MEMORIZATION (memorization_probe.py, per candidate row, run this cycle). CUT as recited:
+# `Status` (recall 0.493, 34 members named - the probe's verdict is "recited, both arms
+# already know it"), so `class_name: 'Account'` in status.rb is NOT gold and status.rb sits
+# in the anchor group; `FeedManager` (0.727) and `InstancePresenter` (0.842), cut in earlier
+# cycles and staying cut. ADMITTED: `User` 0.176 (below the bar, not recited);
+# `ResolveURLService`, `NoteLengthValidator`, `AuthorizeInteractionsController`,
+# `ActivityPub::Activity`, `ActivityPub::FetchRemoteAccountService` and
+# `ActivityPub::FollowersSynchronizationsController` all `recall: null` (too few declared
+# members to score recitation); `AccountSearchService` 0.333, `SignatureVerification` 0.375
+# and `Extractor` 0.8, each labelled by the probe itself "clears 0.3 but only 2-4 member(s)
+# named (< 5) - generic framework vocabulary, not recitation of THIS symbol", and each of
+# those rows' credit is a line-level fact rather than a member list. `ActivityPub::TagManager`,
+# `Admin::ActionLogFilter` and `ActivityPub::ProcessAccountService` carry line-level credits
+# (a `when` branch on a name string, one entry in a frozen filter table, one attribute
+# assignment) that no member list recites. The anchor itself comes back recited (`Account`
+# 0.312) - that is the contract's own API surface, which is why the contract centre is a
+# NON-SCORING anchor group; no gold row's credit is a member list.
+#
+# ------------------------------------------------------------------------------------
+# CYCLE 6 AUTHOR - NO-ANCHOR. THIS YAML IS THE CYCLE-5 QUESTION, UNCHANGED AND UNRUN AGAIN.
+# ------------------------------------------------------------------------------------
+# Nothing below was authored this cycle; it is the record of why a sixth question on this
+# anchor was not written. Every number here is quoted command output.
+#
+# 1. THE ANCHOR IS RE-CONFIRMED AND RE-PROFILED, not abandoned on taste. `seam_hunt.py
+#    Account --file app/models/account.rb`, re-run this cycle:
+#      app caller files : 107   SCATTER (dirs) : 34
+#      GREP-NOISE : 'Account' in 257 app files   PRECISION=0.42   SCATTERED + GREP-NOISY
+#    0.42 is still the lowest precision profiled on this repo (TagManager 0.53,
+#    ResolveAccountService 0.94, AccountReachFinder 1.17, AccountStat resolver-gap).
+#
+# 2. WHAT A CREDIT COSTS HERE, read out of the scorer rather than assumed. `bench/lib/gold.py`
+#    credits a gold row when the gold path is pinned to A line - `path:N`, `path (line N)`,
+#    or a sibling `"line": N` - not to THE gold line. So the whole discriminator on this cell
+#    is WHICH FILES an arm names; a `grep -rn` hit is already a full credit for its file.
+#
+# 3. THE TWO ARMS NOW PRODUCE THE SAME FILE SET. Re-read off the cycle-5 transcripts
+#    (`results/claude-opus-5/minibench/*/mastodon/run-1/transcript.json`, final answers):
+#      baseline answer: 74 distinct app/*.rb files pinned to lines
+#      sense    answer: 75
+#      sense-only files: 3   (account_policy.rb, rest/account_serializer.rb,
+#                             unique_username_validator.rb)
+#      baseline-only files: 2
+#    Both measured baselines on this anchor scored `dependents` 1.000 (cycle 4, 24 rows;
+#    cycle 5, 13 rows - cycles.jsonl). Cycle 4's gold was already the volume-and-tail shape
+#    (schedulers, importers, metric dimensions, form objects) and the baseline took 24 of 24.
+#
+# 4. THE ARITHMETIC KILLER, RUN AGAINST THE NEXT DRAFT BEFORE WRITING IT. The bar needs a
+#    baseline at or below 0.50, so a majority of any 12-row gold must be rows a token grep
+#    plus one read of account.rb does not produce. The pool of such rows was probed over MCP
+#    this cycle (`sense_graph Account --file app/models/account.rb --direction both`, 109
+#    edges, 68 distinct files): the dependents Sense shows that do NOT write the token are
+#      app/validators/unreserved_username_validator.rb
+#      app/validators/empty_profile_field_names_validator.rb
+#      app/validators/unique_username_validator.rb
+#      app/models/account_stat.rb
+#      app/models/instance.rb
+#      app/models/admin/action_log.rb
+#    SIX files over THREE areas, and all six are wired by a line inside account.rb itself
+#    (`validates_with UniqueUsernameValidator`, the associations concern), which step 1 opens.
+#    `app/policies/account_policy.rb` and `app/chewy/accounts_index.rb` - the other two
+#    convention-wired candidates - are ABSENT from the shown payload, so they cannot be gold.
+#    Six is below the twelve-rows-across-six-areas floor, so the framework-wiring axis (the
+#    one mechanism five cycles have not asked about) cannot be golded to spec, and every
+#    other row available is call-form or token-form, which is what measured 1.000 twice.
+#
+# 5. WHAT THIS DOES NOT SAY. It does not say mastodon is dead, and it is not derived from a
+#    grep: the kills are two two-arm runs and an MCP probe of the shown pool. It says this
+#    ANCHOR cannot carry a discriminating twelve-row gold under a file-level credit rule.
+#    Recommendation handed up with the numbers: swap the slot for its own declared backup
+#    rather than spend a seventh cycle on `Account`.
+description: |
+  You are a maintainer about to rework a class - the one whose objects are both the local
+  users of this server and the remote actors it knows about. The rework changes the class
+  itself: where it lives, what it is called, and what it publishes for the rest of the
+  codebase to reuse. Before you touch it, audit the code that depends on it, completely
+  enough that the rework cannot silently break a dependent. What counts is the exact line
+  at which a dependency is taken, not the file it sits in: for each one give an exact
+  file:line a teammate could jump straight to, plus one phrase on how it depends on the
+  class. A filename with no line number does not count, and a missed dependent is a
+  regression shipped.
+steps:
+- name: Identify the class under change
+  prompt: "Task: orient. In a few sentences plus exact file:line references, name the
+    single class this ticket is about, say where it is defined, and say what a rework of
+    it would have to preserve. Settle on the class as a whole - the audit that follows is
+    about everything in the codebase that depends on that class, not about any one part of
+    it and not about how it is stored. Give file:line for everything you name.
+    "
+  checks:
+  - type: response_richness
+    value: '3'
+    required: true
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+- name: Audit every dependent of the class under change
+  prompt: "Task: this is the core of the ticket. Find EVERY place in the codebase that
+    would have to be revisited when this class moves and is renamed, so the rework cannot
+    silently break one. Be exhaustive and group them by area. Leave out the dependents that
+    simply ask the class for something and get an answer back - that kind travels with the
+    class, I am not worried about it, and listing it does not help me. What I need is the
+    other kind: the dependency taken on the class ITSELF rather than on anything it does -
+    code that depends on this being that particular class, or on something the class
+    publishes for other code to reuse. Those dependents share no entry point, there is no
+    method, helper or gateway they pass through, and there is no single shape to look for.
+    A line that reaches the persisted form instead - the underlying table, its columns, a
+    key relating one to another, or a hand-written query naming any of those - is not what
+    I need here. Most of the code that depends on the class this way is not about that
+    class's own concerns at all, and in those files the class's name also recurs many times
+    over for reasons that have nothing to do with the dependency, so identifying the file is
+    not the same as identifying the dependency: one line in it is the dependency, and that
+    line is what I need. For each dependent give file:line and one phrase on how it depends
+    on the class. A filename with no line number does not count, and a missed dependent is a
+    regression shipped.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Pinned the dependency line in each file, not just the file
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
+# Gold is the must-find audit of what depends on the account class. TWO groups:
+#   - `contract` (10, NON-SCORING anchor): the class itself, its own concerns, and the
+#     call-form dependents this ticket says it is not worried about - every one of which a
+#     measured arm has already reached. It does not discriminate and it is not meant to.
+#   - `dependents` (13, THE discriminator): ONE row per FILE, across 10 directories. Every
+#     row's file is in the shown `sense_blast` output above, and every credit below was read
+#     off its own line by hand (gold_audit stamp/verify), never taken from a script tally.
+#     Not one of them is a call to the class.
+gold:
+  # --- NON-SCORING anchors: the contract centre and the call-form dependents ---
+  - {id: contract-model, group: contract, match: [models/account.rb], relation: "app/models/account.rb:65 `class Account < ApplicationRecord` - the account class itself, the contract under change"}
+  - {id: c:finder-concern, group: contract, match: [account/finder_concern.rb], relation: "app/models/concerns/account/finder_concern.rb:28 `Account` heading the chain into `.remote.matches_username(...)` - the class's own lookup surface, the obvious centre both arms reach"}
+  - {id: c:interactions-concern, group: contract, match: [account/interactions.rb], relation: "app/models/concerns/account/interactions.rb:123 `other_id = other_account.is_a?(Account) ? other_account.id : other_account` - the class's own concern compares its argument against the class; contract centre, reached by opening the model"}
+  - {id: c:status, group: contract, match: [models/status.rb], relation: "app/models/status.rb:78 `belongs_to :in_reply_to_account, class_name: 'Account', optional: true` - the content model names the class as a string in an association; CUT from scoring as memorized (probe recall 0.493, 34 members named)"}
+  - {id: c:resolve-service, group: contract, match: [services/resolve_account_service.rb], relation: "app/services/resolve_account_service.rb:27 `@account ||= Account.find_remote(@username, @domain)` - the webfinger resolve path, the obvious lookup entry point; a call, so out of scope for this ticket"}
+  - {id: c:account-owned-concern, group: contract, match: [account_owned_concern.rb], relation: "app/controllers/concerns/account_owned_concern.rb:21 `@account = username_param.present? ? Account.find_local!(username_param) : Account.local.find(account_id_param)` - a call-form dependent; BOTH arms cited it in cycle 2"}
+  - {id: c:json-ld-helper, group: contract, match: [helpers/json_ld_helper.rb], relation: "app/helpers/json_ld_helper.rb:233 `on_behalf_of ||= Account.representative` - a call-form dependent; BOTH arms cited it in cycle 2"}
+  - {id: c:suggestions-source, group: contract, match: [account_suggestions/source.rb], relation: "app/models/account_suggestions/source.rb:13 `Account` heading a multi-line chain into `.searchable.where(discoverable: true).without_silenced.without_memorial` - a scope chain off the bare class; BOTH arms cited it in cycle 3"}
+  - {id: c:friends-of-friends, group: contract, match: [friends_of_friends_source.rb], relation: "app/models/account_suggestions/friends_of_friends_source.rb:10 `Account.find_by_sql([<<~SQL.squish, { id: account.id, limit: limit }])` - raw SQL run through the class; BOTH arms cited it in cycle 3"}
+  - {id: c:favourited-by-accounts, group: contract, match: [statuses/favourited_by_accounts_controller.rb], relation: "app/controllers/api/v1/statuses/favourited_by_accounts_controller.rb:22 `Account` heading a multi-line chain into `.without_suspended.includes(:favourites, :account_stat, :user)` - a scope chain off the bare class; BOTH arms cited it in cycle 4"}
+  # --- THE DISCRIMINATOR: one line per file, none of them a call to the class ---
+  - {id: d:user-webhook-type-name, group: dependents, match: [models/user.rb], relation: "app/models/user.rb:493 `TriggerWebhookWorker.perform_async('account.approved', 'Account', account_id)` - the approval path writes the class's NAME AS A STRING into a queued webhook payload for the worker to resolve back into the class"}
+  - {id: d:tag-manager-klass-name, group: dependents, match: [activitypub/tag_manager.rb], relation: "app/lib/activitypub/tag_manager.rb:288 `when 'Account'` - the generic URI-to-resource translator dispatches on `klass.name`, so it depends on the class being called exactly that"}
+  - {id: d:action-log-target-type, group: dependents, match: [admin/action_log_filter.rb], relation: "app/models/admin/action_log_filter.rb:58 `memorialize_account: { target_type: 'Account', action: 'memorialize' }.freeze` - the audit-log filter table stores the class's name as the polymorphic target type it matches on"}
+  - {id: d:resolve-url-username-re, group: dependents, match: [services/resolve_url_service.rb], relation: "app/services/resolve_url_service.rb:7 `USERNAME_STATUS_RE = %r{/@(?<username>#{Account::USERNAME_RE})/(statuses/)?(?<status_id>[0-9a-zA-Z]+)\\Z}` - URL resolution interpolates a username pattern the class publishes into its own route regex"}
+  - {id: d:account-search-mention-re, group: dependents, match: [services/account_search_service.rb], relation: "app/services/account_search_service.rb:8 `MENTION_ONLY_RE = /\\A#{Account::MENTION_RE}\\z/i` - account search builds its exact-mention pattern out of a pattern constant the class publishes"}
+  - {id: d:extractor-mention-re, group: dependents, match: [lib/extractor.rb], relation: "app/lib/extractor.rb:28 `text.scan(Account::MENTION_RE) do |screen_name, _|` - the text-entity extractor drives its mention scan off a pattern constant the class publishes"}
+  - {id: d:note-length-mention-re, group: dependents, match: [validators/note_length_validator.rb], relation: "app/validators/note_length_validator.rb:19 `new_text.gsub!(Account::MENTION_RE, '@\\2')` - the profile-note length validator strips mentions with that same published pattern before counting graphemes"}
+  - {id: d:followers-sync-uri-prefix, group: dependents, match: [activitypub/followers_synchronizations_controller.rb], relation: "app/controllers/activitypub/followers_synchronizations_controller.rb:20 `signed_request_account.uri[Account::URL_PREFIX_RE]` - follower-list synchronisation slices a partner's URI with a pattern constant the class publishes"}
+  - {id: d:process-account-display-limit, group: dependents, match: [activitypub/process_account_service.rb], relation: "app/services/activitypub/process_account_service.rb:142 `@account.display_name = (@json['name'] || '')[0...(Account::DISPLAY_NAME_LENGTH_HARD_LIMIT)]` - inbound actor processing truncates a remote display name to a hard limit the class publishes"}
+  - {id: d:fetch-remote-actor-typecheck, group: dependents, match: [fetch_remote_account_service.rb], relation: "app/services/activitypub/fetch_remote_account_service.rb:7 `return actor if actor.nil? || actor.is_a?(Account)` - remote actor fetching compares the fetched object against the class itself and rejects anything else"}
+  - {id: d:signature-verification-typecheck, group: dependents, match: [concerns/signature_verification.rb], relation: "app/controllers/concerns/signature_verification.rb:48 `signed_request_actor.is_a?(Account) ? signed_request_actor : nil` - HTTP signature verification compares the signing actor against the class before treating it as an account"}
+  - {id: d:authorize-interactions-dispatch, group: dependents, match: [authorize_interactions_controller.rb], relation: "app/controllers/authorize_interactions_controller.rb:11 `when Account` - the remote-follow landing page branches on the resolved resource being that class rather than a status or a collection"}
+  - {id: d:activity-uri-resource, group: dependents, match: [activitypub/activity.rb], relation: "app/lib/activitypub/activity.rb:75 `ActivityPub::TagManager.instance.uri_to_resource(uri, Account)` - inbound activity handling hands the class itself to a generic URI resolver as the type to resolve into"}
