@@ -53,6 +53,36 @@ interesting thing left on the table.
 Whether a question can hold the baseline down AND let Sense reach is still unproven in both
 directions.
 
+## THE LEAD TO START WITH (found after the rest of this page was written)
+
+**Omissions are scored linearly, and that is what is hiding the signal.** `cited_recall` is
+`cited/total`, so missing 2 of 16 costs 12.5% - while the ask itself says "an unlisted
+dependent counts as missed. A missed dependent is a regression shipped." The metric does not
+believe the task.
+
+Completeness-gated on the SAME five opus-5 pairs already on disk, no re-benching:
+
+    baseline dependents  0.875 0.875 0.812 0.938 0.812   complete: [0,0,0,0,0]
+    sense    dependents  1.000 1.000 1.000 0.875 1.000   complete: [1,1,1,0,1]
+
+    LINEAR recall      baseline 0.863  sense 0.975  delta +0.112   dead
+    COMPLETENESS-GATED baseline 0.000  sense 0.800  delta +0.800   clears the floor
+
+The baseline never once produced a complete audit; Sense did four times in five. Defensible
+rather than goalpost-moving: a 14-of-16 audit does not let a maintainer safely rework the
+contract, and completeness IS the product claim.
+
+Before acting on it, the same discipline that killed the line-level proposal:
+
+- **must hold on other cells** - free re-score across every run on disk; if it turns the
+  banked rails +0.72 into noise or flips a tie into a false win, it fails
+- **high variance** - one miss is a zero, so it needs n=5+ per arm; only `Status` has that
+- **STOPPER-class** - headline metric change, needs a re-score diff and re-measurement of
+  every banked number
+- **grounded-but-wrong citations matter MORE under gating**, and nothing catches them today:
+  `citation_grounding` only asks whether a `path:line` resolves, not whether it is the right
+  line. Both arms produced resolving citations ~180 lines from the dependency today.
+
 ## Three fixes queued, none started
 
 1. **Stop the transcript wipe.** `FORCE_WIPE=1` on the unscored roots (added today so cycles
@@ -104,3 +134,33 @@ directions.
 - Six authoring attempts kept as `.bak`, named for what each tried.
 - Cycle 9's transcripts snapshotted outside the results tree; cycles 1-8 are gone (see fix 1).
 - Results tree is gitignored by policy; everything else is committed.
+
+
+____
+Do not take the below into consideration, they are unstructured random notes for me (luc):
+
+We're proving the rebuilt bench loop can craft a winning scenario.
+once we kown how to create a winning scenario:
+
+1. we bench all LLMs
+2. we then analyze each transcripts to see where Sense can improve. store the info with proof and create a card for it (with previous scores to compare)
+3. We pike the card, build and re-bench to check if brings better results, otherwise we drop the pike.
+4. If better results, we clean the pike and pr with a qlty pass, coverage pass, council review.
+
+
+how do we score omissions like the below where baseline missed 2? Maybe we are not harsh enough or score in a way that does not punish omissions. And do we track and score hallucinations?
+
+  ┌──────────┬──────┬────────────────┬───────────────┐
+  │   arm    │ wall │     budget     │  dependents   │
+  ├──────────┼──────┼────────────────┼───────────────┤
+  │ sense    │ 343s │ 480s           │ 16/16 = 1.000 │
+  ├──────────┼──────┼────────────────┼───────────────┤
+  │ baseline │ 405s │ 412s (matched) │ 14/16 = 0.875 │
+  └──────────┴──────┴────────────────┴───────────────┘
+
+
+First pick an axis Status in our case
+Second, iterate 6 times over it
+Third, if still no win, change axis.
+repeat 3 times
+Report to human
