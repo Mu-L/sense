@@ -727,7 +727,26 @@ def score_transcript(transcript_path, scenario, repo_path=None, repo_checkout=No
     repo = scenario.get("repo", "")
     ceiling = EFFICIENCY_CEILINGS.get(repo, DEFAULT_EFFICIENCY_CEILING)
     priced_ceiling = PRICED_EFFICIENCY_CEILINGS.get(repo, DEFAULT_PRICED_EFFICIENCY_CEILING)
+    # SHARED DENOMINATOR, DELIBERATELY - do NOT switch this to the run's own
+    # session_timeout_seconds. Under matched budget (bench-sense-local.sh) the two arms run
+    # under DIFFERENT walls by design: the sense arm gets the default ceiling and the
+    # baseline gets its paired sense run x1.2. Normalising each arm by its own wall would
+    # score a baseline held to 332s as ~0.0 time-efficient while the sense arm at 276s of
+    # 480s scores 0.43 - an artefact of the budget we handed out, pointing the wrong way.
+    # Both arms are measured against ONE per-cell number so the figures stay comparable;
+    # the matched budget shows up where it belongs, in the baseline's RECALL.
     time_ceiling = TIME_CEILINGS.get(repo, DEFAULT_TIME_CEILING)
+
+    # The wall THIS arm was actually allowed, read from its own run_meta.json. Reported
+    # only - it is deliberately not the efficiency denominator (see the note above).
+    run_budget, run_basis = None, "default ceiling"
+    try:
+        with open(os.path.join(os.path.dirname(transcript_path), "run_meta.json")) as _fh:
+            _rm = json.load(_fh)
+        run_budget = _rm.get("session_timeout_seconds")
+        run_basis = _rm.get("timeout_basis") or "default ceiling"
+    except (OSError, ValueError):
+        pass
 
     wall_time = round((t.get("duration_ms", 0) or 0) / 1000, 1)
 
@@ -860,6 +879,10 @@ def score_transcript(transcript_path, scenario, repo_path=None, repo_checkout=No
             "effective_token_total_priced": eff_priced,
             "priced_efficiency_ceiling": priced_ceiling,
             "time_ceiling_seconds": time_ceiling,
+            # What THIS arm was actually allowed, and where that number came from. Under
+            # matched budget these differ per arm while time_ceiling_seconds does not.
+            "session_timeout_seconds": run_budget,
+            "timeout_basis": run_basis,
             "token_efficiency": round(token_eff, 4),
             "time_efficiency": round(time_eff, 4),
             "answer_chars": len(answer_text),
