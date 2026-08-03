@@ -14,10 +14,10 @@ import unittest
 from inverse_frequency import runs_for, tally
 
 
-def make_run(root, arm, repo, run, rows):
+def make_run(root, arm, repo, run, rows, sv="sha256:aaa"):
     d = os.path.join(root, arm, repo, run)
     os.makedirs(d)
-    json.dump({"tool": arm, "repo": repo, "wall_time_seconds": 1},
+    json.dump({"tool": arm, "repo": repo, "wall_time_seconds": 1, "scenario_version": sv},
               open(os.path.join(d, "run_meta.json"), "w"))
     json.dump({"gold_recall": {"details": rows}},
               open(os.path.join(d, "scored.json"), "w"))
@@ -69,6 +69,23 @@ class TallyTest(unittest.TestCase):
         os.makedirs(d)
         json.dump({"tool": "sense"}, open(os.path.join(d, "run_meta.json"), "w"))
         self.assertEqual(len(runs_for("mastodon", [self.tmp])), 4)
+
+    def test_two_scenarios_on_one_repo_are_not_blended(self):
+        """A repo name is not a scenario. Runs from a DIFFERENT question have different
+        gold, so counting them together reports rows as never-cited that the other
+        scenario never had - the ranking then steers the next gold off a phantom."""
+        make_run(self.tmp, "sense", "mastodon", "run-7",
+                 [{"id": "other-question-row", "group": "dependents", "cited": True}],
+                 sv="sha256:bbb")
+        versions = {sv for _a, _s, sv in runs_for("mastodon", [self.tmp])}
+        self.assertEqual(versions, {"sha256:aaa", "sha256:bbb"})
+        # tally over ONE version must not see the other question's row
+        one = [r for r in runs_for("mastodon", [self.tmp]) if r[2] == "sha256:aaa"]
+        self.assertNotIn("other-question-row", tally(one))
+
+    def test_the_version_rides_along_with_every_run(self):
+        for _arm, _scored, sv in runs_for("mastodon", [self.tmp]):
+            self.assertTrue(sv)
 
     def test_unreadable_scored_json_does_not_crash_the_ranking(self):
         d = make_run(self.tmp, "sense", "mastodon", "run-8", [])

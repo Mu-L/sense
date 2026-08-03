@@ -34,7 +34,13 @@ import sys
 
 
 def runs_for(repo, roots):
-    """Every scored run for this repo under the given roots, as (arm, path)."""
+    """Every scored run for this repo, as (arm, path, scenario_version).
+
+    The version rides along because a repo name is NOT a scenario: one results root can
+    hold runs from several questions authored against the same repo, and their gold sets
+    have different rows. Blending them would count a row as "never cited" simply because
+    the other scenario never had it.
+    """
     out = []
     for root in roots:
         for meta in glob.glob(os.path.join(root, "**", "run_meta.json"), recursive=True):
@@ -45,17 +51,17 @@ def runs_for(repo, roots):
             if not os.path.isfile(scored):
                 continue
             try:
-                arm = json.load(open(meta)).get("tool") or "?"
+                m = json.load(open(meta))
             except (OSError, ValueError):
                 continue
-            out.append((arm, scored))
+            out.append((m.get("tool") or "?", scored, m.get("scenario_version") or "(unversioned)"))
     return out
 
 
 def tally(runs):
     """{row_id: {"group":g, arm: [cited, total]}} across every run."""
     rows = {}
-    for arm, scored in runs:
+    for arm, scored, _sv in runs:
         try:
             gr = json.load(open(scored))["gold_recall"]
         except (OSError, ValueError, KeyError):
@@ -78,15 +84,44 @@ def main():
     ap.add_argument("roots", nargs="+")
     ap.add_argument("--min-runs", type=int, default=1,
                     help="skip rows seen in fewer runs than this (default 1)")
+    ap.add_argument("--scenario-version", help="rank this version (default: the one with most runs)")
+    ap.add_argument("--list-versions", action="store_true", help="list versions found, then stop")
     args = ap.parse_args()
 
     runs = runs_for(args.repo, args.roots)
     if not runs:
         print(f"no scored runs for {args.repo} under {', '.join(args.roots)}")
         return 1
-    by_arm = collections.Counter(a for a, _ in runs)
+
+    # ONE SCENARIO VERSION, ALWAYS. Different questions on one repo score different gold,
+    # so a blended table reports rows as never-cited that the other scenario never had.
+    by_version = collections.Counter(sv for _a, _s, sv in runs)
+    if args.list_versions:
+        print(f"# scenario versions for {args.repo}")
+        for sv, n in by_version.most_common():
+            print(f"  {sv}  {n} run(s)")
+        return 0
+    if args.scenario_version:
+        target = args.scenario_version
+        if target not in by_version:
+            print(f"no runs at scenario_version {target}; have: "
+                  + ", ".join(f"{sv} ({n})" for sv, n in by_version.most_common()))
+            return 1
+    else:
+        # Most-represented wins, ties broken by name so the pick is deterministic. It is
+        # announced rather than silent: picking without saying so is the same bug.
+        target = sorted(by_version.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
+    skipped = [(sv, n) for sv, n in by_version.most_common() if sv != target]
+    runs = [r for r in runs if r[2] == target]
+
+    by_arm = collections.Counter(a for a, _s, _sv in runs)
     print(f"# inverse-frequency ranking (rarest cited first) - {args.repo}  ({len(runs)} runs: "
-          + ", ".join(f"{a} x{n}" for a, n in sorted(by_arm.items())) + ")\n")
+          + ", ".join(f"{a} x{n}" for a, n in sorted(by_arm.items())) + ")")
+    print(f"# scenario {target}")
+    if skipped:
+        print("# NOT included (a different question on this repo, different gold): "
+              + ", ".join(f"{sv} ({n} run(s))" for sv, n in skipped))
+    print()
 
     rows = tally(runs)
     arms = sorted(by_arm)
