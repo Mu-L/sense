@@ -934,6 +934,11 @@ while :; do
   esac
   [ -z "$NEXT" ] && { echo "[$VERTICAL/$REPO] phase '$PHASE' set no next phase - stopping" >&2; exit 1; }
   state_set "$REPO" "$NEXT"
+  # Re-render the human page at every transition. STATUS.md is write-only (it decides
+  # nothing) but it is the page a resuming session reads, and nothing else re-rendered it:
+  # it sat at 'author' for a day while the state file correctly said 'harvest'. Rendering
+  # is $0 and read-only, and it must never take the loop down - hence the `|| true`.
+  bash "$LIB/render-status.sh" "$VERTICAL" >/dev/null 2>&1 || true
   [ -n "$FORCE_PHASE" ] && { echo "[$VERTICAL/$REPO] phase '$PHASE' done; next is '$NEXT' (--phase forced single step)"; exit 0; }
   PHASE="$NEXT"
   [ "$PHASE" = done ] && { echo "[$VERTICAL/$REPO] all phases complete."; exit 0; }
