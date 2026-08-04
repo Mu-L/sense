@@ -1,0 +1,237 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# WHY map_quality carries the most weight here: this scenario's axis (cycle 10) is
+# ATTRIBUTION, not enumeration. A search prints the line that takes the dependency; it
+# never prints the routine that owns that line. The answer that matters says WHOSE
+# behaviour changes - the enclosing routine, and what it would start getting wrong - for
+# every dependent, under a budget the first step already spent.
+#
+# Step names MUST match scenarios/mastodon.yaml exactly (the judge pairs by name).
+
+audience: |
+  An AI coding agent that will use this answer to safely rework the class representing a
+  person on a Mastodon server. Score for that agent, not a human reader and not a docs
+  page. A perfect answer leaves the agent able to change that class knowing two things:
+  how the rest of the system gets hold of one of these records when all it holds is an
+  identifier that came from outside - traced through the routines that make that path up -
+  and every other place that would have to change with the class, each one attributed to
+  the routine the dependency sits inside, pinned to an exact file:line, with the
+  consequence of the change on that routine stated. The dependents that matter are not the
+  ones whose job is this record; they are the ones doing some unrelated job that reach for
+  it once in the middle of it, from a routine named after that other job. A weak answer
+  lists places rather than routines; sweeps the areas obviously about the record and
+  stops; collapses a set into "all the services"; or gives file:line with nothing said
+  about which routine owns the line or what breaks in it - which leaves the agent knowing
+  where the name appears and not what its change would do.
+
+steps:
+  - name: Orient in the codebase
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer give a usable map - what this project is, how the tree is
+          organized, where the record standing for a person sits, and the shared pieces its
+          behaviour is assembled from - rather than a directory listing or a README recital?
+          Could the next step act from this map with small targeted lookups instead of a
+          fresh exploration?
+      specificity:
+        weight: 0.25
+        question: |
+          Are the references real paths, with line numbers where a specific piece is named,
+          rather than area words ("the models", "the services")?
+      justification:
+        weight: 0.20
+        question: |
+          Does it say WHY the code is laid out this way - what the conventions are and what
+          they imply for a change here - rather than only naming directories?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does it flag what it has not looked at, or that this is an orientation sweep and
+          not an audit, rather than presenting it as complete?
+
+  - name: Map the account-record contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer trace the outside-identifier resolution path end to end rather
+          than describing the class in general? Does it cover the entry points that turn an
+          external identifier into one of these records, the places that cache or
+          short-circuit that path, the place that goes out to the network to build a record
+          the system did not have, and the places that hand back something other than a
+          person when the identifier does not resolve to one? Is each step of the path
+          attributed to the ROUTINE it lives in, not just to a file? Does it say what a
+          rework would have to preserve for that path to keep working? Would the agent be
+          able to start the audit that follows with only small, targeted lookups?
+      specificity:
+        weight: 0.25
+        question: |
+          Are the cited references exact file:line rather than filenames, directories or
+          vague area names ("the services")? Is every step of the path tied to a real path
+          AND a line AND the name of the routine that contains it? Is every claim tied to a
+          real path?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain WHY the path is shaped this way - what each hop
+          contributes, why the cache or the network hop is there, what the fallbacks are
+          protecting against - rather than only NAMING the pieces it found?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer flag what it has not verified, or where it is inferring a
+          routine's role from its name rather than from its contents, instead of presenting
+          an orientation sweep as complete?
+
+  - name: Trace how one of these records is built up and taken apart
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer trace the lifecycle end to end - the record being brought into
+          existence when the system finds it needs one it does not have, being updated, and
+          later being withdrawn, wound down or folded into another - and say what runs around
+          each of those moments? Is each layer attributed to the ROUTINE it lives in? Is it
+          clear which parts run inline in the triggering request and which are handed off to
+          run later, and what the deferred parts are handed - the record, or something they
+          must look it up from again?
+      specificity:
+        weight: 0.25
+        question: |
+          Is every layer pinned to an exact file:line AND the enclosing routine, rather than
+          a filename or a class name alone? Is the line the one that actually does the work
+          named, rather than a class header?
+      justification:
+        weight: 0.20
+        question: |
+          Does it explain WHY the lifecycle is split the way it is - why a piece is deferred,
+          what the ordering protects, what would go wrong if it ran inline - rather than only
+          listing the layers?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does it say where it is inferring a step's role from a name it did not open, or
+          which branches of the lifecycle it did not follow?
+
+  - name: Audit every dependent of the account-record contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          THIS IS THE CORE STEP, and attribution is what it is scored on. How complete is
+          the dependent set, and for how many of them does the answer name the ROUTINE the
+          dependency sits inside and what that routine would start getting wrong if the
+          class changed? Credit dependents that sit in an area whose job is something other
+          than this record and that consult it once in passing, from a routine named after
+          that other job. Penalise an answer that lists file:line locations without saying
+          which routine owns each line; that names routines but cannot say what breaks in
+          them; that enumerates the areas obviously about the record and stops; or that
+          collapses a set into a summary such as "all the services". Would the agent be able
+          to change the class without silently breaking behaviour it was never shown the
+          owner of?
+      specificity:
+        weight: 0.25
+        question: |
+          Is EVERY dependent pinned to an exact file:line AND to the name of the enclosing
+          routine? A filename with no line number does not count; a file:line with no
+          routine named around it does not count. Is the line the one that actually takes
+          the dependency rather than a class header? Does each entry say concretely what
+          that routine takes from the class?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain how these dependents were found and why the set should be
+          believed complete - and does it reason about consequence, distinguishing a
+          dependent that would fail loudly from one that would keep running and quietly
+          return something different - rather than only listing what it located?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer state honestly where its enumeration is thin - areas it did not
+          sweep, routines it named without opening, budget it ran short of - rather than
+          presenting a partial list as exhaustive?
+
+  - name: Trace the guards that confirm a real, current record
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer find the three distinct kinds of guard and keep them apart - the
+          kind-check that refuses something that is not one of these records at all, the
+          missing-record path that turns absence into a refusal rather than an error further
+          down, and the check that stops work on a record that exists but has been withdrawn
+          or is not yet cleared? Is each guard attributed to the routine it lives in?
+      specificity:
+        weight: 0.25
+        question: |
+          Is every guard pinned to an exact file:line AND its enclosing routine, and is the
+          line the one that performs the check rather than the method the check sits under?
+      justification:
+        weight: 0.20
+        question: |
+          Does it say what each guard protects the caller from - what would reach the caller
+          if the guard were removed - rather than only quoting the condition?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does it say where guards may exist that it did not find, or where it is asserting a
+          guard's purpose from its name rather than its contents?
+
+  - name: Assess the blast radius of the contract change
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Is this a RANKED risk assessment over everything found earlier, or a relisting of
+          the same dependents? Does it separate the dependents that would fail loudly and
+          immediately from the ones that would keep running and quietly return something
+          different, and does it treat the quiet ones as the expensive class? Does it say what
+          must be re-verified afterwards, concretely?
+      specificity:
+        weight: 0.25
+        question: |
+          Is each risk carried by a named routine at an exact file:line, rather than assigned
+          to a file or an area? Is the ranking made of specific dependents rather than
+          categories?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer say what DRIVES the ranking - why this dependent is riskier than
+          that one - rather than asserting an order?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does it state which risks it is unsure of, and which parts of the radius it could
+          not assess within the budget it had left?
+
+  - name: Produce the change + verification map
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Could a teammate land the change from this map alone, without re-exploring the
+          codebase? Does it cover all three parts - the pieces of the contract itself to
+          edit, every dependent that must be reviewed or touched grouped by area, and the
+          tests that would have to be updated or added for the behaviour that moves - or does
+          it drop one?
+      specificity:
+        weight: 0.25
+        question: |
+          Is every edit and every dependent pinned to a file:line and its enclosing routine?
+          Are the tests named as real files rather than as "the specs"? Is the grouping by
+          area concrete rather than a heading with a summary under it?
+      justification:
+        weight: 0.20
+        question: |
+          Does the map say why each item is on it - what about the change reaches that item -
+          rather than presenting an undifferentiated to-do list?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does it name what it would want to check before starting, and what it could not
+          confirm, rather than presenting the map as a finished plan?
