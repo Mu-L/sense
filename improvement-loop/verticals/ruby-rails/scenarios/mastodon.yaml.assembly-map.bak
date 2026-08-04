@@ -1,0 +1,273 @@
+name: Mastodon work session - audit the account-record contract before a rework
+repo: mastodon
+contract_symbol: Account
+contract_file: app/models/account.rb
+# TWO-STEP PROBE SCENARIO (plans/01-author.md), CYCLE 9 - a RE-QUESTION.
+# It exists so the next phase can run the mini-bench - both arms, once, at the real wall,
+# unscored - against a real baseline. Nothing here is a verdict: no delta is claimed and
+# none has been measured on this shape.
+#
+# Single-prompt session bench (bench/drivers/bench-sense-local.sh): every step is presented
+# in ONE prompt and worked in order. Rendered to the agent: the description + each step's
+# name and prompt ONLY (checks and gold are NEVER shown). Everything rendered is kept
+# NEUTRAL - it states the task, never the answer's shape, file paths, class or method
+# names, counts, or which tool to reach for.
+#
+# ------------------------------------------------------------------------------------
+# THE TRAJECTORY, EVERY CYCLE, AND WHICH SIDE OF THE WINDOW IT FELL ON
+# ------------------------------------------------------------------------------------
+# The window is BOTH conditions at once: baseline `dependents` at or below 0.50 AND sense
+# at least +0.50 above it. FAR = the baseline cleared the question itself. NEAR = the
+# baseline was held down but our arm did not reach either.
+#
+#   cycle 1  mastodon.yaml.class-call-sites.bak   base 0.8125  sense 1.000  d +0.1875  FAR
+#   cycle 2  mastodon.yaml.line-not-file.bak      base 0.158   sense 0.158  d  0.000   NEAR
+#            (baseline half CLEARED; the sense arm never called blast on the class)
+#   cycle 3  mastodon.yaml.table-altitude.bak     base 0.091   sense 0.091  d  0.000   NEAR
+#            (both arms audited the accounts TABLE and agreed on the wrong question)
+#   cycle 4  mastodon.yaml.names-the-class.bak    base 1.000   sense 1.000  d  0.000   FAR
+#   cycle 5  mastodon.yaml.not-the-call-form.bak  base 1.000   sense 1.000  d  0.000   FAR
+#   cycle 6  (author phase, `Account#local?`)     no run                              n/a
+#            NO-ANCHOR reached from a per-row grep census - a screen used as a gate, which
+#            laws.md forbids in any form. It decided nothing and is not counted.
+#   cycle 7  mastodon.yaml.line-pin-no-shape.bak  base 1.000   sense 1.000  d  0.000   FAR
+#   cycle 8  mastodon.yaml.inherited-helpers.bak  base 1.000   sense 1.000  d  0.000   FAR
+#            (the ANCHOR MOVE: `Account` retired for `ApplicationController`, whose gold was
+#            19 of 19 token-DARK files. The baseline read the base file once, printed the
+#            inherited helper names, grepped those, and took 19 of 19 in 21 calls.)
+#
+# WHICH SIDE THIS DRAFT CORRECTS FROM: the FAR side, six of the eight runs, and by a full
+# 0.50. Intended landing: baseline at or below ~0.45, sense at or above ~0.95.
+#
+# ------------------------------------------------------------------------------------
+# WHAT THE EIGHT CYCLES HAVE ALREADY CLOSED - do not re-run these levers
+# ------------------------------------------------------------------------------------
+#  a. REWORDING THE MECHANISM. Named, withheld, re-named: cycles 4, 5 and 7 measured
+#     1.000, 1.000, 1.000. Withholding the call shapes cost the baseline four extra Bash
+#     calls and bought zero rows (cycle 7's own report).
+#  b. TOKEN-DARK GOLD. Cycle 8 built the strongest possible version - 19 of 19 gold files
+#     with ZERO occurrences of the anchor's name - and the baseline took all 19. Darkness
+#     of the CLASS name does not help when the dependents share any small enumerable token.
+#  c. MOVING THE ANCHOR. Also cycle 8. Same number, 1.000. The anchor is not the variable.
+#  d. PINNING THE LINE RATHER THAN THE FILE. Closed by the scorer, not by a run.
+#     `bench/lib/gold.py:_cited` credits a gold path followed by ANY line number; the
+#     specific line is never compared to gold's. So "which LINE, not which file" (cycle 7's
+#     whole thesis) is not a thing the metric can see. The metric is: WHICH FILES did the
+#     answer name, with some line attached. Nothing else.
+#  e. TRIAGE / PRECISION FRAMINGS. `bench/lib/scorer.py` dropped gold_f1; recall only, so
+#     an arm that dumps every candidate pays nothing for over-citing.
+#
+# What that leaves is a question about which FILES an arm can still be naming when its
+# budget is half spent. That is the one variable eight cycles never touched.
+#
+# ------------------------------------------------------------------------------------
+# THE AXIS - the two levers, both untested, stated so the next phase can measure them
+# ------------------------------------------------------------------------------------
+# LEVER 1 - SESSION POSITION, MADE TESTABLE IN TWO STEPS. laws.md carries this as a
+# hypothesis under test, not established: this repo's ONE banked win (+0.53, baseline 7 of
+# 23, sense 19 of 23) is the SAME occurrence-list kind as the eight failures, and the
+# difference on the record is that it sits at step 4 of a 7-step session, so both arms
+# arrive with wall and context already spent, while all eight probes asked it at step 2 of
+# 2 with the wall fresh. Cycle 7's report concluded a two-step probe therefore CANNOT
+# measure it. That is only true while step 1 is cheap orientation, and in all eight cycles
+# it was. Here step 1 is deliberately expensive and it is the COST, not the wording, that
+# is the experiment: the record class's body is assembled from seventeen files at load
+# time (540 lines in the class, 1145 more across sixteen mixed-in modules), and step 1 asks
+# for the assembly map with file:line for every part. An arm cannot answer it from the
+# class file alone and cannot answer it from memory - see MEMORIZATION below, where the
+# probe recites member NAMES at 0.387 but no defining file for any of them.
+# NOTE the honest risk, stated before the run: laws.md also says squeezing the WALL only
+# voids arms. This does not squeeze the wall - both arms keep their normal budget - it
+# spends it on real work first. If the baseline arrives at step 2 and still closes at
+# 1.000, the session-position hypothesis is answered NO for a two-step shape and the next
+# cycle must stop proposing it.
+#
+# LEVER 2 - GOLD FROM THE SINGLETON PERIPHERY ONLY. Every previous gold set mixed dense
+# areas (app/services at 35 direct callers, app/models at 31, app/controllers/api/v1 at 13)
+# with sparse ones, and the dense areas are where a token sweep's output starts. All 16
+# rows below are drawn from areas the shown blast payload reports at ONE OR TWO direct
+# callers - validators, schedulers, system checks, metric dimensions, presenters, importers,
+# form objects, serializer decorators. Cycle 1 is the only measurement that bears on this
+# and it points the right way: its three misses were the tail of a 100+ hit list, and its
+# own report called them "attention drop-off at the tail", not a blind spot. The bet is that
+# drop-off at the tail is what a spent budget amplifies, and that the blast payload is
+# order-free and paid once. That is a bet. It is not established and it is not evidence.
+#
+# THE SENTENCE PLAN 01 ASKS FOR, ANSWERED HONESTLY. This is KIND ONE. The answer to step 2
+# IS a list of the places a name appears; every one of the 16 gold files contains the
+# literal token `Account`, and one grep prints all of them. That is stated plainly rather
+# than dressed up, per the plan's own instruction. What is under test is not the shape of
+# the answer, it is whether an arm still reaches the tail of that list after paying for
+# step 1.
+#
+# ------------------------------------------------------------------------------------
+# THE CONTRACT AND ITS SEAM PROFILE
+# ------------------------------------------------------------------------------------
+# `Account`, app/models/account.rb - the record that both local users and remote actors are
+# rows in, the model everything in this codebase hangs off. Kept, per ITERATE ON THE
+# QUESTION, KEEP THE ANCHOR, and because cycle 8 measured that moving it changes nothing.
+#
+#   python3 bench/lib/anchor_rank.py $CLONE --top 20
+#     Account   class   dep_files 206   app/models/account.rb      <- rank 1 of 20
+#
+#   python3 bench/lib/seam_hunt.py $CLONE Account --file app/models/account.rb
+#     app caller files 107; SCATTER (dirs) 34; 'Account' in 257 app files;
+#     PRECISION=0.42 (lower = grep-hostile); VERDICT "SCATTERED + GREP-NOISY".
+#     Re-run this cycle, not carried over from a previous header. It is the lowest
+#     precision profiled on this repo across nine cycles. Compared on the same command
+#     this cycle: ApplicationPolicy PRECISION 0.53 / SCATTER 10 dirs, TagManager
+#     PRECISION 0.53 / SCATTER 22 dirs; Serializer and BaseService both report SCATTER 0
+#     dirs with "RESOLVER-GAP?", so neither can serve a gold row at all.
+#   Calibration on the record: 0.078 preceded a +1.00 cell, 0.78 was a deliberate control
+#   tie, ~0.94 handed a baseline 17 of 18 rows in one grep. 0.42 RANKS mid. It never kills.
+#
+#   python3 bench/lib/ring_sweep.py $CLONE --top 12
+#     0 candidate(s) above the bar - all twelve anchors at 0 rows / 0 files / 0 vias.
+#   So "what HOLDS X" is off the menu repo-wide, for the third sweep running. Kind one is
+#   not a preference here, it is the only kind this stack can serve.
+#
+# ------------------------------------------------------------------------------------
+# WHAT THE ARM IS SHOWN, AT MCP DEFAULTS
+# ------------------------------------------------------------------------------------
+#   python3 bench/lib/mcp_probe.py $CLONE \
+#     '[{"name":"sense_blast","arguments":{"symbol":"Account","file":"app/models/account.rb"}}]'
+#     risk high, risk_factors ["200 direct callers"], affected_symbols 336,
+#     affected_files 61, production_affected 60, indirect_callers [] (no second hop),
+#     direct_callers_by_area spans 30 areas.
+# EVERY one of the 16 `dependents` rows below appears in that shown payload:
+#   python3 bench/lib/gold_confidence_check.py $YAML Account --repo $CLONE \
+#     --group dependents --file app/models/account.rb
+#     gold rows: 16   shown: 16   missing: 0    PASS
+# The payload names the enclosing `def` and NOT the dependency line, so every line below was
+# opened and read by hand this cycle; the relations are written from that output, never from
+# a script tally, and `gold_audit.py verify` passes on 22 of 22 hand-audited rows.
+#
+# ONE FACT ABOUT THE FIRST CALL, which the next phase should expect in the transcripts.
+# `sense_blast {"symbol":"Account"}` with NO file returns no dependents at all - it returns
+# a disambiguation object: `"ambiguous": true, "matches": 13`, with a hint naming
+# app/models/account.rb, because thirteen symbols in this repo are called `Account` (the
+# React component, the CLI maintenance class, and ten migration-local shims). The sense arm
+# must pass `file` to be shown anything. Cycle 7's transcript shows it doing exactly that
+# unprompted, so this is a documented shape of the run, not a hazard - but a sense arm that
+# stops at the ambiguity reply scores zero, and that is now a thing to check for rather than
+# to infer from a low number.
+#
+# THE INVERSE-FREQUENCY RANKING (plan step 0c) contributed nothing to this gold set and is
+# recorded so the next cycle does not re-run it expecting more:
+#   python3 bench/lib/inverse_frequency.py mastodon $VDIR/results/claude-opus-5/validation
+#   10 runs, baseline x5 + sense x5 - but that root is the BANKED `Status` cell, a different
+#   scenario (sha256:f576efe) with different gold. It reports 10 free rows and 2 unreachable
+#   spec rows ON THAT CELL. There is no per-row citation history for any `Account` gold row
+#   at n>=5 on one wording, because no `Account` wording has been benched twice. Nothing was
+#   dropped or kept on its authority.
+#
+# MEMORIZATION (bench/lib/memorization_probe.py $CLONE Account, this cycle):
+#   ok false, recall 0.387, hits_n 36, truth_n 93, samples [0.0, 0.258, 0.387]
+#   reason: "closed-book recall 0.387 (36 members named) >= 0.3 - recited"
+#   hits include: USERNAME_RE, MENTION_RE, INSTANCE_ACTOR_ID, NOTE_LENGTH_LIMIT,
+#   STALE_THRESHOLD, AUTOMATED_ACTOR_TYPES, from_text, acct, discoverable, ...
+# The class's own member list is recited. Acted on, not noted:
+#   - NOT ONE gold row's credit is a member name. Every one is a line in a DIFFERENT file,
+#     and the probe produces no file for any member it recites.
+#   - Step 1 is therefore framed as WHERE each part of the surface is DEFINED, across the
+#     seventeen files, not WHAT the surface contains. Reciting names does not answer it.
+#   - Every gold file's last commit is 2026-06-12, after the model snapshot (churn-dated
+#     this cycle with `git log -1 --format=%ad`, 16 of 16 dependents plus 6 of 6 contract).
+description: |
+  You are a maintainer about to rework the record class that both local people and
+  remote actors are stored as - the one every other part of this codebase reaches for
+  when it needs to know who someone is. The rework will change what that class hands
+  back to its callers, so before you touch it you have to know two things: how the
+  class is assembled today, and what across the codebase would have to change with it.
+  For everything you name, give an exact file:line a teammate could jump straight to,
+  plus one phrase on why it matters. A filename with no line number does not count, and
+  a missed dependent is a regression shipped.
+steps:
+- name: Map the account-record contract
+  prompt: "Task: orient, and be thorough - the rest of the ticket is built on this. The
+    class in question is not written in one place: most of what it offers its callers is
+    contributed at load time by modules mixed into it, and the file that declares the class
+    mostly just lists them. Produce the assembly map. For EVERY module mixed in, give the
+    file:line where it is mixed in, the file:line where that module is defined, and one
+    phrase on which part of the class's surface it contributes - the query scopes, the
+    lookup entry points, the relations to other records, the counters, the moderation
+    states, the search surface, and so on. Then say, in a few sentences, what a rework
+    would have to preserve. Naming a module without saying where it is defined does not
+    count, and neither does listing what the class offers without saying which file
+    contributes it. Give file:line for everything you name.
+    "
+  checks:
+  - type: response_richness
+    value: '8'
+    required: true
+    description: Modules located at their definition site, not just named
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+- name: Audit every dependent of the account-record contract
+  prompt: "Task: this is the core of the ticket, and you are working it with the budget the
+    first part already cost you. Find EVERY place in the codebase that depends on the record
+    class, so the rework cannot silently break one. Be exhaustive and group them by area.
+    The dependents you will find first are the ones that are about people - the parts of the
+    system whose whole job is this record. Those are the easy half and they are not what
+    breaks quietly. The half that breaks quietly consults the record to settle a question
+    about something else entirely: it is doing some other job, it reaches for this class
+    once in the middle of it, and it sits alone in a corner of the tree that has nothing
+    else like it. Do not stop where dependents are dense. For each dependent give file:line
+    and one phrase on how it uses the record class. A filename with no line number does not
+    count, and a missed dependent is a regression shipped.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Named dependents outside the areas that are about the record itself
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
+# Gold is the must-find audit of what depends on the account record. TWO groups:
+#   - `contract` (6, NON-SCORING anchors): the class file and five of the modules mixed into
+#     it. These are step 1's targets. Both arms reach them and they do NOT score; they are
+#     here so the scored group is not diluted by the obvious centre, and so step 1's cost is
+#     charged without step 1 giving anything away.
+#   - `dependents` (16, THE DISCRIMINATOR): one row per FILE, across 14 distinct directories,
+#     every one of them an area the shown blast payload reports at ONE OR TWO direct callers.
+#     No row is from app/services (35 callers), app/models (31) or app/controllers/api/v1
+#     (13) - the dense areas a token sweep's output opens with. Every row appears in the
+#     shown blast payload above and every line below was read by hand.
+# Stated plainly: all 16 files contain the literal token `Account`. This gold is NOT curated
+# for darkness - cycle 8 measured that darkness does not help - it is curated for distance
+# from where an enumeration starts.
+gold:
+- {id: contract-model, group: contract, match: [app/models/account.rb], relation: "app/models/account.rb:91 `include Attachmentable # Load prior to Avatar & Header concerns` - the contract under rework; lines 91-112 are the twenty-two mixin lines that assemble the class"}
+- {id: c:associations, group: contract, match: [app/models/concerns/account/associations.rb], relation: "app/models/concerns/account/associations.rb:3 `module Account::Associations` - contributes every relation the record has to other records"}
+- {id: c:finder, group: contract, match: [app/models/concerns/account/finder_concern.rb], relation: "app/models/concerns/account/finder_concern.rb:6 `class_methods do` - contributes the class-level lookup entry points callers reach the record through"}
+- {id: c:interactions, group: contract, match: [app/models/concerns/account/interactions.rb], relation: "app/models/concerns/account/interactions.rb:3 `module Account::Interactions` - contributes the follow/block/mute relations and their predicates"}
+- {id: c:search, group: contract, match: [app/models/concerns/account/search.rb], relation: "app/models/concerns/account/search.rb:6 `DISALLOWED_TSQUERY_CHARACTERS` - contributes the text-search surface and its ranking SQL"}
+- {id: c:counters, group: contract, match: [app/models/concerns/account/counters.rb], relation: "app/models/concerns/account/counters.rb:6 `ALLOWED_COUNTER_KEYS = %i(statuses_count following_count followers_count).freeze` - contributes the cached counter surface"}
+- {id: d:note-length-validator, group: dependents, match: [app/validators/note_length_validator.rb], relation: "app/validators/note_length_validator.rb:19 `new_text.gsub!(Account::MENTION_RE, '@\\2')` - a length validator strips mentions using the record's mention regexp before counting graphemes"}
+- {id: d:self-destruct-scheduler, group: dependents, match: [app/workers/scheduler/self_destruct_scheduler.rb], relation: "app/workers/scheduler/self_destruct_scheduler.rb:54 `@inboxes ||= Account.inboxes` - the instance-shutdown scheduler collects delivery targets from a class-level scope"}
+- {id: d:media-privacy-check, group: dependents, match: [app/lib/admin/system_check/media_privacy_check.rb], relation: "app/lib/admin/system_check/media_privacy_check.rb:102 `Account.representative.media_attachments.create!(file: tmp_file)` - an admin system check uploads a probe file as the instance's representative record"}
+- {id: d:space-usage-dimension, group: dependents, match: [app/lib/admin/metrics/dimension/space_usage_dimension.rb], relation: "app/lib/admin/metrics/dimension/space_usage_dimension.rb:44 `Account.sum(Arel.sql('COALESCE(avatar_file_size, 0) + COALESCE(header_file_size, 0)'))` - a storage-dashboard dimension aggregates avatar and header bytes off the record"}
+- {id: d:serializer-model-name, group: dependents, match: [app/serializers/rest/account_serializer.rb], relation: "app/serializers/rest/account_serializer.rb:29 `Account.model_name` - a SimpleDelegator decorator forwards the record's model name so serialization keys stay stable"}
+- {id: d:account-batch-form, group: dependents, match: [app/models/form/account_batch.rb], relation: "app/models/form/account_batch.rb:69 `Account.where(id: account_ids)` - a moderation batch form resolves checked ids back to records"}
+- {id: d:instance-presenter, group: dependents, match: [app/presenters/instance_presenter.rb], relation: "app/presenters/instance_presenter.rb:54 `User.confirmed.joins(:account).merge(Account.without_suspended).count` - the public instance profile counts users through a record scope"}
+- {id: d:json-ld-helper, group: dependents, match: [app/helpers/json_ld_helper.rb], relation: "app/helpers/json_ld_helper.rb:233 `on_behalf_of ||= Account.representative` - federation fetches fall back to the instance's representative record to sign requests"}
+- {id: d:statuses-index-importer, group: dependents, match: [app/lib/importer/statuses_index_importer.rb], relation: "app/lib/importer/statuses_index_importer.rb:74 `Poll.joins(:votes).where(votes: { account: Account.local }).select(polls: [:id, :status_id])` - the search reindexer restricts poll votes to local records"}
+- {id: d:action-log-filter, group: dependents, match: [app/models/admin/action_log_filter.rb], relation: "app/models/admin/action_log_filter.rb:114 `account = Account.find_or_initialize_by(id: value)` - the audit-log filter resolves a target id to a record so it can match polymorphic targets"}
+- {id: d:friends-of-friends, group: dependents, match: [app/models/account_suggestions/friends_of_friends_source.rb], relation: "app/models/account_suggestions/friends_of_friends_source.rb:10 `Account.find_by_sql([<<~SQL.squish, { id: account.id, limit: limit }])` - a follow-suggestion source instantiates records from raw SQL"}
+- {id: d:extractor, group: dependents, match: [app/lib/extractor.rb], relation: "app/lib/extractor.rb:28 `text.scan(Account::MENTION_RE) do |screen_name, _|` - the text extractor finds mentions with the record's mention regexp"}
+- {id: d:entity-cache, group: dependents, match: [app/lib/entity_cache.rb], relation: "app/lib/entity_cache.rb:15 `Account.select(:id, :username, :domain, :url).find_remote(username, domain)` - the entity cache memoises a narrowed remote lookup"}
+- {id: d:feed-manager, group: dependents, match: [app/lib/feed_manager.rb], relation: "app/lib/feed_manager.rb:21 `Account.joins(:user).merge(User.signed_in_recently).find_each(&block)` - timeline maintenance iterates recently-active records in batches"}
+- {id: d:signature-verification, group: dependents, match: [app/controllers/concerns/signature_verification.rb], relation: "app/controllers/concerns/signature_verification.rb:48 `signed_request_actor.is_a?(Account) ? signed_request_actor : nil` - HTTP signature verification type-tests the resolved actor against the record class"}
+- {id: d:ap-create-delivered, group: dependents, match: [app/lib/activitypub/activity/create.rb], relation: "app/lib/activitypub/activity/create.rb:170 `@delivered_to_account ||= Account.find(@options[:delivered_to_account_id])` - inbound federated posts resolve the delivery target before inserting into a home feed"}
