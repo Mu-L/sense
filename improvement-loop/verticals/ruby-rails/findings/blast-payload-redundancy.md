@@ -1,5 +1,10 @@
 # Finding: `sense_blast` pays ~10x for bytes it duplicates
 
+> **PRICING SUPERSEDED 2026-08-04.** The byte measurements below hold and were replicated on
+> mastodon. The priced projection ("1.26x -> 1.07x, PASS") does not: it subtracts
+> re-read-multiplied tokens 1:1 from a total that prices cache reads at 0.1x, over-crediting
+> the lever ~10x. See [`cost-parity-premium-is-not-the-payload.md`](cost-parity-premium-is-not-the-payload.md).
+
 **Source:** Loop 5 harvest on the `rails` cell (WIN, discriminator +0.56, 2026-08-01).
 **Status:** IN SCOPE for Loop 7 (owner ruling, 2026-08-01). Optimizing an existing
 payload for its consumer is the `enhance` lane — *"better output of an existing

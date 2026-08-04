@@ -311,6 +311,106 @@ class GoldUniqueSuffixTest(unittest.TestCase):
         self.assertFalse(d["order-build"]["cited"])
 
 
+class SymbolOracleTest(unittest.TestCase):
+    """`Class::Name#method` `:N` is a citation (owner ruling 2026-08-04).
+
+    Forms are taken verbatim from the mastodon run that the path-only matcher
+    scored 15/20 while Sense had returned all twenty
+    (findings/gold-matcher-is-path-only.md).
+    """
+
+    REPO = [
+        "app/controllers/admin/action_logs_controller.rb",
+        "app/controllers/api/v1/statuses/favourited_by_accounts_controller.rb",
+        "app/lib/admin/metrics/dimension/space_usage_dimension.rb",
+        "app/models/account_suggestions/friends_of_friends_source.rb",
+        "app/models/account_suggestions/source.rb",
+        "app/models/trends/source.rb",
+        "app/models/status_source.rb",
+    ]
+    GOLD = [
+        {"id": "audit", "group": "deps",
+         "match": ["app/controllers/admin/action_logs_controller.rb"]},
+        {"id": "favs", "group": "deps",
+         "match": ["app/controllers/api/v1/statuses/favourited_by_accounts_controller.rb"]},
+        {"id": "space", "group": "deps",
+         "match": ["app/lib/admin/metrics/dimension/space_usage_dimension.rb"]},
+        {"id": "suggest", "group": "deps",
+         "match": ["app/models/account_suggestions/source.rb"]},
+    ]
+
+    def _det(self, answer, transcript=None):
+        tx = transcript if transcript is not None else "\n".join(self.REPO)
+        res = gold.score_gold_recall(answer, self.GOLD, repo_files=self.REPO,
+                                     transcript_text=tx)
+        return {d["id"]: d for d in res["details"]}
+
+    def test_class_plus_line_is_cited(self):
+        d = self._det("`Admin::ActionLogsController#index` `:7`")
+        self.assertTrue(d["audit"]["cited"])
+        self.assertTrue(d["audit"]["mentioned"])
+
+    def test_deep_namespace_and_elided_prefix(self):
+        d = self._det("`Api::V1::Statuses::FavouritedByAccountsController"
+                      "#default_accounts` `:21`")
+        self.assertTrue(d["favs"]["cited"])
+        # The agent's leading ellipsis is not a word char, so the short form
+        # still anchors.
+        d = self._det("`…SpaceUsageDimension#media_size` `:39`")
+        self.assertTrue(d["space"]["cited"])
+
+    def test_class_without_line_is_mention_not_cite(self):
+        d = self._det("`Admin::ActionLogsController` also touches it")
+        self.assertTrue(d["audit"]["mentioned"])
+        self.assertFalse(d["audit"]["cited"])
+
+    def test_ambiguous_tail_needs_the_full_constant(self):
+        # `Source` is derived by two repo files, so the bare tail earns nothing.
+        d = self._det("`Source#base_account_scope` `:12`")
+        self.assertFalse(d["suggest"]["mentioned"])
+        d = self._det("`AccountSuggestions::Source#base_account_scope` `:12`")
+        self.assertTrue(d["suggest"]["cited"])
+
+    def test_longer_class_does_not_credit_a_shorter_one(self):
+        # StatusSource ends with "Source" but is a different class.
+        d = self._det("`StatusSource#text` `:4`")
+        self.assertFalse(d["suggest"]["mentioned"])
+
+    def test_pinless_class_cannot_borrow_the_next_rows_line(self):
+        d = self._det("`Admin::ActionLogsController#index`; "
+                      "`Api::V1::Statuses::FavouritedByAccountsController` `:21`")
+        self.assertFalse(d["audit"]["cited"])
+        self.assertTrue(d["audit"]["mentioned"])
+
+    def test_symbol_not_in_transcript_is_not_credited(self):
+        # Oracle 1 still gates: a class the run never held cannot be credited.
+        d = self._det("`Admin::ActionLogsController#index` `:7`", transcript="nothing here")
+        self.assertFalse(d["audit"]["mentioned"])
+
+    def test_oracle_off_without_a_checkout(self):
+        res = gold.score_gold_recall("`Admin::ActionLogsController#index` `:7`", self.GOLD)
+        self.assertEqual(res["cited"], 0)
+
+
+class PathToConstantTest(unittest.TestCase):
+    """The constant a Ruby path implies, derived from the path alone."""
+
+    def test_app_autoload_root_is_stripped(self):
+        self.assertEqual(
+            gold._path_to_constant("app/controllers/admin/action_logs_controller.rb"),
+            ("admin::actionlogscontroller", "actionlogscontroller"))
+        self.assertEqual(gold._path_to_constant("app/lib/feed_manager.rb"),
+                         ("feedmanager", "feedmanager"))
+
+    def test_lib_root_is_stripped_at_its_last_occurrence(self):
+        self.assertEqual(
+            gold._path_to_constant("activerecord/lib/active_record/relation.rb"),
+            ("activerecord::relation", "relation"))
+
+    def test_non_ruby_path_derives_nothing(self):
+        self.assertEqual(gold._path_to_constant("internal/blast/blast.go"), (None, None))
+
+
 class ScoreGoldF1Test(unittest.TestCase):
     """Precision/recall/F1 of the claimed (cited) file set vs gold."""
 

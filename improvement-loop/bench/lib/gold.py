@@ -44,6 +44,9 @@ the path but pinned the line a different way, and so manufactured fake
                                      unambiguous among the gold file paths (no two
                                      targets share it), so a basename pin can never
                                      double-count two distinct targets.
+  5. `Class::Name#method` `:N`     - the SYMBOL form of the same answer, when a
+                                     repo checkout is available. Owner ruling
+                                     2026-08-04; see the symbol oracle below.
 
 Returns None when the scenario declares no gold - older scenarios and
 competitor runs are unaffected.
@@ -281,6 +284,92 @@ def _oracle_match(file_pat, hay, repo_files, transcript_text):
     return (True, cited)
 
 
+# --- Symbol-form oracle ----------------------------------------------------
+# Agents also answer a "what depends on X" question in SYMBOLS rather than
+# paths: `Admin::ActionLogsController#index` `:7` instead of
+# `app/controllers/admin/action_logs_controller.rb:7`. Same answer, different
+# handwriting - and the path matcher scores it a miss, which cost the mastodon
+# cell 5 of 20 dependents on a run where Sense had returned every one of them
+# (findings/gold-matcher-is-path-only.md). Owner ruling 2026-08-04: a class name
+# plus a line IS a citation.
+#
+# The constant is derived from the PATH, never from an index or a tool result,
+# so scoring stays arm-blind and needs no inflection table: strip the autoload
+# root (`app/<dir>/`, or everything through the last `lib/`), then drop the
+# underscores from each remaining segment and join with `::`. The haystack is
+# already lower-cased, so `Api::V1` vs `API::V1` acronym casing never matters.
+#
+#   app/controllers/admin/action_logs_controller.rb -> admin::actionlogscontroller
+#   app/lib/admin/metrics/dimension/space_usage_dimension.rb
+#                                       -> admin::metrics::dimension::spaceusagedimension
+#
+# Both the path oracle's checks still apply (the gold pattern grounds to one
+# real file; that file is in the run transcript), plus a THIRD: the short form
+# is credited only when exactly one repo file derives it, otherwise the fully
+# qualified constant is required. A bare `Source` can never earn a credit.
+
+# How far past a class name its line pin may sit: enough for `#method` plus the
+# backticks and spaces agents put around it. `;` and `\n` are hard stops so a
+# pinless class in a `;`-separated list cannot borrow the next row's line.
+_SYMBOL_PIN_WINDOW = 30
+
+
+def _path_to_constant(real_path):
+    """(fully-qualified constant, last segment) implied by a Ruby path, both
+    lower-cased and underscore-stripped, or (None, None) for a non-Ruby path.
+
+    Derived from the path alone - no index, no repo read, no inflection table.
+    """
+    if not real_path.endswith(".rb"):
+        return (None, None)
+    segs = [s for s in real_path[:-3].split("/") if s]
+    if segs[:1] == ["app"] and len(segs) > 2:
+        segs = segs[2:]                      # app/models/..., app/lib/..., app/services/...
+    elif "lib" in segs:
+        segs = segs[len(segs) - 1 - segs[::-1].index("lib") + 1:]
+    if not segs:
+        return (None, None)
+    parts = [s.replace("_", "") for s in segs]
+    return ("::".join(parts), parts[-1])
+
+
+def _constant_is_unique(tail, repo_files):
+    """Does exactly one repo file derive this last-segment constant?"""
+    n = 0
+    for f in repo_files:
+        if _path_to_constant(str(f).lower())[1] == tail:
+            n += 1
+            if n > 1:
+                return False
+    return n == 1
+
+
+def _symbol_match(file_pat, hay, repo_files, transcript_text):
+    """(mentioned, cited) credit for an answer written in symbols instead of
+    paths; (False, False) unless the gold pattern grounds to one real file, that
+    file is in the run transcript, and the constant the path implies appears
+    boundary-anchored in the answer. `cited` additionally needs a line pin
+    within `_SYMBOL_PIN_WINDOW`. `hay`/`transcript_text` are lower-cased.
+    """
+    real = _resolve_real(file_pat, repo_files)
+    if not real or real not in transcript_text:
+        return (False, False)
+    fq, tail = _path_to_constant(real)
+    if not fq:
+        return (False, False)
+    # The short form only when the tree makes it unambiguous; else the full one.
+    forms = [fq] if fq == tail or not _constant_is_unique(tail, repo_files) else [fq, tail]
+    for form in forms:
+        anchor = r"(?<![\w.\-])" + re.escape(form) + r"(?![\w])"
+        if not re.search(anchor, hay):
+            continue
+        cited = bool(re.search(anchor + r"[^\n;{}]{0,%d}?:\d+" % _SYMBOL_PIN_WINDOW, hay)
+                     or re.search(anchor + r"[^\n;{}]{0,%d}?\(line\s+\d+\)"
+                                  % _SYMBOL_PIN_WINDOW, hay))
+        return (True, cited)
+    return (False, False)
+
+
 def _gold_file_targets(gold):
     """[(id, group, [lower-cased file-like patterns])] for every gold item that
     has at least one file-like `match`. Symbol-only targets (e.g. update_score)
@@ -421,8 +510,9 @@ def score_gold_recall(answer_text, gold, repo_files=None, transcript_text=None):
             if oracle_on:
                 for p in file_pats:
                     om, oc = _oracle_match(p, hay, repo_files, tx)
-                    mentioned = mentioned or om
-                    cited = cited or oc
+                    sm, sc = _symbol_match(p, hay, repo_files, tx)
+                    mentioned = mentioned or om or sm
+                    cited = cited or oc or sc
         else:
             cited = mentioned  # pure symbol target: mention is the best we can verify
         # cited ⇒ mentioned. A target pinned only by its (unambiguous) basename
