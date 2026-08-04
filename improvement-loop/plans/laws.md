@@ -87,6 +87,14 @@ they are not re-argued at runtime.
   files to pin sixteen lines. Curate gold from the scattered periphery, keep the contract
   centre as non-scoring anchors, demand `path:line`, and never judge a shape by whether grep
   finds the file.
+- **A CORRECTNESS ORACLE MUST NOT BE SATISFIABLE BY THE ROUTE.** Scoring a citation as
+  on-target when the audited token appears on the pinned line is a restatement of "did you
+  find this by grepping for that token", and it scores the grepper 100% where the structural
+  arm scores 0% on rows where BOTH are right: measured 67.4% baseline against 48.4% sense over
+  10 transcripts, with the difference being `def attached_to_preview_card` (sense) against
+  `Status.joins(...)` (baseline) one line below it. If citation correctness is ever scored the
+  oracle is a RANGE - does the pin fall inside the symbol carrying the dependency - never a
+  text match, and its circularity must be answered before it runs.
 - **A GOLD ROW MUST BE CITEABLE IN THE FORM THE ASK DEMANDS.** The headline scores `path:line`,
   so a row for an artifact the ask says to ADD has no line to cite and can never score. Measured
   on the banked Status control: its step 7 asks for "the specs/fixtures that must be updated or
