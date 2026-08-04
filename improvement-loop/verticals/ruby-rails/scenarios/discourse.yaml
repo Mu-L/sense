@@ -1,7 +1,91 @@
 # ============================================================================
-# SEVEN-STEP SESSION SCENARIO (plans/03-expand.md), CYCLE 8 on discourse.
+# SEVEN-STEP SESSION SCENARIO (plans/03-expand.md), CYCLE 8 on discourse,
+# ATTEMPT 2: THE SAME SESSION SHORTENED TO FIT THE WALL.
 # Expanded from the cycle-8 two-step probe, which is kept byte-for-byte at
 # scenarios/discourse.yaml.probe-2step-cycle8.bak (rubric alongside it).
+# Attempt 1 of this session - identical except for the six non-discriminator step
+# prompts and their richness floors - is kept at
+# scenarios/discourse.yaml.longsession-cycle8.bak (rubric alongside it).
+#
+# WHY THIS ATTEMPT EXISTS: CANNOT-FINISH-AT-BUDGET, AND WHERE THE WALL WENT
+#   The brief on disk (results/loop/discourse/expand.brief.md) is an instruction and it
+#   is quoted:
+#     "CANNOT FINISH AT BUDGET - the sense arm ran out of clock on every attempt, the
+#      retry included. The watchdog is NOT raised: the scenario is shortened and re-run
+#      instead. The anchor, the question and the gold all stay; expand rewrites the seven
+#      steps to ask for less work each. ... fewer places to visit per step, not fewer
+#      steps - seven is a contract this phase is checked against."
+#
+#   Both sense runs of attempt 1, from their run_meta.json:
+#     run-1  wall_time_seconds 481 of 480  claude_exit_code 124  watchdog hard_cap_timeout
+#     run-2  wall_time_seconds 481 of 480  claude_exit_code 124  watchdog hard_cap_timeout
+#
+#   The arm did NOT run out of clock exploring. It ran out writing. From the transcripts
+#   (results/.../validation/077b1225bb1b78e0/sense/discourse/run-*/transcript.json):
+#     run-1  first entry 21:00:05  LAST tool_use 21:03:35  killed 21:08:00
+#            -> 211s of the 480s wall on tools, 269s (56%) writing one final message
+#     run-2  first entry 21:08:06  LAST tool_use 21:11:03  killed 21:16:01
+#            -> 177s on tools, 303s (63%) writing
+#   Both answers are a single final message and both were cut mid-sentence inside step 6.
+#   Neither reached step 7 at all. Section sizes of run-1's 59,819-character answer,
+#   measured by splitting it on its own step headings:
+#     step 1  2,041     step 2  7,887     step 3  7,027     step 4  33,750
+#     step 5  6,019     step 6  3,063 (CUT MID-LINE)        step 7  never written
+#
+#   So the budget is an OUTPUT budget, and step 4 - which may not be touched - is 56% of
+#   it on its own. Every character of relief has to come from the other six steps. The
+#   arithmetic this attempt is built on: run-1 wrote 59,819 characters in 269 seconds,
+#   about 222 characters per second. Steps 2, 3 and 5 together cost 20,933 characters
+#   (~94s); this rewrite aims them at roughly 7,000 (~32s), freeing about 62 seconds, and
+#   steps 6 and 7 are now forbidden from re-listing the audit, which is what made step 6
+#   expensive and step 7 unreachable. Step 4's 33,750 characters are left exactly where
+#   they are.
+#
+# WHAT WAS CHANGED TO GET THERE, AND WHAT WAS NOT TOUCHED
+#   NOT touched: the anchor (`Category`), step 4's name, prompt and checks, and the whole
+#   `dependents` gold group - all still byte-identical to the probe, so the mini-bench
+#   figure below still describes this scenario. No gold row was added, removed or
+#   re-pointed in any group.
+#   Changed, and only this: the prompts of steps 1, 2, 3, 5, 6 and 7, each capped at how
+#   many places it may visit, plus their `response_richness` floors lowered to stay
+#   satisfiable under the caps (step 2 8->4, step 3 4->4 unchanged, step 6 6->4,
+#   step 7 6->4). One sentence was added to `description` making "answer once, refer back,
+#   never re-list" a session-wide rule; it runs FORWARD only, and step 4 is the first step
+#   that enumerates dependents, so nothing above it can be referred back to in its place.
+#   The rubric's map_quality and specificity questions on the six changed steps were
+#   rewritten to stop rewarding the exhaustiveness their prompts now forbid; step 4's four
+#   criteria and the audience paragraph are untouched.
+#
+#   THE RISK THIS SHORTENING CARRIES, NAMED IN ADVANCE. Steps 1, 2, 3 and 5 are what
+#   spends context and wall BEFORE the discriminator, and the standing budget-pressure
+#   hypothesis is that the arriving-tired condition is part of why step 4 discriminates.
+#   Cutting them cuts that pressure, so a baseline that arrives at step 4 fresher may
+#   assemble more of the set than the 1/12 the mini-bench measured. That is not settled
+#   here and it is the first thing to read in the next validation's baseline transcript.
+#   Cutting them was still the only move available: the alternative is a session that
+#   never reaches step 7, and cannot-finish-at-budget is a result, not a wall to raise.
+#
+#   THE SECOND RISK: "DO NOT RE-LIST" READ BACKWARDS. Steps 6 and 7 now forbid repeating
+#   the audit, and an arm that plans the whole answer before writing it could in principle
+#   trim step 4 itself on the grounds that it will not get to reuse the list. Step 4 pushes
+#   the other way and it pushes harder - it demands a closed set, forbids "and a few
+#   similar cases", and charges MORE words for a candidate ruled out than for one kept -
+#   so the expected effect is nil. It is written down because it is the one way this
+#   rewrite could move the discriminator without touching its wording, and the check is
+#   mechanical: step 4's cited count in the next run's sense transcripts against the 12 of
+#   12 the mini-bench measured.
+#
+# THE INVENTORY READ-BACK ON THE SHORTENED PROMPT (done by hand, as the law requires)
+#   Read back step by step, no phrase identifies a single gold row's file. The nearest
+#   thing to a leak is step 7's "the areas the dependents fall into", which tells the arm
+#   the answer HAS areas - but that clause is inherited from cycle 4 and attempt 1 word for
+#   word, it names no area, and step 7 runs AFTER the discriminator, so nothing it says can
+#   reach step 4. Steps 2, 3 and 5 describe jobs and kinds ("where the hierarchy is walked
+#   to disambiguate one level from another", "a reference stored earlier re-checked against
+#   what is actually there"), which is mechanism, and all three feed NON-SCORING groups.
+#   The rendered prompt was also grepped for paths, extensions, class names, tool names and
+#   counts: the only hits are the scenario title and two step names, all of which carry the
+#   word "category" and nothing else.
 #
 # THE MINI-BENCH THAT AUTHORISED THIS EXPANSION
 #   results/loop/discourse/minibench.md, verdict PROCEED, quoted:
@@ -270,15 +354,21 @@ description: |
   Throughout, an answer that points at a place must give an exact file:line a teammate
   could jump straight to, plus one phrase on why it matters. A bare filename does not
   count, a set of names offered together with one shared reason and no location on any of
-  them does not count, and a missed dependent is a regression shipped.
+  them does not count, and a missed dependent is a regression shipped. Answer each step
+  once and move on: a later step refers back to a place an earlier one already located,
+  by name, and never re-lists it. You are being read by a teammate who has your whole
+  answer in front of them, so restating a list you have already written is wasted budget
+  that a later step needs.
 
 steps:
   - name: Orient in the codebase
     prompt: >
-      Task: orient yourself. In a few sentences plus file:line references, what is this
-      project, how is the code organized, and where does the class that stands for the
-      container topics are filed under sit - the one the rest of the system keeps having to
-      ask about - along with the shared pieces its behaviour is assembled from? Hand the
+      Task: orient yourself, briefly. In a short paragraph plus a handful of file:line
+      references, what is this project, how is the code organized, and where does the
+      class that stands for the container topics are filed under sit - the one the rest of
+      the system keeps having to ask about - along with the shared pieces its behaviour is
+      assembled from? Name only the places the later steps will actually need: this is a
+      map, not a survey, and a tour of the tree costs budget the ticket needs. Hand the
       next agent a map so they can act with small, targeted lookups, not a fresh
       exploration of the codebase. No Explore agents.
     checks:
@@ -297,22 +387,23 @@ steps:
 
   - name: Map the category contract
     prompt: >
-      Task: orient, and be thorough - the rest of the ticket is built on this. Start with
-      the one part of this class's job that every incoming request leans on: getting hold
-      of one of these records when all the system has is the human-readable path the
-      visitor typed, which may name a parent and a child, may be an old path that has since
-      been retired, and may not name one of these at all. Trace that path end to end. Show
-      every entry point that turns such a path into one of these records, every place that
-      walks the hierarchy to disambiguate one level from another, every place that keeps
-      the path in step when the record is renamed, and every place that redirects or
-      refuses because the path turned out to point somewhere else. For each one give the
-      file:line, the name of the routine it lives in, and one phrase on what it contributes
-      to that path. Then say, in a few sentences, what a rework would have to preserve for
-      that path to keep working. A place named without the routine it lives in does not
-      count, and neither does a routine named without the file:line where it is defined.
+      Task: map the shape of the contract, tightly. Start with the one part of this
+      class's job that every incoming request leans on: getting hold of one of these
+      records when all the system has is the human-readable path the visitor typed, which
+      may name a parent and a child, may be an old path that has since been retired, and
+      may not name one of these at all. Trace that one path end to end, and give the single
+      clearest place that does each job along it: where such a path is turned into one of
+      these records, where the hierarchy is walked to disambiguate one level from another,
+      where the stored path is kept in step when the record is renamed, and where a path
+      that turns out to point somewhere else is redirected or refused. One place per job,
+      one line each: the file:line, the name of the routine it lives in, and one phrase on
+      what it contributes to that path. Do not enumerate every caller of any of them - the
+      ticket's enumeration comes later, and this step is only the map it starts from. A
+      place named without the routine it lives in does not count, and neither does a
+      routine named without the file:line where it is defined.
     checks:
       - type: response_richness
-        value: "8"
+        value: "4"
         required: true
         description: Resolution path traced through the routines that make it up, each located
       - type: mcp_tool_used
@@ -322,15 +413,17 @@ steps:
 
   - name: Trace how one of these records is built up and taken apart
     prompt: >
-      Task: trace the lifecycle. Follow one of these records from the point where the
-      system decides it needs one it does not have yet, through it being brought into
-      existence and later renamed or re-described, and on to the point where it is taken
-      apart again, and say what runs around each of those moments. For every layer give the
-      file:line and the name of the routine it lives in, and mark which parts run inline,
-      in the request or task that triggered them, and which are handed off to run once that
-      call has finished. Where something is handed off, say what it is handed - the record
-      itself, or something it can be looked up from again - because that is what a rework
-      of the contract has to keep working.
+      Task: trace the lifecycle, briefly. Follow one of these records from being brought
+      into existence to being taken apart again, and say what runs around those two
+      moments. Give the places one of these is created, the place one is destroyed, and
+      the work that runs around them - a few representative places, correctly marked, is
+      the whole answer here, not a catalogue. One line each: the file:line, the name of the
+      routine it lives in, and whether it runs inline, in the request or task that
+      triggered it, or is handed off to run once that call has finished. Where something is
+      handed off, say what it is handed - the record itself, or something it can be looked
+      up from again - because that is what a rework of the contract has to keep working.
+      Do not recite the declarations that register this work; show the code that picks it
+      up.
     checks:
       - type: response_richness
         value: "4"
@@ -390,14 +483,15 @@ steps:
   - name: Trace the guards that confirm a real, current record
     prompt: >
       Task: work runs against one of these records all over the codebase, and some of what
-      that work is handed is not one at all, or names one that is no longer there. Trace
-      how the code satisfies itself, before it acts, that what it holds really is one of
-      these and that it really still exists: where an incoming thing is checked for being
-      the right kind of thing at all, where a name or an identifier that resolves to
-      nothing is turned into a refusal at the boundary rather than an error further down,
-      and where a reference that was stored earlier is re-checked against what is actually
-      there before it is trusted. Give the file:line and the enclosing routine for each
-      guard, and say in one phrase what it is protecting the caller from.
+      that work is handed is not one at all, or names one that is no longer there. Show how
+      the code satisfies itself, before it acts, that what it holds really is one of these
+      and that it really still exists. There are three kinds of guard to cover and ONE
+      example of each is enough - a second example of a kind you have already shown is
+      worth nothing here: an incoming thing checked for being the right kind of thing at
+      all; a name or an identifier that resolves to nothing turned into a refusal at the
+      boundary rather than an error further down; and a reference that was stored earlier
+      re-checked against what is actually there before it is trusted. One line each: the
+      file:line, the enclosing routine, and one phrase on what it protects the caller from.
     checks:
       - type: response_richness
         value: "3"
@@ -414,17 +508,18 @@ steps:
 
   - name: Assess the blast radius of the contract change
     prompt: >
-      Task: you are about to change what this class hands back. Assess the full blast
-      radius across everything you have found: which dependents are at risk, which are most
-      likely to break, and what must be re-verified afterwards. Rank by risk and say what
-      drives the ranking - separate the ones that would fail loudly and immediately from
-      the ones that would keep running and quietly return something different, which are
-      the expensive ones. Use file:line throughout and name the routine that carries each
-      risk, not just the file it is in. A missed high-risk dependent is the one that pages
-      someone.
+      Task: you are about to change what this class hands back. Rank the risk. Do NOT
+      re-list what you have already located above - a ranking that repeats the audit back
+      is not a ranking and it costs budget the last step needs. Name only the places most
+      likely to break, in risk order, one line each, and say what puts each where it is:
+      separate the ones that would fail loudly and immediately from the ones that would
+      keep running and quietly return something different, which are the expensive ones.
+      Use file:line and name the routine that carries each risk, not just the file it is
+      in. Then say in a sentence or two what must be re-verified afterwards. A missed
+      high-risk dependent is the one that pages someone.
     checks:
       - type: response_richness
-        value: "6"
+        value: "4"
         required: true
         description: Dependents ranked by risk, each located at file:line with its routine
       - type: no_grep
@@ -438,14 +533,17 @@ steps:
 
   - name: Produce the change + verification map
     prompt: >
-      Task: produce the complete map for landing this safely: the pieces of the contract
-      itself you will edit, every dependent that has to be reviewed or touched grouped by
-      area, and the tests that would have to be updated or added to cover the behaviour
-      that moves. Use file:line and the enclosing routine throughout, so a teammate could
-      land the change from your map alone without re-exploring the codebase.
+      Task: finish with the map for landing this safely, and again do not repeat the audit
+      back. Three things only: the pieces of the contract itself you will edit, each at its
+      file:line and the routine it lives in; then the areas the dependents fall into, and
+      for each area how many you found there and the one in it you would review first, at
+      its file:line - the area line stands in for the rest, which you have already written
+      out; then the tests that would have to be updated or added to cover the behaviour
+      that moves. A teammate reading this map together with what you have already written
+      should be able to land the change without re-exploring the codebase.
     checks:
       - type: response_richness
-        value: "6"
+        value: "4"
         required: true
         description: Edit list, dependents by area and the tests that move, all located
       - type: no_grep

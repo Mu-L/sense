@@ -3,7 +3,18 @@
 # Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
 # / justification 0.20 / uncertainty 0.15.
 #
-# CYCLE 8, SEVEN-STEP SESSION (plans/03-expand.md). This is the cycle-4 session rubric
+# CYCLE 8, SEVEN-STEP SESSION (plans/03-expand.md), ATTEMPT 2: THE SHORTENED SESSION.
+# Attempt 1's rubric is kept at discourse.rubric.yaml.longsession-cycle8.bak. Both sense runs
+# of attempt 1 were killed by the wall (481 of 480, exit 124, hard_cap_timeout) while WRITING
+# - run-1 spent 269 of its 480 seconds on one 59,819-character final message and was cut mid
+# step 6, never reaching step 7 - so the six non-discriminator step prompts now cap how many
+# places each may visit, and the criteria below were rewritten to match: they no longer reward
+# the exhaustiveness those prompts forbid, and on steps 6 and 7 they now PENALISE re-listing
+# the audit rather than treating completeness-by-restatement as the strong answer.
+# Step 4's four criteria and the audience paragraph are untouched: it is the discriminator and
+# the mini-bench was judged under exactly those questions.
+#
+# Its ancestry: this is the cycle-4 session rubric
 # (discourse.rubric.yaml.session-7step-cycle4.bak) with two steps replaced by the cycle-8
 # probe rubric's, verbatim: "Map the category contract" and "Audit every dependent of the
 # category contract". The second of those is the discriminator, so its four questions and
@@ -76,8 +87,7 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Does the answer give a usable map of the project - what it is, how the tree is laid
-        out,
+      question: 'Does the answer give a usable map of the project - what it is, how the tree is laid out,
 
         where the class under rework sits, and what its behaviour is assembled from (the concerns
 
@@ -85,27 +95,33 @@ steps:
 
         next step can act from this map with small targeted lookups instead of starting over.
 
+        The step asks for a short map, not a survey, so breadth of tour is NOT what is credited:
+
+        a compact orientation that names only what the later steps need scores above a directory
+
+        walk-through, and length is not evidence of quality here.
+
         '
     specificity:
       weight: 0.25
       question: 'Are the claims anchored to paths, and the class and its assembled pieces to file:line?
         A
 
-        tour of the directory names with no file:line anywhere is not specific.
+        tour of the directory names with no file:line anywhere is not specific. A handful of
+
+        file:line references is what was asked for; more of them is not better.
 
         '
     justification:
       weight: 0.2
-      question: 'Does the orientation say why each part of the map matters to the ticket, rather
-        than
+      question: 'Does the orientation say why each part of the map matters to the ticket, rather than
 
         reciting the directory layout of a Rails application in general?
 
         '
     uncertainty:
       weight: 0.15
-      question: 'Does it separate what it read from what it assumed from a conventional layout? A
-        Rails
+      question: 'Does it separate what it read from what it assumed from a conventional layout? A Rails
 
         tree invites confident guessing; saying which parts were actually opened is worth more.
 
@@ -114,21 +130,23 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Is the slug-path resolution path traced end to end as one connected path, rather
+      question: 'Is the slug-path resolution path traced end to end as one connected path, rather than
 
-        than listed as places the class is mentioned? A strong answer reaches the
+        listed as places the class is mentioned? The step asks for ONE place per job along that
 
-        class-level entry point every lookup bottoms out in, the trailing-id variant, the
+        path - where a typed path becomes a record, where the hierarchy is walked to disambiguate,
 
-        one-level lookup the hierarchy walk is built from, the hierarchy walk itself, the
+        where the stored path is kept in step across a rename, and where a path pointing elsewhere
 
-        HTTP front door, the rename path that keeps a stored slug in step, and the
+        is redirected or refused - so the question is COVERAGE OF THE JOBS, not count of places.
 
-        retired-path redirect. Credit is for showing how they connect, not for the count.
+        All four jobs shown once each, connected into a path, is the full answer; a fifth and
 
-        Could the next step act from this map with small targeted lookups rather than a
+        sixth caller of a job already covered adds nothing, and enumerating every caller is what
 
-        fresh exploration?
+        this step explicitly told the answer not to do. Could the next step act from this map with
+
+        small targeted lookups rather than a fresh exploration?
 
         '
     specificity:
@@ -146,19 +164,20 @@ steps:
         '
     justification:
       weight: 0.2
-      question: 'Does each place carry one phrase on what it contributes to the resolution path -
+      question: 'Does each place carry one phrase on what it contributes to the resolution path - which
 
-        which input form it accepts, what it disambiguates, what it falls back to, why it
+        input form it accepts, what it disambiguates, what it falls back to, why it refuses? The
 
-        refuses? Do the closing sentences say what a rework must preserve in terms of
+        step no longer asks for a closing statement of what a rework must preserve, so its absence
 
-        behaviour, rather than restating the method names?
+        is not a fault; if one is given, it is credited only when it is about behaviour rather than
+
+        a restatement of the method names.
 
         '
     uncertainty:
       weight: 0.15
-      question: 'Does the answer separate what it verified by reading from what it inferred from
-        a
+      question: 'Does the answer separate what it verified by reading from what it inferred from a
 
         name? Guessing at a fallback it never opened is worse than saying it did not
 
@@ -169,26 +188,37 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Is the lifecycle traced as a sequence - the decision that one is needed, its creation,
-        the renames and re-descriptions that follow, and its teardown - with what runs around each
+      question: 'Is the lifecycle traced as a sequence - creation, and teardown, with what runs around
+        each
+
         moment? A strong answer separates two timings and does not collapse them: what runs inline
-        in the call that saved or destroyed the record, and what is handed off to run once that call
-        has finished. Reciting the callback declarations in order is not the answer; saying which
-        of them the caller can depend on having already happened is.
+
+        in the call that saved or destroyed the record, and what is handed off to run once that
+
+        call has finished. The step asks for a few representative places, correctly marked, and
+
+        says not to recite the declarations that register the work, so a complete catalogue of
+
+        callbacks is NOT the strong answer here and is not credited as one: marking a small set
+
+        correctly beats listing a large one. Saying which of that work a caller can depend on
+
+        having already happened is the point.
 
         '
     specificity:
       weight: 0.25
-      question: 'Does every layer carry a file:line and the routine it lives in, including the handed-off
-        ones - the code that picks the work up, not just the line that dispatches it?
+      question: 'Does every place named carry a file:line and the routine it lives in, including the
+
+        handed-off ones - the code that picks the work up, not just the line that dispatches it?
 
         '
     justification:
       weight: 0.2
-      question: 'For each hand-off, does the answer say WHAT is handed over - the record itself,
-        or an identifier to be looked up again later - and why that matters to a contract change?
-        A deferred consumer that re-resolves by id can find the record gone; one holding the record
-        cannot. That distinction is the point of the step.
+      question: 'For each hand-off, does the answer say WHAT is handed over - the record itself, or an
+        identifier to be looked up again later - and why that matters to a contract change? A deferred
+        consumer that re-resolves by id can find the record gone; one holding the record cannot. That
+        distinction is the point of the step.
 
         '
     uncertainty:
@@ -279,8 +309,7 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Does the answer cover the distinct KINDS of guard rather than many instances of
-        one kind?
+      question: 'Does the answer cover the distinct KINDS of guard rather than many instances of one kind?
 
         The kinds are: a type check on something that may not be one of these at all; a lookup by
 
@@ -288,21 +317,25 @@ steps:
 
         handed downstream; and a reference stored earlier re-checked against what is actually
 
-        there before it is trusted. Missing a whole kind costs more than missing an instance.
+        there before it is trusted. The step asks for ONE example of each and says a second
+
+        example of a kind already shown is worth nothing, so missing a whole kind is the only
+
+        failure this criterion catches - extra instances of a covered kind earn nothing and, where
+
+        they crowd out a missing kind, they are the failure.
 
         '
     specificity:
       weight: 0.25
-      question: 'Does each guard carry a file:line and its enclosing routine? A validation named
-        by its
+      question: 'Does each guard carry a file:line and its enclosing routine? A validation named by its
 
         method alone, or a bare file, is not specific.
 
         '
     justification:
       weight: 0.2
-      question: 'Does each guard carry one phrase on what it protects the caller from - what would
-        reach
+      question: 'Does each guard carry one phrase on what it protects the caller from - what would reach
 
         the next layer and fail there if the guard were removed - rather than restating the
 
@@ -311,8 +344,7 @@ steps:
         '
     uncertainty:
       weight: 0.15
-      question: 'Does the answer distinguish guards it read from guards it expects a framework to
-        provide?
+      question: 'Does the answer distinguish guards it read from guards it expects a framework to provide?
 
         Assuming a validation exists because a Rails model usually has one is the failure here.
 
@@ -321,24 +353,30 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Is this a RANKING that adds something to the audit, or the audit relisted? A strong
-        answer
+      question: 'Is this a RANKING that adds something to the audit, or the audit relisted? The step
 
-        separates dependents that would fail loudly and immediately from those that would keep
+        forbids re-listing what was already located, so an answer that walks the whole set again
 
-        running and quietly return something different, and says what drives the split. The quiet
+        in risk order has NOT done this step, however complete it is - score it down for that, not
 
-        ones are the expensive ones and a ranking that does not surface them has not done the
+        up. A strong answer names only the places most likely to break, in order, and separates
 
-        step. Ranking everything as high risk is not a ranking.
+        those that would fail loudly and immediately from those that would keep running and
+
+        quietly return something different, saying what drives the split. The quiet ones are the
+
+        expensive ones and a ranking that does not surface them has not done the step. Ranking
+
+        everything as high risk is not a ranking.
 
         '
     specificity:
       weight: 0.25
-      question: 'Is each risk pinned to the routine that carries it, at a file:line, rather than
-        to the
+      question: 'Is each risk named actually pinned to the routine that carries it, at a file:line, rather
 
-        file it sits in? A ranked list of filenames is not this step''s answer.
+        than to the file it sits in? A ranked list of filenames is not this step''s answer. A short
+
+        ranking, each entry pinned, is worth more than a long one that is not.
 
         '
     justification:
@@ -352,8 +390,7 @@ steps:
         '
     uncertainty:
       weight: 0.15
-      question: 'Does the answer say which parts of the radius it is least sure of, and name what
-        it would
+      question: 'Does the answer say which parts of the radius it is least sure of, and name what it would
 
         have to look at to firm them up? Confident totals over a codebase this size are the tell.
 
@@ -362,24 +399,32 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Is this a map a teammate could land the change from without re-exploring - the pieces
-        of
+      question: 'Is this a map a teammate could land the change from without re-exploring, READ TOGETHER
 
-        the contract itself that get edited, every dependent grouped by area, and the test surface
+        with what the session already wrote? The step asks for three things and forbids repeating
 
-        that has to move with it? Completeness against everything found earlier in the session is
+        the audit: the pieces of the contract itself that get edited; the areas the dependents fall
 
-        what is measured; a map that quietly drops areas the audit reached is the failure.
+        into, each with how many were found there and the one to review first; and the test surface
+
+        that has to move. So completeness is measured over the AREAS, not over the dependents - an
+
+        area the audit reached and the map silently drops is the failure, while a map that names an
+
+        area with its count and its first entry instead of re-listing its members has done exactly
+
+        what was asked and must not be marked down for brevity.
 
         '
     specificity:
       weight: 0.25
-      question: 'Do the edits and the dependents carry file:line and the enclosing routine? The tests
-        are
+      question: 'Do the contract edits, and the one dependent named per area, carry file:line and the
 
-        the exception: a test that must be ADDED has no line yet, so naming the file it belongs in
+        enclosing routine? Do the area lines carry a count? The tests are the exception: a test
 
-        is the correct form there and is not penalised.
+        that must be ADDED has no line yet, so naming the file it belongs in is the correct form
+
+        there and is not penalised.
 
         '
     justification:
