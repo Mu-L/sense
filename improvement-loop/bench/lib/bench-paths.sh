@@ -55,7 +55,7 @@ fi
 # run against itself. It takes precedence over BENCH_VALIDATION when both are set.
 if [ "${BENCH_MINIBENCH:-0}" = 1 ]; then
   case "$RESULTS_DIR" in
-    */minibench) : ;;
+    */minibench|*/minibench/*) : ;;
     *) RESULTS_DIR="$RESULTS_DIR/minibench" ;;
   esac
   BENCH_SCORING=0
@@ -65,8 +65,12 @@ elif [ "${BENCH_VALIDATION:-0}" = 1 ]; then
   # unconditional append nested it once per hop - runs landed in .../validation/validation
   # while the reporter looked in .../validation/validation/validation and died. The run
   # itself was fine; only the paths disagreed.
+  #
+  # The guard matches the SEGMENT, not the tail: one-root-per-question appends the
+  # scenario version below this segment, so a tail-only test stopped seeing the
+  # `validation` it had already added and nested a fresh copy per hop.
   case "$RESULTS_DIR" in
-    */validation) : ;;
+    */validation|*/validation/*) : ;;
     *) RESULTS_DIR="$RESULTS_DIR/validation" ;;
   esac
   BENCH_SCORING=0

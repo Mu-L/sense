@@ -768,7 +768,19 @@ do_validate() {
   # (ceiling +0.375) - the judgment phase correctly answered "does it discriminate?" and
   # had no reason to ask "can it clear the bar?". A floor is not a judgment call.
   echo "## [validate] arithmetic ceiling (can any group still reach the floor?)"
-  if ! RESULTS_DIR="$VALIDATION_DIR" python3 "$LIB/pay_ceiling.py" "$REPO" 0.50; then
+  RESULTS_DIR="$VALIDATION_DIR" python3 "$LIB/pay_ceiling.py" "$REPO" 0.50
+  ceiling_rc=$?
+  # A CEILING THAT COULD NOT BE READ IS NOT A DEAD CEILING. pay_ceiling exits 64 when it
+  # finds no scored run at all, and this used to share a branch with exit 1 (measured:
+  # dead), so a path defect that hid the pair spent an authoring cycle re-golding a
+  # scenario nothing had measured. An unreadable instrument halts; it does not route.
+  if [ "$ceiling_rc" = 64 ]; then
+    echo "[validate] the ceiling could not be READ (no scored run under $VALIDATION_DIR)."
+    echo "           That is an instrument failure, not a DO-NOT-PAY. Nothing is routed"
+    echo "           and no cycle is spent until the pair is where this phase looks."
+    exit 1
+  fi
+  if [ "$ceiling_rc" != 0 ]; then
     requeue_author validate \
       "DO NOT PAY - no gold group can reach +0.50 however well the sense arm does." \
       "This is arithmetic on the validation pair, not a judgment. The lever is the" \
