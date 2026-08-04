@@ -334,21 +334,26 @@ PY
 # Did the sense arm run out of CLOCK, as opposed to crashing or never starting? Yes when
 # no sense run for this cell finished cleanly AND at least one was stopped by the watchdog.
 #
-# A CRASH IS NOT EVIDENCE EITHER WAY, so it neither triggers this nor vetoes it. Requiring
-# EVERY run to be watchdogged was too strict and it showed within the hour: runs accumulate
-# in a cell across invocations, so one harness crash sat in the history and would have
-# vetoed the lever for every later timeout on the same scenario - the opposite of "it timed
-# out again, shorten it". A cell of nothing but crashes still halts (no watchdog, so no
-# timeout to answer for), and one clean run still halts: the missing pair then has some
-# other cause, and shortening it would treat the wrong thing and quietly make the bench
-# easier.
+# A CRASH IS NOT EVIDENCE EITHER WAY, so it neither triggers this nor vetoes it. A cell of
+# nothing but crashes still halts (no watchdog, so no timeout to answer for), and a clean
+# run still halts: the missing pair then has some other cause, and shortening it would
+# treat the wrong thing and quietly make the bench easier.
+#
+# SCOPED TO THIS ATTEMPT, from <first-run> up. Runs APPEND to a cell across invocations, so
+# reading the whole history let a single old run settle a question about what just
+# happened: discourse held one clean run from an earlier invocation, which would have
+# vetoed the lever for every later timeout on that scenario, forever. This is the same
+# accumulation trap the crash rule had; both are answered by only ever reading the runs
+# this attempt actually produced.
 out_of_clock() {
-  python3 - "$1" "$REPO" <<'PY'
-import glob, json, os, sys
-root, repo = sys.argv[1], sys.argv[2]
-metas = sorted(glob.glob(os.path.join(root, "sense", repo, "run-*", "run_meta.json")))
+  python3 - "$1" "$REPO" "${2:-1}" <<'PY'
+import glob, json, os, re, sys
+root, repo, first = sys.argv[1], sys.argv[2], int(sys.argv[3])
 watchdogged = clean = False
-for path in metas:
+for path in glob.glob(os.path.join(root, "sense", repo, "run-*", "run_meta.json")):
+    n = re.search(r"run-(\d+)", os.path.dirname(path))
+    if not n or int(n.group(1)) < first:
+        continue
     try:
         with open(path) as fh:
             meta = json.load(fh)
@@ -805,7 +810,11 @@ do_validate() {
     # APPEND, never wipe - same reason as the mini-bench: a re-validation used to
     # destroy the pair the previous cycle was diagnosed from, and a diagnosis whose
     # transcripts are gone cannot be re-checked.
-    BENCH_VALIDATION=1 KEEP_RUNS=1 START_RUN="$(next_run "$VALIDATION_DIR")" \
+    # Remembered so the checks below read THIS attempt's runs and not the whole cell's
+    # history - runs append across invocations, and a verdict about what just happened
+    # must not be settled by a run from an hour ago.
+    local start_run; start_run="$(next_run "$VALIDATION_DIR")"
+    BENCH_VALIDATION=1 KEEP_RUNS=1 START_RUN="$start_run" \
       VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS=1 \
       bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || {
         echo "[validate] the validation run FAILED - that is a result, not an obstacle."
@@ -825,7 +834,7 @@ do_validate() {
       # the work the seven steps ask for, and expand is the phase that writes those.
       # Any OTHER cause of a missing pair (a crash, a missing clone) still halts - that is
       # not a scenario-length problem and shortening would be treating the wrong thing.
-      if out_of_clock "$VALIDATION_DIR"; then
+      if out_of_clock "$VALIDATION_DIR" "$start_run"; then
         requeue_expand validate \
           "CANNOT FINISH AT BUDGET - the sense arm ran out of clock on every attempt," \
           "the retry included. The watchdog is NOT raised: the scenario is shortened and" \
