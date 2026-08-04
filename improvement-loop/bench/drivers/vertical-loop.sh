@@ -811,9 +811,15 @@ do_report() {
   python3 "$LIB/panel.py" 2>&1 | sed 's/^/  /' || true
   echo "## [report] per-group cited-recall verdict (headline arm: $HEADLINE_MODEL)"
   # RESULTS_DIR mirrors bench-paths.sh: verticals/<name>/results/<sanitized-model>.
-  local msan rdir out
+  local msan rdir rdir_ver out
   msan="$(printf '%s' "$HEADLINE_MODEL" | tr '/:' '__')"
   rdir="$VDIR/results/$msan"
+  # ONE ROOT PER QUESTION: the paid cells live under the scenario version, so the
+  # unversioned parent holds no <arm>/<repo>/run-* and every reader below would
+  # correctly report "no scored runs" - which for THIS phase means the verdict never
+  # fires. Point at the question this repo is currently being benched on.
+  rdir_ver="$(python3 "$LIB/scenario_version.py" "$YAML" 2>/dev/null)"
+  [ -n "$rdir_ver" ] && scenario_root rdir "$rdir_ver"
   out="$(RESULTS_DIR="$rdir" python3 "$LIB/pergroup.py" "$REPO" 0.50 2>&1)"
   echo "$out" | sed 's/^/  /'
 
@@ -883,9 +889,15 @@ do_harvest() {
   # The product half. Printing the instruction in `report` was not enough - an
   # instruction nobody executes is how the budget-trim audit sat deferred from
   # 2026-07-30 to 2026-08-01 while a 26% premium went unexplained. Harvest RUNS it.
-  local msan rdir
+  local msan rdir rdir_ver
   msan="$(printf '%s' "$HEADLINE_MODEL" | tr '/:' '__')"
   rdir="$VDIR/results/$msan"
+  # ONE ROOT PER QUESTION: the paid cells live under the scenario version, so the
+  # unversioned parent holds no <arm>/<repo>/run-* and every reader below would
+  # correctly report "no scored runs" - which for THIS phase means the verdict never
+  # fires. Point at the question this repo is currently being benched on.
+  rdir_ver="$(python3 "$LIB/scenario_version.py" "$YAML" 2>/dev/null)"
+  [ -n "$rdir_ver" ] && scenario_root rdir "$rdir_ver"
   echo "## [harvest] context cost audit - WHY the sense arm costs what it costs"
   RESULTS_DIR="$rdir" python3 "$LIB/cost_parity.py" "$REPO" 2>&1 | sed 's/^/  /' || true
   RESULTS_DIR="$rdir" python3 "$LIB/context_cost_audit.py" "$REPO" 2>&1 | sed 's/^/  /' || true
