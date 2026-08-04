@@ -73,4 +73,33 @@ elif [ "${BENCH_VALIDATION:-0}" = 1 ]; then
 else
   BENCH_SCORING=1
 fi
-export RESULTS_DIR SCENARIOS_DIR VERTICAL BENCH_MODEL BENCH_SCORING
+# BENCH_SCENARIO_VERSION=<sha256:...> -> ONE ROOT PER QUESTION.
+#
+# Same principle as the validation/minibench split above, applied to the axis that broke
+# next. A results root used to hold exactly one question because the authoring cycle wiped
+# it between cycles; once runs began to ACCUMULATE (KEEP_RUNS), a root could hold two
+# questions with different gold, and every reader that walks <root>/<arm>/<repo>/run-* was
+# silently averaging them. Measured: pergroup.py pooled five runs of the previous scenario
+# into a new cell and printed the OPPOSITE verdict (dependents +0.17 / NOT YET against the
+# +0.70 the pair actually showed).
+#
+# Fifteen readers walk that path and one filters on scenario_version. Rather than teach
+# fifteen instruments - six of them verdict-bearing, so six re-score diffs - the isolation
+# is the DIRECTORY, exactly as it is for validation runs. Nothing downstream changes and
+# every reader written later is correct for free.
+#
+# The segment sits ABOVE <arm> deliberately. A reader aimed at the parent finds no
+# <arm>/<repo>/run-* under it and says "no scored runs" instead of returning a number
+# averaged across two questions: this fails LOUDLY, where a per-reader filter fails quietly.
+# Idempotent for the same reason the validation append is - this file is sourced once per
+# driver hop.
+if [ -n "${BENCH_SCENARIO_VERSION:-}" ]; then
+  _sv="${BENCH_SCENARIO_VERSION#sha256:}"
+  # Strip an existing version segment before appending, so a carried-over RESULTS_DIR at a
+  # DIFFERENT version re-points instead of nesting one question's root inside another's.
+  case "$RESULTS_DIR" in
+    */[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) RESULTS_DIR="${RESULTS_DIR%/*}" ;;
+  esac
+  RESULTS_DIR="$RESULTS_DIR/$_sv"
+fi
+export RESULTS_DIR SCENARIOS_DIR VERTICAL BENCH_MODEL BENCH_SCORING BENCH_SCENARIO_VERSION

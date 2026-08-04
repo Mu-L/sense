@@ -463,6 +463,28 @@ archive_scenario() {
     || echo "[warn] could not archive $1 - its gold will not be recoverable by version" >&2
 }
 
+# scenario_root <var-name> <scenario_version> - append the version segment to a phase root.
+#
+# ONE ROOT PER QUESTION, the same isolation bench-paths.sh applies (its comment carries the
+# full rationale). A root used to hold exactly one question because the cycle wiped it
+# between cycles; once runs began to ACCUMULATE, two questions could share a cell and the
+# fifteen readers that walk <root>/<arm>/<repo>/run-* averaged them. Measured: pergroup.py
+# pooled five runs of the previous scenario and printed the opposite verdict.
+#
+# Idempotent, because a phase may re-enter, and re-appending would bury the runs one level
+# deeper each time - the bug the validation append already learned once.
+scenario_root() {
+  local var="$1" ver="${2#sha256:}" cur
+  eval "cur=\$$var"
+  # Strip an existing version segment BEFORE appending. Idempotence alone is not enough:
+  # a routed lever re-questions in the SAME process, minting a different version, and a
+  # plain append would bury each cycle's root inside the previous one.
+  case "$cur" in
+    */[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) cur="${cur%/*}" ;;
+  esac
+  eval "$var=\"\$cur/\$ver\""
+}
+
 # next_run <root> - the run index a new cycle should file under, i.e. one past the
 # highest run-N already on disk for this repo under either arm.
 #
@@ -558,13 +580,17 @@ do_minibench() {
   # reached 2.5, and a leaked run reached 15 of 16 over that same arm. No correction
   # factor fits points that disagree by 2.5x one way and 0.36x the other. This costs
   # about the same and measures a real baseline instead of guessing at one.
-  RDIR="$MINIBENCH_DIR"
   local scen_ver
   scen_ver="$(python3 "$LIB/scenario_version.py" "$YAML")" || {
     echo "[minibench] cannot compute the scenario version for $YAML - NOT advancing."
     echo "            A pair that cannot be tied to a scenario is not evidence."
     exit 1; }
   archive_scenario "$YAML"
+  # ONE ROOT PER QUESTION (rationale in bench-paths.sh). Re-pointed here and not where the
+  # dir is defined, because the version is not known until the scenario has been read. Every
+  # later use in this phase - the gate, next_run, the agent's $RDIR, record_cycle - follows.
+  scenario_root MINIBENCH_DIR "$scen_ver"
+  RDIR="$MINIBENCH_DIR"
   echo "## [minibench] scenario $scen_ver"
   if [ -n "$(pair_for "$MINIBENCH_DIR" "$scen_ver")" ]; then
     echo "## [minibench] a run already exists for this scenario version - not re-running"
@@ -701,13 +727,15 @@ do_validate() {
   # RESULTS_DIR is model-scoped, so the tree is results/<model>/validation/, not
   # results/validation/. Probing the latter never finds an existing run, so every entry
   # re-spends. Scoping to repo and scenario version lives in runs_for; both were paid for.
-  RDIR="$VALIDATION_DIR"
   local scen_ver
   scen_ver="$(python3 "$LIB/scenario_version.py" "$YAML")" || {
     echo "[validate] cannot compute the scenario version for $YAML - NOT advancing."
     echo "           A validation pair that cannot be tied to a scenario is not evidence."
     exit 1; }
   archive_scenario "$YAML"
+  # ONE ROOT PER QUESTION - see the same call in do_minibench.
+  scenario_root VALIDATION_DIR "$scen_ver"
+  RDIR="$VALIDATION_DIR"
   echo "## [validate] scenario $scen_ver"
   if [ -n "$(pair_for "$VALIDATION_DIR" "$scen_ver")" ]; then
     echo "## [validate] a validation run already exists for $REPO - not re-running"

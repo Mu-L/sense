@@ -25,6 +25,16 @@ source "$BENCH_DIR/lib/bench-paths.sh"
 source "$BENCH_DIR/lib/throttle-pacing.sh"
 
 REPO="${1:?usage: runs-variance.sh <repo>}"
+# ONE ROOT PER QUESTION (the rationale is in bench-paths.sh). Computed HERE because this is
+# the single funnel every bench goes through and the first place the repo - and therefore the
+# scenario - is known. It is consumed by the per-model re-source inside the model loop below,
+# so RESULTS_DIR stays version-less for the variance report written above that loop.
+if [ -z "${BENCH_SCENARIO_VERSION:-}" ] && [ -f "$SCENARIOS_DIR/$REPO.yaml" ]; then
+  BENCH_SCENARIO_VERSION="$(python3 "$BENCH_DIR/lib/scenario_version.py" "$SCENARIOS_DIR/$REPO.yaml" 2>/dev/null || true)"
+  export BENCH_SCENARIO_VERSION
+  [ -n "$BENCH_SCENARIO_VERSION" ] \
+    || echo "[variance] WARNING: no scenario version for $REPO; runs will land in the shared, un-versioned root" >&2
+fi
 source "$BENCH_DIR/lib/arms.sh"
 # The headline arm by default; the id lives only in verticals/<key>/arms.txt.
 MODELS="${MODELS:-$(arms_models "$VERTICAL" headline)}"
