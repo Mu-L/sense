@@ -3,29 +3,29 @@
 # Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
 # / justification 0.20 / uncertainty 0.15.
 #
-# CYCLE 4, SEVEN STEPS (plans/03-expand.md). Expanded from the cycle-4 two-step probe
-# rubric, kept at discourse.rubric.yaml.probe-2step-cycle4.bak.
-#
-# WHAT MOVED AND WHAT DID NOT. The two measured steps - "Map the category contract" and
-# "Audit every dependent of the category contract" - carry their cycle-4 criteria
-# unchanged, because their prompts and their gold are unchanged. The five steps added
-# around them carry the criteria written for the cycle-1 seven-step session
-# (discourse.rubric.yaml.briefed-7step.bak), except step 3, whose map_quality,
-# specificity and justification were rewritten: that step no longer asks about work on a
-# repeating schedule, so the judge no longer scores three timings.
+# CYCLE 8, SEVEN-STEP SESSION (plans/03-expand.md). This is the cycle-4 session rubric
+# (discourse.rubric.yaml.session-7step-cycle4.bak) with two steps replaced by the cycle-8
+# probe rubric's, verbatim: "Map the category contract" and "Audit every dependent of the
+# category contract". The second of those is the discriminator, so its four questions and
+# the audience paragraph are the ones the mini-bench was judged under and are not touched.
+# The cycle-8 two-step probe rubric is kept at discourse.rubric.yaml.probe-2step-cycle8.bak.
 #
 # WHY map_quality carries the most weight on the discriminator: this scenario's axis is
-# SCOPE, not darkness. Every dependent in the scored group is a one-touch call site inside
-# a routine named after some other job, and the fourteen of them are spread across
-# fourteen distinct areas in five separate trees. Breadth across areas is what is scored.
+# SCOPE, not darkness. Every dependent in the scored group is a one-touch call site inside a
+# routine named after some other job, and the twelve of them are spread across twelve
+# distinct areas in five separate trees - the application's scheduled jobs, its rake tasks,
+# its import scripts, its migration tooling, and five bundled plugins. A search route has to
+# decide where to point before it can enumerate, and every measured baseline route on this
+# repo pointed at a subset of the application tree. Breadth across areas is what is scored.
 #
-# Earlier rubrics: discourse.rubric.yaml.declared-link-12row.bak (cycle 3),
-# discourse.rubric.yaml.mixed-22row.bak (cycle 2), discourse.rubric.yaml.briefed-7step.bak
-# (cycle 1).
+# WHY specificity demands the enclosing routine: every scored row is a call inside a def
+# (or, for the narrative-bot row, inside a Proc in a state table), so the routine is
+# demanded for all of them, and it is the part a search result does not print.
 #
-# Step names MUST match scenarios/discourse.yaml exactly and in order (the judge pairs by
-# name).
-
+# SEVEN steps, names verbatim and in the order of scenarios/discourse.yaml (the judge pairs
+# by name). Earlier rubrics: cycle 7 at discourse.rubric.yaml.periphery-cycle7.bak, cycle 6
+# at .holder-widest-cycle6.bak, cycle 5 at .holder-subset-cycle5.bak, cycle 4's probe at
+# .probe-2step-cycle4.bak and its session at .session-7step-cycle4.bak.
 audience: 'An AI coding agent that will use this answer to safely rework the Discourse category
 
   class - the container topics are filed under, carrying its own permissions, settings and
@@ -46,15 +46,19 @@ audience: 'An AI coding agent that will use this answer to safely rework the Dis
 
   other job entirely - optimising uploads during a migration, appending imported records in
 
-  sort order, deciding whether two records being merged are the same one, walking every
+  sort order, deciding whether two records being merged are the same one, deciding whether
 
-  record to re-feed a search index, scrubbing a revision payload for a viewer, polling an
+  an incoming import record already exists, walking every record to re-feed a search index,
 
-  external feed, migrating one plugin''s data into another, deciding whether an incoming
+  finding the records whose search rows are stale, migrating one plugin''s data into
 
-  import record already exists - and they are scattered across the application, its rake
+  another, skipping a stored integration rule that no longer resolves, casting a user-typed
 
-  tasks, its import and
+  query parameter, narrowing an embedding suggestion to what a user may post in, expanding
+
+  a configured parent into its descendants, staging a bot tutorial - and they are scattered
+
+  across the application''s scheduled jobs, its rake tasks, its import scripts, its
 
   migration tooling and its bundled plugins. A weak answer covers the application tree
 
@@ -72,8 +76,8 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Does the answer give a usable map of the project - what it is, how the tree is
-        laid out,
+      question: 'Does the answer give a usable map of the project - what it is, how the tree is laid
+        out,
 
         where the class under rework sits, and what its behaviour is assembled from (the concerns
 
@@ -100,8 +104,8 @@ steps:
         '
     uncertainty:
       weight: 0.15
-      question: 'Does it separate what it read from what it assumed from a conventional layout?
-        A Rails
+      question: 'Does it separate what it read from what it assumed from a conventional layout? A
+        Rails
 
         tree invites confident guessing; saying which parts were actually opened is worth more.
 
@@ -142,8 +146,7 @@ steps:
         '
     justification:
       weight: 0.2
-      question: 'Does each place carry one phrase on what it contributes to the resolution path
-        -
+      question: 'Does each place carry one phrase on what it contributes to the resolution path -
 
         which input form it accepts, what it disambiguates, what it falls back to, why it
 
@@ -166,18 +169,18 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Is the lifecycle traced as a sequence - the decision that one is needed, its
-        creation, the renames and re-descriptions that follow, and its teardown - with what runs
-        around each moment? A strong answer separates two timings and does not collapse them:
-        what runs inline in the call that saved or destroyed the record, and what is handed off
-        to run once that call has finished. Reciting the callback declarations in order is not
-        the answer; saying which of them the caller can depend on having already happened is.
+      question: 'Is the lifecycle traced as a sequence - the decision that one is needed, its creation,
+        the renames and re-descriptions that follow, and its teardown - with what runs around each
+        moment? A strong answer separates two timings and does not collapse them: what runs inline
+        in the call that saved or destroyed the record, and what is handed off to run once that call
+        has finished. Reciting the callback declarations in order is not the answer; saying which
+        of them the caller can depend on having already happened is.
 
         '
     specificity:
       weight: 0.25
-      question: 'Does every layer carry a file:line and the routine it lives in, including the
-        handed-off ones - the code that picks the work up, not just the line that dispatches it?
+      question: 'Does every layer carry a file:line and the routine it lives in, including the handed-off
+        ones - the code that picks the work up, not just the line that dispatches it?
 
         '
     justification:
@@ -210,17 +213,19 @@ steps:
 
         single touches inside routines named after some other job, and they sit as much in
 
-        the migration and import tooling, the maintenance tasks and the bundled plugins as
+        the migration tooling, the import scripts, the maintenance and plugin rake tasks,
 
-        in the application itself. An answer that is dense in one tree and silent in the
+        the one-off jobs and the bundled plugins as in the application itself. An answer
 
-        others has enumerated inside one search scope and mistaken that for the codebase.
+        that is dense in one tree and silent in the others has enumerated inside one search
 
-        Is the answer organised by area with each area worked to the end, and are areas it
+        scope and mistaken that for the codebase. Is the answer organised by area with each
 
-        could not finish declared as unfinished rather than quietly summarised? Re-listing
+        area worked to the end, and are areas it could not finish declared as unfinished
 
-        the class''s own surface, or the join models named after it, is not this question.
+        rather than quietly summarised? Re-listing the class''s own surface, or the join
+
+        models named after it, is not this question.
 
         '
     specificity:
@@ -248,13 +253,15 @@ steps:
 
         if the class changed under it? The consequence must be about that place''s own job
 
-        - what breaks for the import being merged, the uploads being optimised, the search
+        - what breaks for the uploads being optimised, the import being appended or merged,
 
-        index being rebuilt, the revision payload being scrubbed, the feed being polled,
+        the search index being rebuilt or swept, the plugin data being migrated, the stored
 
-        the ad being targeted, the calendar being filtered, the forum being imported - not
+        integration rule being skipped, the saved query parameter being cast, the
 
-        a restatement of the line of code.
+        suggestion being narrowed, the template list being expanded, the tutorial being
+
+        staged - not a restatement of the line of code.
 
         '
     uncertainty:
@@ -272,11 +279,10 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Does the answer cover the distinct KINDS of guard rather than many instances
-        of one kind?
+      question: 'Does the answer cover the distinct KINDS of guard rather than many instances of
+        one kind?
 
-        The kinds are: a type check on something that may not be one of these at all; a lookup
-        by
+        The kinds are: a type check on something that may not be one of these at all; a lookup by
 
         user-supplied name or identifier turned into a refusal at the boundary instead of a nil
 
@@ -305,8 +311,8 @@ steps:
         '
     uncertainty:
       weight: 0.15
-      question: 'Does the answer distinguish guards it read from guards it expects a framework
-        to provide?
+      question: 'Does the answer distinguish guards it read from guards it expects a framework to
+        provide?
 
         Assuming a validation exists because a Rails model usually has one is the failure here.
 
@@ -315,8 +321,8 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Is this a RANKING that adds something to the audit, or the audit relisted? A
-        strong answer
+      question: 'Is this a RANKING that adds something to the audit, or the audit relisted? A strong
+        answer
 
         separates dependents that would fail loudly and immediately from those that would keep
 
@@ -356,40 +362,36 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Is this a map a teammate could land the change from without re-exploring - the
-        pieces of
+      question: 'Is this a map a teammate could land the change from without re-exploring - the pieces
+        of
 
         the contract itself that get edited, every dependent grouped by area, and the test surface
 
-        that has to move with it? Completeness against everything found earlier in the session
-        is
+        that has to move with it? Completeness against everything found earlier in the session is
 
         what is measured; a map that quietly drops areas the audit reached is the failure.
 
         '
     specificity:
       weight: 0.25
-      question: 'Do the edits and the dependents carry file:line and the enclosing routine? The
-        tests are
+      question: 'Do the edits and the dependents carry file:line and the enclosing routine? The tests
+        are
 
-        the exception: a test that must be ADDED has no line yet, so naming the file it belongs
-        in
+        the exception: a test that must be ADDED has no line yet, so naming the file it belongs in
 
         is the correct form there and is not penalised.
 
         '
     justification:
       weight: 0.2
-      question: 'Does the map say what each edit is for and what each test would be covering -
-        the
+      question: 'Does the map say what each edit is for and what each test would be covering - the
 
         behaviour that moves - rather than listing paths under headings?
 
         '
     uncertainty:
       weight: 0.15
-      question: 'Does it state what it is not sure survives the change, and what it would want
-        checked
+      question: 'Does it state what it is not sure survives the change, and what it would want checked
 
         first? A plan claiming to be complete over the whole radius, with no residual risk named,
 
