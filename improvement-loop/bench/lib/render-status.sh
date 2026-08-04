@@ -2,8 +2,16 @@
 # render-status.sh - regenerate a vertical's STATUS.md from disk. Readability
 # artifact per ledger.md: humans read it, loops NEVER do (write-only law).
 # Every section is recomputed from the authoritative sources (results tree,
-# report-matrix.sh, next-steps.md, repos.md); the file is replaced wholesale so
-# it can never drift into hand-edited state.
+# next-steps.md, repos.md); the file is replaced wholesale so it can never drift
+# into hand-edited state.
+#
+# NO MATRIX SECTION. It used to embed report-matrix.sh, which labels whatever
+# directory it finds as a model: after the one-root-per-question migration that
+# published scenario-version hashes (and, at another root, "minibench" and
+# "validation") in the model column with real numbers beside them. Removed
+# 2026-08-04 rather than repaired - nothing reads the matrix (no plan references
+# it), and the cross-model surface it exists for gets designed against the
+# versioned tree when the bench-all-models plan is written.
 #
 #   bash render-status.sh <vertical-key>
 #   e.g.: bash render-status.sh laravel   -> writes docs/laravel/STATUS.md
@@ -22,24 +30,6 @@ NEXT_STEPS="$DOC_DIR/next-steps.md"
 LEDGER="$DOC_DIR/LEDGER.md"
 STAMP="$(date '+%Y-%m-%d %H:%M %Z')"
 
-matrix_section() {
-  # report-matrix.sh writes report.md into $RESULTS and cats it; we keep the file.
-  if [ -d "$RESULTS" ] && VERTICAL="$KEY" bash "$IL_ROOT/bench/drivers/report-matrix.sh" >/dev/null 2>&1 \
-     && [ -s "$RESULTS/report.md" ]; then
-    # Numbers only: start at the report's Results section (methodology prose
-    # stays in report.md), demote its headings under ours.
-    if grep -q '^## Results' "$RESULTS/report.md"; then
-      sed -n '/^## Results/,$p' "$RESULTS/report.md" | sed 's/^#/##/'
-    else
-      sed 's/^#/##/' "$RESULTS/report.md"
-    fi
-    echo
-    echo "_Full report with methodology: \`verticals/${KEY}/results/report.md\`_"
-  else
-    echo "_matrix render unavailable (no results yet, or report-matrix.sh failed; source: $RESULTS)_"
-  fi
-}
-
 cells_section() {
   if [ -d "$RESULTS" ]; then
     local found=0
@@ -48,7 +38,11 @@ cells_section() {
       local runs
       runs=$(find "$cell" -mindepth 1 -maxdepth 1 -type d -name 'run-*' | wc -l | tr -d ' ')
       echo "- \`${cell#"$RESULTS"/}\` - $runs run(s)"
-    done < <(find "$RESULTS" -mindepth 4 -maxdepth 4 -type d -name 'run-*' -exec dirname {} \; | sort -u)
+    # Any depth, not a pinned one: cells used to sit at <model>/<arm>/<repo>/run-N
+    # and the one-root-per-question migration added a <version> segment, so a
+    # -maxdepth 4 walk reported "no run cells on disk yet" over a full results
+    # tree. The printed path carries whatever segments are actually there.
+    done < <(find "$RESULTS" -type d -name 'run-*' -exec dirname {} \; | sort -u)
     [ "$found" -eq 1 ] || echo "_no run cells on disk yet_"
   else
     echo "_no results tree yet at ${RESULTS}_"
@@ -220,10 +214,6 @@ else:
   echo "## Loop position (\`.loop-state.json\`)"
   echo
   loop_position_section
-  echo
-  echo "## Matrix (report-matrix.sh, VERTICAL=${KEY})"
-  echo
-  matrix_section
   echo
   echo "## Results cells on disk (\`verticals/${KEY}/results\`)"
   echo

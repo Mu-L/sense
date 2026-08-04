@@ -95,4 +95,4 @@ for repo in "${WINORDER[@]}"; do
   fi
 done
 echo "✅ sweep complete for $MODEL (all win-ordered repos benched)."
-echo "   Read: bash bench/drivers/report-matrix.sh"
+

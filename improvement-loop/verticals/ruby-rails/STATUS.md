@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-04 13:14 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-04 13:23 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -13,23 +13,23 @@
 
 Resume: `VERTICAL=ruby-rails bash bench/drivers/vertical-loop.sh <repo>`
 
-## Matrix (report-matrix.sh, VERTICAL=ruby-rails)
-
-## ruby-rails - Sense vertical benchmark
-
-This is the benchmark, the methodology, and the raw data behind the ruby-rails write-ups: how much a structural code index (**Sense**) helps an AI coding agent answer questions about real-world codebases in this stack, measured across several models.
-
-Every scenario is run twice with the same model: a **baseline** arm (the agent's normal tools) and a **sense** arm (the same tools plus the Sense index). Each scenario declares a must-find set of code locations, and the score is **cited recall** - the share of that set the answer pinned to an exact `path:line`. The deltas below are sense minus baseline, so **positive means Sense helped**.
-
-Jump to: [Methodology](#methodology) · [Results](#results) · [Per-model reports](#per-model-reports) · [Per-repo variance](#per-repo-variance)
-
-_No model results yet._
-
-_Full report with methodology: `verticals/ruby-rails/results/report.md`_
-
 ## Results cells on disk (`verticals/ruby-rails/results`)
 
-_no run cells on disk yet_
+- `claude-opus-4-8/validation/f576efebe028db23/baseline/mastodon` - 1 run(s)
+- `claude-opus-4-8/validation/f576efebe028db23/sense/mastodon` - 1 run(s)
+- `claude-opus-5/27dfc6000a5e98f3/baseline/mastodon` - 2 run(s)
+- `claude-opus-5/27dfc6000a5e98f3/sense/mastodon` - 2 run(s)
+- `claude-opus-5/3f210bcde96c18e1/baseline/rails` - 3 run(s)
+- `claude-opus-5/3f210bcde96c18e1/sense/rails` - 3 run(s)
+- `claude-opus-5/minibench/f5335174fcda4ffa/baseline/mastodon` - 1 run(s)
+- `claude-opus-5/minibench/f5335174fcda4ffa/sense/mastodon` - 2 run(s)
+- `claude-opus-5/minibench/unversioned/baseline/mastodon` - 1 run(s)
+- `claude-opus-5/validation/27dfc6000a5e98f3/baseline/mastodon` - 1 run(s)
+- `claude-opus-5/validation/27dfc6000a5e98f3/sense/mastodon` - 1 run(s)
+- `claude-opus-5/validation/f576efebe028db23/baseline/mastodon` - 5 run(s)
+- `claude-opus-5/validation/f576efebe028db23/sense/mastodon` - 5 run(s)
+- `claude-opus-5/validation/validation/baseline/rails` - 1 run(s)
+- `claude-opus-5/validation/validation/sense/rails` - 1 run(s)
 
 ## Ledger
 

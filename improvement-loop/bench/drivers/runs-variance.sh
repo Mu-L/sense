@@ -141,5 +141,3 @@ for m in $MODELS; do
 done
 echo "[done] $OUT"
 cat "$OUT"
-# Refresh the vertical's cross-model matrix (verticals/<name>/results/report.md|json).
-bash "$BENCH_DIR/drivers/report-matrix.sh" >/dev/null 2>&1 || echo "[warn] matrix refresh failed" >&2

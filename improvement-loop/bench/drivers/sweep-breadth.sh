@@ -216,5 +216,4 @@ case "$PASS" in
 esac
 
 pace_provider_lock_release   # free the subscription for a waiting same-provider sweep
-bash bench/drivers/report-matrix.sh >/dev/null 2>&1 || echo "[warn] matrix refresh failed" >&2
-echo "[breadth] done. Read: RESULTS_DIR=$modelroot python3 bench/lib/pergroup.py <repo>; bash bench/drivers/report-matrix.sh"
+echo "[breadth] done. Read: RESULTS_DIR=$modelroot python3 bench/lib/pergroup.py <repo>"

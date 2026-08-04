@@ -186,5 +186,4 @@ bash "$BENCH_DIR/judge.sh"  "${SJ[@]}" --via-cli
 # cross-model matrix so every entry point keeps the tracked reports current.
 bash "$BENCH_DIR/report.sh" --md
 bash "$BENCH_DIR/report.sh" --json
-[ -n "${VERTICAL:-}" ] && { bash "$BENCH_DIR/drivers/report-matrix.sh" >/dev/null 2>&1 || echo "[warn] matrix refresh failed" >&2; }
 echo "[session] done - see bench/results/{${TOOLS_CSV}}/$REPO/" >&2

@@ -129,5 +129,3 @@ for m in $MODELS; do
   pace_provider_lock_release
 done
 echo "[sweep] complete $(date +%H:%M:%S)"
-# Refresh the vertical's cross-model matrix (verticals/<name>/results/report.md|json).
-bash "$BENCH_DIR/drivers/report-matrix.sh" >/dev/null 2>&1 || echo "[warn] matrix refresh failed" >&2
