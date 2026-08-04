@@ -15,6 +15,17 @@ they are not re-argued at runtime.
 - **NO PREDICTORS BEFORE A SCENARIO EXISTS.** A win is crafted, never detected by a script
   beforehand. A killer runs against a scenario that exists and may kill it; a predictor
   guesses before one does and is banned.
+- **A METRIC WITH A FREE PARAMETER IS SWEPT, NEVER EVALUATED.** Report the whole curve, not the
+  chosen point. A fixed per-miss cost was measured at 1/3, reported and recommended before the
+  sweep was run; the sweep showed `delta = cost * 1.8` on that cell - monotone, no optimum,
+  0.0625 giving +0.112 and 1.0 giving +0.800 - and that 1/3 sat at the edge of a window derived
+  FROM the cell it was meant to judge. If turning the knob one way always makes us look better,
+  it is a dial and not a measurement. A blend whose delta is a convex combination of its terms
+  is safe by construction: it lands BETWEEN them and cannot manufacture a win neither supports.
+- **OPUS-4.8 IS HISTORY; WE SCORE OPUS-5 FORWARD (ruling, 2026-08-04).** Banked opus-4.8
+  numbers are labelled historical, never deleted, and they do NOT constrain a scoring change.
+  The killer "it must hold on the banked cell" was treating a record on a retired model as a
+  live constraint. Killers still bind on every cell benched on the headline model.
 - **THE FIRST MEASUREMENT IS A REAL BASELINE ARM.** Nothing kills a draft before a two-arm run
   has answered its question at a real wall. Every cheaper substitute this bench has built - the
   token-cover battery, the import screen, the scored adversary probe, the hand-run read-cost
@@ -76,6 +87,16 @@ they are not re-argued at runtime.
   files to pin sixteen lines. Curate gold from the scattered periphery, keep the contract
   centre as non-scoring anchors, demand `path:line`, and never judge a shape by whether grep
   finds the file.
+- **A GOLD ROW MUST BE CITEABLE IN THE FORM THE ASK DEMANDS.** The headline scores `path:line`,
+  so a row for an artifact the ask says to ADD has no line to cite and can never score. Measured
+  on the banked Status control: its step 7 asks for "the specs/fixtures that must be updated or
+  added", and `spec:status` / `spec:post-svc` scored **mentioned 2/2 in 8 of 10 runs, cited 0/2
+  in 10 of 10**, both arms, both models, since June. The arms did the work and named the files
+  in the only natural form (`spec/models/status_spec.rb`, no line). Before golding a row, say
+  out loud what the ask asks for it and what a correct answer looks like: if a line number would
+  be meaningless in that sentence, the row is mention-only or it does not belong in gold.
+  A never-cited row is NOT automatically hard or unreachable - check the ask's wording before
+  checking the blast payload.
 - **A GOLD ROW SHOULD COST A READ - AND THE RUN IS WHAT CHARGES IT.** `grep -rn` prints
   `path:line`, so a row whose dependency IS the token occurrence can be free: a gold set whose
   eighteen rows were each a single `Setting.<key>` read scored 17 of 18 to a baseline in nine

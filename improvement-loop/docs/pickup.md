@@ -75,7 +75,9 @@ contract, and completeness IS the product claim.
 Before acting on it, the same discipline that killed the line-level proposal:
 
 - **must hold on other cells** - free re-score across every run on disk; if it turns the
-  banked rails +0.72 into noise or flips a tie into a false win, it fails
+  banked +0.72 into noise or flips a tie into a false win, it fails. (That cell is
+  **mastodon on opus-4.8**, not rails - `LEDGER.md:1019`. Corrected 2026-08-04, and the
+  constraint itself was then retired by ruling: opus-4.8 is history.)
 - **high variance** - one miss is a zero, so it needs n=5+ per arm; only `Status` has that
 - **STOPPER-class** - headline metric change, needs a re-score diff and re-measurement of
   every banked number
@@ -95,7 +97,7 @@ Before acting on it, the same discipline that killed the line-level proposal:
    `.../minibench`, and the paid roots. Report linear delta beside gated delta per cell.
 
 3. **Read the three killers before believing it.**
-   - does it hold on the banked rails cell, or turn +0.72 into noise?
+   - does it hold on the banked mastodon opus-4.8 cell, or turn +0.72 into noise?
    - does it flip any TIE into a win? (that would be the metric inventing a result)
    - at n<5, how often does one miss swing a cell? quote the number.
 
