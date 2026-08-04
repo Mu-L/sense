@@ -492,7 +492,15 @@ for scenario_name in "${scenarios[@]}"; do
     prompt=$(python3 "$LIB_DIR/scenario.py" "$scenario_file" --prompt)
 
     for run_idx in $(seq 1 $NUM_RUNS); do
-    for tool in "${TOOLS[@]}"; do
+    # The arms are a QUEUE, not a fixed list, so a sense arm that did not finish can be
+    # re-entered ahead of the arms still to come (see the retry below). Held as a
+    # whitespace-delimited string rather than an array: this runs under `set -u` on bash
+    # 3.2, where slicing an array down to empty is an unbound-variable error.
+    arm_queue="${TOOLS[*]}"
+    sense_retried=0
+    while [[ -n "$arm_queue" ]]; do
+      tool="${arm_queue%% *}"
+      if [[ "$arm_queue" == *" "* ]]; then arm_queue="${arm_queue#* }"; else arm_queue=""; fi
       # sense_* binary provenance rides only on the sense arm, mirroring tool_ver.
       if [[ "$tool" == sense ]]; then
         tool_ver="$SENSE_VERSION"; tool_ref="$SENSE_REF"; tool_dirty="$SENSE_DIRTY"; tool_release="$SENSE_RELEASE"
@@ -733,6 +741,21 @@ d = json.load(open(sys.argv[1]))
 print('true' if (d.get('valid') is True and not d.get('watchdog_kind')) else 'false')
 " "$result_dir/run_meta.json")
         sense_run_record "$scenario_name" "$run_idx" "$wall" "$run_valid"
+        # ONE RETRY FOR A SENSE ARM THAT DID NOT FINISH. The baseline derives its wall from
+        # its paired sense run, so a watchdogged or crashed sense run takes the baseline
+        # down with it and the whole cell is lost - measured: discourse run-1 hit the clock
+        # at 481s, the baseline was skipped for want of an honest wall, and validate halted
+        # on a pair that did not exist. The retry re-enters the sense arm AHEAD of the arms
+        # still queued, lands in the next free run-N (nothing is overwritten) and re-records
+        # the pairing entry for this run_idx, so the baseline pairs with the run that
+        # finished. ONE retry, never a loop: cannot-finish-at-budget is a RESULT, and a
+        # scenario that needs three attempts is saying something we must not average away.
+        if [[ "$run_valid" != true && $sense_retried -eq 0 ]]; then
+          sense_retried=1
+          arm_queue="sense${arm_queue:+ $arm_queue}"
+          _log "  sense arm did not finish (valid=$run_valid) - RETRYING the sense arm once"
+          _log "     A second failure stands as the result; the watchdog is not raised."
+        fi
       fi
 
       if [[ $rc -eq 0 ]]; then
