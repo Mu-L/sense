@@ -10,6 +10,7 @@ live scenario, the next validation cycle would have deleted them too.
 
 The rest pin `next_run`, whose only job is to never hand back an index that is already filed.
 """
+import json
 import os
 import re
 import subprocess
@@ -48,6 +49,70 @@ def next_run(root, repo="mastodon"):
     script = f'REPO="{repo}"\nnext_run() {{\n{match.group(1)}}}\nnext_run "{root}"'
     out = subprocess.run(["bash", "-c", script], capture_output=True, text=True, check=True)
     return int(out.stdout.strip())
+
+
+def pair_for(root, version, repo="mastodon"):
+    """Run the driver's runs_for + pair_for against a tree. Same extraction as next_run."""
+    text = driver_text()
+    bodies = []
+    for name in ("runs_for", "pair_for"):
+        m = re.search(rf"^{name}\(\) \{{\n(.*?)^\}}", text, re.S | re.M)
+        assert m, f"{name}() not found in vertical-loop.sh - the pins below test nothing"
+        bodies.append(f"{name}() {{\n{m.group(1)}}}")
+    script = f'REPO="{repo}"\n' + "\n".join(bodies) + f'\npair_for "{root}" "{version}"'
+    out = subprocess.run(["bash", "-c", script], capture_output=True, text=True, check=True)
+    return out.stdout.strip()
+
+
+class HalfPairTest(unittest.TestCase):
+    """A one-armed run must not satisfy a two-arm gate.
+
+    The minibench root holds a VALID sense run at the live scenario version with no baseline
+    beside it - a cycle killed between its arms. Asking whether ANY run exists at that
+    version answers yes, so resuming would have skipped the measurement and advanced the
+    loop on half a pair.
+    """
+    def setUp(self):
+        self.root = os.path.join(
+            os.environ.get("TMPDIR", "/tmp"), f"half-pair-{os.getpid()}")
+        os.makedirs(self.root, exist_ok=True)
+        self.addCleanup(subprocess.run, ["rm", "-rf", self.root])
+
+    def run_dir(self, arm, idx, version):
+        d = os.path.join(self.root, arm, "mastodon", f"run-{idx}")
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, "run_meta.json"), "w") as fh:
+            json.dump({"tool": arm, "scenario_version": version}, fh)
+        open(os.path.join(d, "transcript.json"), "w").close()
+
+    def test_a_lone_sense_run_does_not_satisfy_the_gate(self):
+        self.run_dir("sense", 1, "sha256:aaa")
+        self.assertEqual(pair_for(self.root, "sha256:aaa"), "")
+
+    def test_a_lone_baseline_run_does_not_satisfy_the_gate(self):
+        self.run_dir("baseline", 1, "sha256:aaa")
+        self.assertEqual(pair_for(self.root, "sha256:aaa"), "")
+
+    def test_both_arms_at_the_same_version_satisfy_it(self):
+        self.run_dir("sense", 1, "sha256:aaa")
+        self.run_dir("baseline", 1, "sha256:aaa")
+        self.assertNotEqual(pair_for(self.root, "sha256:aaa"), "")
+
+    def test_two_arms_at_DIFFERENT_versions_are_not_a_pair(self):
+        """The version scoping is the point: two arms that answered different questions
+        never formed a pair, however many runs are on disk."""
+        self.run_dir("sense", 1, "sha256:aaa")
+        self.run_dir("baseline", 1, "sha256:bbb")
+        self.assertEqual(pair_for(self.root, "sha256:aaa"), "")
+
+    def test_the_arm_comes_from_run_meta_not_the_directory_name(self):
+        """`tool` is the run's own record; the directory is a convention."""
+        d = os.path.join(self.root, "sense", "mastodon", "run-9")
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, "run_meta.json"), "w") as fh:
+            json.dump({"tool": "baseline", "scenario_version": "sha256:aaa"}, fh)
+        open(os.path.join(d, "transcript.json"), "w").close()
+        self.assertEqual(pair_for(self.root, "sha256:aaa"), "")
 
 
 class WipeTest(unittest.TestCase):

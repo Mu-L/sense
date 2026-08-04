@@ -409,9 +409,9 @@ do_index() {
 #   pair, so the loop read a ceiling off a baseline that had answered a different
 #   scenario. run_meta.json has carried scenario_version all along; it gated nothing.
 runs_for() {
-  python3 - "$1" "$REPO" "$2" <<'PY'
+  python3 - "$1" "$REPO" "$2" "${3:-}" <<'PY'
 import json, os, sys
-root, repo, want = sys.argv[1], sys.argv[2], sys.argv[3]
+root, repo, want, arm = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 for dirpath, _, filenames in os.walk(root):
     if "run_meta.json" not in filenames or "transcript.json" not in filenames:
         continue
@@ -424,9 +424,31 @@ for dirpath, _, filenames in os.walk(root):
         continue
     if meta.get("scenario_version") != want:
         continue
+    # `tool` is the run's own record of which arm produced it - authoritative where the
+    # directory name is only a convention.
+    if arm and meta.get("tool") != arm:
+        continue
     print(os.path.join(dirpath, "transcript.json"))
     break
 PY
+}
+
+# pair_for <root> <scenario_version> - non-empty only when BOTH arms ran this question.
+#
+# WHY THIS EXISTS. The gates below asked runs_for whether ANY run existed at this version
+# and treated that as "the pair is on disk". A cycle killed between its two arms leaves
+# exactly one, and the minibench root holds precisely that: a valid sense run at the LIVE
+# scenario version with no baseline beside it. Resuming would have read "a run already
+# exists - not re-running", skipped the measurement and advanced the loop on half a pair.
+# A one-armed run cannot answer a two-arm question.
+# "No pair" is an ANSWER, not a failure: it returns 0 with empty output, so a caller under
+# `set -e` reads the absence instead of aborting on it.
+pair_for() {
+  local b s
+  b="$(runs_for "$1" "$2" baseline)"
+  s="$(runs_for "$1" "$2" sense)"
+  if [ -n "$b" ] && [ -n "$s" ]; then echo "$b $s"; fi
+  return 0
 }
 
 # archive_scenario <yaml> - keep the scored bytes of this scenario version forever.
@@ -544,7 +566,7 @@ do_minibench() {
     exit 1; }
   archive_scenario "$YAML"
   echo "## [minibench] scenario $scen_ver"
-  if [ -n "$(runs_for "$MINIBENCH_DIR" "$scen_ver")" ]; then
+  if [ -n "$(pair_for "$MINIBENCH_DIR" "$scen_ver")" ]; then
     echo "## [minibench] a run already exists for this scenario version - not re-running"
     echo "   (delete $MINIBENCH_DIR to force a fresh one)"
   else
@@ -563,7 +585,7 @@ do_minibench() {
         echo "            Read the transcripts before re-running."; exit 1; }
     # POST-CONDITION, not just the exit code: the runner has returned 0 with the run
     # actually failed. An exit code is a claim; the transcript on disk is the fact.
-    if [ -z "$(runs_for "$MINIBENCH_DIR" "$scen_ver")" ]; then
+    if [ -z "$(pair_for "$MINIBENCH_DIR" "$scen_ver")" ]; then
       echo "[minibench] the runner exited 0 but wrote NO transcript for $REPO - treating"
       echo "            as a FAILED run. Nothing advances on an absent artefact."
       exit 1
@@ -687,7 +709,7 @@ do_validate() {
     exit 1; }
   archive_scenario "$YAML"
   echo "## [validate] scenario $scen_ver"
-  if [ -n "$(runs_for "$VALIDATION_DIR" "$scen_ver")" ]; then
+  if [ -n "$(pair_for "$VALIDATION_DIR" "$scen_ver")" ]; then
     echo "## [validate] a validation run already exists for $REPO - not re-running"
     echo "   (delete $VALIDATION_DIR to force a fresh one)"
   else
@@ -704,7 +726,7 @@ do_validate() {
     # actually failed, and this phase advanced to the PAID bench on it. An exit code is
     # a claim; the transcript on disk is the fact. Generalised into require_verdict for
     # every agent phase - this one guards a runner, so it stays here too.
-    if [ -z "$(runs_for "$VALIDATION_DIR" "$scen_ver")" ]; then
+    if [ -z "$(pair_for "$VALIDATION_DIR" "$scen_ver")" ]; then
       echo "[validate] the runner exited 0 but wrote NO transcript for $REPO - treating as a FAILED"
       echo "           validation. Nothing advances to a paid bench on an absent artefact."
       exit 1
