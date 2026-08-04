@@ -1,0 +1,101 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# WHY map_quality carries the most weight here: this scenario's axis (cycle 10) is
+# ATTRIBUTION, not enumeration. A search prints the line that takes the dependency; it
+# never prints the routine that owns that line. The answer that matters says WHOSE
+# behaviour changes - the enclosing routine, and what it would start getting wrong - for
+# every dependent, under a budget the first step already spent.
+#
+# Step names MUST match scenarios/mastodon.yaml exactly (the judge pairs by name).
+
+audience: |
+  An AI coding agent that will use this answer to safely rework the class representing a
+  person on a Mastodon server. Score for that agent, not a human reader and not a docs
+  page. A perfect answer leaves the agent able to change that class knowing two things:
+  how the rest of the system gets hold of one of these records when all it holds is an
+  identifier that came from outside - traced through the routines that make that path up -
+  and every other place that would have to change with the class, each one attributed to
+  the routine the dependency sits inside, pinned to an exact file:line, with the
+  consequence of the change on that routine stated. The dependents that matter are not the
+  ones whose job is this record; they are the ones doing some unrelated job that reach for
+  it once in the middle of it, from a routine named after that other job. A weak answer
+  lists places rather than routines; sweeps the areas obviously about the record and
+  stops; collapses a set into "all the services"; or gives file:line with nothing said
+  about which routine owns the line or what breaks in it - which leaves the agent knowing
+  where the name appears and not what its change would do.
+
+steps:
+  - name: Map the account-record contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer trace the outside-identifier resolution path end to end rather
+          than describing the class in general? Does it cover the entry points that turn an
+          external identifier into one of these records, the places that cache or
+          short-circuit that path, the place that goes out to the network to build a record
+          the system did not have, and the places that hand back something other than a
+          person when the identifier does not resolve to one? Is each step of the path
+          attributed to the ROUTINE it lives in, not just to a file? Does it say what a
+          rework would have to preserve for that path to keep working? Would the agent be
+          able to start the audit that follows with only small, targeted lookups?
+      specificity:
+        weight: 0.25
+        question: |
+          Are the cited references exact file:line rather than filenames, directories or
+          vague area names ("the services")? Is every step of the path tied to a real path
+          AND a line AND the name of the routine that contains it? Is every claim tied to a
+          real path?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain WHY the path is shaped this way - what each hop
+          contributes, why the cache or the network hop is there, what the fallbacks are
+          protecting against - rather than only NAMING the pieces it found?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer flag what it has not verified, or where it is inferring a
+          routine's role from its name rather than from its contents, instead of presenting
+          an orientation sweep as complete?
+
+  - name: Audit every dependent of the account-record contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          THIS IS THE CORE STEP, and attribution is what it is scored on. How complete is
+          the dependent set, and for how many of them does the answer name the ROUTINE the
+          dependency sits inside and what that routine would start getting wrong if the
+          class changed? Credit dependents that sit in an area whose job is something other
+          than this record and that consult it once in passing, from a routine named after
+          that other job. Penalise an answer that lists file:line locations without saying
+          which routine owns each line; that names routines but cannot say what breaks in
+          them; that enumerates the areas obviously about the record and stops; or that
+          collapses a set into a summary such as "all the services". Would the agent be able
+          to change the class without silently breaking behaviour it was never shown the
+          owner of?
+      specificity:
+        weight: 0.25
+        question: |
+          Is EVERY dependent pinned to an exact file:line AND to the name of the enclosing
+          routine? A filename with no line number does not count; a file:line with no
+          routine named around it does not count. Is the line the one that actually takes
+          the dependency rather than a class header? Does each entry say concretely what
+          that routine takes from the class?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain how these dependents were found and why the set should be
+          believed complete - and does it reason about consequence, distinguishing a
+          dependent that would fail loudly from one that would keep running and quietly
+          return something different - rather than only listing what it located?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer state honestly where its enumeration is thin - areas it did not
+          sweep, routines it named without opening, budget it ran short of - rather than
+          presenting a partial list as exhaustive?
