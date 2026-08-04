@@ -1,533 +1,440 @@
 # ============================================================================
-# SEVEN-STEP WORK SESSION (plans/03-expand.md), CYCLE 1 on this repo.
-# Expanded from the two-step probe, which is kept at
-# scenarios/discourse.yaml.probe-2step.bak.
+# SEVEN-STEP WORK SESSION (plans/03-expand.md), CYCLE 4 on discourse.
+# Expanded from the cycle-4 two-step probe, kept at
+# scenarios/discourse.yaml.probe-2step-cycle4.bak.
 #
 # THE MINI-BENCH THAT AUTHORISED THIS EXPANSION - both arms, x1, unscored, real wall
 # (results/loop/discourse/minibench.md):
-#     group        baseline (per run)   sense (per run)   delta
-#     contract     3/4                  4/4               +0.25
-#     dependents   6/15 = 0.400         14/15 = 0.933     +0.533   <== WIN
-#   baseline 0.400 <= the 0.50 ceiling; delta +0.533 >= the +0.50 bar; both conditions hold.
-#   Both arms exited 0, no watchdog, both finished with wall unspent (sense 371 of 480,
-#   baseline 289 of 446). The baseline's 0.400 is where it STOPPED, not where it was cut.
-#   Its route was 30 tool calls, 23 of them greps, ending in a `grep -rln "Category\b" |
-#   xargs grep -c "Category\." | sort -rn` frequency census it then hand-read down - not the
-#   one-grep-returns-the-set shape. The rows it never reached are the quiet single-touch app
-#   files and the plugin periphery.
-#   Free rows, cited by BOTH arms, which are the whole of the baseline's floor:
-#     d:backup-restorer, d:email-receiver, d:tags-search, d:topic-guardian,
-#     d:topic-view-serializer, d:topics-controller.
-#   Cited by NEITHER arm at x1: d:migrations-optimizer. One row of fifteen; watched, not cut.
-#   No superseded question: this is cycle 1, nothing was killed by a number.
+#     group        baseline (per run)      sense (per run)      delta
+#     dependents   6/14 = 0.4286           13/14 = 0.9286       +0.5000   <== WIN
+#   baseline 0.4286 <= the 0.50 ceiling; delta +0.5000 >= the +0.50 bar; both hold.
+#   Arm health before believing either number: both exit 0, no watchdog, both `valid: true`.
+#   sense 357 of 480 wall, 27 tool calls, 9 of them MCP, cites_grounded 255 of 255.
+#   baseline 391 of 429 wall, 39 tool calls, 25 searches, read_count 0, hallucinated 0.
+#   The baseline was not cut off - it stopped on its own after building two custom repo
+#   scanners (`ruby /tmp/scan.rb app lib`, `/tmp/scan2.rb`) and hand-reading them down.
+#
+#   THE DELTA IS EXACTLY ON THE BAR. There is no slack. Seven sense-only rows carry the
+#   whole win - d:bulk-import-merger, d:import-scripts-base, d:migrations-importer-categories,
+#   d:migrations-optimizer, d:reindex-search-job, d:slack-migration, d:templates-rake - and
+#   five of seven would give +0.357. Six of the fourteen dependents are FREE (both arms took
+#   them at x1: d:ai-translation-candidates, d:event-finder, d:house-ad, d:post-revision,
+#   d:post-revision-serializer, d:rss-polling); they put a 0.4286 floor under the baseline
+#   that no wording lifts. d:search-rake was reached by NEITHER arm at x1 - unknown whether
+#   it is hard or unreachable, and one run cannot tell.
+#
+# SUPERSEDED QUESTIONS, AND THE NUMBER THAT KILLED EACH
+#   cycle 1  seven-step briefed session, 15 rows  base 11/15 = 0.733  sense 14/15  +0.200
+#            killed: baseline too high (kept at discourse.yaml.briefed-7step.bak)
+#   cycle 2  two-step probe, 22 rows (+7 assoc)   base 12/22 = 0.5455 sense 14/22  +0.091
+#            killed: baseline too high (discourse.yaml.mixed-22row.bak)
+#   cycle 3  two-step probe, 12 declared links    base  7/12 = 0.583  sense 11/12  +0.333
+#            killed: recall caps at 1.00, so a baseline at 0.583 capped the delta at
+#            +0.417 before the pair ran (discourse.yaml.declared-link-12row.bak)
+#
+# THE AXIS SENTENCE. Not darkness - SCOPE. Every scored dependent is a one-touch call site
+# inside a routine named after some other job, and the fourteen sit in fourteen distinct
+# areas across five trees (app, lib, migrations, script, plugins). A search route must
+# choose where to point before it can enumerate, and every measured baseline route on this
+# anchor pointed at some subset of `app lib plugins --include=*.rb`; none of the five ever
+# searched `script/`, `migrations/`, or a `.rake` file. `sense_blast` returns the whole
+# radius in one call, printed as direct_callers_by_area over 44 areas.
+#
+# SEAM PROFILE (bench/lib/seam_hunt.py, RANKING ONLY, it never kills)
+#   Category  app/models/category.rb  app callers 89, SCATTER 47 dirs,
+#             grep-noise 109 app files, PRECISION 0.82  <- best of three profiled.
+#   CategoryUser 1.21 and CategoryList 3.50 are both ABOVE 1.00 - false caller edges, not
+#   darkness. 0.82 sits in the tie zone (a deliberate control tie profiled 0.78; the +1.00
+#   winner profiled 0.078). Recorded, not worked around.
+#
+# RING: ring_sweep.py --top 12 returns "0 candidate(s) above the bar" on this clone. The
+#   "what HOLDS X" kind is off the menu on this stack, as it was on mastodon.
+# MEMORIZATION: memorization_probe.py Category -> closed-book recall 0.174, "not recited".
+#   The forty recited names are all Category's own members; no gold row here is a member of
+#   Category - every scored row is an external call site in tooling or a bundled plugin.
+# TOKEN COUNTS, recorded and deciding nothing: no file in the shown blast payload is
+#   token-dark; the lowest `categor` count over ~80 payload files is 2.
 #
 # WHAT THE EXPANSION CHANGED, AND WHAT IT DID NOT
-#   NOT changed: step 4 is the probe's step 2 byte for byte, and the `dependents` gold is the
-#   same fifteen rows at the same lines. Move either and the +0.533 stops describing this
-#   scenario. Step 2 is the probe's step 1, likewise unchanged.
+#   NOT changed: step 4 is the cycle-4 probe's step 2 byte for byte, and the `dependents`
+#   gold is the same fourteen rows at the same fourteen lines. Move either and the +0.5000
+#   stops describing this scenario. Step 2 is the probe's step 1, likewise unchanged.
 #   Added: steps 1, 3, 5, 6, 7 around them, and eight rows in two NON-SCORING groups -
-#   `write-path` (4) and `guards` (4). Nothing was added to `dependents`: gold that never
-#   faced a baseline is untested gold.
+#   `write-path` (4) and `guards` (4). Nothing was added to `dependents`: with the delta
+#   exactly on the bar, gold that never faced a baseline would dilute a group that has no
+#   room to be diluted.
 #
-# WHY THERE IS NO `specs` GROUP. Step 7 asks for the tests that must be updated or added, but
-# the headline scores `path:line` and a test that must be ADDED has no line to cite. The
+# WHY THERE IS NO `specs` GROUP. Step 7 asks for the tests that must be updated or added,
+# but the headline scores path:line and a test that must be ADDED has no line to cite. The
 # banked Status control measured exactly this: its spec rows scored mentioned 2/2 in 8 of 10
-# runs and cited 0/2 in 10 of 10, both arms, both models, since June. The step still asks for
-# them - the judge's map_quality sees the answer - but they are not gold.
+# runs and cited 0/2 in 10 of 10, both arms, both models, since June. The step still asks
+# for them - the judge's map_quality reads the answer - but they are not gold.
 #
-# WHERE THE ADDED ROWS CAME FROM, stated because three of them are not in the blast payload.
-#   Shown in `sense_blast(symbol: "Category", file: "app/models/category.rb")`:
-#     w:seed-categories, w:import-export-importer, g:data-explorer-parameter,
-#     g:chat-integration-rule, g:site-setting-validation.
-#   NOT in that payload, sourced by reading app/models/category.rb and following the
-#   registered name: w:index-for-search-job, w:category-stats-job, g:chat-plugin-event.
-#   These three are reached through `Jobs.enqueue(:index_category_for_search, ...)` and
-#   `DiscourseEvent.trigger(:category_updated, ...)` - symbol-registry dispatch, which the
-#   payload's own index_caveat names as a known gap ("plugin extensions
-#   (DiscoursePluginRegistry, add_to_class) ... method_missing dispatch"). They are the true
-#   answer to "which parts run asynchronously", they are equally reachable from the model file
-#   by either arm, and they sit in non-scoring groups, so they decide nothing.
-#   Every one of the eight added rows was opened and its line read by hand; not one credit
-#   comes from a script tally.
+# WHERE THE ADDED ROWS CAME FROM. Every one of the eight was opened and its line read by
+# hand; not one credit comes from a script tally.
+#   Checked, not assumed - `gold_confidence_check.py <yaml> Category
+#   --file app/models/category.rb --group <g>` was run per group:
+#     dependents  14 of 14 shown   PASS   <- the only group the gate is required on
+#     contract     3 of 4  shown          missing contract-model, which IS the anchor file
+#     write-path   2 of 4  shown          missing w:destroy-task, w:automation-event
+#     guards       3 of 4  shown          missing g:chat-plugin-event
+#   So five of the eight added rows are in the shown payload: w:seed-categories,
+#   w:import-export-importer, g:data-explorer-parameter, g:chat-integration-rule,
+#   g:site-setting-validation.
+#   The other three were sourced by reading app/models/category.rb and following what it
+#   declares (`:132-138` the after_destroy chain, `:158-160` the after_commit event
+#   triggers, `:1124` the same three names registered as web hook events):
+#     w:automation-event and g:chat-plugin-event are symbol-registry dispatch, which the
+#     payload's own index_caveat names as a known gap;
+#     w:destroy-task calls `category.destroy` on an instance, so it carries no edge to the
+#     class symbol at all.
+#   All three are equally reachable from the model file by EITHER arm and all three sit in
+#   non-scoring groups, so they decide nothing.
 #
-# STEP ORDER AND LEAKAGE. Nothing before step 4 names a directory a `dependents` row sits in.
-# The step 5 guard rows land in plugins/chat/plugin.rb and lib/site_settings/validations.rb -
-# both AFTER the discriminator, so they cannot hand it anything - and lib/guardian/ was
-# deliberately left out of every added row, because d:topic-guardian lives there.
+# STEP ORDER AND LEAKAGE, checked row by row. Nothing before step 4 names a directory a
+# `dependents` row sits in:
+#   step 3's rows are lib/seed_data, lib/import_export, app/services/destroy_task.rb and
+#   plugins/automation. The two search-indexing job rows the cycle-1 expansion used
+#   (app/jobs/regular/index_category_for_search.rb, app/jobs/scheduled/category_stats.rb)
+#   were DROPPED here: `app/jobs/scheduled/` now holds d:reindex-search-job and the search
+#   indexer is what d:search-rake re-feeds, so those rows would walk both arms into two of
+#   the seven rows carrying the whole win. plugins/automation is not one of the six plugins
+#   holding a dependents row. For the same reason step 3's PROMPT no longer says "or on a
+#   repeating schedule" (the cycle-1 wording): that phrase points an arm straight at the
+#   scheduled-jobs directory, which is where d:reindex-search-job lives. It now asks only
+#   for what runs inline versus what is handed off to run once the call has finished, and
+#   the rubric's step-3 criteria were rewritten to match.
+#   step 5's rows land in plugins/chat, plugins/discourse-data-explorer,
+#   plugins/discourse-chat-integration and lib/site_settings - all AFTER the discriminator,
+#   so they cannot hand it anything.
 # ============================================================================
-#
-# ---- carried from the probe scenario, unchanged ----------------------------
-# TWO-STEP PROBE SCENARIO (plans/01-author.md), CYCLE 1 on this repo.
-# Not a re-question: results/loop/discourse/cycles.jsonl does not exist, so there is no
-# trajectory to correct from. `ls verticals/ruby-rails/results/loop/discourse/` returns
-# author.agent.json and author.agent.log only - no measured run on this repo, either arm.
-#
-# ------------------------------------------------------------------------------------
-# THE KIND OF QUESTION, AND WHY IT IS THE ONE ON THE MENU
-# ------------------------------------------------------------------------------------
-# The strongest measured kind - "what HOLDS X, and what stays alive when X goes away" -
-# is OFF THE MENU here, and that is measured, not assumed:
-#     python3 bench/lib/ring_sweep.py $CLONE --top 12
-#     SiteSetting/User/Post/DiscourseRoute/Topic/Base/ApplicationSerializer/Array/
-#     Category/InvalidParameters/Group/Guardian  ->  rows 0, files 0, vias 0, "under bar"
-#     0 candidate(s) above the bar.
-# Twelve for twelve at zero. That reproduces the standing law's finding on the two Ruby
-# repos already swept, and it takes the retention kind off this repo too.
-#
-# So this is kind one, an occurrence-list question, and the plan requires the sentence
-# saying what makes it the first sort and not the second. See THE AXIS below: the ask is
-# not for the occurrence list. It is for the ROUTINE each occurrence sits inside.
-#
-# ------------------------------------------------------------------------------------
-# SEAM PROFILE - recorded, never a gate
-# ------------------------------------------------------------------------------------
-# Three candidates profiled. `Upload` and `Category` first returned PRECISION=0.00 with
-# 0 app caller files; that is symbol ambiguity, not a resolver gap - sense_blast replied
-#   {"ambiguous": true, "matches": 6, "top_matches": ["Upload (204 edges, class) app/models/upload.rb:5", ...]}
-# and both profile cleanly once --file pins the model. Re-run with the file pinned:
-#
-#   python3 bench/lib/seam_hunt.py $CLONE Category --file app/models/category.rb --propose
-#     app caller files : 89    SCATTER (dirs) : 47
-#     GREP-NOISE       : 'Category' in 109 app files   PRECISION=0.82  (lower=grep-hostile)
-#     VERDICT          : SCATTERED + grep-clean
-#   python3 bench/lib/seam_hunt.py $CLONE Upload --file app/models/upload.rb --propose
-#     app caller files : 85    SCATTER (dirs) : 36
-#     GREP-NOISE       : 'Upload' in 80 app files      PRECISION=1.06
-#   python3 bench/lib/seam_hunt.py $CLONE Guardian --file lib/guardian.rb --propose
-#     app caller files : 130   SCATTER (dirs) : 50
-#     GREP-NOISE       : 'Guardian' in 102 app files   PRECISION=1.27
-#
-# Category leads the ranking on the one figure that has separated wins from ties across
-# three verticals: 0.82, the lowest of the three. PRECISION RANKS, IT NEVER KILLS - the
-# two-arm run in the next phase is what rejects.
-#
-# A KILLER RUN AGAINST MY OWN REASON FOR PREFERRING IT. I first wanted to pass over
-# Category on the theory that its dependents are `category_*.rb` association models that
-# `git ls-files | grep category` prints for free - which is true of its 28
-# affected_via_composition rows (CategoryCustomField, CategoryGroup, CategoryTagStat...).
-# Run against the whole dependent set, the theory dies:
-#     Category: 89 dependent files, 16 have "category" in the PATH (18%)
-#     Upload:   85 dependent files, 23 have "upload"   in the PATH (27%)
-#     Guardian: 130 dependent files, 0 have "guardian" in the PATH (0%)
-# 18% is the LOWEST path-transcription share of the two anchors whose token is in their
-# paths at all. The theory was backwards; it is recorded here because it nearly chose the
-# anchor. Every composition row is excluded from gold below for exactly this reason.
-#
-# ------------------------------------------------------------------------------------
-# THE STRUCTURAL FACT THIS DRAFT IS BUILT AGAINST - quoted, not estimated
-# ------------------------------------------------------------------------------------
-# Every one of the 60 shown `direct_callers` rows carries "relation":"calls Category", and
-# plan step 3 requires every gold row to come from that shown set. So gold on this anchor
-# is a subset of the token occurrences BY CONSTRUCTION and cannot be dark. Confirmed by
-# opening all fifteen gold files: every pinned line writes the literal token `Category`.
-# That is the same fact the mastodon cycles recorded, and it is why no darkness lever,
-# no anchor move and no rewording is attempted here - all three are closed, measured, on
-# a Ruby repo with this exact payload shape.
-#
-# ------------------------------------------------------------------------------------
-# THE AXIS
-# ------------------------------------------------------------------------------------
-# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS:
-#   for each dependent, the ENCLOSING ROUTINE the dependency sits inside - the method that
-#   owns the line and whose behaviour actually changes. A search prints the matching line,
-#   its path and its number; it never prints the definition that encloses the match.
-#
-# That asymmetry is real in THIS payload, not borrowed. The shown blast set names the
-# routine on every row, free:
-#     app/services/user_destroyer.rb:16   | UserDestroyer#destroy
-#     app/services/search_indexer.rb:269  | SearchIndexer.index
-#     lib/email/receiver.rb:845           | Email::Receiver#sent_to_mailinglist_mirror?
-# and `grep -n '\bCategory\b'` on those same three files gives:
-#     app/services/user_destroyer.rb:37:      category_topic_ids = Category.where.not(topic_id: nil).pluck(:topic_id)
-#     app/services/search_indexer.rb:345:    if Category === obj && (obj.saved_change_to_name? || force)
-#     lib/email/receiver.rb:849:            return true if destination.is_a?(Category) && destination.mailinglist_mirror?
-# Not one of the three grep lines contains the name of the routine it is inside.
-#
-# THE MECHANISM SENTENCE, which the next phase measures: a dependent reaches the category
-# class once, in the middle of doing some other job - destroying a user, indexing for
-# search, deciding whether an inbound email is a mailing-list mirror - from inside a
-# routine whose own name is about that other job and never about categories, so the line
-# that takes the dependency and the routine that owns it are about two different subjects,
-# and the line alone does not say whose behaviour changes when the contract moves.
-#
-# GOLD IS CURATED FOR THAT AXIS. Every one of the fifteen `dependents` rows was opened and
-# its enclosing routine read by hand. Rows whose routine is named after categories
-# (Jobs::ReindexSearch#rebuild_categories, ImportExport::Importer#import_categories,
-# SiteSettings::Validations#validate_category_ids, PostRevisionSerializer#filter_category_id,
-# Tags::Search#fetch_category, PostRevision#categories) were REJECTED even though they are
-# in the shown payload: on those the routine name restates the line and the axis does not
-# bite. Two rows were also rejected for sitting in a class body rather than a method, where
-# the payload names no routine either (lib/search.rb, lib/post_revisor.rb - the shown rows
-# are `Search` at :3 and `PostRevisor` at :6).
-#
-# STEP 1 CANNOT BE CASHED IN STEP 2. Step 1 orients on ONE narrow sub-surface: resolving a
-# category when all the system holds is a slug path from a URL. Its files are the
-# non-scoring `contract` group. An earlier draft used the permission surface and was
-# changed: it puts CategoryGuardian in step 1 while gold row d:topic-guardian sits in
-# lib/guardian/topic_guardian.rb, the same directory, so an arm reading the surface reads
-# the gold. The slug surface shares no directory with any scoring row.
-#
-# MEMORIZATION - python3 bench/lib/memorization_probe.py $CLONE Category
-#   {"ok": true, "recall": 0.2, "samples": [0.161, 0.0, 0.2],
-#    "reason": "closed-book recall 0.2 < 0.3 - not recited"}
-# Not recited. What it did recall is Category's OWN members (ensure_slug, description_text,
-# find_by_email, topics_week...); no gold row is a member of Category.
-#
-# A PROPERTY OF THE SENSE ARM ON THIS ANCHOR, recorded because the next phase will meet it:
-# `sense_blast(symbol: "Category")` with no `file` does NOT return a payload. It returns
-#     {"ambiguous": true, "matches": 6, "hint": "Multiple symbols named \"Category\" exist -
-#      retry this tool with the `file` parameter set to ..."}
-# so the arm must make a second call pinning app/models/category.rb before it is shown
-# anything. gold_confidence_check reproduces this exactly: run without --file it reported
-# "gold rows: 15  shown: 0  missing: 15", and with --file app/models/category.rb it reported
-# "gold rows: 15  shown: 15  missing: 0". This is a real cost on the sense arm - one extra
-# round trip - and it is also a real recovery path, since the hint names the file to pass.
-# It is NOT a defect in the checker; the checker takes --file and I had omitted it.
-#
-# THE HONEST RISK, stated before the run: the scorer cannot enforce the enclosing-routine
-# demand. `bench/lib/gold.py:_cited` credits a gold path plus ANY line number, so an arm
-# that dumps grep output and names no routine still scores the row. The bet is behavioural,
-# and it is a bet, not a measured effect. Only the judge's map_quality and justification
-# see the demand directly. If the run returns baseline at or near 1.00 with a transcript
-# showing a spooled grep and no Reads, that is a routed lever for the human, not a kill
-# this phase may make.
 name: Discourse work session - audit the category contract before a rework
 repo: discourse
 contract_symbol: Category
 contract_file: app/models/category.rb
+
 description: |
   You are a maintainer about to rework the class that represents one of this forum's
   top-level containers - the thing topics are filed under, that carries its own
   permissions, settings and hierarchy, and that half the product reaches for whenever it
   needs to know where something belongs or who is allowed to see it. The rework will change
-  what that class hands back to the code that asks it questions. You will work the whole
-  ticket in one session: get your bearings, map how the rest of the system gets hold of one
-  of these records when all it has is the human-readable path out of a URL, follow one of
-  these records through being brought into existence and taken apart again, audit everywhere
-  else in the codebase that would have to change with the class, trace how code satisfies
-  itself it is acting on a real one, rank what is at risk, and hand over the map a teammate
-  could land the change from. Throughout, an answer that points at a place must say which
-  routine that place is inside, and give an exact file:line a teammate could jump straight
-  to, plus one phrase on why it matters. A bare filename does not count, a file:line with
-  no routine named around it does not count, and a missed dependent is a regression
-  shipped.
+  what that class hands back to the code that asks it questions, and it will change the
+  shape of what it stores. Work the ticket end to end in one session: orient, map the
+  contract and the path every incoming request leans on, trace how one of these records is
+  built up and taken apart, audit everywhere else in the codebase that would have to be
+  reviewed or changed with it, trace the guards that confirm a real and current record,
+  rank the blast radius, and finish with the map a teammate could land the change from.
+  Throughout, an answer that points at a place must give an exact file:line a teammate
+  could jump straight to, plus one phrase on why it matters. A bare filename does not
+  count, a set of names offered together with one shared reason and no location on any of
+  them does not count, and a missed dependent is a regression shipped.
+
 steps:
-- name: Orient in the codebase
-  prompt: |
-    Task: orient yourself. In a few sentences plus file:line references, what is this project, how is the code organized, and where does the class that stands for the container topics are filed under sit - the one the rest of the system keeps having to ask about - along with the shared pieces its behaviour is assembled from? Hand the next agent a map so they can act with small, targeted lookups, not a fresh exploration of the codebase. No Explore agents.
-  checks:
-  - type: response_richness
-    value: '3'
-    required: true
-    description: Project shape and the class's place in it, with paths
-  - type: mcp_tool_used
-    value: sense_search
-    required: false
-    layer: adoption
-  - type: mcp_tool_used
-    value: sense_conventions
-    required: false
-    layer: adoption
-- name: Map the category contract
-  prompt: 'Task: orient, and be thorough - the rest of the ticket is built on this. Start with the one
-    part of this class''s job that every incoming request leans on: getting hold of one of these records
-    when all the system has is the human-readable path the visitor typed, which may name a parent and
-    a child, may be an old path that has since been retired, and may not name one of these at all. Trace
-    that path end to end. Show every entry point that turns such a path into one of these records, every
-    place that walks the hierarchy to disambiguate one level from another, every place that keeps the
-    path in step when the record is renamed, and every place that redirects or refuses because the path
-    turned out to point somewhere else. For each one give the file:line, the name of the routine it lives
-    in, and one phrase on what it contributes to that path. Then say, in a few sentences, what a rework
-    would have to preserve for that path to keep working. A place named without the routine it lives in
-    does not count, and neither does a routine named without the file:line where it is defined. '
-  checks:
-  - type: response_richness
-    value: '8'
-    required: true
-    description: Resolution path traced through the routines that make it up, each located
-  - type: mcp_tool_used
-    value: sense_graph
-    required: false
-    layer: adoption
-- name: Trace how one of these records is built up and taken apart
-  prompt: |
-    Task: trace the lifecycle. Follow one of these records from the point where the system decides it needs one it does not have yet, through it being brought into existence and later renamed or re-described, and on to the point where it is taken apart again, and say what runs around each of those moments. For every layer give the file:line and the name of the routine it lives in, and mark which parts run inline, in the request or task that triggered them, and which are handed off to run later in the background or on a repeating schedule. Where something is handed off, say what it is handed - the record itself, or something it can be looked up from again - because that is what a rework of the contract has to keep working.
-  checks:
-  - type: response_richness
-    value: '4'
-    required: true
-    description: Lifecycle traced through its routines, inline vs deferred marked
-  - type: mcp_tool_used
-    value: sense_graph
-    required: false
-    layer: adoption
-- name: Audit every dependent of the category contract
-  prompt: 'Task: this is the core of the ticket, and you are working it with the budget the first part
-    already cost you. Widen back out from that one path to the class as a whole, as a single subject,
-    and find EVERY place in the codebase that would have to change with it, so the rework cannot silently
-    break one. Be exhaustive and group them by area. Most of what you are looking for is not doing this
-    class''s job at all: it is in the middle of some other job entirely, it reaches for this class exactly
-    once to settle a question that other job needs answered, and the routine it does that from is named
-    after the other job and never after this one. So the answer you owe is not where the dependency sits
-    but WHOSE behaviour changes: for every dependent, name the routine the dependency is inside, give
-    its file:line, and say in one phrase what that routine would start getting wrong if the class stopped
-    handing back what it hands back today. A file:line with no routine named around it does not count,
-    a routine you cannot state the consequence for does not count, and a missed dependent is a regression
-    shipped. '
-  checks:
-  - type: response_richness
-    value: '6'
-    required: true
-    description: Dependents attributed to the enclosing routine, with the consequence named
-  - type: no_grep
-    value: no_grep
-    required: false
-    layer: adoption
-  - type: mcp_tool_used
-    value: sense_blast
-    required: false
-    layer: adoption
-- name: Trace the guards that confirm a real, current record
-  prompt: |
-    Task: work runs against one of these records all over the codebase, and some of what that work is handed is not one at all, or names one that is no longer there. Trace how the code satisfies itself, before it acts, that what it holds really is one of these and that it really still exists: where an incoming thing is checked for being the right kind of thing at all, where a name or an identifier that resolves to nothing is turned into a refusal at the boundary rather than an error further down, and where a reference that was stored earlier is re-checked against what is actually there before it is trusted. Give the file:line and the enclosing routine for each guard, and say in one phrase what it is protecting the caller from.
-  checks:
-  - type: response_richness
-    value: '3'
-    required: true
-    description: Guards located at their routines, with what each protects against
-  - type: mcp_tool_used
-    value: sense_graph
-    required: false
-    layer: adoption
-- name: Assess the blast radius of the contract change
-  prompt: |
-    Task: you are about to change what this class hands back. Assess the full blast radius across everything you have found: which dependents are at risk, which are most likely to break, and what must be re-verified afterwards. Rank by risk and say what drives the ranking - separate the ones that would fail loudly and immediately from the ones that would keep running and quietly return something different, which are the expensive ones. Use file:line throughout and name the routine that carries each risk, not just the file it is in. A missed high-risk dependent is the one that pages someone.
-  checks:
-  - type: response_richness
-    value: '6'
-    required: true
-    description: Dependents ranked by risk at their routines, not relisted
-  - type: mcp_tool_used
-    value: sense_blast
-    required: false
-    layer: adoption
-- name: Produce the change + verification map
-  prompt: |
-    Task: produce the complete map for landing this safely: the pieces of the contract itself you will edit, every dependent that has to be reviewed or touched grouped by area, and the tests that would have to be updated or added to cover the behaviour that moves. Use file:line and the enclosing routine throughout, so a teammate could land the change from your map alone without re-exploring the codebase.
-  checks:
-  - type: response_richness
-    value: '6'
-    required: true
-    description: An actionable map - edits, dependents by area, and the test surface
-  - type: mcp_tool_used
-    value: sense_blast
-    required: false
-    layer: adoption
+  - name: Orient in the codebase
+    prompt: >
+      Task: orient yourself. In a few sentences plus file:line references, what is this
+      project, how is the code organized, and where does the class that stands for the
+      container topics are filed under sit - the one the rest of the system keeps having to
+      ask about - along with the shared pieces its behaviour is assembled from? Hand the
+      next agent a map so they can act with small, targeted lookups, not a fresh
+      exploration of the codebase. No Explore agents.
+    checks:
+      - type: response_richness
+        value: "3"
+        required: true
+        description: Project shape and the contract's home located at file:line
+      - type: mcp_tool_used
+        value: sense_search
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_conventions
+        required: false
+        layer: adoption
+
+  - name: Map the category contract
+    prompt: >
+      Task: orient, and be thorough - the rest of the ticket is built on this. Start with
+      the one part of this class's job that every incoming request leans on: getting hold
+      of one of these records when all the system has is the human-readable path the
+      visitor typed, which may name a parent and a child, may be an old path that has since
+      been retired, and may not name one of these at all. Trace that path end to end. Show
+      every entry point that turns such a path into one of these records, every place that
+      walks the hierarchy to disambiguate one level from another, every place that keeps
+      the path in step when the record is renamed, and every place that redirects or
+      refuses because the path turned out to point somewhere else. For each one give the
+      file:line, the name of the routine it lives in, and one phrase on what it contributes
+      to that path. Then say, in a few sentences, what a rework would have to preserve for
+      that path to keep working. A place named without the routine it lives in does not
+      count, and neither does a routine named without the file:line where it is defined.
+    checks:
+      - type: response_richness
+        value: "8"
+        required: true
+        description: Resolution path traced through the routines that make it up, each located
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Trace how one of these records is built up and taken apart
+    prompt: >
+      Task: trace the lifecycle. Follow one of these records from the point where the
+      system decides it needs one it does not have yet, through it being brought into
+      existence and later renamed or re-described, and on to the point where it is taken
+      apart again, and say what runs around each of those moments. For every layer give the
+      file:line and the name of the routine it lives in, and mark which parts run inline,
+      in the request or task that triggered them, and which are handed off to run once that
+      call has finished. Where something is handed off, say what it is handed - the record
+      itself, or something it can be looked up from again - because that is what a rework
+      of the contract has to keep working.
+    checks:
+      - type: response_richness
+        value: "4"
+        required: true
+        description: Creation and teardown layers located, each marked inline or handed off
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the category contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the
+      first part already cost you. Widen back out from that one path to the class as a
+      whole, as a single subject, and find EVERY place in the codebase that would have to
+      be reviewed or changed with it, so the rework cannot silently break one. Most of what
+      you are looking for is not doing this class's job at all: it is in the middle of some
+      other job entirely, it reaches for this class exactly once to settle a question that
+      other job needs answered, and the routine it does that from is named after the other
+      job and never after this one. So the answer you owe is not where the dependency sits
+      but WHOSE behaviour changes: for every dependent, name the routine the dependency is
+      inside, give its file:line, and say in one phrase what that routine would start
+      getting wrong if the class stopped handing back what it hands back today. Organise
+      the answer by area, one section per area, and treat an area as finished only when
+      every dependent inside it is listed separately with its own location - if you cannot
+      finish an area, say which one and say what you left in it, because an area you
+      quietly summarised reads as an area with nothing in it. A file:line with no routine
+      named around it does not count, a routine you cannot state the consequence for does
+      not count, and a missed dependent is a regression shipped.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every dependent located at file:line with its own consequence named
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+  - name: Trace the guards that confirm a real, current record
+    prompt: >
+      Task: work runs against one of these records all over the codebase, and some of what
+      that work is handed is not one at all, or names one that is no longer there. Trace
+      how the code satisfies itself, before it acts, that what it holds really is one of
+      these and that it really still exists: where an incoming thing is checked for being
+      the right kind of thing at all, where a name or an identifier that resolves to
+      nothing is turned into a refusal at the boundary rather than an error further down,
+      and where a reference that was stored earlier is re-checked against what is actually
+      there before it is trusted. Give the file:line and the enclosing routine for each
+      guard, and say in one phrase what it is protecting the caller from.
+    checks:
+      - type: response_richness
+        value: "3"
+        required: true
+        description: Each guard located at file:line with the routine and what it protects
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Assess the blast radius of the contract change
+    prompt: >
+      Task: you are about to change what this class hands back. Assess the full blast
+      radius across everything you have found: which dependents are at risk, which are most
+      likely to break, and what must be re-verified afterwards. Rank by risk and say what
+      drives the ranking - separate the ones that would fail loudly and immediately from
+      the ones that would keep running and quietly return something different, which are
+      the expensive ones. Use file:line throughout and name the routine that carries each
+      risk, not just the file it is in. A missed high-risk dependent is the one that pages
+      someone.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Dependents ranked by risk, each located at file:line with its routine
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+  - name: Produce the change + verification map
+    prompt: >
+      Task: produce the complete map for landing this safely: the pieces of the contract
+      itself you will edit, every dependent that has to be reviewed or touched grouped by
+      area, and the tests that would have to be updated or added to cover the behaviour
+      that moves. Use file:line and the enclosing routine throughout, so a teammate could
+      land the change from your map alone without re-exploring the codebase.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Edit list, dependents by area and the tests that move, all located
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
 scoring:
   weights:
     correctness: 0.7
     efficiency: 0.3
+
 gold:
-- id: contract-model
-  group: contract
-  match:
-  - app/models/category.rb
-  relation: app/models/category.rb:1083 `def self.find_by_slug_path(slug_path)` - the contract under rework
-    and the class-level entry point every slug-path lookup bottoms out in; :1103 `find_by_slug_path_with_id`
-    is the trailing-id variant that falls back to it at :1110, :985 `def self.query_category(slug_or_id,
-    parent_category_id)` is the one-level lookup the hierarchy walk is built from, :627 `def ensure_slug`
-    keeps the stored slug in step across a rename, and :16 `SLUG_REF_SEPARATOR = ":"` is the separator
-    the ref form is built from
-- id: c:categories-controller
-  group: contract
-  match:
-  - app/controllers/categories_controller.rb
-  relation: app/controllers/categories_controller.rb:394 `category = Category.find_by_slug_path(params[:slug_path].split("/"))`
-    inside `CategoriesController#find` (def at :387) - the HTTP front door onto the slug-path lookup,
-    raising Discourse::NotFound when it comes back blank
-- id: c:hierarchical-search
-  group: contract
-  match:
-  - app/services/category/query/hierarchical_search.rb
-  relation: app/services/category/query/hierarchical_search.rb:53 `scope = Category.from("allowed_categories").select(:id)`
-    inside `Category::Query::HierarchicalSearch#matched_scope` - walks the parent/child hierarchy to disambiguate
-    one level from another
-- id: c:permalink
-  group: contract
-  match:
-  - app/models/permalink.rb
-  relation: 'app/models/permalink.rb:82 `return category.relative_url if category` - the retired-path
-    case: an old URL that no longer resolves is redirected through the permalink record''s category association
-    declared at line 6'
-- id: d:user-destroyer
-  group: dependents
-  match:
-  - app/services/user_destroyer.rb
-  relation: 'app/services/user_destroyer.rb:37 `category_topic_ids = Category.where.not(topic_id: nil).pluck(:topic_id)`
-    inside `UserDestroyer#destroy` - deleting a user has to spare the topics that are category description
-    topics; the routine is about destroying a user and never about categories'
-- id: d:search-indexer
-  group: dependents
-  match:
-  - app/services/search_indexer.rb
-  relation: app/services/search_indexer.rb:345 `if Category === obj && (obj.saved_change_to_name? || force)`
-    inside `SearchIndexer.index` - the search index dispatches on the record's class to decide it must
-    reindex on a rename; the routine is the generic indexing entry point
-- id: d:email-receiver
-  group: dependents
-  match:
-  - lib/email/receiver.rb
-  relation: lib/email/receiver.rb:849 `return true if destination.is_a?(Category) && destination.mailinglist_mirror?`
-    inside `Email::Receiver#sent_to_mailinglist_mirror?` - inbound mail type-tests its destination against
-    the class to decide mailing-list mirror handling; the routine is about email delivery
-- id: d:topic-view-serializer
-  group: dependents
-  match:
-  - app/serializers/topic_view_serializer.rb
-  relation: 'app/serializers/topic_view_serializer.rb:212 `return nil if !scope.can_see_category?(Category.find_by(id:
-    topic_timer.category_id))` inside `TopicViewSerializer#topic_timer` - the timer attribute is suppressed
-    when the viewer cannot see the target category; the routine is about serializing a topic timer'
-- id: d:seed-topics
-  group: dependents
-  match:
-  - lib/seed_data/topics.rb
-  relation: 'lib/seed_data/topics.rb:63 `general_category = Category.find_by(id: SiteSetting.general_category_id)`
-    inside `SeedData::Topics#topics` - new-site seeding resolves three configured categories before it
-    can place its seed topics; the routine is about seeding topics'
-- id: d:user-notifications
-  group: dependents
-  match:
-  - app/mailers/user_notifications.rb
-  relation: 'app/mailers/user_notifications.rb:633 `"#{Category.where(id: category.parent_category_id).pick(:name)}/#{show_category_in_subject}"`
-    inside `UserNotifications#send_notification_email` - the notification subject line reaches for the
-    parent category''s name; the routine is about sending an email'
-- id: d:chat-channel-fetcher
-  group: dependents
-  match:
-  - plugins/chat/lib/chat/channel_fetcher.rb
-  relation: plugins/chat/lib/chat/channel_fetcher.rb:124 `Category.subcategory_ids(options[:chatable_id].to_i)`
-    inside `Chat::ChannelFetcher.secured_public_channel_search` - chat channel search expands a category
-    into its subcategories to scope the search; the routine is about fetching chat channels
-- id: d:topics-controller
-  group: dependents
-  match:
-  - app/controllers/topics_controller.rb
-  relation: app/controllers/topics_controller.rb:220 `category = Category.find(params[:destination_category_id])`
-    inside `TopicsController#publish` - publishing a shared draft resolves its destination container;
-    the routine is about publishing a topic
-- id: d:tags-search
-  group: dependents
-  match:
-  - app/services/tags/search.rb
-  relation: app/services/tags/search.rb:217 `Category` inside `Tags::Search#explain_exclusion` - tag search
-    explains why a tag was excluded by joining back to the category restriction; the routine is about
-    explaining a tag exclusion
-- id: d:topic-voting
-  group: dependents
-  match:
-  - plugins/discourse-topic-voting/lib/discourse_topic_voting/topic_extension.rb
-  relation: plugins/discourse-topic-voting/lib/discourse_topic_voting/topic_extension.rb:18 `SiteSetting.topic_voting_enabled
-    && regular? && Category.can_vote?(category_id) &&` inside `DiscourseTopicVoting::TopicExtension#can_vote?`
-    - voting eligibility is gated on a class-level predicate about the container; the routine is about
-    whether a topic can be voted on
-- id: d:migrations-optimizer
-  group: dependents
-  match:
-  - migrations/lib/uploader/tasks/optimizer.rb
-  relation: migrations/lib/uploader/tasks/optimizer.rb:43 `@category_id = Category.last.id` inside `Migrations::Uploader::Tasks::Optimizer#initialize_discourse_resources`
-    - the import optimizer needs some category to attach its resources to; the routine is about initialising
-    uploader resources
-- id: d:topic-guardian
-  group: dependents
-  match:
-  - lib/guardian/topic_guardian.rb
-  relation: lib/guardian/topic_guardian.rb:301 `Category.where(` inside `TopicGuardian#can_edit_featured_link?`
-    - the featured-link permission is decided by querying which categories allow them; the routine is
-    about editing a featured link
-- id: d:rss-polling
-  group: dependents
-  match:
-  - plugins/discourse-rss-polling/app/jobs/jobs/discourse_rss_polling/poll_feed.rb
-  relation: plugins/discourse-rss-polling/app/jobs/jobs/discourse_rss_polling/poll_feed.rb:15 `return
-    if @discourse_category_id.present? && !Category.exists?(@discourse_category_id)` inside `Jobs::DiscourseRssPolling::PollFeed#execute`
-    - the feed job aborts when its configured destination no longer exists; the routine is about polling
-    a feed
-- id: d:chat-integration-helper
-  group: dependents
-  match:
-  - plugins/discourse-chat-integration/app/helpers/helper.rb
-  relation: 'plugins/discourse-chat-integration/app/helpers/helper.rb:21 `category = Category.find_by(slug:
-    category_name)` inside `DiscourseChatIntegration::Helper.process_command` - a chat slash-command resolves
-    the container named in its arguments; the routine is about processing a chat command'
-- id: d:backup-restorer
-  group: dependents
-  match:
-  - lib/backup_restore/restorer.rb
-  relation: lib/backup_restore/restorer.rb:152 `Category.reset_topic_ids_cache` inside `BackupRestore::Restorer#clear_category_cache`
-    - a restore must drop the class-level caches the contract maintains, or the restored site serves stale
-    ids
-- id: w:seed-categories
-  group: write-path
-  match:
-  - lib/seed_data/categories.rb
-  relation: 'lib/seed_data/categories.rb:135 `Category.new(` inside `SeedData::Categories#create_category`
-    (def at :116), saved inline at :148 - the creation end of the lifecycle on a brand-new site: the record
-    is built, permissions are set on it before the save, and everything the create callbacks hang off
-    that save (the definition topic, the permalink cleanup) runs in the same call'
-- id: w:import-export-importer
-  group: write-path
-  match:
-  - lib/import_export/importer.rb
-  relation: lib/import_export/importer.rb:110 `category = Category.new(cat_attrs)` inside `ImportExport::Importer#import_categories`
-    (def at :80), saved inline at :119 - the other creation path; :123 `post = category.topic.ordered_posts.first`
-    then reads back the definition topic that the after_create callback must already have built, so this
-    caller depends on that part of the write path running inline and not later
-- id: w:index-for-search-job
-  group: write-path
-  match:
-  - app/jobs/regular/index_category_for_search.rb
-  relation: 'app/jobs/regular/index_category_for_search.rb:5 `category = Category.find_by(id: args[:category_id])`
-    inside `Jobs::IndexCategoryForSearch#execute` - the deferred half of a save: `app/models/category.rb:163
-    after_save_commit :index_search` enqueues this (`:1072`) with the id only, so the job re-resolves
-    the record later and gives up at :6 `return if category.blank?` if it has gone in the meantime'
-- id: w:category-stats-job
-  group: write-path
-  match:
-  - app/jobs/scheduled/category_stats.rb
-  relation: 'app/jobs/scheduled/category_stats.rb:8 `Category.update_stats` inside `Jobs::CategoryStats#execute`
-    - the third timing: not inline and not triggered by the save at all, but a class-level refresh run
-    every 24 hours (:5 `every 24.hours`), so a contract change here breaks a day later and not at the
-    write'
-- id: g:chat-plugin-event
-  group: guards
-  match:
-  - plugins/chat/plugin.rb
-  relation: 'plugins/chat/plugin.rb:389 `next unless category.is_a?(Category)` inside the `on(:category_updated)`
-    handler (:387) - the kind-check: the comment above it records that core sometimes triggers this event
-    with an `#update` result (true/false) rather than the record, so the handler refuses anything that
-    is not one of these before touching :390 `Chat::Channel.find_by(chatable: category)`'
-- id: g:data-explorer-parameter
-  group: guards
-  match:
-  - plugins/discourse-data-explorer/lib/discourse_data_explorer/parameter.rb
-  relation: 'plugins/discourse-data-explorer/lib/discourse_data_explorer/parameter.rb:220 `invalid_format
-    string, "Could not find category named #{string}" if object.blank?` inside `DiscourseDataExplorer::Parameter#cast_to_ruby`
-    (def at :127) - missing turned into a refusal at the boundary: a user-typed parameter that resolves
-    to nothing raises a validation error here rather than handing nil to the query, with the parent/child
-    form refused separately at :210 and :213'
-- id: g:chat-integration-rule
-  group: guards
-  match:
-  - plugins/discourse-chat-integration/app/models/rule.rb
-  relation: 'plugins/discourse-chat-integration/app/models/rule.rb:112 `if !(category_id.nil? || Category.where(id:
-    category_id).exists?)` inside `DiscourseChatIntegration::Rule#category_valid?` (def at :105) - a stored
-    reference re-checked before it is persisted: the rule keeps an id in its own record, so validation
-    asks whether that id still resolves rather than trusting what was stored'
-- id: g:site-setting-validation
-  group: guards
-  match:
-  - lib/site_settings/validations.rb
-  relation: 'lib/site_settings/validations.rb:35 `if Category.where(id: category_ids).count != category_ids.size`
-    inside `SiteSettings::Validations#validate_category_ids` (def at :33) - a count comparison used as
-    an existence guard: a setting naming any id that no longer resolves is refused whole, so a configuration
-    cannot be saved pointing at something that is not there'
+  # ---- ANCHORS: the contract centre and its obvious write path. Both arms reach these and
+  # ---- they do not decide anything. Carried unchanged from cycle 3.
+  - id: contract-model
+    group: contract
+    match: [app/models/category.rb]
+    relation: "app/models/category.rb:1083 `def self.find_by_slug_path(slug_path)` - the contract under rework and the class-level entry point every slug-path lookup bottoms out in; :1103 `find_by_slug_path_with_id` is the trailing-id variant that falls back to it at :1110, :985 `def self.query_category(slug_or_id, parent_category_id)` is the one-level lookup the hierarchy walk is built from, :627 `def ensure_slug` keeps the stored slug in step across a rename, and :16 `SLUG_REF_SEPARATOR = \":\"` is the separator the ref form is built from"
+  - id: c:categories-controller
+    group: contract
+    match: [app/controllers/categories_controller.rb]
+    relation: "app/controllers/categories_controller.rb:394 `category = Category.find_by_slug_path(params[:slug_path].split(\"/\"))` inside `CategoriesController#find` (def at :387) - the HTTP front door onto the slug-path lookup, raising Discourse::NotFound when it comes back blank"
+  - id: c:hierarchical-search
+    group: contract
+    match: [app/services/category/query/hierarchical_search.rb]
+    relation: "app/services/category/query/hierarchical_search.rb:53 `scope = Category.from(\"allowed_categories\").select(:id)` inside `Category::Query::HierarchicalSearch#matched_scope` - walks the parent/child hierarchy to disambiguate one level from another"
+  - id: c:permalink
+    group: contract
+    match: [app/models/permalink.rb]
+    relation: "app/models/permalink.rb:82 `return category.relative_url if category` - the retired-path case: an old URL that no longer resolves is redirected through the permalink record's category association declared at line 6"
+
+  # ---- WRITE PATH / TEARDOWN: NON-SCORING. Step 3's answer. Four rows, one per file, each
+  # ---- opened and read at the line below. These never faced a baseline, so they decide
+  # ---- nothing; they exist so the judge can see whether step 3 was worked at all.
+  - id: w:seed-categories
+    group: write-path
+    match: [seed_data/categories.rb]
+    relation: "lib/seed_data/categories.rb:135 `Category.new(` inside `SeedData::Categories#create_category` (def at :116), saved inline at :148 - the creation end of the lifecycle on a brand-new site: the record is built, permissions are set on it at :147 before the save, and everything the after_create callbacks hang off that save (the definition topic at app/models/category.rb:126, the permalink cleanup at :127) runs in the same call"
+  - id: w:import-export-importer
+    group: write-path
+    match: [import_export/importer.rb]
+    relation: "lib/import_export/importer.rb:110 `category = Category.new(cat_attrs)` inside `ImportExport::Importer#import_categories` (def at :80), saved inline at :119 - the other creation path; :123 `post = category.topic.ordered_posts.first` then reads back the definition topic that the after_create callback must already have built, so this caller depends on that part of the write path running inline and not later"
+  - id: w:destroy-task
+    group: write-path
+    match: [services/destroy_task.rb]
+    relation: "app/services/destroy_task.rb:178 `category.destroy` inside `DestroyTask#category_topic_destroyer` (def at :175) - the teardown end: the topics inside are destroyed first at :176 and only then the container itself, which fires the after_destroy chain declared at app/models/category.rb:132-138 (trashing the definition topic, clearing the related site settings, resetting the cached id sets, publishing the deletion). A rework that changes what destroy leaves behind is felt here first"
+  - id: w:automation-event
+    group: write-path
+    match: [automation/plugin.rb]
+    relation: "plugins/automation/plugin.rb:180 `on(:category_created) do |category|` (and `on(:category_edited)` at :184) - the handed-off half: app/models/category.rb:158-160 triggers these from after_commit, so they run only once the transaction has landed, and the handler at plugins/automation/lib/discourse_automation/event_handlers.rb:210 `handle_category_created_edited` passes the RECORD itself into `automation.trigger!` at :221, which forks inline or into the background at plugins/automation/app/models/discourse_automation/automation.rb:156-157 depending on whether the script is a background one"
+
+  # ---- GUARDS: NON-SCORING. Step 5's answer. Four rows, one per file, each opened and read
+  # ---- at the line below. All four sit AFTER the discriminator in step order, so nothing
+  # ---- here can hand step 4 a dependent.
+  - id: g:chat-plugin-event
+    group: guards
+    match: [chat/plugin.rb]
+    relation: "plugins/chat/plugin.rb:389 `next unless category.is_a?(Category)` inside the `on(:category_updated)` handler (:387) - the kind-check: the comment at :388 records that core sometimes triggers this event with an `#update` result (true/false) rather than the record, so the handler refuses anything that is not one of these before touching :390 `Chat::Channel.find_by(chatable: category)`"
+  - id: g:data-explorer-parameter
+    group: guards
+    match: [discourse_data_explorer/parameter.rb]
+    relation: "plugins/discourse-data-explorer/lib/discourse_data_explorer/parameter.rb:220 `invalid_format string, \"Could not find category named #{string}\" if object.blank?` inside `DiscourseDataExplorer::Parameter#cast_to_ruby` (def at :127) - missing turned into a refusal at the boundary: a user-typed parameter that resolves to nothing raises a validation error here rather than handing nil to the query, with the parent/child form refused separately at :210 and :213"
+  - id: g:chat-integration-rule
+    group: guards
+    match: [chat_integration/rule.rb, discourse-chat-integration/app/models/rule.rb]
+    relation: "plugins/discourse-chat-integration/app/models/rule.rb:112 `if !(category_id.nil? || Category.where(id: category_id).exists?)` inside `DiscourseChatIntegration::Rule#category_valid?` (def at :105) - a stored reference re-checked before it is persisted: the rule keeps an id in its own record, so validation asks whether that id still resolves rather than trusting what was stored"
+  - id: g:site-setting-validation
+    group: guards
+    match: [site_settings/validations.rb]
+    relation: "lib/site_settings/validations.rb:35 `if Category.where(id: category_ids).count != category_ids.size` inside `SiteSettings::Validations#validate_category_ids` (def at :33) - a count comparison used as an existence guard: a setting naming any id that no longer resolves is refused whole, so a configuration cannot be saved pointing at something that is not there"
+
+  # ---- DEPENDENTS: fourteen one-touch call sites, one per file, fourteen distinct areas
+  # ---- across five trees (app, lib, migrations, script, plugins). Every row is present in
+  # ---- the shown sense_blast payload for Category (direct_callers), checked against
+  # ---- mcp_probe output before it was written. Every line below was opened and read.
+  # -- tree: migrations/ (never searched by any measured baseline route)
+  - id: d:migrations-optimizer
+    group: dependents
+    match: [uploader/tasks/optimizer.rb]
+    relation: "migrations/lib/uploader/tasks/optimizer.rb:43 `@category_id = Category.last.id` inside `Migrations::Uploader::Tasks::Optimizer#initialize_discourse_resources` (def at :40) - the upload optimiser grabs one arbitrary container up front purely to have something to attach its synthetic uploads to; it would start resolving a different record, or nil on an empty install, if the default ordering or the store shape moved under it"
+  - id: d:migrations-importer-categories
+    group: dependents
+    match: [importer/steps/categories/categories.rb]
+    relation: "migrations/lib/importer/steps/categories/categories.rb:124 `@highest_position = Category.unscoped.maximum(:position) || 0` inside `Migrations::Importer::Steps::Categories#execute` (def at :123) - the importer reads the current maximum sort position so freshly imported containers are appended after the existing ones; it would start filing every import at a colliding position if `position` stopped being the ordering column"
+
+  # -- tree: script/ (never searched by any measured baseline route)
+  - id: d:bulk-import-merger
+    group: dependents
+    match: [bulk_import/discourse_merger.rb]
+    relation: "script/bulk_import/discourse_merger.rb:230 `existing = Category.where(slug: cat_row[\"slug\"]).or(Category.where(name: cat_row[\"name\"])).first` inside `BulkImport::DiscourseMerger#category_exists` (def at :226) - the merge tool decides whether an incoming container is the same one as an existing one by matching slug or name and then comparing parents at :232; it would start duplicating containers, or silently merging two different ones, if slug uniqueness or the parent link changed"
+
+  # -- tree: lib/tasks (.rake - invisible to every `--include=*.rb` sweep on record)
+  - id: d:search-rake
+    group: dependents
+    match: [tasks/search.rake]
+    relation: "lib/tasks/search.rake:32 `Category.find_each do |c|` inside `reindex_search` (def at :7) - the manual reindex task walks every container and re-feeds it to the search indexer; it would start leaving containers out of the search index, with no error, if the class stopped enumerating them the way it does today"
+
+  # -- tree: app/
+  - id: d:reindex-search-job
+    group: dependents
+    match: [scheduled/reindex_search.rb]
+    relation: "app/jobs/scheduled/reindex_search.rb:112 `Category` opening the chained query joined to `category_search_data` at :113, inside `Jobs::ReindexSearch#load_problem_category_ids` (def at :111) - the scheduled reindexer finds containers whose search rows are stale by locale or index version; it would start reindexing everything, or nothing, if that join column or the id enumeration moved"
+  - id: d:post-revision
+    group: dependents
+    match: [models/post_revision.rb]
+    relation: "app/models/post_revision.rb:36 `@categories ||= Category.with_parents(modifications[\"category_id\"])` inside `PostRevision#categories` (def at :33) - a post revision resolves the before/after container ids stored in its modifications blob, and it needs the PARENT of each one so the revision history can render the full path; it would start rendering an edit's category change with a missing or wrong parent"
+  - id: d:post-revision-serializer
+    group: dependents
+    match: [serializers/post_revision_serializer.rb]
+    relation: "app/serializers/post_revision_serializer.rb:320 `Category.secured(scope).find_by(id: category_id)&.id` inside `PostRevisionSerializer#filter_category_id` (def at :318) - the revision payload is scrubbed so a viewer never learns the id of a container they cannot see; it would start leaking a restricted container id, or blanking a visible one, if the security scope stopped filtering the way it does"
+
+  # -- tree: plugins/
+  - id: d:rss-polling
+    group: dependents
+    match: [discourse_rss_polling/poll_feed.rb]
+    relation: "plugins/discourse-rss-polling/app/jobs/jobs/discourse_rss_polling/poll_feed.rb:15 `return if @discourse_category_id.present? && !Category.exists?(@discourse_category_id)` inside `Jobs::DiscourseRssPolling::PollFeed#execute` (def at :8) - the feed poller aborts the whole job when the container configured for a feed has gone away; it would start posting imported feed items into a container that no longer exists, or stop polling working feeds, if existence stopped being answerable by bare id"
+  - id: d:templates-rake
+    group: dependents
+    match: [lib/tasks/discourse-templates.rake]
+    relation: "plugins/discourse-templates/lib/tasks/discourse-templates.rake:113 `Category.find_by(id: SiteSetting.discourse_templates_categories&.split(\"|\")&.first.to_i)` inside `migrate_data` (def at :100) - the canned-replies migration resolves the configured destination container out of a pipe-separated setting string and raises at :116 when it is missing; it would start migrating every template into a newly created container instead of the configured one"
+  - id: d:house-ad
+    group: dependents
+    match: [ad_plugin/house_ad.rb]
+    relation: "plugins/discourse-adplugin/app/models/ad_plugin/house_ad.rb:64 `category_ids = Category.secured(scope).pluck(:id)` inside `AdPlugin::HouseAd.all_for_logged_in_users` (def at :50) - house ads targeted at containers are filtered to the ones this viewer may see before the ad join at :67; it would start showing an ad that reveals the existence of a restricted container, or hiding ads that should show"
+  - id: d:event-finder
+    group: dependents
+    match: [discourse_post_event/event_finder.rb]
+    relation: "plugins/discourse-calendar/lib/discourse_post_event/event_finder.rb:165 `Category.subcategory_ids(category_id)` inside `DiscoursePostEvent::EventFinder.filter_by_category` (def at :158) - the calendar expands one container into itself plus its descendants when the caller asked to include subcategories, then filters events on that id set at :171; it would start dropping events filed in child containers out of the calendar"
+  - id: d:ai-translation-candidates
+    group: dependents
+    match: [translation/category_candidates.rb]
+    relation: "plugins/discourse-ai/lib/translation/category_candidates.rb:13 `Category.where(id: target_category_ids.split(\"|\").map(&:to_i))` inside `DiscourseAi::Translation::CategoryCandidates.get` (def at :10) - the translation backlog is built from the containers named in a pipe-separated setting, falling back to `Category.none` at :15; it would start queueing every container for translation, or none, if that relation stopped being chainable"
+  - id: d:slack-migration
+    group: dependents
+    match: [migrate_from_slack_official.rb]
+    relation: "plugins/discourse-chat-integration/app/jobs/onceoff/migrate_from_slack_official.rb:52 `next if !category_id.nil? && !Category.exists?(id: category_id)` inside `Jobs::DiscourseChatMigrateFromSlackOfficial#migrate_data` (def at :35) - the one-off Slack migration skips any stored rule whose container id no longer resolves, where the id was parsed out of a plugin-store key at :48; it would start carrying rules pointed at dead containers into the new integration"
+  - id: d:import-scripts-base
+    group: dependents
+    match: [import_scripts/base.rb]
+    relation: "script/import_scripts/base.rb:467 `Category` opening the chained lookup that filters on `parent_category_id` at :468 and a case-folded name at :469, inside `ImportScripts::Base#create_category` (def at :465) - every forum importer decides here whether an incoming container already exists, keyed on parent plus lower-cased name, before falling through to `Category.new` at :486; it would start creating a duplicate container on every re-run of an import, or adopting the wrong existing one, if that identity rule changed"

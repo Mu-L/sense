@@ -3,235 +3,396 @@
 # Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
 # / justification 0.20 / uncertainty 0.15.
 #
-# WHY map_quality carries the most weight here: this scenario's axis is ATTRIBUTION, not
-# enumeration. A search prints the line that takes the dependency; it never prints the
-# routine that owns that line. The answer that matters says WHOSE behaviour changes - the
-# enclosing routine, and what it would start getting wrong - for every dependent, under a
-# budget the first step already spent.
+# CYCLE 4, SEVEN STEPS (plans/03-expand.md). Expanded from the cycle-4 two-step probe
+# rubric, kept at discourse.rubric.yaml.probe-2step-cycle4.bak.
 #
-# Step names MUST match scenarios/discourse.yaml exactly (the judge pairs by name).
+# WHAT MOVED AND WHAT DID NOT. The two measured steps - "Map the category contract" and
+# "Audit every dependent of the category contract" - carry their cycle-4 criteria
+# unchanged, because their prompts and their gold are unchanged. The five steps added
+# around them carry the criteria written for the cycle-1 seven-step session
+# (discourse.rubric.yaml.briefed-7step.bak), except step 3, whose map_quality,
+# specificity and justification were rewritten: that step no longer asks about work on a
+# repeating schedule, so the judge no longer scores three timings.
+#
+# WHY map_quality carries the most weight on the discriminator: this scenario's axis is
+# SCOPE, not darkness. Every dependent in the scored group is a one-touch call site inside
+# a routine named after some other job, and the fourteen of them are spread across
+# fourteen distinct areas in five separate trees. Breadth across areas is what is scored.
+#
+# Earlier rubrics: discourse.rubric.yaml.declared-link-12row.bak (cycle 3),
+# discourse.rubric.yaml.mixed-22row.bak (cycle 2), discourse.rubric.yaml.briefed-7step.bak
+# (cycle 1).
+#
+# Step names MUST match scenarios/discourse.yaml exactly and in order (the judge pairs by
+# name).
 
-audience: |
-  An AI coding agent that will use this answer to safely rework the Discourse category
+audience: 'An AI coding agent that will use this answer to safely rework the Discourse category
+
   class - the container topics are filed under, carrying its own permissions, settings and
-  hierarchy. Score for that agent, not a human reader and not a docs page. A perfect answer
-  leaves the agent able to change that class knowing two things: how the rest of the system
-  gets hold of one of these records when all it holds is the human-readable path out of a
-  URL - traced through the routines that make that path up - and every other place that
-  would have to change with the class, each one attributed to the routine the dependency
-  sits inside, pinned to an exact file:line, with the consequence of the change on that
-  routine stated. The dependents that matter are not the ones whose job is categories; they
-  are the ones doing some unrelated job - destroying a user, indexing for search, receiving
-  an email, casting a vote, restoring a backup - that reach for the class once in the
-  middle of it, from a routine named after that other job. A weak answer lists places
-  rather than routines; sweeps the obviously category-named neighbours and stops; collapses
-  a set into "all the services"; or gives file:line with nothing said about which routine
-  owns the line or what breaks in it - which leaves the agent knowing where the name
-  appears and not what its change would do.
 
+  hierarchy. Score for that agent, not a human reader and not a docs page. A perfect answer
+
+  leaves the agent able to change that class knowing two things: how the rest of the system
+
+  gets hold of one of these records when all it holds is the human-readable path out of a
+
+  URL - traced through the routines that make that path up - and every other place that
+
+  would have to be reviewed or changed with the class, each pinned to an exact file:line
+
+  with the consequence of the change on that place stated. The dependents that matter are
+
+  not the code named after this class. They are single touches inside routines doing some
+
+  other job entirely - optimising uploads during a migration, appending imported records in
+
+  sort order, deciding whether two records being merged are the same one, walking every
+
+  record to re-feed a search index, scrubbing a revision payload for a viewer, polling an
+
+  external feed, migrating one plugin''s data into another, deciding whether an incoming
+
+  import record already exists - and they are scattered across the application, its rake
+
+  tasks, its import and
+
+  migration tooling and its bundled plugins. A weak answer covers the application tree
+
+  thoroughly and treats the rest of the repository as if it were not there; or collapses a
+
+  run of dependents into one line with a shared reason and no location on any of them; or
+
+  gives file:line with nothing said about what would break, which leaves the agent knowing
+
+  where the name appears and not what its change would do.
+
+  '
 steps:
 - name: Orient in the codebase
   criteria:
     map_quality:
       weight: 0.4
-      question: |
-        Does the answer give a usable map of the project - what it is, how the tree is laid out,
+      question: 'Does the answer give a usable map of the project - what it is, how the tree is
+        laid out,
+
         where the class under rework sits, and what its behaviour is assembled from (the concerns
+
         mixed in, the associations it declares, the settings it reads)? The test is whether the
+
         next step can act from this map with small targeted lookups instead of starting over.
+
+        '
     specificity:
       weight: 0.25
-      question: |
-        Are the claims anchored to paths, and the class and its assembled pieces to file:line? A
+      question: 'Are the claims anchored to paths, and the class and its assembled pieces to file:line?
+        A
+
         tour of the directory names with no file:line anywhere is not specific.
+
+        '
     justification:
       weight: 0.2
-      question: |
-        Does the orientation say why each part of the map matters to the ticket, rather than
+      question: 'Does the orientation say why each part of the map matters to the ticket, rather
+        than
+
         reciting the directory layout of a Rails application in general?
+
+        '
     uncertainty:
       weight: 0.15
-      question: |
-        Does it separate what it read from what it assumed from a conventional layout? A Rails
+      question: 'Does it separate what it read from what it assumed from a conventional layout?
+        A Rails
+
         tree invites confident guessing; saying which parts were actually opened is worth more.
+
+        '
 - name: Map the category contract
   criteria:
     map_quality:
       weight: 0.4
-      question: |
-        Is the slug-path resolution path traced end to end as one connected path, rather
+      question: 'Is the slug-path resolution path traced end to end as one connected path, rather
+
         than listed as places the class is mentioned? A strong answer reaches the
+
         class-level entry point every lookup bottoms out in, the trailing-id variant, the
+
         one-level lookup the hierarchy walk is built from, the hierarchy walk itself, the
+
         HTTP front door, the rename path that keeps a stored slug in step, and the
+
         retired-path redirect. Credit is for showing how they connect, not for the count.
+
         Could the next step act from this map with small targeted lookups rather than a
+
         fresh exploration?
+
+        '
     specificity:
       weight: 0.25
-      question: |
-        Does every place carry an exact file:line AND the name of the routine it lives
+      question: 'Does every place carry an exact file:line AND the name of the routine it lives
+
         in? A bare filename is not specific. A file:line with no routine named around it
+
         is not specific - the maintainer asked whose code it is, not where the character
+
         offset falls. A routine named without the file:line where it is defined is not
+
         specific either.
+
+        '
     justification:
       weight: 0.2
-      question: |
-        Does each place carry one phrase on what it contributes to the resolution path -
+      question: 'Does each place carry one phrase on what it contributes to the resolution path
+        -
+
         which input form it accepts, what it disambiguates, what it falls back to, why it
+
         refuses? Do the closing sentences say what a rework must preserve in terms of
+
         behaviour, rather than restating the method names?
+
+        '
     uncertainty:
       weight: 0.15
-      question: |
-        Does the answer separate what it verified by reading from what it inferred from a
+      question: 'Does the answer separate what it verified by reading from what it inferred from
+        a
+
         name? Guessing at a fallback it never opened is worse than saying it did not
+
         check. Is completeness claimed without saying how it was established?
+
+        '
 - name: Trace how one of these records is built up and taken apart
   criteria:
     map_quality:
       weight: 0.4
-      question: |
-        Is the lifecycle traced as a sequence - the decision that one is needed, its creation, the
-        renames and re-descriptions that follow, and its teardown - with what runs around each
-        moment? A strong answer separates three timings and does not collapse them: what runs
-        inline in the call that saved the record, what is handed off to a background job, and what
-        runs later on a repeating schedule and is not triggered by the save at all. Listing the
-        callbacks off the model in declaration order without saying when each actually runs is
-        weaker than a shorter answer that gets the timings right.
+      question: 'Is the lifecycle traced as a sequence - the decision that one is needed, its
+        creation, the renames and re-descriptions that follow, and its teardown - with what runs
+        around each moment? A strong answer separates two timings and does not collapse them:
+        what runs inline in the call that saved or destroyed the record, and what is handed off
+        to run once that call has finished. Reciting the callback declarations in order is not
+        the answer; saying which of them the caller can depend on having already happened is.
+
+        '
     specificity:
       weight: 0.25
-      question: |
-        Does every layer carry a file:line and the routine it lives in, including the deferred
-        ones - the job class that picks the work up, not just the line that enqueues it?
+      question: 'Does every layer carry a file:line and the routine it lives in, including the
+        handed-off ones - the code that picks the work up, not just the line that dispatches it?
+
+        '
     justification:
       weight: 0.2
-      question: |
-        For each hand-off, does the answer say WHAT is handed over - the record itself, or an
-        identifier to be looked up again later - and why that matters to a contract change? A
-        deferred consumer that re-resolves by id can find the record gone; one holding the record
+      question: 'For each hand-off, does the answer say WHAT is handed over - the record itself,
+        or an identifier to be looked up again later - and why that matters to a contract change?
+        A deferred consumer that re-resolves by id can find the record gone; one holding the record
         cannot. That distinction is the point of the step.
+
+        '
     uncertainty:
       weight: 0.15
-      question: |
-        Does the answer flag the parts of the lifecycle it could not follow - work dispatched by a
+      question: 'Does the answer flag the parts of the lifecycle it could not follow - work dispatched
+        by a
+
         registered name rather than a direct call is easy to miss, and saying so is worth more
+
         than an unqualified claim that the lifecycle is fully covered.
+
+        '
 - name: Audit every dependent of the category contract
   criteria:
     map_quality:
       weight: 0.4
-      question: |
-        THE DISCRIMINATOR. Is this an exhaustive, area-grouped audit of everywhere that
-        would have to change with the class, reaching the scattered periphery rather than
-        the obvious category-named neighbours? The dependents that matter are in the
-        middle of some other job entirely: destroying a user, indexing for search,
-        deciding whether inbound email is a mailing-list mirror, serializing a topic
-        timer, seeding a new site, composing a notification subject, scoping a chat
-        channel search, publishing a shared draft, explaining a tag exclusion, gating a
-        vote, restoring a backup, polling a feed, deciding a featured-link permission.
-        Breadth across areas is what is being measured, and missing a whole area is a
-        regression shipped. Re-listing the class's own surface, or the association models
-        named after it, is not this question.
+      question: 'THE DISCRIMINATOR, and it is BREADTH OF AREA. Does the audit reach dependents
+
+        outside the part of the repository that serves web requests, or does it cover the
+
+        application thoroughly and stop there? The dependents that decide this step are
+
+        single touches inside routines named after some other job, and they sit as much in
+
+        the migration and import tooling, the maintenance tasks and the bundled plugins as
+
+        in the application itself. An answer that is dense in one tree and silent in the
+
+        others has enumerated inside one search scope and mistaken that for the codebase.
+
+        Is the answer organised by area with each area worked to the end, and are areas it
+
+        could not finish declared as unfinished rather than quietly summarised? Re-listing
+
+        the class''s own surface, or the join models named after it, is not this question.
+
+        '
     specificity:
       weight: 0.25
-      question: |
-        For every dependent: the routine the dependency sits inside, its file:line, and
-        the consequence. A file:line with no routine named around it does not count - it
-        is the output of a search, not the answer to the question asked. A routine named
-        with no consequence stated does not count. Marks are lost per dependent that
-        arrives as a bare location.
+      question: 'Does EVERY dependent carry its own exact file:line AND the name of the routine
+
+        the dependency sits inside? Every dependent in scope here is a call inside a
+
+        routine, so a file:line with no routine named around it is not specific, and a
+
+        routine named without a file:line is not specific either. Several dependents named
+
+        together on one line as a set that shares a reason is the failure this criterion
+
+        exists to catch: however correct the shared reason is, it is one item, not a set
+
+        of located dependents, and it should be scored as one. A bare filename does not
+
+        count.
+
+        '
     justification:
       weight: 0.2
-      question: |
-        Does each dependent carry one phrase on what that routine would start getting
-        wrong if the class stopped handing back what it hands back today? The consequence
-        must be about the routine's own job - what breaks for the user being destroyed,
-        the email being received, the vote being cast - not a restatement of the line of
-        code.
+      question: 'Does each dependent carry one phrase on what that place would start getting wrong
+
+        if the class changed under it? The consequence must be about that place''s own job
+
+        - what breaks for the import being merged, the uploads being optimised, the search
+
+        index being rebuilt, the revision payload being scrubbed, the feed being polled,
+
+        the ad being targeted, the calendar being filtered, the forum being imported - not
+
+        a restatement of the line of code.
+
+        '
     uncertainty:
       weight: 0.15
-      question: |
-        Does the answer say how it convinced itself the audit is exhaustive, and name
+      question: 'Does the answer say how it convinced itself the audit is exhaustive, and name
+
         where it is likely still thin? An unqualified claim of completeness over a
-        codebase this size is overconfidence. Flagging areas it could not reach within
-        budget is worth more than a confident list that quietly stops.
+
+        codebase this size is overconfidence. Naming an area it knows it did not finish,
+
+        and what it left there, is worth more than a confident list that quietly stops.
+
+        '
 - name: Trace the guards that confirm a real, current record
   criteria:
     map_quality:
       weight: 0.4
-      question: |
-        Does the answer cover the distinct KINDS of guard rather than many instances of one kind?
-        The kinds are: a type check on something that may not be one of these at all; a lookup by
+      question: 'Does the answer cover the distinct KINDS of guard rather than many instances
+        of one kind?
+
+        The kinds are: a type check on something that may not be one of these at all; a lookup
+        by
+
         user-supplied name or identifier turned into a refusal at the boundary instead of a nil
+
         handed downstream; and a reference stored earlier re-checked against what is actually
+
         there before it is trusted. Missing a whole kind costs more than missing an instance.
+
+        '
     specificity:
       weight: 0.25
-      question: |
-        Does each guard carry a file:line and its enclosing routine? A validation named by its
+      question: 'Does each guard carry a file:line and its enclosing routine? A validation named
+        by its
+
         method alone, or a bare file, is not specific.
+
+        '
     justification:
       weight: 0.2
-      question: |
-        Does each guard carry one phrase on what it protects the caller from - what would reach
+      question: 'Does each guard carry one phrase on what it protects the caller from - what would
+        reach
+
         the next layer and fail there if the guard were removed - rather than restating the
+
         condition in words?
+
+        '
     uncertainty:
       weight: 0.15
-      question: |
-        Does the answer distinguish guards it read from guards it expects a framework to provide?
+      question: 'Does the answer distinguish guards it read from guards it expects a framework
+        to provide?
+
         Assuming a validation exists because a Rails model usually has one is the failure here.
+
+        '
 - name: Assess the blast radius of the contract change
   criteria:
     map_quality:
       weight: 0.4
-      question: |
-        Is this a RANKING that adds something to the audit, or the audit relisted? A strong answer
+      question: 'Is this a RANKING that adds something to the audit, or the audit relisted? A
+        strong answer
+
         separates dependents that would fail loudly and immediately from those that would keep
+
         running and quietly return something different, and says what drives the split. The quiet
+
         ones are the expensive ones and a ranking that does not surface them has not done the
+
         step. Ranking everything as high risk is not a ranking.
+
+        '
     specificity:
       weight: 0.25
-      question: |
-        Is each risk pinned to the routine that carries it, at a file:line, rather than to the
-        file it sits in? A ranked list of filenames is not this step's answer.
+      question: 'Is each risk pinned to the routine that carries it, at a file:line, rather than
+        to the
+
+        file it sits in? A ranked list of filenames is not this step''s answer.
+
+        '
     justification:
       weight: 0.2
-      question: |
-        Does each rank carry its reason - why this one breaks first, why that one degrades
+      question: 'Does each rank carry its reason - why this one breaks first, why that one degrades
+
         silently, what has to be re-verified afterwards and how? A ranking with no stated driver
+
         is an ordering the maintainer cannot check.
+
+        '
     uncertainty:
       weight: 0.15
-      question: |
-        Does the answer say which parts of the radius it is least sure of, and name what it would
+      question: 'Does the answer say which parts of the radius it is least sure of, and name what
+        it would
+
         have to look at to firm them up? Confident totals over a codebase this size are the tell.
+
+        '
 - name: Produce the change + verification map
   criteria:
     map_quality:
       weight: 0.4
-      question: |
-        Is this a map a teammate could land the change from without re-exploring - the pieces of
+      question: 'Is this a map a teammate could land the change from without re-exploring - the
+        pieces of
+
         the contract itself that get edited, every dependent grouped by area, and the test surface
-        that has to move with it? Completeness against everything found earlier in the session is
+
+        that has to move with it? Completeness against everything found earlier in the session
+        is
+
         what is measured; a map that quietly drops areas the audit reached is the failure.
+
+        '
     specificity:
       weight: 0.25
-      question: |
-        Do the edits and the dependents carry file:line and the enclosing routine? The tests are
-        the exception: a test that must be ADDED has no line yet, so naming the file it belongs in
+      question: 'Do the edits and the dependents carry file:line and the enclosing routine? The
+        tests are
+
+        the exception: a test that must be ADDED has no line yet, so naming the file it belongs
+        in
+
         is the correct form there and is not penalised.
+
+        '
     justification:
       weight: 0.2
-      question: |
-        Does the map say what each edit is for and what each test would be covering - the
+      question: 'Does the map say what each edit is for and what each test would be covering -
+        the
+
         behaviour that moves - rather than listing paths under headings?
+
+        '
     uncertainty:
       weight: 0.15
-      question: |
-        Does it state what it is not sure survives the change, and what it would want checked
+      question: 'Does it state what it is not sure survives the change, and what it would want
+        checked
+
         first? A plan claiming to be complete over the whole radius, with no residual risk named,
+
         is overconfident.
+
+        '
