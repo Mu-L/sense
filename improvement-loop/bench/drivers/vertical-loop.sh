@@ -429,6 +429,27 @@ for dirpath, _, filenames in os.walk(root):
 PY
 }
 
+# next_run <root> - the run index a new cycle should file under, i.e. one past the
+# highest run-N already on disk for this repo under either arm.
+#
+# WHY THIS EXISTS. An authoring cycle used to re-run at the SAME run-1 and wipe the
+# previous cycle's transcripts to get there. cycles.jsonl kept the FIGURES and $DRYRUN
+# kept the agent's READ, but the runs those were derived from were gone, so no finding
+# from a cycle could be re-checked afterwards - and every real finding this loop has
+# produced came out of a transcript, not a number. Appending instead costs disk and
+# nothing else: runs_for() selects a cycle's own pair by scenario_version, so two
+# cycles' runs coexist in one root without being blended by anything downstream.
+next_run() {
+  local root="$1" max=0 n d
+  for d in "$root"/*/"$REPO"/run-*; do
+    [ -d "$d" ] || continue
+    n="${d##*/run-}"
+    case "$n" in *[!0-9]*) continue ;; esac
+    [ "$n" -gt "$max" ] && max="$n"
+  done
+  echo $((max + 1))
+}
+
 # scenario_steps <yaml> - how many steps the scenario declares (0 if unreadable).
 scenario_steps() {
   python3 -c "import sys,yaml
@@ -515,18 +536,15 @@ do_minibench() {
     echo "   (delete $MINIBENCH_DIR to force a fresh one)"
   else
     echo "## [minibench] unscored two-arm run x1 (BENCH_MINIBENCH=1)"
-    # FORCE_WIPE=1, and ONLY on the unscored roots. runs-variance.sh refuses to
-    # overwrite a cell holding scored runs, which is the right default for the PAID
-    # tree - a failed re-run there loses transcripts for good. But an authoring cycle
-    # re-runs at the same <root>/<arm>/<repo>/run-1 every time, so without this the
-    # second cycle cannot run at all: cycle 2 hit exactly that and the post-condition
-    # correctly refused to advance on cycle 1's stale numbers.
-    #
-    # It is safe HERE because these runs are working space, not the record: this
-    # cycle's figures are already in cycles.jsonl (record_cycle stamps them while the
-    # run is still on disk) and its read is archived in $DRYRUN. Never add this to
-    # do_bench.
-    BENCH_MINIBENCH=1 FORCE_WIPE=1 VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS=1 \
+    # APPEND, never wipe. This used to pass FORCE_WIPE=1 so a second cycle could run
+    # at the same <root>/<arm>/<repo>/run-1 at all - the figures were in cycles.jsonl
+    # and the read in $DRYRUN, so the runs looked like working space. They were not:
+    # cycles 1-8 of the Account campaign are unrecoverable, and every finding worth
+    # having this campaign came from reading a transcript. KEEP_RUNS=1 + START_RUN
+    # files each cycle beside the last; runs_for() still selects this cycle's own pair
+    # by scenario_version, so nothing downstream blends two questions.
+    BENCH_MINIBENCH=1 KEEP_RUNS=1 START_RUN="$(next_run "$MINIBENCH_DIR")" \
+      VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS=1 \
       bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || {
         echo "[minibench] the run FAILED - that is a result, not an obstacle."
         echo "            Read the transcripts before re-running."; exit 1; }
@@ -660,10 +678,11 @@ do_validate() {
     echo "   (delete $VALIDATION_DIR to force a fresh one)"
   else
     echo "## [validate] unscored validation run, both arms x1 (BENCH_VALIDATION=1)"
-    # FORCE_WIPE=1 on the unscored root only - same reason as the mini-bench: an
-    # authoring cycle re-validates at the same path, the figures are already in
-    # cycles.jsonl, and the paid tree keeps the refuse-to-wipe default.
-    BENCH_VALIDATION=1 FORCE_WIPE=1 VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS=1 \
+    # APPEND, never wipe - same reason as the mini-bench: a re-validation used to
+    # destroy the pair the previous cycle was diagnosed from, and a diagnosis whose
+    # transcripts are gone cannot be re-checked.
+    BENCH_VALIDATION=1 KEEP_RUNS=1 START_RUN="$(next_run "$VALIDATION_DIR")" \
+      VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS=1 \
       bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || {
         echo "[validate] the validation run FAILED - that is a result, not an obstacle."
         echo "           Read the transcripts before re-running."; exit 1; }
