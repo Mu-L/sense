@@ -22,6 +22,11 @@ line in `notes` and stop.
        $VDIR/results/loop/$REPO/minibench.md
        $YAML
 
+   And, **if it exists**, the brief from the loop - it is an instruction, not context, and
+   the expansion you write must satisfy it:
+
+       $VDIR/results/loop/$REPO/expand.brief.md
+
 2. Rewrite `$YAML` to the seven steps below, then extend `$RUBRIC` to match.
 
 3. Pull the shown set again for the anchors and specs you are adding:

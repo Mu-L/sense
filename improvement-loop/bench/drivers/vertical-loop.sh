@@ -331,6 +331,46 @@ PY
 # requeue_author <label> <why...> - route a rejected question back to authoring.
 # Nothing is deleted: the scenario, its gold and the read that rejected it all stay on
 # disk, and 01-author.md opens by reading them. The anchor stays.
+# Did the sense arm run out of CLOCK, as opposed to crashing or never starting? True only
+# when there is at least one sense run for this cell and EVERY one of them was stopped by
+# the watchdog. One clean sense run means the missing pair has some other cause, and this
+# must not answer yes to it: shortening a scenario that did not time out treats the wrong
+# thing and quietly makes the bench easier.
+out_of_clock() {
+  python3 - "$1" "$REPO" <<'PY'
+import glob, json, os, sys
+root, repo = sys.argv[1], sys.argv[2]
+metas = sorted(glob.glob(os.path.join(root, "sense", repo, "run-*", "run_meta.json")))
+kinds = []
+for path in metas:
+    try:
+        with open(path) as fh:
+            kinds.append(json.load(fh).get("watchdog_kind"))
+    except (OSError, ValueError):
+        sys.exit(1)
+sys.exit(0 if kinds and all(kinds) else 1)
+PY
+}
+
+# Re-enter EXPAND with a brief, on the same authoring-cycle counter as requeue_author, so
+# an expansion that keeps timing out is bounded by AUTH_CYCLE_MAX like every other routed
+# lever and parks for a human at the ceiling instead of shortening forever.
+requeue_expand() {
+  local label="$1"; shift
+  mkdir -p "$LOOPDIR"
+  # The brief is how the instruction reaches the agent: plans/03-expand.md reads this file
+  # when it exists. Printing it to the console only tells the human.
+  { echo "# Brief for this expansion (written by the loop, $label)"
+    echo
+    printf '%s\n' "$@"
+    echo
+    echo "Keep the anchor, the discriminator step and the gold. Rewrite the seven steps so"
+    echo "the whole session is answerable inside the wall budget: fewer places to visit per"
+    echo "step, not fewer steps - seven is a contract this phase is checked against."
+  } > "$LOOPDIR/expand.brief.md"
+  REQUEUE_TO=expand requeue_author "$label" "$@"
+}
+
 requeue_author() {
   local label="$1"; shift
   local n; n="$(state_get "$REPO#authcycle")"; [ -z "$n" ] && n=0
@@ -338,12 +378,18 @@ requeue_author() {
   # Record BEFORE the run is wiped by the next cycle, and before anything is invalidated.
   record_cycle "$n" "$label" "${VERDICT:-$label}"
   invalidate author minibench expand validate
-  state_set "$REPO" author
+  # REQUEUE_TO lets requeue_expand share this bookkeeping (counter, park, ledger row)
+  # without a second copy of it. Everything else routes to author, as it always did.
+  local to="${REQUEUE_TO:-author}"
+  state_set "$REPO" "$to"
   if [ "$n" -ge "$AUTH_CYCLE_MAX" ]; then
     # Park, and hand the next run a FRESH budget. A counter left at the ceiling makes
     # the printed re-run command a lie: it would re-enter, increment to 7 and park again
     # forever - the same trap the old NO-AXIS park had before it learned to invalidate.
     state_set "$REPO#authcycle" 0
+    # A parked repo always resumes at author, whatever lever parked it: the ceiling means
+    # the loop's judgment ran out, and a fresh round starts from the question.
+    state_set "$REPO" author
     # A CEILING IS A DECISION HANDED UP, NOT A DEAD END. The repo is not dead and the
     # anchor may be fine; what has run out is the loop's own judgment, so it writes the
     # human a plain-language read of all $AUTH_CYCLE_MAX attempts and stops. Spawned
@@ -380,9 +426,10 @@ requeue_author() {
   fi
   state_set "$REPO#authcycle" "$n"
   echo ""
-  echo "## [$label] authoring cycle $n of $AUTH_CYCLE_MAX - re-entering author, no pause"
+  echo "## [$label] authoring cycle $n of $AUTH_CYCLE_MAX - re-entering $to, no pause"
   printf '   %s\n' "$@"
-  NEXT=author
+  NEXT="$to"
+  REQUEUE_TO=""
 }
 
 # have_verdict <phase> <allowed-csv> - true when a usable verdict is already on disk.
@@ -671,6 +718,9 @@ do_expand() {
   python3 "$LIB/rubric_check.py" "$YAML" || {
     echo "[expand] the rubric does not satisfy the judge - NOT advancing."; exit 1; }
   commit_scenario
+  # The brief was for THIS expansion. Left on disk it would shorten every later one,
+  # including expansions of questions that never timed out.
+  rm -f "$LOOPDIR/expand.brief.md"
   NEXT=preflight
 }
 
@@ -757,6 +807,22 @@ do_validate() {
     if [ -z "$(pair_for "$VALIDATION_DIR" "$scen_ver")" ]; then
       echo "[validate] the runner exited 0 but wrote NO transcript for $REPO - treating as a FAILED"
       echo "           validation. Nothing advances to a paid bench on an absent artefact."
+      # OUT OF CLOCK IS A ROUTED LEVER, NOT A STOP. The runner has already spent its one
+      # retry by the time this is asked, so every sense run watchdogged means the scenario
+      # cannot be answered inside the ceiling - twice. The ceiling is never raised; the
+      # SCENARIO is what gives. This re-enters expand rather than author because the
+      # question and its gold were already measured by the mini-bench: what is too big is
+      # the work the seven steps ask for, and expand is the phase that writes those.
+      # Any OTHER cause of a missing pair (a crash, a missing clone) still halts - that is
+      # not a scenario-length problem and shortening would be treating the wrong thing.
+      if out_of_clock "$VALIDATION_DIR"; then
+        requeue_expand validate \
+          "CANNOT FINISH AT BUDGET - the sense arm ran out of clock on every attempt," \
+          "the retry included. The watchdog is NOT raised: the scenario is shortened and" \
+          "re-run instead. The anchor, the question and the gold all stay; expand rewrites" \
+          "the seven steps to ask for less work each."
+        return
+      fi
       exit 1
     fi
   fi
