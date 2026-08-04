@@ -331,24 +331,34 @@ PY
 # requeue_author <label> <why...> - route a rejected question back to authoring.
 # Nothing is deleted: the scenario, its gold and the read that rejected it all stay on
 # disk, and 01-author.md opens by reading them. The anchor stays.
-# Did the sense arm run out of CLOCK, as opposed to crashing or never starting? True only
-# when there is at least one sense run for this cell and EVERY one of them was stopped by
-# the watchdog. One clean sense run means the missing pair has some other cause, and this
-# must not answer yes to it: shortening a scenario that did not time out treats the wrong
-# thing and quietly makes the bench easier.
+# Did the sense arm run out of CLOCK, as opposed to crashing or never starting? Yes when
+# no sense run for this cell finished cleanly AND at least one was stopped by the watchdog.
+#
+# A CRASH IS NOT EVIDENCE EITHER WAY, so it neither triggers this nor vetoes it. Requiring
+# EVERY run to be watchdogged was too strict and it showed within the hour: runs accumulate
+# in a cell across invocations, so one harness crash sat in the history and would have
+# vetoed the lever for every later timeout on the same scenario - the opposite of "it timed
+# out again, shorten it". A cell of nothing but crashes still halts (no watchdog, so no
+# timeout to answer for), and one clean run still halts: the missing pair then has some
+# other cause, and shortening it would treat the wrong thing and quietly make the bench
+# easier.
 out_of_clock() {
   python3 - "$1" "$REPO" <<'PY'
 import glob, json, os, sys
 root, repo = sys.argv[1], sys.argv[2]
 metas = sorted(glob.glob(os.path.join(root, "sense", repo, "run-*", "run_meta.json")))
-kinds = []
+watchdogged = clean = False
 for path in metas:
     try:
         with open(path) as fh:
-            kinds.append(json.load(fh).get("watchdog_kind"))
+            meta = json.load(fh)
     except (OSError, ValueError):
         sys.exit(1)
-sys.exit(0 if kinds and all(kinds) else 1)
+    if meta.get("watchdog_kind"):
+        watchdogged = True
+    elif meta.get("valid") is True:
+        clean = True
+sys.exit(0 if watchdogged and not clean else 1)
 PY
 }
 

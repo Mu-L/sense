@@ -211,12 +211,20 @@ sense_run_record() {  # <scenario> <run_idx> <wall> <valid>
 
 # sense_run_lookup <scenario> <run_idx> - echo "<wall> <valid>" for that run, or nothing.
 sense_run_lookup() {
-  local e
+  # THE LAST RECORD FOR A (scenario, run_idx) WINS. The table appends, and a retried sense
+  # arm re-records the same key, so returning the FIRST match handed the baseline the
+  # attempt that failed and skipped it even though the retry had just succeeded - measured:
+  # discourse run-5 finished cleanly in 459s and its baseline was skipped anyway.
+  # Echo-only, never a non-zero return: the caller reads this inside a `paired=$(...)`
+  # assignment under `set -e`, where a failing substitution would kill the run.
+  local e hit=""
   for e in "${SENSE_RUNS[@]:-}"; do
     case "$e" in
-      "$1|$2|"*) echo "${e#"$1|$2|"}" | tr '|' ' '; return 0 ;;
+      "$1|$2|"*) hit="${e#"$1|$2|"}" ;;
     esac
   done
+  [ -n "$hit" ] && echo "$hit" | tr '|' ' '
+  return 0
 }
 
 WANT_SENSE=false
