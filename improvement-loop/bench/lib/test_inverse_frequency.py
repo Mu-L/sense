@@ -77,14 +77,14 @@ class TallyTest(unittest.TestCase):
         make_run(self.tmp, "sense", "mastodon", "run-7",
                  [{"id": "other-question-row", "group": "dependents", "cited": True}],
                  sv="sha256:bbb")
-        versions = {sv for _a, _s, sv in runs_for("mastodon", [self.tmp])}
+        versions = {sv for _a, _s, sv, _m in runs_for("mastodon", [self.tmp])}
         self.assertEqual(versions, {"sha256:aaa", "sha256:bbb"})
         # tally over ONE version must not see the other question's row
         one = [r for r in runs_for("mastodon", [self.tmp]) if r[2] == "sha256:aaa"]
         self.assertNotIn("other-question-row", tally(one))
 
     def test_the_version_rides_along_with_every_run(self):
-        for _arm, _scored, sv in runs_for("mastodon", [self.tmp]):
+        for _arm, _scored, sv, _model in runs_for("mastodon", [self.tmp]):
             self.assertTrue(sv)
 
     def test_unreadable_scored_json_does_not_crash_the_ranking(self):

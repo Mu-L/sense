@@ -429,6 +429,18 @@ for dirpath, _, filenames in os.walk(root):
 PY
 }
 
+# archive_scenario <yaml> - keep the scored bytes of this scenario version forever.
+#
+# WHY. run_meta.json records the version AND the scenario_file, but that path is the LIVE
+# one, which the next authoring cycle overwrites. So a number on disk knows the identity of
+# the question that produced it and cannot reach its gold. Recovering which question produced
+# the twelve scored mastodon runs meant brute-forcing ten .bak files crossed with two rubrics.
+# Content-addressed and append-only, so re-archiving an unchanged pair is a no-op.
+archive_scenario() {
+  python3 "$LIB/scenario_archive.py" add "$1" --store "$(dirname "$1")/.versions" >/dev/null \
+    || echo "[warn] could not archive $1 - its gold will not be recoverable by version" >&2
+}
+
 # next_run <root> - the run index a new cycle should file under, i.e. one past the
 # highest run-N already on disk for this repo under either arm.
 #
@@ -530,6 +542,7 @@ do_minibench() {
     echo "[minibench] cannot compute the scenario version for $YAML - NOT advancing."
     echo "            A pair that cannot be tied to a scenario is not evidence."
     exit 1; }
+  archive_scenario "$YAML"
   echo "## [minibench] scenario $scen_ver"
   if [ -n "$(runs_for "$MINIBENCH_DIR" "$scen_ver")" ]; then
     echo "## [minibench] a run already exists for this scenario version - not re-running"
@@ -672,6 +685,7 @@ do_validate() {
     echo "[validate] cannot compute the scenario version for $YAML - NOT advancing."
     echo "           A validation pair that cannot be tied to a scenario is not evidence."
     exit 1; }
+  archive_scenario "$YAML"
   echo "## [validate] scenario $scen_ver"
   if [ -n "$(runs_for "$VALIDATION_DIR" "$scen_ver")" ]; then
     echo "## [validate] a validation run already exists for $REPO - not re-running"

@@ -34,7 +34,7 @@ import sys
 
 
 def runs_for(repo, roots):
-    """Every scored run for this repo, as (arm, path, scenario_version).
+    """Every scored run for this repo, as (arm, path, scenario_version, model).
 
     The version rides along because a repo name is NOT a scenario: one results root can
     hold runs from several questions authored against the same repo, and their gold sets
@@ -54,23 +54,51 @@ def runs_for(repo, roots):
                 m = json.load(open(meta))
             except (OSError, ValueError):
                 continue
-            out.append((m.get("tool") or "?", scored, m.get("scenario_version") or "(unversioned)"))
+            out.append((m.get("tool") or "?", scored,
+                        m.get("scenario_version") or "(unversioned)",
+                        m.get("model") or "(unknown model)"))
     return out
 
 
-def tally(runs):
-    """{row_id: {"group":g, arm: [cited, total]}} across every run."""
+def tally(runs, keys=None):
+    """{row_key: {"group":g, arm: [cited, total]}} across every run.
+
+    `keys` maps scenario_version -> {row id -> durable key}. When given, rows are counted
+    under their durable key (the gold's file path) instead of their id, which is what lets
+    difficulty survive a re-gold: the same file keeps its history when the question that
+    names it is rewritten. Without it, behaviour is unchanged - keyed by id, one version.
+    """
     rows = {}
-    for arm, scored, _sv in runs:
+    for arm, scored, sv, _model in runs:
         try:
             gr = json.load(open(scored))["gold_recall"]
         except (OSError, ValueError, KeyError):
             continue
         for item in gr.get("details", []):
-            rec = rows.setdefault(item["id"], {"group": item.get("group", "")})
+            key = (keys or {}).get(sv, {}).get(item["id"], item["id"])
+            rec = rows.setdefault(key, {"group": item.get("group", "")})
             cited, total = rec.get(arm, [0, 0])
             rec[arm] = [cited + (1 if item.get("cited") else 0), total + 1]
     return rows
+
+
+def durable_keys(runs, store):
+    """{scenario_version: {row id: gold file path}} for every version we can resolve.
+
+    Returns the unresolved versions too. A version whose scenario is not archived is
+    REPORTED and dropped, never silently folded in under its ids: two questions whose rows
+    happen to share an id are not the same row, and pretending otherwise is the exact bug
+    the scenario_version scoping was added to prevent.
+    """
+    import scenario_archive
+    keys, missing = {}, []
+    for sv in sorted({sv for _a, _s, sv, _m in runs}):
+        path = scenario_archive.get(sv, store)
+        if not path:
+            missing.append(sv)
+            continue
+        keys[sv] = scenario_archive.gold_paths(path)
+    return keys, missing
 
 
 def rate(pair):
@@ -86,6 +114,11 @@ def main():
                     help="skip rows seen in fewer runs than this (default 1)")
     ap.add_argument("--scenario-version", help="rank this version (default: the one with most runs)")
     ap.add_argument("--list-versions", action="store_true", help="list versions found, then stop")
+    ap.add_argument("--by-path", metavar="STORE",
+                    help="accumulate difficulty ACROSS re-questions: key each row on its "
+                         "gold file path, resolved from a scenario_archive store, and merge "
+                         "every version instead of ranking one")
+    ap.add_argument("--model", help="scope --by-path to one model (default: the most-run one)")
     args = ap.parse_args()
 
     runs = runs_for(args.repo, args.roots)
@@ -93,9 +126,14 @@ def main():
         print(f"no scored runs for {args.repo} under {', '.join(args.roots)}")
         return 1
 
-    # ONE SCENARIO VERSION, ALWAYS. Different questions on one repo score different gold,
-    # so a blended table reports rows as never-cited that the other scenario never had.
-    by_version = collections.Counter(sv for _a, _s, sv in runs)
+    # ONE SCENARIO VERSION, ALWAYS - unless --by-path resolves each version's gold, which
+    # makes rows comparable ACROSS questions by keying them on the file they point at.
+    # Different questions score different gold, so a table blended on ids alone reports
+    # rows as never-cited that the other scenario never had; blended on paths it reports
+    # what the file has cost every arm that was ever asked about it.
+    by_version = collections.Counter(sv for _a, _s, sv, _m in runs)
+    if args.by_path and not args.list_versions:
+        return rank_by_path(args, runs, by_version)
     if args.list_versions:
         print(f"# scenario versions for {args.repo}")
         for sv, n in by_version.most_common():
@@ -114,7 +152,7 @@ def main():
     skipped = [(sv, n) for sv, n in by_version.most_common() if sv != target]
     runs = [r for r in runs if r[2] == target]
 
-    by_arm = collections.Counter(a for a, _s, _sv in runs)
+    by_arm = collections.Counter(a for a, _s, _sv, _m in runs)
     print(f"# inverse-frequency ranking (rarest cited first) - {args.repo}  ({len(runs)} runs: "
           + ", ".join(f"{a} x{n}" for a, n in sorted(by_arm.items())) + ")")
     print(f"# scenario {target}")
@@ -123,26 +161,34 @@ def main():
               + ", ".join(f"{sv} ({n} run(s))" for sv, n in skipped))
     print()
 
-    rows = tally(runs)
-    arms = sorted(by_arm)
+    print_ranking(tally(runs), sorted(by_arm), args.min_runs, width=24)
+    return 0
+
+
+def rank(rows, arms, min_runs):
+    """(overall rate, key, record, cited, seen) per row, rarest first."""
     ranked = []
     for rid, rec in rows.items():
         seen = sum(rec.get(a, [0, 0])[1] for a in arms)
-        if seen < args.min_runs:
+        if seen < min_runs:
             continue
         cited = sum(rec.get(a, [0, 0])[0] for a in arms)
         ranked.append((cited / seen if seen else 1.0, rid, rec, cited, seen))
     ranked.sort(key=lambda r: (r[0], r[1]))
+    return ranked
 
-    head = f"{'row':24s} {'group':11s} {'overall':>9s}  " + "  ".join(f"{a:>12s}" for a in arms)
+
+def print_ranking(rows, arms, min_runs, width=24):
+    ranked = rank(rows, arms, min_runs)
+    head = f"{'row':{width}s} {'group':11s} {'overall':>9s}  " + "  ".join(f"{a:>12s}" for a in arms)
     print(head)
     print("-" * len(head))
-    for overall, rid, rec, cited, seen in ranked:
+    for _overall, rid, rec, cited, seen in ranked:
         cells = []
         for a in arms:
             c, t = rec.get(a, [0, 0])
             cells.append(f"{(str(c) + '/' + str(t)):>12s}" if t else f"{'-':>12s}")
-        print(f"{rid:24s} {rec['group']:11s} {cited:>4}/{seen:<4} {' '.join(cells)}")
+        print(f"{rid:{width}s} {rec['group']:11s} {cited:>4}/{seen:<4} {' '.join(cells)}")
 
     dead = [r for r in ranked if r[3] == 0]
     free = [r for r in ranked if r[0] == 1.0]
@@ -151,6 +197,57 @@ def main():
     print(f"  cited by every run     : {len(free)}  <- free rows, they dilute the group")
     print("\n  A never-cited row is HARD or UNREACHABLE. Check it against the blast payload"
           "\n  before building on it: absent from the payload means the tool cannot serve it.")
+    return ranked
+
+
+def rank_by_path(args, runs, by_version):
+    """Difficulty accumulated ACROSS questions, keyed on each row's gold file path."""
+    keys, missing = durable_keys(runs, args.by_path)
+    if not keys:
+        print(f"no archived scenario for any version under {args.by_path}")
+        print("  archive one with: scenario_archive.py add <scenario.yaml> [rubric] --store "
+              f"{args.by_path}")
+        print("  versions wanted: " + ", ".join(f"{sv} ({n} run(s))" for sv, n in by_version.most_common()))
+        return 1
+    kept = [r for r in runs if r[2] in keys]
+
+    # ONE MODEL. Merging questions is the point; merging GENERATIONS is a different claim,
+    # and laws.md already requires this ranking be scoped to the headline model because
+    # mixing them reorders the middle of the table. Left unscoped, the first run of this
+    # blended six baseline runs across two models without saying so.
+    by_model = collections.Counter(m for _a, _s, _sv, m in kept)
+    model = args.model
+    if model and model not in by_model:
+        print(f"no runs on model {model}; have: "
+              + ", ".join(f"{m} ({n})" for m, n in by_model.most_common()))
+        return 1
+    if not model:
+        top = max(by_model.values())
+        tied = sorted(m for m, n in by_model.items() if n == top)
+        if len(tied) > 1:
+            # Alphabetical would have picked claude-opus-4-8 over claude-opus-5 - a default
+            # that silently prefers the older generation. Make the caller say which.
+            print("several models are equally represented - pass --model to pick one:\n  "
+                  + "\n  ".join(f"{m} ({by_model[m]} run(s))" for m in tied))
+            return 1
+        model = tied[0]
+    other = [(m, n) for m, n in by_model.most_common() if m != model]
+    kept = [r for r in kept if r[3] == model]
+
+    by_arm = collections.Counter(a for a, _s, _sv, _m in kept)
+    print(f"# difficulty by GOLD PATH, merged across questions - {args.repo}  "
+          f"({len(kept)} runs: " + ", ".join(f"{a} x{n}" for a, n in sorted(by_arm.items())) + ")")
+    print(f"# model {model}")
+    if other:
+        print("# NOT included (a different model generation reorders the table): "
+              + ", ".join(f"{m} ({n} run(s))" for m, n in other))
+    print(f"# {len(keys)} scenario version(s) merged: " + ", ".join(sorted(keys)))
+    if missing:
+        # Never silently folded in under their ids - see durable_keys.
+        print("# DROPPED, no archived scenario so their rows cannot be identified: "
+              + ", ".join(f"{sv} ({by_version[sv]} run(s))" for sv in missing))
+    print()
+    print_ranking(tally(kept, keys), sorted(by_arm), args.min_runs, width=52)
     return 0
 
 
