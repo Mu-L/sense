@@ -138,6 +138,63 @@ def _glance_row(column, copy):
             f"**{o['delta']:+.2f}** | |")
 
 
+def _routed(column):
+    """A column whose number is actually about Sense."""
+    states = column.get("routing") or []
+    return bool(column.get("measured")) and (not states or states[0] not in ROUTING_NOTE)
+
+
+def _delta_chart(data, copy):
+    """One bar per model: what Sense added to that model's own score.
+
+    Deltas, never absolute scores. A chart of raw scores side by side would read
+    as a model ranking however the caption is worded, and that is the one thing
+    this page does not claim. Charted beside the table, never instead of it, so
+    the numbers survive if a renderer does not draw mermaid.
+    """
+    cols = [c for c in data["columns"] if _routed(c)]
+    if len(cols) < 2:
+        return []
+    labels = ", ".join(f'"{_label(copy, "models", c["model"])}"' for c in cols)
+    values = ", ".join(f"{c['overall']['delta']:.4f}" for c in cols)
+    # Headroom above the tallest bar: an axis that ends exactly at the maximum
+    # clips it, and a clipped bar on a public page reads as a rendering fault.
+    top = min(1.0, max(0.5, max(c["overall"]["delta"] for c in cols) * 1.15))
+    return ["```mermaid", "xychart-beta",
+            '    title "What Sense added to each model"',
+            f"    x-axis [{labels}]",
+            f'    y-axis "Extra answers found, share of the whole" 0 --> {top:.2f}',
+            f"    bar [{values}]", "```", ""]
+
+
+def _provenance_chart(column, copy, avg):
+    """Where one model's answers came from. The scoring picture in one shape."""
+    slices = [("From Sense, and used", avg[REACH]),
+              ("From Sense, not used", avg[IGNORED]),
+              ("Found without Sense", avg[FOUND_ANYWAY]),
+              ("Reached by neither", avg[MISSED])]
+    if not any(v for _, v in slices):
+        return []
+    out = ["```mermaid", "pie showData",
+           f'    title Where {_label(copy, "models", column["model"])} '
+           f"got its answers"]
+    out += [f'    "{name}" : {v:g}' for name, v in slices if v]
+    return out + ["```", ""]
+
+
+def _method_chart():
+    """How a number on this page is produced, before anyone argues about one."""
+    return ["```mermaid", "flowchart LR",
+            '    Q["One question<br/>7 steps, same for both"]',
+            '    A["The model on its own"]',
+            '    B["The model with Sense"]',
+            '    G["Answers fixed in advance<br/>hand-audited, file and line"]',
+            '    J["Blind grader<br/>never told which arm"]',
+            '    S["Share of the answers named"]',
+            "    Q --> A", "    Q --> B", "    A --> J", "    B --> J",
+            "    G --> J", "    J --> S", "```", ""]
+
+
 def _glance(data, copy):
     out = ["## At a glance", "",
            "| model | on its own | with Sense | difference | |",
@@ -146,6 +203,7 @@ def _glance(data, copy):
     out += ["", f"Share of the {data.get('gold_rows', 0)} hand-audited answers each "
             f"model cited, working the same question. Read each row across, never down: "
             f"a model is only ever compared to itself.", ""]
+    out += _delta_chart(data, copy)
     return out
 
 
@@ -178,6 +236,8 @@ def _column_block(column, gold_rows, copy):
         out.append(f"- **tokens billed** {bmean:,.0f} on its own, {smean:,.0f} with Sense")
     out.append(f"- **runs** {runs['baseline']} without Sense, {runs['sense']} with, {src}")
     out.append("")
+    if measured:
+        out += _provenance_chart(column, copy, avg)
 
     flipped = mech.get("rows_disagreeing") or []
     if flipped:
@@ -254,6 +314,9 @@ def _limits(data, copy):
         "per repository and hand-audited per repository; a number from one page does "
         "not rank against a number from another.",
         "",
+        "How a number here is produced:",
+        "",
+        *_method_chart(),
         f"The answers were fixed in advance: {data.get('gold_rows', 0)} locations, "
         "audited by hand before any model ran, and a model is credited only when it "
         "names the file and the line. Grading is done by a separate pinned model that "

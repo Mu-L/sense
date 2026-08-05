@@ -183,3 +183,67 @@ class TheTaskIsShown(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Charts(unittest.TestCase):
+    """Mermaid beside the tables, never instead of them."""
+
+    def _multi(self, n=3, delta=0.5435):
+        cols = []
+        for i in range(n):
+            cols.append(_col(_mech([_counts(reach=18, ignored=2, found=2, missed=1)],
+                                   rb.REACH), model=f"m{i}", delta=delta))
+            cols[-1]["overall"] = {"baseline_mean": 0.3, "sense_mean": 0.3 + delta,
+                                   "delta": delta}
+        return {"repo": "discourse", "vertical": "ruby-rails", "gold_rows": 23,
+                "scenario_version": "sha256:abcd", "sense_version": "s",
+                "headline": "m0", "question": {}, "columns": cols,
+                "replication": {"routed": [], "replicated": [], "never_routed": [],
+                                "search_only": [], "not_measured": [], "threshold": 0.5}}
+
+    def test_the_axis_leaves_headroom_above_the_tallest_bar(self):
+        out = "\n".join(rb._delta_chart(self._multi(), rb.load_copy()))
+        top = float(out.split("0 --> ")[1].split("\n")[0])
+        self.assertGreater(top, 0.5435)
+
+    def test_the_axis_never_runs_past_one(self):
+        out = "\n".join(rb._delta_chart(self._multi(delta=0.95), rb.load_copy()))
+        self.assertIn("0 --> 1.00", out)
+
+    def test_the_chart_plots_deltas_not_absolute_scores(self):
+        out = "\n".join(rb._delta_chart(self._multi(), rb.load_copy()))
+        self.assertIn("bar [0.5435, 0.5435, 0.5435]", out)
+        self.assertNotIn("0.3000", out)
+
+    def test_one_model_alone_gets_no_comparison_chart(self):
+        self.assertEqual(rb._delta_chart(self._multi(n=1), rb.load_copy()), [])
+
+    def test_an_arm_that_never_called_sense_is_not_plotted(self):
+        data = self._multi(n=2)
+        data["columns"][1]["routing"] = ["never-routed"]
+        out = "\n".join(rb._delta_chart(data, rb.load_copy()))
+        self.assertEqual(out, "")
+
+    def test_each_model_gets_a_pie_of_where_its_answers_came_from(self):
+        avg = {rb.REACH: 21, rb.IGNORED: 4, rb.FOUND_ANYWAY: 12, rb.MISSED: 1}
+        out = "\n".join(rb._provenance_chart(_col(_mech([], None), model="m0"),
+                                             rb.load_copy(), avg))
+        self.assertIn("pie showData", out)
+        self.assertIn('"From Sense, and used" : 21', out)
+        self.assertIn('"Found without Sense" : 12', out)
+
+    def test_an_empty_slice_is_left_out_rather_than_drawn_as_zero(self):
+        avg = {rb.REACH: 23, rb.IGNORED: 0, rb.FOUND_ANYWAY: 0, rb.MISSED: 0}
+        out = "\n".join(rb._provenance_chart(_col(_mech([], None), model="m0"),
+                                             rb.load_copy(), avg))
+        self.assertIn('"From Sense, and used" : 23', out)
+        self.assertNotIn("not used", out)
+
+    def test_the_page_explains_how_a_number_is_produced(self):
+        out = rb.render(self._multi())
+        self.assertIn("flowchart LR", out)
+        self.assertIn("Blind grader", out)
+
+    def test_every_mermaid_block_is_closed(self):
+        out = rb.render(self._multi())
+        self.assertEqual(out.count("```mermaid"), out.count("```") - out.count("```mermaid"))
