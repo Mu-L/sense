@@ -3,38 +3,45 @@
 # Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
 # / justification 0.20 / uncertainty 0.15.
 #
-# CYCLE 4 on chatwoot. Supersedes the cycle-3 rubric, kept at
-# scenarios/chatwoot.rubric.yaml.caller-of-a-toucher-cycle3.bak. Cycle 3's scenario told the
-# arm the dependent's file "names the go-between while never naming the record at all"; the
-# sense arm obeyed it, excluded thirteen of fifteen gold files on that ground and scored
-# 2 of 15 = 0.133. Every trace of that clause is gone from the scenario, and the two places
-# where THIS rubric still leaned on it - step 2's specificity and justification - are
-# rewritten below. Nothing in this rubric may reward or require an arm to reason about what
-# text a file does or does not contain: thirteen of the fifteen scored files DO write the
-# record's name and they are gold anyway.
-#
-# WHAT REPLACES IT: the demand is now a two-link CALL PATH per place - the caller, the
-# go-between it hands the work to, and the location of the hand-off. An entry that names
-# a place but cannot say what it hands off to has not answered the question asked, however
-# real the dependency is. That is what step 2's map_quality and specificity score.
-#
-# WHY step 2 penalises the direct ring: the maintainer explicitly excluded the code that
-# deals with the record head-on, because that code is what a name search returns and the
-# rework already sees it. Re-listing it is answering a different question, and padding
-# with it should pull map_quality down rather than leave it flat.
-#
-# SEVEN steps, matching the expanded session (plans/03-expand.md). Step names MUST match
-# scenarios/chatwoot.yaml exactly and in order (the judge pairs by name).
+# CYCLE 6 on chatwoot, SEVEN steps, matching the expanded session (plans/03-expand.md).
+# Expands the cycle-6 two-step rubric, kept at
+# scenarios/chatwoot.rubric.yaml.minibench-cycle6.bak.
 #
 # WHAT THE EXPANSION MOVED IN HERE: nothing that scores the discriminator. The mini-bench's
 # two criteria blocks are carried over BYTE-IDENTICAL into slots 2 and 4 - "Map the
 # conversation-record contract" and "Audit every dependent of the conversation-record
-# contract" - and five new blocks were written around them. Slot 4 is the discriminator and
-# its four criteria are untouched; moving them would stop the mini-bench's +0.60 from
-# describing this scenario.
+# contract" - and five new blocks were written around them. Slot 4 is the discriminator
+# (baseline 3 of 13, sense 10 of 13, +0.538) and its four criteria are untouched; moving
+# them would stop that number from describing this scenario.
 #
-# The audience paragraph below is the mini-bench's, extended by one sentence naming the
-# session shape. Everything it says about the hard half is unchanged.
+# The five new blocks score steps BOTH arms are expected to reach. They exist to make the
+# session a session - by step 4 both arms have spent wall and context on steps 1 to 3 -
+# and to score whether later steps build on the earlier map rather than re-exploring.
+# Step 7 asks for the test surface and this rubric scores it; nothing in gold hangs on it,
+# because a spec that has to be ADDED has no line to cite.
+#
+# WHAT CHANGED AND WHY. Cycle 5's rubric scored a RING - "the ring one step outside", with
+# the code that deals with the record head-on ruled out, and padding with it pulling
+# map_quality down. Two cycles measured what that exclusion costs the arm being scored:
+# cycle 3's version of it capped the sense arm at 2 of 15 (0.133), and cycle 5's left six
+# of twelve gold rows at `neither` while all six sat in the shown blast payload. The
+# scenario has dropped the exclusion; so has this rubric. Step 2 now scores DISTANCE -
+# how far out along the chain the audit reaches - as a RANKING, never as a gate. A near
+# entry is a weaker entry here, not a wrong one, and listing near entries alongside far
+# ones may not pull map_quality down. Only stopping short may.
+#
+# THE OTHER DELETION: cycle 5's map_quality asked whether the answer "notices that one
+# go-between is handed the work from several places that are not neighbours". The scenario
+# sentence that said the same thing to the agent is the measured leak - the baseline turned
+# it into one constructor-call sweep and took two rows off it (results/loop/chatwoot/
+# minibench.md, calls 6 and 7). It is gone from the prompt, so it is gone from here too.
+#
+# Nothing in this rubric may reward or require an arm to reason about what text a file does
+# or does not contain - that clause is what killed cycle 3. Eleven of the thirteen scored
+# files DO write the record's name and they are gold anyway.
+#
+# Step names MUST match scenarios/chatwoot.yaml exactly and in order (the judge pairs by
+# name). This file carries no `repo:` key.
 
 audience: 'An AI coding agent that will use this answer to safely rework the Chatwoot
   conversation record - the object the whole product is organised around, that a customer''s
@@ -43,25 +50,27 @@ audience: 'An AI coding agent that will use this answer to safely rework the Cha
   knowing two things: how the system gets hold of the right one of these when a reply
   arrives from outside and all it holds are the mail headers - traced through the routines
   that make that path up - and then, separately, which code would change behaviour under
-  the rework even though nothing on its own line goes near the record. That second part is
-  the hard half and it is deliberately narrow. It is not the code that deals with the
-  record head-on: that code says the record''s name out loud, a search returns it, and the
-  maintainer said they already have it. It is the ring one step outside - code that reaches
-  the record only at second hand, by handing the work off to some other object, where it is
-  that object and not this code that touches the record. So each entry there is a small
-  path: a caller, the go-between it hands to, and the exact file:line where the hand-off is
-  made, plus what that place would start getting wrong. Those callers sit scattered across
-  the application tree and a second application tree carrying the paid edition, in actions,
-  controllers for the dashboard and for the embedded widget, model concerns, channel
-  message builders, notification building and push presenters. A weak answer re-lists the
-  code that deals with the record directly - the finder strategies, the query builders, the
-  services that write to it - because a name search returns them, and that is exactly what
-  was excluded; or names a caller but cannot say what it hands the work to, which leaves
-  the path unverified; or gives a bare filename; or gives file:line with nothing said about
-  what would break, which leaves the agent knowing where to look and not what its change
-  would do. The whole thing is worked as one session in order, so later steps are scored on
-  whether they build on what the earlier ones established rather than starting over: an
-  answer that re-explores the codebase at step 6 has wasted the map it already had.
+  the rework, however far out it sits. That second part is the hard half, and what makes it
+  hard is DISTANCE. Some of the code that breaks sits right against the record and names it
+  outright; a search returns that code and the agent will have it anyway. The code the
+  maintainer is short of is further out: a place that asks something, which asks something
+  else, and only the last link in that chain ever goes near the record - two, three and five
+  links, through routines named after jobs that have nothing to do with this record. So each
+  entry there is a chain: the outer file:line, the links it runs through, how far out it
+  sits, and what that place would start getting wrong. The far entries are what the answer
+  is being scored for; the near ones are welcome and count for less. Those distant places
+  sit scattered across the application tree and a second application tree carrying the paid
+  edition - in a contact-merge action and the endpoint that drives it, in channel message
+  builders and a subclass hook a parent calls without naming, in controllers that delegate
+  an access decision to a service, and in modules folded over a service, a controller or the
+  record itself whose line is `super`. A weak answer stops at the first thing it lands on
+  and reports the near ring only; or names a distant place but cannot give the chain from it
+  to the record, which leaves the claim unverifiable; or gives a bare filename; or gives
+  file:line with nothing said about what would break, which leaves the agent knowing where
+  to look and not what its change would do. The whole thing is worked as one session in
+  order, so later steps are scored on whether they build on what the earlier ones
+  established rather than starting over: an answer that re-explores the codebase at step 6
+  has wasted the map it already had.
 
   '
 steps:
@@ -70,25 +79,40 @@ steps:
     map_quality:
       weight: 0.4
       question: 'Does the answer give the shape of the project and place the record inside it -
+
         what the application is for, how the trees are laid out, where the record lives, and
+
         what shared pieces its behaviour is assembled from - rather than reciting a directory
+
         listing? Is it a map the next step can act from with small targeted lookups, or would
+
         the next step have to explore again?
+
         '
     specificity:
       weight: 0.25
       question: 'Are the claims anchored at file:line rather than at directory names? A statement
-        about where something lives that carries no path is not orientation.
+
+        about where something lives that carries no file:line is not specific, and a tree
+
+        listing is not a map.
+
         '
     justification:
       weight: 0.2
-      question: 'Does the answer say why each piece it names matters to the rework ahead, rather
-        than describing the repository for its own sake?
+      question: 'Does the answer say WHY the record sits where it does and what the shared pieces
+
+        contribute to its behaviour, rather than naming them? Is the second application tree
+
+        explained as what it is rather than listed?
+
         '
     uncertainty:
       weight: 0.15
-      question: 'Does the answer distinguish what it read from what it inferred from names and
-        conventions, and say which parts of the layout it has not looked at?
+      question: 'Does the answer separate what it read from what it assumed from a directory name
+
+        or a convention? Is any part of the layout it did not look at declared as such?
+
         '
 - name: Map the conversation-record contract
   criteria:
@@ -150,98 +174,122 @@ steps:
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Is the lifecycle followed as one connected path - the decision that a new one is
-        needed, it being brought into existence, later changed, and finally removed - with
-        what runs around each of those moments? The centre of this step is the piece that
-        announces every appearance and change, and that it announces along TWO routes at
-        once: one that runs in the caller''s own thread and one that enqueues the same event
-        for later. An answer that finds the announcement but treats it as a single route has
-        missed the half of the fan-out that matters most to a contract rework. Does the
-        answer reach at least one destination on each route, and the removal path, or does it
-        stop at creation?
+      question: 'Is the lifecycle traced as one connected path - the decision that one is needed,
+
+        the point it is brought into existence, what happens when it changes, and the path
+
+        that removes it - rather than a list of methods? The specific thing asked for is the
+
+        piece that is told every time one appears or changes, and the fact that it hands the
+
+        news on along TWO routes at once: does the answer find that fan-out and follow both
+
+        routes to something that runs on each? Does it build on the map from the earlier
+
+        steps rather than re-exploring from scratch?
+
         '
     specificity:
       weight: 0.25
-      question: 'Does every layer carry an exact file:line AND the routine it lives in? Is each
-        one marked inline or deferred, and is the marking argued from the code rather than
-        assumed from a name? Where work is handed off, is it said what the receiver is handed
-        - the record object itself, or something it has to look the record up from again?
+      question: 'Does every layer carry an exact file:line AND the routine it lives in? Is each part
+
+        marked as running inline in the triggering request or handed off to run later in the
+
+        background - and is that marking attached to a located line rather than asserted in
+
+        general?
+
         '
     justification:
       weight: 0.2
-      question: 'Does each layer carry one phrase on what it contributes, and does the answer say
-        why the inline/deferred split matters to a rework of what the record hands back -
-        that a deferred receiver is handed the record across a serialization boundary and an
-        inline one is not?
+      question: 'Where work is handed off to run later, does the answer say what that work is handed
+
+        the record BY - the record object itself, or an identifier it can be looked up from
+
+        again - and why that distinction is what a contract rework has to keep working? Is
+
+        the removal path explained in terms of what still runs when a record goes away?
+
         '
     uncertainty:
       weight: 0.15
-      question: 'Does the answer separate the destinations it verified by reading from the ones it
-        assumed followed from a registration list? Declaring a route it did not walk to the
-        end is worth more than a confident list that quietly stops.
+      question: 'Does the answer distinguish the routes it followed to something concrete from the
+
+        ones it inferred from a name? Are listeners or hooks it did not open declared rather
+
+        than described?
+
         '
 - name: Audit every dependent of the conversation-record contract
   criteria:
     map_quality:
       weight: 0.4
-      question: 'THE DISCRIMINATOR, and it is about a RING, not a count. The maintainer asked
+      question: 'THE DISCRIMINATOR, and it is about DISTANCE, not a count and not a ring. The
 
-        only for code that reaches the record at second hand - code whose own line hands
+        maintainer said the places that matter are the ones furthest out - a file whose own
 
-        the work to another object, where it is that object and not this code that touches
+        line asks something, which asks something else, and only the last link touches the
 
-        the record. Does the audit sit in that ring? A strong answer is dense in callers of
+        record. How far out does this audit actually reach? A strong answer carries entries
 
-        the record''s handlers: the endpoint or action that invokes a service and lets the
+        several links from the record and shows the intervening links: the action or endpoint
 
-        service do the writing; the concern mixed into the record that passes itself out to
+        whose chain reaches the record two or three routines later inside something that
 
-        a service or a job; the channel builder whose routine calls out to a scope and a
+        merges customer records; the controller that delegates an access decision to a
 
-        builder rather than querying anything; the notification path that defers the access
+        service and lets the service do all the deciding; the module folded over a service, a
 
-        decision to a policy object; the presenter payload whose every key is forwarded
+        controller or the record itself whose line is `super`, so the behaviour is settled
 
-        through a wrapper. A weak answer re-lists the code that deals with the record
+        across two files that never call each other by name; the subclass hook a parent
 
-        head-on - the lookup strategies, the query builders, the services and jobs that
+        routine calls without naming the file it lands in; the channel builder whose routine
 
-        write to it - because that is what a name search returns, and it is exactly what
+        calls out to a scope and a builder rather than querying anything itself. Near
 
-        was excluded. Padding the list with excluded entries is worse than a shorter list
+        entries - code that names and works the record on its own line - are NOT wrong here
 
-        that stays in the ring, and should pull this criterion down. Does the answer reach
+        and must not be penalised; they are simply worth less, and an answer made only of
 
-        BEYOND the main application tree into the second application tree carrying the paid
+        them has not done the work that was asked. Does the answer reach BEYOND the main
 
-        edition, and across actions, dashboard and widget controllers, model concerns,
+        application tree into the second application tree carrying the paid edition, and
 
-        channel builders and presenters, or is it dense in one kind of place and silent
+        across the contact-side actions and endpoints, the channel builders, and the modules
 
-        about the rest? Areas it could not finish should be declared unfinished rather than
+        folded over services, controllers and the record? Or is it dense in one kind of place
 
-        quietly summarised.
+        and silent about the rest? Areas it could not finish should be declared unfinished
+
+        rather than quietly summarised.
 
         '
     specificity:
       weight: 0.25
-      question: 'Does EVERY place carry its own exact file:line AND the name of what it hands the
+      question: 'Does EVERY place carry its own exact file:line AND the chain running from that
 
-        work to? Both, because the entry is a path and half a path locates nothing. A bare
+        line to the record? Both, because the entry is a chain and one end of it locates
 
-        filename does not count - a file is not where a hand-off happens, a line is, and the
+        nothing. A bare filename does not count - a file is not where a dependency sits, a
 
-        agent has to be able to jump to it. A file:line
+        line is, and the agent has to be able to jump to it. A file:line with no chain given
 
-        with no go-between named is an assertion the agent cannot check, and should be
+        is an assertion the agent cannot check, and should be scored weaker than one that
 
-        scored weaker than one that names the object the work is handed to. Several places
+        names each link in turn down to whatever finally reaches the record. Where a link is
 
-        named together on one line as a set that shares a go-between is the failure this
+        a call back up the ancestor chain rather than a named object, saying so and naming
 
-        criterion exists to catch: however correct the shared reason is, it is one item,
+        the routine it lands in counts as giving that link. Is the distance stated, so the
 
-        not a set of located dependents, and it should be scored as one.
+        agent can tell a place that breaks directly from one that breaks three routines
+
+        away? Several places named together on one line as a set that shares a chain is the
+
+        failure this criterion exists to catch: however correct the shared reason is, it is
+
+        one item, not a set of located dependents, and it should be scored as one.
 
         '
     justification:
@@ -250,124 +298,169 @@ steps:
 
         record changed under it? The consequence must be about that place''s own job - the
 
-        agent who stops being assigned, the activity message that stops being posted, the
+        agent who stops being assigned, the attachment list an agent should not see, the
 
-        push payload that loses a field, the attachment list an agent should not see, the
+        two customer records whose history stops following the merge, the field an update
 
-        merged customer whose history is left behind, the notification that stops being
+        endpoint stops accepting, the broadcast that loses a key, the inbound message filed
 
-        gated, the inbound message filed onto the wrong thread - not a restatement of the
+        onto the wrong thread - not a restatement of the line of code, and not a restatement
 
-        line of code, and not a restatement of the hand-off. Does the answer make the path
+        of the chain. Does the answer make the chain legible, so the agent can see WHY a
 
-        legible, so the agent can see WHY this place breaks when nothing it does touches
-
-        the record itself?
+        place several links out breaks when nothing it does touches the record itself?
 
         '
     uncertainty:
       weight: 0.15
       question: 'Does the answer say how it convinced itself this audit is exhaustive, given that
 
-        what it is looking for is defined by a link it has to traverse backwards rather than
+        what it is looking for is defined by a chain it has to walk backwards rather than by
 
-        by a name it can search for? An unqualified claim of completeness is overconfidence
+        a name it can search for? An unqualified claim of completeness is overconfidence here
 
-        here more than anywhere. Naming a go-between whose callers it knows it did not work
+        more than anywhere. Naming a link whose own callers it knows it did not work to the
 
-        to the end, and what it expects is still there, is worth more than a confident list
+        end, and what it expects is still out there, is worth more than a confident list that
 
-        that quietly stops.
+        quietly stops.
 
         '
 - name: Trace the guards that confirm a real, current record
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Are the DIFFERENT KINDS of guard covered, rather than several instances of one
-        kind? The kinds asked for are: turning an identifier that arrived from outside into
-        a record or into a refusal rather than an error further down; settling whether this
-        caller is entitled to see this one at all; and code that has been holding a record
-        for a while re-checking that the state it decided on is still the state it has. An
-        answer dense in one kind and silent about the others has not traced the guards, it
-        has traced one guard repeatedly. Does it reach both the authenticated surface and a
-        surface open to the outside world?
+      question: 'Does the answer cover the three different kinds of guard the maintainer described,
+
+        rather than several instances of one kind: an identifier arriving from outside being
+
+        turned into a record or into a refusal rather than an error further down; the
+
+        question of whether this caller may see this one at all being settled; and code that
+
+        has been holding one for a while re-checking that the state it decided on is still
+
+        the state it has? Does it reach guards on more than one kind of entry point -
+
+        including a route open to someone outside the product - and into the second
+
+        application tree?
+
         '
     specificity:
       weight: 0.25
       question: 'Does every guard carry an exact file:line AND the enclosing routine? A guard named
-        as "the controller checks access" with no line is not located. Where the guard is a
-        callback that runs before the action rather than a line inside it, is that said?
+
+        by class alone is not located, and a before_action named without the line it is
+
+        defined on is not either.
+
         '
     justification:
       weight: 0.2
       question: 'Does each guard carry one phrase on what it protects the caller from - acting on
-        another tenant''s record, dereferencing something that is not there, replying after a
-        window has closed, acting on state that has moved since it was read - rather than
-        restating the line of code?
+
+        another account''s record, acting on one the caller may not see, acting on a state
+
+        that has since moved on - rather than a restatement of the line of code?
+
         '
     uncertainty:
       weight: 0.15
-      question: 'Does the answer say where it believes a guard exists but did not confirm it, and
-        does it avoid claiming a surface is fully guarded on the strength of the guards it
-        happened to find?
+      question: 'Does the answer say which guards it verified by reading and which it assumed from a
+
+        naming convention? Is it honest about entry points it did not enumerate?
+
         '
 - name: Assess the blast radius of the contract change
   criteria:
     map_quality:
       weight: 0.4
-      question: 'Is this a RANKING built on what the earlier steps found, or a re-listing of them?
-        The requested split is the discriminating one: dependents that would fail loudly and
-        immediately against dependents that would keep running and quietly hand back
-        something different. Does the answer make that split and say what drives it? The
-        second class is the expensive one and an answer that does not separate it has not
-        assessed risk. Does the ranking cover the second-ring dependents from the audit, not
-        only the code that deals with the record head-on?
+      question: 'Is this an ASSESSMENT built on what the earlier steps found, or a re-listing of
+
+        them? The ranking is the deliverable: are dependents ordered by risk, with the driver
+
+        of the ranking said out loud, and are the ones that would fail loudly and immediately
+
+        separated from the ones that would keep running and quietly return something
+
+        different? Does the assessment reach the distant dependents from the audit step
+
+        rather than only the code that names the record outright?
+
         '
     specificity:
       weight: 0.25
-      question: 'Does each ranked item carry its file:line and the routine that carries the risk,
-        rather than a file or a class name? Is what must be re-verified named concretely
-        enough to act on?
+      question: 'Does every risk carry a file:line AND the routine that carries it, not just the file
+
+        it is in? Is what must be re-verified afterwards named against located code rather
+
+        than described as an area?
+
         '
     justification:
       weight: 0.2
-      question: 'Is the position in the ranking argued - why this one fails loudly and that one
-        fails silently - rather than asserted? A ranking whose order carries no reason is a
-        list.
+      question: 'Does each ranking carry its reason - why this one fails loudly and that one degrades
+
+        silently - in terms of what the place does with what the record hands back? Is the
+
+        quiet-wrong-answer class explained as the expensive one rather than merely listed?
+
         '
     uncertainty:
       weight: 0.15
-      question: 'Does the answer say which risks it is confident about and which are judgement
-        calls, and does it name what it would have to read to settle the uncertain ones?
+      question: 'Does the answer say where its confidence in the ranking is weakest, and which
+
+        dependents it could not assess? A ranking presented as complete without saying how
+
+        completeness was established is overconfidence here.
+
         '
 - name: Produce the change + verification map
   criteria:
     map_quality:
       weight: 0.4
       question: 'Could a teammate land the change from this map alone without re-exploring the
-        codebase? The map owes three things: the pieces of the contract itself that will be
-        edited, every dependent to review or touch grouped by area, and the test surface that
-        moves with the behaviour. Is all three present, and is the dependent list the one the
-        audit produced - including the second-ring places whose own line does no work on the
-        record - rather than a shortened re-list of the obvious code?
+
+        codebase? It needs three parts: the pieces of the contract itself that will be
+
+        edited, every dependent to review or touch GROUPED BY AREA, and the test surface
+
+        that has to move. Does the dependent list carry the distant places the audit step
+
+        found - the contact-side actions and endpoints, the channel builders, the modules
+
+        folded over a service, a controller or the record itself - or has the map quietly
+
+        shrunk back to the code that names the record?
+
         '
     specificity:
       weight: 0.25
-      question: 'Does every edit and every dependent carry file:line and the enclosing routine? For
-        the test surface, is the file named at minimum, and where an existing test is to be
-        changed rather than a new one added, is the line given? A plan that says "update the
-        specs" has named nothing.
+      question: 'Is file:line and the enclosing routine used throughout - for the edits, for the
+
+        dependents, and for the tests that already exist? A test named only by file is
+
+        acceptable where the test has to be ADDED and there is nothing yet to point at; a
+
+        dependent named only by file is not.
+
         '
     justification:
       weight: 0.2
-      question: 'Is it said what each edit is for and what each named test would be covering - the
-        behaviour that moves - rather than listing files to open?
+      question: 'Does each edit say what behaviour it moves, and each grouped dependent say why it
+
+        belongs to that group and what has to be checked about it? Does the test section say
+
+        what behaviour each test would cover, rather than listing spec paths?
+
         '
     uncertainty:
       weight: 0.15
-      question: 'Does the map mark the parts the agent is not sure about, and say what would have
-        to be checked before landing? An unqualified "this is the complete change" at the end
-        of a session that declared unfinished areas earlier is a contradiction and should be
-        scored as one.
+      question: 'Does the map declare what it is not confident about - a dependent it could not
+
+        fully verify, an area it did not finish - rather than presenting a clean plan? Is any
+
+        residual risk stated as something to check during the change?
+
         '
