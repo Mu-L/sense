@@ -148,8 +148,15 @@ def session(root, repo):
     """What the work actually cost, per arm: time, tokens, money, tool calls.
 
     A delta with no cost beside it is half a result. These come from the metrics
-    block the scorer already writes, so the board reports what was billed rather
+    block the scorer already writes, so the board reports what was measured rather
     than a second opinion about it.
+
+    TOKENS ARE THE COST AXIS, NOT DOLLARS. Four of the five arms run on flat-rate
+    plans and report no price at all, so a dollar column would be filled for one
+    model and empty for the rest. token_total_all is built the same way on every
+    harness - billed plus cache reads plus cache writes, with the competitor
+    runners mapping their own fields onto that shape - so it is the one cost
+    number that means the same thing in every column.
     """
     out = {}
     for arm in ("baseline", "sense"):
@@ -158,8 +165,9 @@ def session(root, repo):
             continue
         out[arm] = {
             key: _mean([m.get(key) for m in runs])
-            for key in ("wall_time_seconds", "token_total_billed", "cost_usd",
-                        "tool_calls", "grep_count", "read_count", "mcp_count")
+            for key in ("wall_time_seconds", "token_total_all", "token_total_billed",
+                        "cost_usd", "tool_calls", "grep_count", "read_count",
+                        "mcp_count")
         }
     return out
 

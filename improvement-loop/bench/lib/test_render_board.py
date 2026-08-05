@@ -284,10 +284,12 @@ class ReachLeads(unittest.TestCase):
 class SessionCost(unittest.TestCase):
     """A delta with no cost beside it is half a result."""
 
-    SES = {"baseline": {"wall_time_seconds": 426.0, "token_total_billed": 33066,
+    SES = {"baseline": {"wall_time_seconds": 426.0, "token_total_all": 2394712,
+                        "token_total_billed": 33066,
                         "cost_usd": 2.85, "tool_calls": 44, "grep_count": 40,
                         "read_count": 0, "mcp_count": 0},
-           "sense": {"wall_time_seconds": 414.0, "token_total_billed": 36918,
+           "sense": {"wall_time_seconds": 414.0, "token_total_all": 1748326,
+                     "token_total_billed": 36918,
                      "cost_usd": 2.55, "tool_calls": 26, "grep_count": 14,
                      "read_count": 1, "mcp_count": 8}}
 
@@ -299,10 +301,10 @@ class SessionCost(unittest.TestCase):
     def test_time_is_in_minutes_not_seconds(self):
         self.assertIn("7.1 min on its own, 6.9 min with Sense", self._bullets())
 
-    def test_tokens_and_money_are_both_shown_per_arm(self):
+    def test_the_total_moved_is_shown_beside_what_was_billed(self):
         out = self._bullets()
+        self.assertIn("2,394,712 on its own, 1,748,326 with Sense", out)
         self.assertIn("33,066 on its own, 36,918 with Sense", out)
-        self.assertIn("$2.85 on its own, $2.55 with Sense", out)
 
     def test_the_tool_mix_is_shown_so_the_delta_has_a_shape(self):
         self.assertIn("40 searches and 0 file reads on its own; 8 Sense calls, "
@@ -316,28 +318,35 @@ class SessionCost(unittest.TestCase):
         self.assertEqual(rb._plural(40, "search", "searches"), "40 searches")
 
 
-class UnpricedArms(unittest.TestCase):
-    """GPT, Kimi, GLM and Mistral run flat-rate: total_cost_usd is null by design."""
+class TokensNotDollars(unittest.TestCase):
+    """Four of the five arms are flat-rate and report no price at all."""
 
-    def _col(self, cost):
+    def _col(self, cost=None):
         return {"session": {
-            "baseline": {"wall_time_seconds": 426, "token_total_billed": 33066,
-                         "cost_usd": cost, "grep_count": 40, "read_count": 0,
-                         "mcp_count": 0},
-            "sense": {"wall_time_seconds": 414, "token_total_billed": 36918,
-                      "cost_usd": cost, "grep_count": 14, "read_count": 1,
-                      "mcp_count": 8}}}
+            "baseline": {"wall_time_seconds": 426, "token_total_all": 2394712,
+                         "token_total_billed": 33066, "cost_usd": cost,
+                         "grep_count": 40, "read_count": 0, "mcp_count": 0},
+            "sense": {"wall_time_seconds": 414, "token_total_all": 1748326,
+                      "token_total_billed": 36918, "cost_usd": cost,
+                      "grep_count": 14, "read_count": 1, "mcp_count": 8}}}
 
-    def test_an_unpriced_arm_says_so_instead_of_printing_zero(self):
-        out = "\n".join(rb._session_bullets(self._col(None)))
-        self.assertIn("not priced", out)
-        self.assertIn("flat-rate plan", out)
-        self.assertNotIn("$0.00", out)
+    def test_total_tokens_are_the_cost_axis(self):
+        out = "\n".join(rb._session_bullets(self._col()))
+        self.assertIn("**tokens used** 2,394,712 on its own, 1,748,326 with Sense", out)
+        self.assertIn("cached context included", out)
 
-    def test_an_unpriced_arm_still_reports_time_and_tokens(self):
-        out = "\n".join(rb._session_bullets(self._col(None)))
+    def test_billed_tokens_are_kept_beside_the_total(self):
+        self.assertIn("**of which billed** 33,066 on its own, 36,918 with Sense",
+                      "\n".join(rb._session_bullets(self._col())))
+
+    def test_no_dollar_figure_reaches_the_page_even_when_one_arm_has_a_price(self):
+        out = "\n".join(rb._session_bullets(self._col(cost=2.85)))
+        self.assertNotIn("$", out)
+        self.assertNotIn("cost", out)
+
+    def test_an_arm_with_no_token_total_omits_the_line_rather_than_showing_zero(self):
+        col = self._col()
+        col["session"]["sense"]["token_total_all"] = None
+        out = "\n".join(rb._session_bullets(col))
+        self.assertNotIn("tokens used", out)
         self.assertIn("7.1 min", out)
-        self.assertIn("33,066", out)
-
-    def test_a_priced_arm_still_shows_dollars(self):
-        self.assertIn("$2.85", "\n".join(rb._session_bullets(self._col(2.85))))
