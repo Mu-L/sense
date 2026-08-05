@@ -285,6 +285,9 @@ AUTH_CYCLE_MAX="${AUTH_CYCLE_MAX:-6}"
 record_cycle() {
   local n="$1" label="$2" verdict="$3" root="$VALIDATION_DIR"
   [ "$label" = minibench ] && root="$MINIBENCH_DIR"
+  # An explicit root wins: the paid outcome is read from the PAID cell, not from the
+  # validation pair that preceded it.
+  [ -n "${4:-}" ] && root="$4"
   python3 - "$LOOPDIR/cycles.jsonl" "$n" "$label" "$verdict" "$YAML" "$root" "$REPO" <<'PY'
 import json, os, sys
 out, n, phase, verdict, yaml_path, root, repo = sys.argv[1:8]
@@ -928,6 +931,26 @@ do_report() {
   local cost_out
   cost_out="$(RESULTS_DIR="$rdir" python3 "$LIB/cost_parity.py" "$REPO" 2>&1)"
   echo "$cost_out" | sed 's/^/  /'
+
+  # THE PAID OUTCOME IS RECORDED, NOT ONLY PRINTED. Every decision-bearing number in this
+  # loop is print-only - pergroup, pay_ceiling, cost_parity and credit_table write no files -
+  # and the per-root report.json keeps avg_cited_recall with no per-group breakdown, which is
+  # the one axis the verdict turns on. The discourse WIN (+0.54, dependents +0.71) therefore
+  # survived only in a terminal buffer. Two rows, written from ONE place so neither outcome
+  # can be reached without recording it:
+  #   - the authoring ledger, which until now held only the attempts that were ROUTED BACK
+  #     (record_cycle is called from requeue_author alone), so the attempt that WON - and a
+  #     sub-floor paid cell, which ends at a gate - never appeared in the history that
+  #     01-author.md and 05-handoff.md read to decide what to try next;
+  #   - the vertical's banked index, re-derivable from disk at any time (banked.py rebuild).
+  # The verdict is PASSED IN, never re-derived here: one decision, one author.
+  local paid_verdict=NOT-YET stamp
+  echo "$out" | grep -q '^VERDICT: WIN' && paid_verdict=WIN
+  stamp="$(date -u +%Y-%m-%dT%H:%MZ)"
+  local cyc; cyc="$(state_get "$REPO#authcycle")"; [ -z "$cyc" ] && cyc=0
+  record_cycle "$cyc" report "$paid_verdict" "$rdir"
+  RESULTS_DIR="$rdir" python3 "$LIB/banked.py" record "$REPO" \
+    --out "$VDIR/banked.jsonl" --verdict "$paid_verdict" --at "$stamp" 2>&1 | sed 's/^/  /' || true
 
   if echo "$out" | grep -q '^VERDICT: WIN'; then
     echo "  -> WIN (discriminator >= +0.50). Banking Loop-A harvest."

@@ -121,10 +121,19 @@ class WipeTest(unittest.TestCase):
         self.assertNotIn("FORCE_WIPE=1", driver_code())
 
     def test_both_unscored_call_sites_append(self):
+        """Both unscored runs start at the next FREE run-N of their own root.
+
+        Pinned as `next_run <root>` reaching START_RUN, not as one spelling of it:
+        the validation site now keeps that number in a variable because the phase
+        reads it again afterwards (out_of_clock scopes its judgement to the runs
+        this attempt produced). A test that pins the spelling fails on a rewrite
+        that changed nothing about the behaviour - which is exactly what it did.
+        """
         text = driver_code()
         self.assertEqual(text.count("KEEP_RUNS=1"), 2)
         self.assertIn('START_RUN="$(next_run "$MINIBENCH_DIR")"', text)
-        self.assertIn('START_RUN="$(next_run "$VALIDATION_DIR")"', text)
+        self.assertIn('next_run "$VALIDATION_DIR"', text)
+        self.assertIn('START_RUN="$start_run"', text)
 
 
 class NextRunTest(unittest.TestCase):
