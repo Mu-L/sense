@@ -88,6 +88,10 @@ Entries follow the natural grain of the stage that writes them, not every heartb
 | Loop 5 | `loop5/<repo-or-tier>` | each harvest tier done |
 | Loop 6 | `loop6/event-e` | vertical close |
 | Loop 7 | `loop7/<window>/{open,<fix>-shipped,<fix>-reverted,close}` | window open (worklist); each fix resolution; window close |
+| Cycle 2 (cross-model board) | `cycle2/<repo>/board` | one published board: the arms run, the replication count, the page |
+| - | `bench/<slug>` | a paid cell's verdict, standing on its own (the per-repo WIN entries) |
+| - | `finding/<slug>` | something measured that changes no code yet |
+| - | `correction/<slug>` | a previous entry or commit message that was wrong |
 | - | `ruling/<slug>` | any out-of-loop consequential decision (a owner ruling, an honesty incident, a park) |
 | - | `stopper/<slug>` | **a measurement-instrument bug (rule 10).** Fires the moment it is FOUND, not when it is fixed. MUST carry the re-score blast radius ("N of M runs", `bench/lib/rescore_diff.py`) and what it retro-invalidates. `ledger_check.py` rule 10 blocks a quiet scorer change. |
 

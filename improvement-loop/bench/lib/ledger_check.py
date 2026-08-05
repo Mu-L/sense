@@ -97,6 +97,13 @@ KEY_CONTRACT = [
         r"^loop5/[^/]+$",
         r"^loop6/event-e$",
         r"^loop7/[^/]+/(open|close|.+-shipped|.+-reverted)$",
+        # Added 2026-08-05: three write points the ledger had been using since July
+        # without the table ever naming them, plus cycle 2's published board. Rule 9
+        # was flagging real entries as illegal, which makes the rule the error.
+        r"^bench/[^/]+$",
+        r"^finding/[^/]+$",
+        r"^correction/[^/]+$",
+        r"^cycle2/[^/]+/board$",
     )
 ]
 # Forward-only by ruling: the entries recorded before KEY_CONTRACT_FROM keep
