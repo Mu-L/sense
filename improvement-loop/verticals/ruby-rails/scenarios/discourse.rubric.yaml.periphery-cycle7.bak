@@ -1,0 +1,202 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 7. The ask is cycle 4's verbatim, so this rubric is cycle 4's with the
+# justification examples re-pointed at the twelve rows that are actually in gold now
+# (the six free rows were dropped and four plugin rows replaced them).
+#
+# WHY map_quality carries the most weight here: this scenario's axis is SCOPE, not
+# darkness. Every dependent in the scored group is a one-touch call site inside a routine
+# named after some other job, and the twelve of them are spread across twelve distinct
+# areas in five separate trees - the application's scheduled jobs, its rake tasks, its
+# import scripts, its migration tooling, and five bundled plugins. A search route has to
+# decide where to point before it can enumerate, and every measured baseline route on this
+# repo pointed at a subset of the application tree. Breadth across areas is what is scored.
+#
+# WHY specificity demands the enclosing routine: every scored row is a call inside a def
+# (or, for the narrative-bot row, inside a Proc in a state table), so the routine is
+# demanded for all of them, and it is the part a search result does not print.
+#
+# TWO steps, matching the cycle-7 two-step probe. The cycle-6 rubric is kept at
+# discourse.rubric.yaml.holder-widest-cycle6.bak, cycle 5's at
+# discourse.rubric.yaml.holder-subset-cycle5.bak, cycle 4's at
+# discourse.rubric.yaml.probe-2step-cycle4.bak.
+#
+# Step names MUST match scenarios/discourse.yaml exactly (the judge pairs by name).
+
+audience: 'An AI coding agent that will use this answer to safely rework the Discourse category
+
+  class - the container topics are filed under, carrying its own permissions, settings and
+
+  hierarchy. Score for that agent, not a human reader and not a docs page. A perfect answer
+
+  leaves the agent able to change that class knowing two things: how the rest of the system
+
+  gets hold of one of these records when all it holds is the human-readable path out of a
+
+  URL - traced through the routines that make that path up - and every other place that
+
+  would have to be reviewed or changed with the class, each pinned to an exact file:line
+
+  with the consequence of the change on that place stated. The dependents that matter are
+
+  not the code named after this class. They are single touches inside routines doing some
+
+  other job entirely - optimising uploads during a migration, appending imported records in
+
+  sort order, deciding whether two records being merged are the same one, deciding whether
+
+  an incoming import record already exists, walking every record to re-feed a search index,
+
+  finding the records whose search rows are stale, migrating one plugin''s data into
+
+  another, skipping a stored integration rule that no longer resolves, casting a user-typed
+
+  query parameter, narrowing an embedding suggestion to what a user may post in, expanding
+
+  a configured parent into its descendants, staging a bot tutorial - and they are scattered
+
+  across the application''s scheduled jobs, its rake tasks, its import scripts, its
+
+  migration tooling and its bundled plugins. A weak answer covers the application tree
+
+  thoroughly and treats the rest of the repository as if it were not there; or collapses a
+
+  run of dependents into one line with a shared reason and no location on any of them; or
+
+  gives file:line with nothing said about what would break, which leaves the agent knowing
+
+  where the name appears and not what its change would do.
+
+  '
+steps:
+- name: Map the category contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is the slug-path resolution path traced end to end as one connected path, rather
+
+        than listed as places the class is mentioned? A strong answer reaches the
+
+        class-level entry point every lookup bottoms out in, the trailing-id variant, the
+
+        one-level lookup the hierarchy walk is built from, the hierarchy walk itself, the
+
+        HTTP front door, the rename path that keeps a stored slug in step, and the
+
+        retired-path redirect. Credit is for showing how they connect, not for the count.
+
+        Could the next step act from this map with small targeted lookups rather than a
+
+        fresh exploration?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every place carry an exact file:line AND the name of the routine it lives
+
+        in? A bare filename is not specific. A file:line with no routine named around it
+
+        is not specific - the maintainer asked whose code it is, not where the character
+
+        offset falls. A routine named without the file:line where it is defined is not
+
+        specific either.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it contributes to the resolution path -
+
+        which input form it accepts, what it disambiguates, what it falls back to, why it
+
+        refuses? Do the closing sentences say what a rework must preserve in terms of
+
+        behaviour, rather than restating the method names?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate what it verified by reading from what it inferred from a
+
+        name? Guessing at a fallback it never opened is worse than saying it did not
+
+        check. Is completeness claimed without saying how it was established?
+
+        '
+- name: Audit every dependent of the category contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'THE DISCRIMINATOR, and it is BREADTH OF AREA. Does the audit reach dependents
+
+        outside the part of the repository that serves web requests, or does it cover the
+
+        application thoroughly and stop there? The dependents that decide this step are
+
+        single touches inside routines named after some other job, and they sit as much in
+
+        the migration tooling, the import scripts, the maintenance and plugin rake tasks,
+
+        the one-off jobs and the bundled plugins as in the application itself. An answer
+
+        that is dense in one tree and silent in the others has enumerated inside one search
+
+        scope and mistaken that for the codebase. Is the answer organised by area with each
+
+        area worked to the end, and are areas it could not finish declared as unfinished
+
+        rather than quietly summarised? Re-listing the class''s own surface, or the join
+
+        models named after it, is not this question.
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does EVERY dependent carry its own exact file:line AND the name of the routine
+
+        the dependency sits inside? Every dependent in scope here is a call inside a
+
+        routine, so a file:line with no routine named around it is not specific, and a
+
+        routine named without a file:line is not specific either. Several dependents named
+
+        together on one line as a set that shares a reason is the failure this criterion
+
+        exists to catch: however correct the shared reason is, it is one item, not a set
+
+        of located dependents, and it should be scored as one. A bare filename does not
+
+        count.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each dependent carry one phrase on what that place would start getting wrong
+
+        if the class changed under it? The consequence must be about that place''s own job
+
+        - what breaks for the uploads being optimised, the import being appended or merged,
+
+        the search index being rebuilt or swept, the plugin data being migrated, the stored
+
+        integration rule being skipped, the saved query parameter being cast, the
+
+        suggestion being narrowed, the template list being expanded, the tutorial being
+
+        staged - not a restatement of the line of code.
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say how it convinced itself the audit is exhaustive, and name
+
+        where it is likely still thin? An unqualified claim of completeness over a
+
+        codebase this size is overconfidence. Naming an area it knows it did not finish,
+
+        and what it left there, is worth more than a confident list that quietly stops.
+
+        '
