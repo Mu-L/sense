@@ -17,7 +17,6 @@
 
 headline      claude-opus-5           2
 judge         claude-opus-4-7         1
-confirmation  claude-fable-5          2
 confirmation  gpt-5.6-sol             2
 confirmation  kimi-for-coding/k3      2
 confirmation  glm-5.2:cloud           2
