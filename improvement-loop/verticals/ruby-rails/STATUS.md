@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-04 13:23 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-05 08:01 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -8,32 +8,69 @@
 
 | repo | phase | verdict on disk |
 |---|---|---|
+| discourse | done | - (no agent at this phase) |
 | mastodon | done | - (no agent at this phase) |
 | rails | done | - (no agent at this phase) |
 
 Resume: `VERTICAL=ruby-rails bash bench/drivers/vertical-loop.sh <repo>`
 
+## Banked cells (`verticals/ruby-rails/banked.jsonl`)
+
+| repo | verdict | overall Δ | best group | runs | scenario |
+|---|---|---|---|---|---|
+| discourse | WIN | +0.54 | dependents +0.71 | 2/2 | `1def723310067e48` |
+| mastodon | WIN | +0.47 | dependents +0.78 | 2/2 | `27dfc6000a5e98f3` |
+| rails | WIN | +0.27 | dependents +0.56 | 3/3 | `3f210bcde96c18e1` |
+
+_Rows are re-derivable from the results tree: `banked.py rebuild verticals/<key>`._
+
 ## Results cells on disk (`verticals/ruby-rails/results`)
 
 - `claude-opus-4-8/validation/f576efebe028db23/baseline/mastodon` - 1 run(s)
 - `claude-opus-4-8/validation/f576efebe028db23/sense/mastodon` - 1 run(s)
+- `claude-opus-5/1def723310067e48/baseline/discourse` - 2 run(s)
+- `claude-opus-5/1def723310067e48/sense/discourse` - 2 run(s)
 - `claude-opus-5/27dfc6000a5e98f3/baseline/mastodon` - 2 run(s)
 - `claude-opus-5/27dfc6000a5e98f3/sense/mastodon` - 2 run(s)
 - `claude-opus-5/3f210bcde96c18e1/baseline/rails` - 3 run(s)
 - `claude-opus-5/3f210bcde96c18e1/sense/rails` - 3 run(s)
+- `claude-opus-5/minibench/1b6e6d97c70982fa/minibench/1b6e6d97c70982fa/baseline/discourse` - 1 run(s)
+- `claude-opus-5/minibench/1b6e6d97c70982fa/minibench/1b6e6d97c70982fa/sense/discourse` - 1 run(s)
+- `claude-opus-5/minibench/55662cc22444c233/baseline/discourse` - 1 run(s)
+- `claude-opus-5/minibench/55662cc22444c233/sense/discourse` - 1 run(s)
+- `claude-opus-5/minibench/73e80a260d06f08b/baseline/discourse` - 1 run(s)
+- `claude-opus-5/minibench/73e80a260d06f08b/sense/discourse` - 1 run(s)
+- `claude-opus-5/minibench/7c9558546ad9e2db/baseline/discourse` - 1 run(s)
+- `claude-opus-5/minibench/7c9558546ad9e2db/sense/discourse` - 1 run(s)
+- `claude-opus-5/minibench/82b4eae75397a62f/baseline/discourse` - 1 run(s)
+- `claude-opus-5/minibench/82b4eae75397a62f/sense/discourse` - 1 run(s)
+- `claude-opus-5/minibench/a54d1d3cface69e6/minibench/a54d1d3cface69e6/baseline/discourse` - 1 run(s)
+- `claude-opus-5/minibench/a54d1d3cface69e6/minibench/a54d1d3cface69e6/sense/discourse` - 1 run(s)
+- `claude-opus-5/minibench/cfba4f24dedacca1/baseline/discourse` - 1 run(s)
+- `claude-opus-5/minibench/cfba4f24dedacca1/sense/discourse` - 2 run(s)
+- `claude-opus-5/minibench/f4283b9e2d348040/baseline/discourse` - 1 run(s)
+- `claude-opus-5/minibench/f4283b9e2d348040/sense/discourse` - 1 run(s)
 - `claude-opus-5/minibench/f5335174fcda4ffa/baseline/mastodon` - 1 run(s)
 - `claude-opus-5/minibench/f5335174fcda4ffa/sense/mastodon` - 2 run(s)
 - `claude-opus-5/minibench/unversioned/baseline/mastodon` - 1 run(s)
+- `claude-opus-5/validation/077b1225bb1b78e0/baseline/discourse` - 1 run(s)
+- `claude-opus-5/validation/077b1225bb1b78e0/sense/discourse` - 2 run(s)
+- `claude-opus-5/validation/1def723310067e48/baseline/discourse` - 1 run(s)
+- `claude-opus-5/validation/1def723310067e48/sense/discourse` - 1 run(s)
 - `claude-opus-5/validation/27dfc6000a5e98f3/baseline/mastodon` - 1 run(s)
 - `claude-opus-5/validation/27dfc6000a5e98f3/sense/mastodon` - 1 run(s)
+- `claude-opus-5/validation/441f437eecaff61a/baseline/discourse` - 7 run(s)
+- `claude-opus-5/validation/441f437eecaff61a/sense/discourse` - 12 run(s)
 - `claude-opus-5/validation/f576efebe028db23/baseline/mastodon` - 5 run(s)
 - `claude-opus-5/validation/f576efebe028db23/sense/mastodon` - 5 run(s)
+- `claude-opus-5/validation/f6a017bb2fc1451e/validation/f6a017bb2fc1451e/baseline/discourse` - 1 run(s)
+- `claude-opus-5/validation/f6a017bb2fc1451e/validation/f6a017bb2fc1451e/sense/discourse` - 1 run(s)
 - `claude-opus-5/validation/validation/baseline/rails` - 1 run(s)
 - `claude-opus-5/validation/validation/sense/rails` - 1 run(s)
 
 ## Ledger
 
-- latest entry: 2026-08-04 | stopper/gold-matcher-path-only | RULED: a class name plus a line is a citation
+- latest entry: 2026-08-04 | bench/discourse-paid-WIN | the loop recovered from its own failure mode, unattended
 - full narrative: `LEDGER.md` (this folder)
 - decision-errors intake: 0 open incident(s) (`../../docs/decision-errors.md`)
 

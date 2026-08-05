@@ -30,6 +30,48 @@ NEXT_STEPS="$DOC_DIR/next-steps.md"
 LEDGER="$DOC_DIR/LEDGER.md"
 STAMP="$(date '+%Y-%m-%d %H:%M %Z')"
 
+banked_section() {
+  # THE SCORES, not the inventory. Every decision-bearing number in this loop is
+  # print-only (pergroup, pay_ceiling, cost_parity), so until banked.jsonl existed a
+  # reader of STATUS.md could see that a repo was `done` and never learn what it
+  # scored. Rendered from the index, never recomputed here: one derivation of a
+  # verdict, and `banked.py rebuild` is what refreshes it from disk.
+  local banked="$DOC_DIR/banked.jsonl"
+  if [ ! -s "$banked" ]; then
+    echo "_no banked cells yet (\`python3 bench/lib/banked.py rebuild verticals/${KEY}\`)_"
+    return
+  fi
+  python3 - "$banked" <<'PY'
+import json, sys
+
+rows = []
+for line in open(sys.argv[1]):
+    line = line.strip()
+    if line:
+        try:
+            rows.append(json.loads(line))
+        except ValueError:
+            continue
+if not rows:
+    print("_banked.jsonl holds no readable rows_")
+    raise SystemExit(0)
+print("| repo | verdict | overall Δ | best group | runs | scenario |")
+print("|---|---|---|---|---|---|")
+for r in sorted(rows, key=lambda x: (x.get("repo") or "")):
+    groups = r.get("groups") or {}
+    best = max(groups.items(), key=lambda kv: kv[1].get("delta", 0), default=(None, {}))
+    runs = r.get("runs") or {}
+    ver = (r.get("scenario_version") or "").replace("sha256:", "")[:16]
+    print("| %s | %s | %+.2f | %s %+.2f | %s/%s | `%s` |" % (
+        r.get("repo"), r.get("verdict"),
+        (r.get("overall") or {}).get("delta", 0.0),
+        best[0] or "-", best[1].get("delta", 0.0),
+        runs.get("baseline", 0), runs.get("sense", 0), ver))
+print()
+print("_Rows are re-derivable from the results tree: `banked.py rebuild verticals/<key>`._")
+PY
+}
+
 cells_section() {
   if [ -d "$RESULTS" ]; then
     local found=0
@@ -214,6 +256,10 @@ else:
   echo "## Loop position (\`.loop-state.json\`)"
   echo
   loop_position_section
+  echo
+  echo "## Banked cells (\`verticals/${KEY}/banked.jsonl\`)"
+  echo
+  banked_section
   echo
   echo "## Results cells on disk (\`verticals/${KEY}/results\`)"
   echo
