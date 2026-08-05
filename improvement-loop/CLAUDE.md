@@ -54,6 +54,21 @@ reached* - need a second, DIFFERENT probe before they are stated at all.
 
 ## Standing laws
 
+- **A SCRIPT IS NOT A RULE UNTIL YOU PROVE IT RUNS AND IT GATES.** Before citing a script as a
+  constraint, or opening it to edit, establish both. **Used** has three states, not two:
+  *invoked* (a driver, plan or agent names its path), *imported* (a live module imports it), or
+  *cold*. Import probes are UNANCHORED - `scorer.py` imports `grounding` from inside a
+  function, and a `^(import|from)` probe misses it. **Enforces** is separate: a live script
+  that only builds a report string constrains nothing; the test is whether it exits non-zero on
+  the condition. Precedent: "RUNS=2 binds the headline arm only" was quoted as a law from
+  `select_final.py` (cold) and `matrix.py` (live, but the line lives in a function that renders
+  a sentence). Nothing enforced it.
+- **NEVER CHANGE A SCRIPT ANOTHER CYCLE'S PLANS USE.** Verifying such a change costs a full
+  cycle - hours and paid sessions - and it fails silently, as a slightly different score rather
+  than a crash. A new cycle reads artifacts off disk and writes its OWN scripts. Every shared
+  instrument already writes its output down (`scored.json`, `sense-io.jsonl`, `banked.jsonl`),
+  so reaching into an older cycle's code is never necessary. `transcript_miss.py` is the
+  pattern: read-only, $0, over transcripts that already exist.
 - **NO PREDICTORS BEFORE A SCENARIO EXISTS.** A win is CRAFTED for a repo, never detected by
   a script beforehand. Anything scoring a repo before there is a task to score it against is
   a predictor. A **killer** runs against a scenario that exists and may kill it; a
