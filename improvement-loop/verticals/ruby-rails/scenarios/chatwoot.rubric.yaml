@@ -1,0 +1,373 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 4 on chatwoot. Supersedes the cycle-3 rubric, kept at
+# scenarios/chatwoot.rubric.yaml.caller-of-a-toucher-cycle3.bak. Cycle 3's scenario told the
+# arm the dependent's file "names the go-between while never naming the record at all"; the
+# sense arm obeyed it, excluded thirteen of fifteen gold files on that ground and scored
+# 2 of 15 = 0.133. Every trace of that clause is gone from the scenario, and the two places
+# where THIS rubric still leaned on it - step 2's specificity and justification - are
+# rewritten below. Nothing in this rubric may reward or require an arm to reason about what
+# text a file does or does not contain: thirteen of the fifteen scored files DO write the
+# record's name and they are gold anyway.
+#
+# WHAT REPLACES IT: the demand is now a two-link CALL PATH per place - the caller, the
+# go-between it hands the work to, and the location of the hand-off. An entry that names
+# a place but cannot say what it hands off to has not answered the question asked, however
+# real the dependency is. That is what step 2's map_quality and specificity score.
+#
+# WHY step 2 penalises the direct ring: the maintainer explicitly excluded the code that
+# deals with the record head-on, because that code is what a name search returns and the
+# rework already sees it. Re-listing it is answering a different question, and padding
+# with it should pull map_quality down rather than leave it flat.
+#
+# SEVEN steps, matching the expanded session (plans/03-expand.md). Step names MUST match
+# scenarios/chatwoot.yaml exactly and in order (the judge pairs by name).
+#
+# WHAT THE EXPANSION MOVED IN HERE: nothing that scores the discriminator. The mini-bench's
+# two criteria blocks are carried over BYTE-IDENTICAL into slots 2 and 4 - "Map the
+# conversation-record contract" and "Audit every dependent of the conversation-record
+# contract" - and five new blocks were written around them. Slot 4 is the discriminator and
+# its four criteria are untouched; moving them would stop the mini-bench's +0.60 from
+# describing this scenario.
+#
+# The audience paragraph below is the mini-bench's, extended by one sentence naming the
+# session shape. Everything it says about the hard half is unchanged.
+
+audience: 'An AI coding agent that will use this answer to safely rework the Chatwoot
+  conversation record - the object the whole product is organised around, that a customer''s
+  back-and-forth with the support team is filed under. Score for that agent, not a human
+  reader and not a docs page. A perfect answer leaves the agent able to change that class
+  knowing two things: how the system gets hold of the right one of these when a reply
+  arrives from outside and all it holds are the mail headers - traced through the routines
+  that make that path up - and then, separately, which code would change behaviour under
+  the rework even though nothing on its own line goes near the record. That second part is
+  the hard half and it is deliberately narrow. It is not the code that deals with the
+  record head-on: that code says the record''s name out loud, a search returns it, and the
+  maintainer said they already have it. It is the ring one step outside - code that reaches
+  the record only at second hand, by handing the work off to some other object, where it is
+  that object and not this code that touches the record. So each entry there is a small
+  path: a caller, the go-between it hands to, and the exact file:line where the hand-off is
+  made, plus what that place would start getting wrong. Those callers sit scattered across
+  the application tree and a second application tree carrying the paid edition, in actions,
+  controllers for the dashboard and for the embedded widget, model concerns, channel
+  message builders, notification building and push presenters. A weak answer re-lists the
+  code that deals with the record directly - the finder strategies, the query builders, the
+  services that write to it - because a name search returns them, and that is exactly what
+  was excluded; or names a caller but cannot say what it hands the work to, which leaves
+  the path unverified; or gives a bare filename; or gives file:line with nothing said about
+  what would break, which leaves the agent knowing where to look and not what its change
+  would do. The whole thing is worked as one session in order, so later steps are scored on
+  whether they build on what the earlier ones established rather than starting over: an
+  answer that re-explores the codebase at step 6 has wasted the map it already had.
+
+  '
+steps:
+- name: Orient in the codebase
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Does the answer give the shape of the project and place the record inside it -
+        what the application is for, how the trees are laid out, where the record lives, and
+        what shared pieces its behaviour is assembled from - rather than reciting a directory
+        listing? Is it a map the next step can act from with small targeted lookups, or would
+        the next step have to explore again?
+        '
+    specificity:
+      weight: 0.25
+      question: 'Are the claims anchored at file:line rather than at directory names? A statement
+        about where something lives that carries no path is not orientation.
+        '
+    justification:
+      weight: 0.2
+      question: 'Does the answer say why each piece it names matters to the rework ahead, rather
+        than describing the repository for its own sake?
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer distinguish what it read from what it inferred from names and
+        conventions, and say which parts of the layout it has not looked at?
+        '
+- name: Map the conversation-record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is the inbound-mail matching path traced end to end as one connected path,
+
+        rather than listed as places the class is mentioned? A strong answer reaches the
+
+        routing decision that admits an arriving message to this path, the piece that runs
+
+        the candidate matches in a declared order and stops at the first hit, each separate
+
+        attempt and the identifier it keys off, the fallback that prepares a fresh record
+
+        when none matched, and the point where a merely prepared record is made permanent.
+
+        Credit is for showing how they connect and in what order, not for the count. Could
+
+        the next step act from this map with small targeted lookups rather than a fresh
+
+        exploration?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every place carry an exact file:line AND the name of the routine it lives
+
+        in? A bare filename is not specific. A file:line with no routine named around it
+
+        is not specific - the maintainer asked whose code it is, not where the character
+
+        offset falls. A routine named without the file:line where it is defined is not
+
+        specific either.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it contributes to the matching path -
+
+        which identifier it keys off, what it scopes the match by, what it falls back to,
+
+        why it refuses? Do the closing sentences say what a rework must preserve in terms
+
+        of behaviour, rather than restating the method names?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate what it verified by reading from what it inferred from a
+
+        name? Guessing at a fallback it never opened is worse than saying it did not
+
+        check. Is completeness claimed without saying how it was established?
+
+        '
+- name: Trace how one of these records is created and taken apart
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is the lifecycle followed as one connected path - the decision that a new one is
+        needed, it being brought into existence, later changed, and finally removed - with
+        what runs around each of those moments? The centre of this step is the piece that
+        announces every appearance and change, and that it announces along TWO routes at
+        once: one that runs in the caller''s own thread and one that enqueues the same event
+        for later. An answer that finds the announcement but treats it as a single route has
+        missed the half of the fan-out that matters most to a contract rework. Does the
+        answer reach at least one destination on each route, and the removal path, or does it
+        stop at creation?
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every layer carry an exact file:line AND the routine it lives in? Is each
+        one marked inline or deferred, and is the marking argued from the code rather than
+        assumed from a name? Where work is handed off, is it said what the receiver is handed
+        - the record object itself, or something it has to look the record up from again?
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each layer carry one phrase on what it contributes, and does the answer say
+        why the inline/deferred split matters to a rework of what the record hands back -
+        that a deferred receiver is handed the record across a serialization boundary and an
+        inline one is not?
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate the destinations it verified by reading from the ones it
+        assumed followed from a registration list? Declaring a route it did not walk to the
+        end is worth more than a confident list that quietly stops.
+        '
+- name: Audit every dependent of the conversation-record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'THE DISCRIMINATOR, and it is about a RING, not a count. The maintainer asked
+
+        only for code that reaches the record at second hand - code whose own line hands
+
+        the work to another object, where it is that object and not this code that touches
+
+        the record. Does the audit sit in that ring? A strong answer is dense in callers of
+
+        the record''s handlers: the endpoint or action that invokes a service and lets the
+
+        service do the writing; the concern mixed into the record that passes itself out to
+
+        a service or a job; the channel builder whose routine calls out to a scope and a
+
+        builder rather than querying anything; the notification path that defers the access
+
+        decision to a policy object; the presenter payload whose every key is forwarded
+
+        through a wrapper. A weak answer re-lists the code that deals with the record
+
+        head-on - the lookup strategies, the query builders, the services and jobs that
+
+        write to it - because that is what a name search returns, and it is exactly what
+
+        was excluded. Padding the list with excluded entries is worse than a shorter list
+
+        that stays in the ring, and should pull this criterion down. Does the answer reach
+
+        BEYOND the main application tree into the second application tree carrying the paid
+
+        edition, and across actions, dashboard and widget controllers, model concerns,
+
+        channel builders and presenters, or is it dense in one kind of place and silent
+
+        about the rest? Areas it could not finish should be declared unfinished rather than
+
+        quietly summarised.
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does EVERY place carry its own exact file:line AND the name of what it hands the
+
+        work to? Both, because the entry is a path and half a path locates nothing. A bare
+
+        filename does not count - a file is not where a hand-off happens, a line is, and the
+
+        agent has to be able to jump to it. A file:line
+
+        with no go-between named is an assertion the agent cannot check, and should be
+
+        scored weaker than one that names the object the work is handed to. Several places
+
+        named together on one line as a set that shares a go-between is the failure this
+
+        criterion exists to catch: however correct the shared reason is, it is one item,
+
+        not a set of located dependents, and it should be scored as one.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it would start getting wrong if the
+
+        record changed under it? The consequence must be about that place''s own job - the
+
+        agent who stops being assigned, the activity message that stops being posted, the
+
+        push payload that loses a field, the attachment list an agent should not see, the
+
+        merged customer whose history is left behind, the notification that stops being
+
+        gated, the inbound message filed onto the wrong thread - not a restatement of the
+
+        line of code, and not a restatement of the hand-off. Does the answer make the path
+
+        legible, so the agent can see WHY this place breaks when nothing it does touches
+
+        the record itself?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say how it convinced itself this audit is exhaustive, given that
+
+        what it is looking for is defined by a link it has to traverse backwards rather than
+
+        by a name it can search for? An unqualified claim of completeness is overconfidence
+
+        here more than anywhere. Naming a go-between whose callers it knows it did not work
+
+        to the end, and what it expects is still there, is worth more than a confident list
+
+        that quietly stops.
+
+        '
+- name: Trace the guards that confirm a real, current record
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Are the DIFFERENT KINDS of guard covered, rather than several instances of one
+        kind? The kinds asked for are: turning an identifier that arrived from outside into
+        a record or into a refusal rather than an error further down; settling whether this
+        caller is entitled to see this one at all; and code that has been holding a record
+        for a while re-checking that the state it decided on is still the state it has. An
+        answer dense in one kind and silent about the others has not traced the guards, it
+        has traced one guard repeatedly. Does it reach both the authenticated surface and a
+        surface open to the outside world?
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every guard carry an exact file:line AND the enclosing routine? A guard named
+        as "the controller checks access" with no line is not located. Where the guard is a
+        callback that runs before the action rather than a line inside it, is that said?
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each guard carry one phrase on what it protects the caller from - acting on
+        another tenant''s record, dereferencing something that is not there, replying after a
+        window has closed, acting on state that has moved since it was read - rather than
+        restating the line of code?
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say where it believes a guard exists but did not confirm it, and
+        does it avoid claiming a surface is fully guarded on the strength of the guards it
+        happened to find?
+        '
+- name: Assess the blast radius of the contract change
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is this a RANKING built on what the earlier steps found, or a re-listing of them?
+        The requested split is the discriminating one: dependents that would fail loudly and
+        immediately against dependents that would keep running and quietly hand back
+        something different. Does the answer make that split and say what drives it? The
+        second class is the expensive one and an answer that does not separate it has not
+        assessed risk. Does the ranking cover the second-ring dependents from the audit, not
+        only the code that deals with the record head-on?
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does each ranked item carry its file:line and the routine that carries the risk,
+        rather than a file or a class name? Is what must be re-verified named concretely
+        enough to act on?
+        '
+    justification:
+      weight: 0.2
+      question: 'Is the position in the ranking argued - why this one fails loudly and that one
+        fails silently - rather than asserted? A ranking whose order carries no reason is a
+        list.
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say which risks it is confident about and which are judgement
+        calls, and does it name what it would have to read to settle the uncertain ones?
+        '
+- name: Produce the change + verification map
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Could a teammate land the change from this map alone without re-exploring the
+        codebase? The map owes three things: the pieces of the contract itself that will be
+        edited, every dependent to review or touch grouped by area, and the test surface that
+        moves with the behaviour. Is all three present, and is the dependent list the one the
+        audit produced - including the second-ring places whose own line does no work on the
+        record - rather than a shortened re-list of the obvious code?
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every edit and every dependent carry file:line and the enclosing routine? For
+        the test surface, is the file named at minimum, and where an existing test is to be
+        changed rather than a new one added, is the line given? A plan that says "update the
+        specs" has named nothing.
+        '
+    justification:
+      weight: 0.2
+      question: 'Is it said what each edit is for and what each named test would be covering - the
+        behaviour that moves - rather than listing files to open?
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the map mark the parts the agent is not sure about, and say what would have
+        to be checked before landing? An unqualified "this is the complete change" at the end
+        of a session that declared unfinished areas earlier is a contradiction and should be
+        scored as one.
+        '
