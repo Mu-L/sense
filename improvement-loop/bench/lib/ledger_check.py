@@ -155,11 +155,20 @@ def check_duplicate_keys(entries):
 
 
 def results_cells(results_dir):
-    """Cells = parents of run-* dirs at results/<model>/<arm>/<repo>/run-N."""
+    """Cells = the parent of every run-* directory, at whatever depth it sits.
+
+    This used to glob a fixed `*/*/*/run-*` (model/arm/repo/run-N). One-root-per-
+    question put the scenario version between the model and the arm, and the
+    validation and minibench roots add a segment of their own, so the fixed glob
+    matched NOTHING and rule 4 has been inert ever since: it reported "0 results
+    cells covered" and passed. A depth-independent walk cannot go stale the next
+    time a segment is added, which is the same lesson the segment guard in
+    bench-paths.sh had to learn.
+    """
     cells = set()
     if not results_dir.is_dir():
         return cells
-    for run in results_dir.glob("*/*/*/run-*"):
+    for run in results_dir.rglob("run-*"):
         if run.is_dir():
             cells.add(run.parent.relative_to(results_dir).as_posix())
     return cells

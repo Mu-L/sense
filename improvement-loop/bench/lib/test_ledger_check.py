@@ -17,7 +17,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from ledger_check import (KEY_CONTRACT, VERDICT_KEY, check_provenance, check_stopper,
+from ledger_check import (KEY_CONTRACT, VERDICT_KEY, results_cells,
+                          check_provenance, check_stopper,
                           parse_entries)
 
 
@@ -155,3 +156,33 @@ class StopperDormancyTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ResultsCellsAtAnyDepth(unittest.TestCase):
+    """Rule 4 globbed a fixed depth and went inert when a segment was inserted."""
+
+    def _cells(self, *paths):
+        import pathlib
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            for p in paths:
+                (root / p).mkdir(parents=True)
+            return results_cells(root)
+
+    def test_a_versioned_cell_is_seen(self):
+        self.assertEqual(self._cells("m/aaaa/sense/repo/run-1"), {"m/aaaa/sense/repo"})
+
+    def test_a_legacy_cell_without_a_version_is_still_seen(self):
+        self.assertEqual(self._cells("m/sense/repo/run-1"), {"m/sense/repo"})
+
+    def test_a_validation_root_adds_its_own_segment_and_is_still_seen(self):
+        self.assertEqual(self._cells("m/validation/aaaa/sense/repo/run-2"),
+                         {"m/validation/aaaa/sense/repo"})
+
+    def test_every_shape_at_once(self):
+        self.assertEqual(len(self._cells("m/aaaa/sense/r1/run-1", "m/sense/r2/run-1",
+                                         "m/minibench/bbbb/baseline/r3/run-3")), 3)
+
+    def test_a_tree_with_no_runs_yields_nothing(self):
+        self.assertEqual(self._cells("m/aaaa/sense/repo"), set())
