@@ -224,20 +224,32 @@ class Charts(unittest.TestCase):
         out = "\n".join(rb._delta_chart(data, rb.load_copy()))
         self.assertEqual(out, "")
 
-    def test_each_model_gets_a_pie_of_where_its_answers_came_from(self):
-        avg = {rb.REACH: 21, rb.IGNORED: 4, rb.FOUND_ANYWAY: 12, rb.MISSED: 1}
-        out = "\n".join(rb._provenance_chart(_col(_mech([], None), model="m0"),
-                                             rb.load_copy(), avg))
+    def _cov(self, **kw):
+        col = _col(_mech([], None), model="m0")
+        col["coverage"] = {"both": 25, "sense_only": 11, "baseline_only": 0,
+                           "neither": 2, "total": 38}
+        col["coverage"].update(kw)
+        return "\n".join(rb._coverage_chart(col, rb.load_copy(), 38))
+
+    def test_the_pie_splits_by_arm_so_the_value_is_visible(self):
+        out = self._cov()
         self.assertIn("pie showData", out)
-        self.assertIn('"From Sense, and used" : 21', out)
-        self.assertIn('"Found without Sense" : 12', out)
+        self.assertIn('"Found only with Sense" : 11', out)
+        self.assertIn('"Found either way" : 25', out)
+
+    def test_the_sense_only_slice_is_listed_first(self):
+        out = self._cov()
+        self.assertLess(out.index("Found only with Sense"), out.index("Found either way"))
 
     def test_an_empty_slice_is_left_out_rather_than_drawn_as_zero(self):
-        avg = {rb.REACH: 23, rb.IGNORED: 0, rb.FOUND_ANYWAY: 0, rb.MISSED: 0}
-        out = "\n".join(rb._provenance_chart(_col(_mech([], None), model="m0"),
-                                             rb.load_copy(), avg))
-        self.assertIn('"From Sense, and used" : 23', out)
-        self.assertNotIn("not used", out)
+        self.assertNotIn("only without Sense", self._cov())
+
+    def test_a_slice_the_baseline_alone_reached_is_still_shown(self):
+        self.assertIn('"Found only without Sense" : 3', self._cov(baseline_only=3))
+
+    def test_a_column_with_no_coverage_gets_no_pie(self):
+        col = _col(_mech([], None), model="m0")
+        self.assertEqual(rb._coverage_chart(col, rb.load_copy(), 38), [])
 
     def test_the_page_explains_how_a_number_is_produced(self):
         out = rb.render(self._multi())
@@ -247,3 +259,58 @@ class Charts(unittest.TestCase):
     def test_every_mermaid_block_is_closed(self):
         out = rb.render(self._multi())
         self.assertEqual(out.count("```mermaid"), out.count("```") - out.count("```mermaid"))
+
+
+class ReachLeads(unittest.TestCase):
+    """A delta says the score moved. Reach says what it could not otherwise find."""
+
+    def test_the_block_opens_with_what_it_could_not_find_alone(self):
+        col = _col(_mech([_counts(reach=18)], rb.REACH))
+        col["sense_only_reach"] = ["a", "b", "c"]
+        line = rb._reach_line(col, 38)
+        self.assertIn("**3 of the 38 answers this model never found on its own**", line)
+
+    def test_a_column_that_reached_nothing_new_says_nothing(self):
+        col = _col(_mech([_counts(reach=18)], rb.REACH))
+        col["sense_only_reach"] = []
+        self.assertEqual(rb._reach_line(col, 38), "")
+
+    def test_an_arm_that_never_called_sense_claims_no_reach(self):
+        col = _col(_mech([], None), routing=("never-routed",))
+        col["sense_only_reach"] = ["a", "b"]
+        self.assertEqual(rb._reach_line(col, 38), "")
+
+
+class SessionCost(unittest.TestCase):
+    """A delta with no cost beside it is half a result."""
+
+    SES = {"baseline": {"wall_time_seconds": 426.0, "token_total_billed": 33066,
+                        "cost_usd": 2.85, "tool_calls": 44, "grep_count": 40,
+                        "read_count": 0, "mcp_count": 0},
+           "sense": {"wall_time_seconds": 414.0, "token_total_billed": 36918,
+                     "cost_usd": 2.55, "tool_calls": 26, "grep_count": 14,
+                     "read_count": 1, "mcp_count": 8}}
+
+    def _bullets(self):
+        col = _col(_mech([_counts(reach=18)], rb.REACH))
+        col["session"] = self.SES
+        return "\n".join(rb._session_bullets(col))
+
+    def test_time_is_in_minutes_not_seconds(self):
+        self.assertIn("7.1 min on its own, 6.9 min with Sense", self._bullets())
+
+    def test_tokens_and_money_are_both_shown_per_arm(self):
+        out = self._bullets()
+        self.assertIn("33,066 on its own, 36,918 with Sense", out)
+        self.assertIn("$2.85 on its own, $2.55 with Sense", out)
+
+    def test_the_tool_mix_is_shown_so_the_delta_has_a_shape(self):
+        self.assertIn("40 searches and 0 file reads on its own; 8 Sense calls, "
+                      "14 searches and 1 file read with Sense", self._bullets())
+
+    def test_a_column_with_no_session_data_omits_the_bullets(self):
+        self.assertEqual(rb._session_bullets(_col(_mech([], None))), [])
+
+    def test_the_plural_is_passed_in_never_guessed(self):
+        self.assertEqual(rb._plural(1, "search", "searches"), "1 search")
+        self.assertEqual(rb._plural(40, "search", "searches"), "40 searches")

@@ -120,6 +120,92 @@ def arm_root(vertical_dir, model, scenario_version):
                         short_version(scenario_version))
 
 
+def _scored(root, arm, repo):
+    """Every scored run for one arm, in run order."""
+    out = []
+    for path in sorted(glob.glob(os.path.join(root, arm, repo, "run-*", "scored.json"))):
+        try:
+            out.append(json.load(open(path)))
+        except (OSError, ValueError):
+            continue
+    return out
+
+
+def _mean(values):
+    return round(sum(values) / len(values), 2) if values else None
+
+
+def session(root, repo):
+    """What the work actually cost, per arm: time, tokens, money, tool calls.
+
+    A delta with no cost beside it is half a result. These come from the metrics
+    block the scorer already writes, so the board reports what was billed rather
+    than a second opinion about it.
+    """
+    out = {}
+    for arm in ("baseline", "sense"):
+        runs = [s.get("metrics") or {} for s in _scored(root, arm, repo)]
+        if not runs:
+            continue
+        out[arm] = {
+            "wall_time_seconds": _mean([m.get("wall_time_seconds", 0) for m in runs]),
+            "token_total_billed": _mean([m.get("token_total_billed", 0) for m in runs]),
+            "cost_usd": _mean([m.get("cost_usd", 0) for m in runs]),
+            "tool_calls": _mean([m.get("tool_calls", 0) for m in runs]),
+            "grep_count": _mean([m.get("grep_count", 0) for m in runs]),
+            "read_count": _mean([m.get("read_count", 0) for m in runs]),
+            "mcp_count": _mean([m.get("mcp_count", 0) for m in runs]),
+        }
+    return out
+
+
+def _cited_ids(root, arm, repo):
+    """Every gold id this arm cited in ANY of its runs."""
+    seen = set()
+    for scored in _scored(root, arm, repo):
+        for d in (scored.get("gold_recall", {}) or {}).get("details", []):
+            if d.get("cited"):
+                seen.add(d.get("id"))
+    return seen
+
+
+def coverage(root, repo, gold):
+    """The 38 answers split by WHICH ARM reached them. The value picture.
+
+    Without a baseline in it, a breakdown of the Sense run alone reads as "Sense
+    supplied about half" when the truth is that a chunk of those answers exist
+    only because Sense was there. The split that shows the value honestly is by
+    arm, not by provenance inside one arm:
+
+        both          the model would have got these anyway
+        sense_only    it never reached these without Sense, in any run
+        baseline_only reached without Sense but not with; noise, and shown
+        neither       reached by no arm; the honest remainder
+    """
+    base, sense = _cited_ids(root, "baseline", repo), _cited_ids(root, "sense", repo)
+    if not gold:
+        return {}
+    ids = {row["id"] for row in gold}
+    base, sense = base & ids, sense & ids
+    return {
+        "both": len(base & sense),
+        "sense_only": len(sense - base),
+        "baseline_only": len(base - sense),
+        "neither": len(ids - base - sense),
+        "total": len(ids),
+    }
+
+
+def sense_only_reach(root, repo):
+    """Answers the Sense arm reached that its own baseline never reached.
+
+    The headline of the whole programme: not "scored higher" but "found what it
+    could not otherwise find". Mirrors the sense-only reach in efficiency.py -
+    cited by the Sense arm in at least one run, cited by the baseline in none.
+    """
+    return sorted(_cited_ids(root, "sense", repo) - _cited_ids(root, "baseline", repo))
+
+
 def _column(root, repo, model, gold, source):
     """One model's column: its own pair, plus why the number is what it is."""
     row = banked.build_row(root, repo) if os.path.isdir(root) else None
@@ -138,6 +224,9 @@ def _column(root, repo, model, gold, source):
         "billed_tokens": row["billed_tokens"],
         "sense_version": row.get("sense_version"),
         "recorded_at": row.get("recorded_at"),
+        "session": session(root, repo),
+        "sense_only_reach": sense_only_reach(root, repo),
+        "coverage": coverage(root, repo, gold),
         "routing": mech.get("routing", []),
         "mechanism": {k: mech[k] for k in
                       ("runs", "measured_runs", "rows_disagreeing", "verdict_split",

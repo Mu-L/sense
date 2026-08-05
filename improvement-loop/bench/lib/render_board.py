@@ -99,6 +99,20 @@ def _counts_across_runs(mech):
     return {k: round(v / n, 1) for k, v in total.items()}, len(runs)
 
 
+def _reach_line(column, gold_rows):
+    """The headline of the programme: what it could NOT otherwise find.
+
+    A delta says the score moved. Sense-only reach says which answers the model
+    never reached on its own in any run, and reached with Sense. That is the
+    claim the whole bench exists to test, so it leads the block.
+    """
+    n = len(column.get("sense_only_reach") or [])
+    if not n or not _routed(column):
+        return ""
+    return (f"**{n} of the {gold_rows} answers this model never found on its own**, "
+            f"in either run without Sense, it found with Sense.")
+
+
 def _why_line(column, gold_rows):
     """The sentences, chosen and ordered mechanically. Largest cell first."""
     states = column.get("routing") or []
@@ -122,10 +136,40 @@ def _why_line(column, gold_rows):
     return " ".join(WHY[c].format(**fields) for c in told if c in WHY)
 
 
+def _plural(n, one, many):
+    """The plural is passed in, not guessed: "search" pluralised to "searchs"."""
+    return f"{n:.0f} {one if abs(n - 1) < 0.5 else many}"
+
+
+def _mins(seconds):
+    """Minutes, because a reader thinks in minutes and not in 322.5 seconds."""
+    return f"{seconds / 60:.1f} min"
+
+
+def _session_bullets(column):
+    """Time, tokens and money, per arm. A delta with no cost beside it is half a result."""
+    ses = column.get("session") or {}
+    b, s = ses.get("baseline"), ses.get("sense")
+    if not b or not s:
+        return []
+    return [
+        f"- **time** {_mins(b['wall_time_seconds'])} on its own, "
+        f"{_mins(s['wall_time_seconds'])} with Sense",
+        f"- **tokens billed** {b['token_total_billed']:,.0f} on its own, "
+        f"{s['token_total_billed']:,.0f} with Sense",
+        f"- **cost** ${b['cost_usd']:.2f} on its own, ${s['cost_usd']:.2f} with Sense",
+        f"- **how it worked** {_plural(b['grep_count'], 'search', 'searches')} and "
+        f"{_plural(b['read_count'], 'file read', 'file reads')} on its own; "
+        f"{_plural(s['mcp_count'], 'Sense call', 'Sense calls')}, "
+        f"{_plural(s['grep_count'], 'search', 'searches')} and "
+        f"{_plural(s['read_count'], 'file read', 'file reads')} with Sense",
+    ]
+
+
 def _glance_row(column, copy):
     label = _label(copy, "models", column["model"])
     if not column.get("measured"):
-        return f"| {label} | not run | not run | | |"
+        return f"| {label} | not run | not run | | | |"
     o = column["overall"]
     states = column.get("routing") or []
     if states and states[0] in ROUTING_NOTE:
@@ -133,9 +177,12 @@ def _glance_row(column, copy):
                 "search-only": "no dependency question asked",
                 "harness-failure": "not measured"}[states[0]]
         return (f"| {label} | {o['baseline_mean']:.2f} | {o['sense_mean']:.2f} | "
-                f"{o['delta']:+.2f} | {mark} |")
+                f"{o['delta']:+.2f} | | {mark} |")
+    reach = len(column.get("sense_only_reach") or [])
+    ses = (column.get("session") or {}).get("sense") or {}
+    when = _mins(ses["wall_time_seconds"]) if ses.get("wall_time_seconds") else ""
     return (f"| {label} | {o['baseline_mean']:.2f} | {o['sense_mean']:.2f} | "
-            f"**{o['delta']:+.2f}** | |")
+            f"**{o['delta']:+.2f}** | **{reach}** | {when} |")
 
 
 def _routed(column):
@@ -167,17 +214,26 @@ def _delta_chart(data, copy):
             f"    bar [{values}]", "```", ""]
 
 
-def _provenance_chart(column, copy, avg):
-    """Where one model's answers came from. The scoring picture in one shape."""
-    slices = [("From Sense, and used", avg[REACH]),
-              ("From Sense, not used", avg[IGNORED]),
-              ("Found without Sense", avg[FOUND_ANYWAY]),
-              ("Reached by neither", avg[MISSED])]
-    if not any(v for _, v in slices):
+def _coverage_chart(column, copy, gold_rows):
+    """Which arm reached each answer. The value picture, not the mechanism one.
+
+    An earlier version charted where the answers came from INSIDE the Sense run:
+    supplied and used, supplied and unused, found without Sense, reached by
+    neither. With no baseline in it that reads as "Sense supplied about half",
+    which is both dispiriting and not what happened. The split that tells the
+    truth is by ARM, because it is the only one that can show the answers that
+    exist solely because Sense was there.
+    """
+    cov = column.get("coverage") or {}
+    if not cov or not cov.get("total"):
         return []
+    slices = [("Found only with Sense", cov.get("sense_only", 0)),
+              ("Found either way", cov.get("both", 0)),
+              ("Found only without Sense", cov.get("baseline_only", 0)),
+              ("Found by neither", cov.get("neither", 0))]
+    label = _label(copy, "models", column["model"])
     out = ["```mermaid", "pie showData",
-           f'    title Where {_label(copy, "models", column["model"])} '
-           f"got its answers"]
+           f"    title {label}: which of the {gold_rows} answers each arm reached"]
     out += [f'    "{name}" : {v:g}' for name, v in slices if v]
     return out + ["```", ""]
 
@@ -197,8 +253,9 @@ def _method_chart():
 
 def _glance(data, copy):
     out = ["## At a glance", "",
-           "| model | on its own | with Sense | difference | |",
-           "|---|---|---|---|---|"]
+           "| model | on its own | with Sense | difference | found only with Sense "
+           "| time with Sense |",
+           "|---|---|---|---|---|---|"]
     out += [_glance_row(c, copy) for c in data["columns"]]
     out += ["", f"Share of the {data.get('gold_rows', 0)} hand-audited answers each "
             f"model cited, working the same question. Read each row across, never down: "
@@ -219,6 +276,9 @@ def _column_block(column, gold_rows, copy):
     o, runs = column["overall"], column["runs"]
     src = ("carried over from the run that first proved this question"
            if column["source"] == "banked" else "benched for this board")
+    reach = _reach_line(column, gold_rows)
+    if reach:
+        out += [reach, ""]
     out += [_why_line(column, gold_rows), ""]
     out.append(f"- **on its own** {o['baseline_mean']:.4f}  ->  **with Sense** "
                f"{o['sense_mean']:.4f}   (**{o['delta']:+.4f}**)")
@@ -229,15 +289,10 @@ def _column_block(column, gold_rows, copy):
         out.append(f"- **where the answers came from** Sense and used {_n(avg[REACH])}, "
                    f"Sense but unused {_n(avg[IGNORED])}, found without Sense "
                    f"{_n(avg[FOUND_ANYWAY])}, reached by neither {_n(avg[MISSED])}")
-    tok = column.get("billed_tokens") or {}
-    if tok.get("baseline") and tok.get("sense"):
-        bmean = sum(tok["baseline"]) / len(tok["baseline"])
-        smean = sum(tok["sense"]) / len(tok["sense"])
-        out.append(f"- **tokens billed** {bmean:,.0f} on its own, {smean:,.0f} with Sense")
+    out += _session_bullets(column)
     out.append(f"- **runs** {runs['baseline']} without Sense, {runs['sense']} with, {src}")
     out.append("")
-    if measured:
-        out += _provenance_chart(column, copy, avg)
+    out += _coverage_chart(column, copy, gold_rows)
 
     flipped = mech.get("rows_disagreeing") or []
     if flipped:
