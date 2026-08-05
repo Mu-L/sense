@@ -221,6 +221,18 @@ else:
   else
     echo "_no board published yet._"
   fi
+  echo
+  # State without an action is why a resuming session stalls: the cycle 1 section has
+  # carried its resume line since it was written, and this one read as a report.
+  if [ -f "$st" ] && python3 -c "
+import json,sys
+d=json.load(open(sys.argv[1]))
+sys.exit(0 if [k for k,v in d.items() if '#' not in k and v!='done'] else 1)" "$st" 2>/dev/null; then
+    echo "Resume: \`VERTICAL=${KEY} bash bench/drivers/cycle2-board.sh <repo>\`"
+  else
+    echo "Start:  \`VERTICAL=${KEY} bash bench/drivers/cycle2-board.sh --eligible\`, then"
+    echo "\`VERTICAL=${KEY} bash bench/drivers/cycle2-board.sh <repo>\` for one of them."
+  fi
 }
 
 loop_position_section() {

@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-05 20:08 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-05 20:36 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -22,6 +22,8 @@ Resume: `VERTICAL=ruby-rails bash bench/drivers/vertical-loop.sh <repo>`
 | discourse | gate | 0 |
 
 _no board published yet._
+
+Resume: `VERTICAL=ruby-rails bash bench/drivers/cycle2-board.sh <repo>`
 
 ## Banked cells (`verticals/ruby-rails/banked.jsonl`)
 
