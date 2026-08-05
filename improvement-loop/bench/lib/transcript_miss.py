@@ -22,11 +22,15 @@ This script mines that corpus for three deterministic signals, no LLM, no re-ben
 
 Output is a ranked gap list to react to BEFORE spending a single new bench token.
 
-Usage:
-  python3 bench/lib/transcript_miss.py                 # whole rails corpus, opus-4-8
-  python3 bench/lib/transcript_miss.py --model all      # every model dir
-  python3 bench/lib/transcript_miss.py --repo chatwoot,discourse
-  python3 bench/lib/transcript_miss.py --json out.json  # machine-readable dump
+Usage (--stack is required, plus exactly one root: --model or --results-dir):
+  python3 bench/lib/transcript_miss.py --stack ruby-rails --model claude-opus-5
+  python3 bench/lib/transcript_miss.py --stack ruby-rails --model all   # every model dir
+  python3 bench/lib/transcript_miss.py --stack ruby-rails --results-dir "$RDIR" --repo chatwoot
+  python3 bench/lib/transcript_miss.py --stack ruby-rails --model all --json out.json
+
+--results-dir scopes the mine to ONE cell (a phase's $RDIR); --model aggregates every
+cell under that model. Both discover the arm dir at any depth: the cells sit at
+<model>/<scenario-version>/sense/<repo>/run-*, one root per question.
 """
 import argparse
 import collections
@@ -253,6 +257,24 @@ def load_gold(stack, repo):
     return out
 
 
+def _sense_arm_dirs(root):
+    """Every `sense/` arm dir under root, at ANY depth.
+
+    ONE ROOT PER QUESTION moved the cells from <model>/sense/<repo>/run-* to
+    <model>/<scenario-version>/sense/<repo>/run-*. The fixed-depth join this
+    replaced found neither shape and reported a clean corpus over an empty walk,
+    at exit 0 - three consecutive blind harvests are on the record in
+    results/loopA-gaps.md (2026-08-04T12:59Z onward), including discourse's paid
+    WIN. Depth is discovered, never assumed.
+    """
+    out = []
+    for dirpath, dirnames, _files in os.walk(root):
+        if os.path.basename(dirpath) == "sense":
+            out.append(dirpath)
+            dirnames[:] = []  # the children are <repo>/run-*, not more arm dirs
+    return sorted(out)
+
+
 def main():
     ap = argparse.ArgumentParser()
     # No default stack, by policy (see resolve_oracle.py): a defaulted vertical audits
@@ -260,25 +282,42 @@ def main():
     ap.add_argument("--stack", required=True)
     ap.add_argument("--model", default=None,
                     help="model dir under verticals/<stack>/results/, or 'all'")
+    ap.add_argument("--results-dir", default=None,
+                    help="mine ONE results root instead of a model dir (the phase's $RDIR); "
+                         "scopes the mine to the cell under diagnosis")
     ap.add_argument("--repo", default="", help="comma-separated repo filter")
     ap.add_argument("--json", default="", help="write machine-readable dump here")
     args = ap.parse_args()
 
     stack_dir = os.path.join(VERTICALS, args.stack, "results")
-    if args.model == "all":
-        model_dirs = [d for d in glob.glob(os.path.join(stack_dir, "*")) if os.path.isdir(d)]
+    # Neither --model nor --results-dir has a default, by the same policy as --stack.
+    # Omitting both used to reach os.path.join(stack_dir, None) and die with a bare
+    # TypeError from inside the walk, which reads as a broken script rather than a
+    # missing argument.
+    if args.model and args.results_dir:
+        sys.exit("transcript_miss.py: pass --model OR --results-dir, not both.")
+    if not args.model and not args.results_dir:
+        avail = sorted(os.path.basename(d)
+                       for d in glob.glob(os.path.join(stack_dir, "*")) if os.path.isdir(d))
+        sys.exit(
+            f"transcript_miss.py: a root is required - specify a model with "
+            f"--model <model-name>, or --model all to walk every model dir, or point at "
+            f"one results root with --results-dir <path> (a phase's $RDIR).\n"
+            f"Model dirs under verticals/{args.stack}/results/: "
+            f"{', '.join(avail) if avail else '(none - no runs on disk)'}")
+    if args.results_dir:
+        roots = [args.results_dir]
+    elif args.model == "all":
+        roots = [d for d in glob.glob(os.path.join(stack_dir, "*")) if os.path.isdir(d)]
     else:
-        model_dirs = [os.path.join(stack_dir, args.model)]
+        roots = [os.path.join(stack_dir, args.model)]
     repo_filter = set(r.strip() for r in args.repo.split(",") if r.strip())
 
     # repo -> aggregated signal
     agg = {}
     gold_cache = {}
     n_runs = 0
-    for md in model_dirs:
-        sense_root = os.path.join(md, "sense")
-        if not os.path.isdir(sense_root):
-            continue
+    for sense_root in [s for r in roots for s in _sense_arm_dirs(r)]:
         for repo_dir in sorted(glob.glob(os.path.join(sense_root, "*"))):
             repo = os.path.basename(repo_dir)
             if repo_filter and repo not in repo_filter:
@@ -325,7 +364,8 @@ def _severity(repo_agg, gold):
 
 
 def report(agg, gold_cache, n_runs, args):
-    print(f"\n=== Sense-miss mine - stack={args.stack} model={args.model} "
+    scope = f"model={args.model}" if args.model else f"results-dir={args.results_dir}"
+    print(f"\n=== Sense-miss mine - stack={args.stack} {scope} "
           f"({n_runs} sense runs over {len(agg)} repos) ===\n")
     # rank repos by discriminator-weighted miss severity
     ranked = sorted(agg.items(),

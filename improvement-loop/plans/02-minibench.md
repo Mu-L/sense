@@ -47,7 +47,11 @@ Work from `improvement-loop/`.
 
 5. What the sense arm cited that was never returned to it:
 
-       python3 bench/lib/transcript_miss.py --stack "$VERTICAL" --repo "$REPO"
+       python3 bench/lib/transcript_miss.py --stack "$VERTICAL" --results-dir "$RDIR" \
+         --repo "$REPO"
+
+   `--results-dir "$RDIR"` scopes the mine to THIS cycle's pair. Without a root it exits
+   non-zero, and a model-wide root would blend the cycles this question already replaced.
 
 ## DECIDE
 

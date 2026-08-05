@@ -38,7 +38,11 @@ not fix the harness.
 
 4. What it cited but was never returned, and where it fell back:
 
-       python3 bench/lib/transcript_miss.py --stack "$VERTICAL" --repo "$REPO"
+       python3 bench/lib/transcript_miss.py --stack "$VERTICAL" --results-dir "$RDIR" \
+         --repo "$REPO"
+
+   `--results-dir "$RDIR"` scopes the mine to THIS validation cell. Without a root it exits
+   non-zero, and a model-wide root would blend in cells this scenario already replaced.
 
 5. How the BASELINE assembled its answer - the route, not the number:
 
