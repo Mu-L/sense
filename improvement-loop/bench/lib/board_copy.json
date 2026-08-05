@@ -1,0 +1,63 @@
+{
+  "_comment": [
+    "Public copy for cycle 2 boards: the words a reader on the Sense repository sees.",
+    "Kept as data, not prose in the renderer, so a wording change is a one-line edit",
+    "and never a code change. Blurbs are short and name the thing plainly, because",
+    "these pages are read online and a reader arrives knowing the repo or the model,",
+    "not the bench."
+  ],
+  "verticals": {
+    "ruby-rails": {
+      "label": "Ruby on Rails",
+      "blurb": "Large production Ruby on Rails codebases."
+    }
+  },
+  "repos": {
+    "rails": {
+      "label": "Rails",
+      "blurb": "Ruby on Rails itself: the web framework that runs a large share of the production web.",
+      "url": "https://github.com/rails/rails"
+    },
+    "mastodon": {
+      "label": "Mastodon",
+      "blurb": "Mastodon: the decentralised social network server behind the ActivityPub fediverse.",
+      "url": "https://github.com/mastodon/mastodon"
+    },
+    "discourse": {
+      "label": "Discourse",
+      "blurb": "Discourse: the open-source discussion platform that runs a large share of the internet's forums.",
+      "url": "https://github.com/discourse/discourse"
+    },
+    "chatwoot": {
+      "label": "Chatwoot",
+      "blurb": "Chatwoot: the open-source customer engagement suite, a self-hosted alternative to Intercom and Zendesk.",
+      "url": "https://github.com/chatwoot/chatwoot"
+    }
+  },
+  "models": {
+    "claude-opus-5": {
+      "label": "Claude Opus 5",
+      "blurb": "Anthropic's Claude Opus 5, run through Claude Code."
+    },
+    "claude-fable-5": {
+      "label": "Claude Fable 5",
+      "blurb": "Anthropic's Claude Fable 5, run through Claude Code."
+    },
+    "gpt-5.6-sol": {
+      "label": "GPT-5.6",
+      "blurb": "OpenAI's GPT-5.6, run through the Codex CLI."
+    },
+    "kimi-for-coding/k3": {
+      "label": "Kimi K3",
+      "blurb": "Moonshot AI's Kimi K3 coding model, run through opencode."
+    },
+    "glm-5.2:cloud": {
+      "label": "GLM-5.2",
+      "blurb": "Z.ai's GLM-5.2, run through opencode."
+    },
+    "mistral-large-3:cloud": {
+      "label": "Mistral Large 3",
+      "blurb": "Mistral AI's Mistral Large 3, run through opencode."
+    }
+  }
+}

@@ -155,5 +155,41 @@ class Assembly(unittest.TestCase):
             self.assertEqual(out["replication"]["not_measured"], ["gpt-5.6-sol"])
 
 
+class TheQuestionIsCarried(unittest.TestCase):
+    """A public board shows the ask verbatim, never a paraphrase of it."""
+
+    YAML = """
+name: Discourse work session
+description: |
+  You are a maintainer about to rework a container.
+contract_symbol: Category
+contract_file: app/models/category.rb
+steps:
+  - name: orient
+    prompt: "Task: orient yourself."
+  - name: dependents
+    prompt: "Now find every dependent."
+gold:
+  - id: a
+    group: g
+    match: [app/models/category.rb]
+"""
+
+    def test_the_scenario_and_every_step_survive_into_the_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "discourse.yaml")
+            open(path, "w").write(self.YAML)
+            q = board.question(path)
+            self.assertEqual(q["contract_symbol"], "Category")
+            self.assertEqual(q["contract_file"], "app/models/category.rb")
+            self.assertEqual([s["name"] for s in q["steps"]], ["orient", "dependents"])
+            self.assertEqual(q["steps"][1]["prompt"], "Now find every dependent.")
+            self.assertIn("about to rework a container", q["description"])
+
+    def test_a_missing_scenario_is_empty_rather_than_fatal(self):
+        self.assertEqual(board.question(None), {})
+        self.assertEqual(board.question("/nope/none.yaml"), {})
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -167,6 +167,28 @@ def _replication(columns, threshold=THRESHOLD):
             "threshold": threshold}
 
 
+def question(scenario_path):
+    """The task the models were given, verbatim.
+
+    A public board has to show the actual ask, not a paraphrase: a reader cannot
+    judge a result without seeing the question that produced it, and paraphrasing
+    it here would let the page drift from what the models were sent.
+    """
+    if not scenario_path or not os.path.exists(scenario_path):
+        return {}
+    import yaml
+
+    doc = yaml.safe_load(open(scenario_path))
+    return {
+        "name": doc.get("name", ""),
+        "description": (doc.get("description") or "").strip(),
+        "contract_symbol": doc.get("contract_symbol", ""),
+        "contract_file": doc.get("contract_file", ""),
+        "steps": [{"name": s.get("name", ""), "prompt": (s.get("prompt") or "").strip()}
+                  for s in (doc.get("steps") or [])],
+    }
+
+
 def assemble(vertical_dir, repo, headline, arms, scenario_path=None):
     """The numbers JSON. Nothing downstream may print a figure absent from here."""
     banked_row = next((r for r in reversed(banked_rows(vertical_dir))
@@ -192,6 +214,7 @@ def assemble(vertical_dir, repo, headline, arms, scenario_path=None):
         "sense_version": banked_row.get("sense_version"),
         "gold_rows": len(gold),
         "headline": headline,
+        "question": question(scenario_path),
         "columns": columns,
         "replication": _replication(columns[1:]),
     }

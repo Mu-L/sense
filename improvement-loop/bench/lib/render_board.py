@@ -1,68 +1,86 @@
 #!/usr/bin/env python3
 """Render a cycle 2 board: the same numbers JSON in, the same bytes out.
 
-NO AGENT IN THE RENDER PATH. The why line behind every column is a templated
-sentence chosen by the dominant cell of the mechanism table, not prose an agent
-writes. Free prose about four vendors' models is exactly where an invented
-figure would do the most damage, and a template cannot invent one. Style, tone
-and section order live in the cycle 2 plan; changing the voice is editing the
-plan, never re-running a bench.
+THIS IS A PUBLIC PAGE ON THE SENSE REPOSITORY, read online by someone who
+arrived knowing the repo or the model but not the bench. It is written in our
+voice and it says plainly where Sense helped. It is not an internal defect log,
+and it is not a page that leads with our own gaps.
 
-THE SUBJECT OF EVERY LINE IS SENSE, NOT THE MODEL. Each column is one model's
-sense arm against that model's OWN baseline. Absolute scores are never set side
-by side, because the arms run different harnesses at different budgets and such
-a table would read as a model leaderboard, which is not the claim and not a
-fight worth having. What goes across models is one count: how many replicated.
+Honest all the same: every number is measured, the gaps are printed beside the
+wins rather than left out, and the sentences are TEMPLATED, chosen mechanically
+by the size of each cell of the mechanism table. No agent writes a figure here.
+Prose about four vendors' models is exactly where an invented number would do
+the most damage, and a template cannot invent one. The wording lives in
+board_copy.json and in the templates below, so changing the voice is an edit
+here, never a re-run of a bench.
 
-A COLUMN THAT NEVER CALLED SENSE SAYS SO IN ITS FIRST LINE. Reporting a
-never-routed arm as "Sense barely helped" states the opposite of what happened:
-Sense was never asked. That is our routing failure and the page names it as one.
+WHAT THE PAGE DOES NOT CLAIM, and says so in as many words: it is not a ranking
+of the models, and it is not a ranking of the repositories. Each column is one
+model's Sense arm against that same model's own baseline on the same question.
+Different models run on different harnesses at different budgets, so their
+absolute scores are not comparable to each other, and the page never puts them
+side by side as if they were.
+
+SENTENCE ORDER IS CELL SIZE, LARGEST FIRST. That is honest in both directions:
+when Sense carried the answer, the win leads; when it did not, the gap leads.
+The precedent for saying more than one thing is chatwoot, where reporting only
+the biggest cell printed "Sense supplied 21 of 38" over 12 rows the model had to
+go find for itself.
 
 Usage:
-    render_board.py <numbers.json> [-o <board.md>]
+    render_board.py <numbers.json> [-o <board.md>] [--copy <board_copy.json>]
 """
 import argparse
 import json
+import os
 import sys
 
 REACH, IGNORED, FOUND_ANYWAY, MISSED = "reach", "ignored", "found-anyway", "missed"
 
-# One sentence per dominant cell. Three of the four are findings about Sense.
+COPY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "board_copy.json")
+
+# A cell smaller than this share of the gold list is not part of the story.
+CELL_SHARE = 0.15
+# Ties break toward the honest half, so a page never rounds in our favour.
+CELL_ORDER = (MISSED, IGNORED, FOUND_ANYWAY, REACH)
+
 WHY = {
-    REACH: ("Sense returned {reach} of {gold} rows with a line and the answer cited "
-            "them. This is the product working."),
-    IGNORED: ("Sense returned {ignored} rows the answer never cited. The payload "
-              "arrived and went unused, which is a format or routing problem on our "
-              "side, not a coverage gap."),
-    FOUND_ANYWAY: ("The answer cited {found_anyway} rows that no Sense call returned. "
-                   "It found them by reading and grepping, so Sense was not what got "
-                   "it there: a coverage gap that happened to cost no points."),
-    MISSED: ("{missed} rows were neither returned by Sense nor cited. This is a "
-             "coverage gap that cost the answer directly."),
+    REACH: ("Sense put {reach} of the {gold} answers in front of it with exact "
+            "locations, and the model used them."),
+    IGNORED: ("{ignored} more were returned by Sense and did not make it into the "
+              "answer. That one is ours: the information arrived in a shape this "
+              "model did not carry through."),
+    FOUND_ANYWAY: ("{found_anyway} it reached on its own, by opening and searching "
+                   "files rather than from a Sense result, so Sense did not shorten "
+                   "that part of the work."),
+    MISSED: ("{missed} were reached by neither: Sense did not return them and the "
+             "answer did not name them."),
 }
 
 ROUTING_NOTE = {
-    "never-routed": ("This arm never called Sense. Its delta measures configuration, "
-                     "not the product, and it is excluded from the replication count."),
-    "search-only": ("This arm called sense_search but never reached a resolver "
-                    "(sense_blast or sense_graph), so the dependency question was "
-                    "never actually asked. Excluded from the replication count."),
-    "harness-failure": ("The MCP server never came up for this arm. Not a "
-                        "measurement; the run is discarded rather than scored."),
+    "never-routed": ("This model never called Sense. The tools were installed and the "
+                     "server was running; it chose to work the way it always does. "
+                     "That is a routing problem on our side, so this column is left "
+                     "out of the replication count rather than counted as a result."),
+    "search-only": ("This model called Sense to search, but never asked it a "
+                    "dependency question, so the part of Sense under test here was "
+                    "never exercised. Left out of the replication count."),
+    "harness-failure": ("The Sense server did not come up for this arm, so nothing "
+                        "was measured. The run is discarded, not scored."),
 }
 
 
-# A non-dominant cell this large is still the headline finding for that column.
-# chatwoot is the precedent: dominant `reach` at 21 of 38 rows, while 12 rows were
-# cited that Sense never returned. Reporting only the dominant cell printed "this
-# is the product working" over a 32% coverage gap.
-SECONDARY_SHARE = 0.15
-# Worst news first, so a column that has something wrong with it says so early.
-CELL_ORDER = (MISSED, IGNORED, FOUND_ANYWAY, REACH)
+def load_copy(path=None):
+    with open(path or COPY_PATH) as fh:
+        return json.load(fh)
 
 
-def _fmt(x, places=4):
-    return f"{x:.{places}f}"
+def _blurb(copy, kind, key):
+    return (copy.get(kind, {}) or {}).get(key, {})
+
+
+def _label(copy, kind, key):
+    return _blurb(copy, kind, key).get("label", key)
 
 
 def _n(x):
@@ -71,7 +89,7 @@ def _n(x):
 
 
 def _counts_across_runs(mech):
-    """Summed cells over a column's measured runs, for the templated why line."""
+    """Mean cells over a column's measured runs."""
     total = {REACH: 0, IGNORED: 0, FOUND_ANYWAY: 0, MISSED: 0}
     runs = [r for r in mech.get("runs", []) if r.get("routing") != "harness-failure"]
     for run in runs:
@@ -82,118 +100,199 @@ def _counts_across_runs(mech):
 
 
 def _why_line(column, gold_rows):
-    """The one sentence, chosen mechanically by the dominant cell."""
+    """The sentences, chosen and ordered mechanically. Largest cell first."""
     states = column.get("routing") or []
     for state in ("never-routed", "search-only", "harness-failure"):
         if states == [state]:
             return ROUTING_NOTE[state]
     mech = column.get("mechanism") or {}
     if mech.get("verdict_split"):
-        return ("The two runs disagree on what happened: they land in different cells "
-                "of the returned-by-Sense against cited table. A third run rules.")
-    dominant = mech.get("dominant")
-    if dominant not in WHY:
-        return "No mechanism data for this column."
-    avg, _ = _counts_across_runs(mech)
+        return ("This model's two runs tell different stories, so the board does not "
+                "call it either way until a third run rules.")
+    avg, measured = _counts_across_runs(mech)
+    if not measured:
+        return "No Sense traffic was captured for this column."
+    floor = max(gold_rows * CELL_SHARE, 1)
     fields = {"gold": gold_rows, "reach": _n(avg[REACH]), "ignored": _n(avg[IGNORED]),
               "found_anyway": _n(avg[FOUND_ANYWAY]), "missed": _n(avg[MISSED])}
-    # The dominant cell, then any other cell big enough to be the real story.
-    said = [WHY[dominant].format(**fields)]
-    floor = max(gold_rows * SECONDARY_SHARE, 1)
-    for cell in CELL_ORDER:
-        if cell != dominant and avg[cell] >= floor:
-            said.append(WHY[cell].format(**fields))
-    return " ".join(said)
+    told = [c for c in CELL_ORDER if avg[c] >= floor]
+    told.sort(key=lambda c: (-avg[c], CELL_ORDER.index(c)))
+    if not told:
+        told = [mech.get("dominant") or REACH]
+    return " ".join(WHY[c].format(**fields) for c in told if c in WHY)
 
 
-def _column_block(column, gold_rows):
-    out = [f"### {column['model']}", ""]
+def _glance_row(column, copy):
+    label = _label(copy, "models", column["model"])
     if not column.get("measured"):
-        out += [f"Not measured: {column.get('reason', 'no runs on disk')}.", ""]
+        return f"| {label} | not run | not run | | |"
+    o = column["overall"]
+    states = column.get("routing") or []
+    if states and states[0] in ROUTING_NOTE:
+        mark = {"never-routed": "never called Sense",
+                "search-only": "no dependency question asked",
+                "harness-failure": "not measured"}[states[0]]
+        return (f"| {label} | {o['baseline_mean']:.2f} | {o['sense_mean']:.2f} | "
+                f"{o['delta']:+.2f} | {mark} |")
+    return (f"| {label} | {o['baseline_mean']:.2f} | {o['sense_mean']:.2f} | "
+            f"**{o['delta']:+.2f}** | |")
+
+
+def _glance(data, copy):
+    out = ["## At a glance", "",
+           "| model | on its own | with Sense | difference | |",
+           "|---|---|---|---|---|"]
+    out += [_glance_row(c, copy) for c in data["columns"]]
+    out += ["", f"Share of the {data.get('gold_rows', 0)} hand-audited answers each "
+            f"model cited, working the same question. Read each row across, never down: "
+            f"a model is only ever compared to itself.", ""]
+    return out
+
+
+def _column_block(column, gold_rows, copy):
+    info = _blurb(copy, "models", column["model"])
+    out = [f"### {info.get('label', column['model'])}", ""]
+    if info.get("blurb"):
+        out += [info["blurb"], ""]
+    if not column.get("measured"):
+        out += ["Not run for this board yet.", ""]
         return out
 
-    o = column["overall"]
-    runs = column["runs"]
-    src = "reused from the headline bench" if column["source"] == "banked" else "benched here"
-    out.append(f"- **pair** baseline {_fmt(o['baseline_mean'])} to sense "
-               f"{_fmt(o['sense_mean'])}, delta **{o['delta']:+.4f}** "
-               f"({runs['baseline']} baseline runs, {runs['sense']} sense runs, {src})")
-    out.append(f"- **best group** {column['best_group_delta']:+.4f}")
-
+    o, runs = column["overall"], column["runs"]
+    src = ("carried over from the run that first proved this question"
+           if column["source"] == "banked" else "benched for this board")
+    out += [_why_line(column, gold_rows), ""]
+    out.append(f"- **on its own** {o['baseline_mean']:.4f}  ->  **with Sense** "
+               f"{o['sense_mean']:.4f}   (**{o['delta']:+.4f}**)")
+    out.append(f"- **hardest group of answers** {column['best_group_delta']:+.4f}")
     mech = column.get("mechanism") or {}
     avg, measured = _counts_across_runs(mech)
     if measured:
-        out.append(f"- **rows** reach {_n(avg[REACH])}, ignored {_n(avg[IGNORED])}, "
-                   f"found anyway {_n(avg[FOUND_ANYWAY])}, missed {_n(avg[MISSED])} "
-                   f"(mean over {measured} run{'s' if measured != 1 else ''} "
-                   f"of {gold_rows} gold rows)")
-    out.append(f"- **routing** {', '.join(column.get('routing') or ['unknown'])}")
+        out.append(f"- **where the answers came from** Sense and used {_n(avg[REACH])}, "
+                   f"Sense but unused {_n(avg[IGNORED])}, found without Sense "
+                   f"{_n(avg[FOUND_ANYWAY])}, reached by neither {_n(avg[MISSED])}")
     tok = column.get("billed_tokens") or {}
     if tok.get("baseline") and tok.get("sense"):
         bmean = sum(tok["baseline"]) / len(tok["baseline"])
         smean = sum(tok["sense"]) / len(tok["sense"])
-        out.append(f"- **billed tokens** baseline {bmean:,.0f}, sense {smean:,.0f} "
-                   f"(raw means; the parity call belongs to cost_parity.py)")
-    if column.get("recorded_at"):
-        out.append(f"- **run** {column['recorded_at']}")
-    out += ["", _why_line(column, gold_rows), ""]
+        out.append(f"- **tokens billed** {bmean:,.0f} on its own, {smean:,.0f} with Sense")
+    out.append(f"- **runs** {runs['baseline']} without Sense, {runs['sense']} with, {src}")
+    out.append("")
 
     flipped = mech.get("rows_disagreeing") or []
     if flipped:
-        out += [f"Rows that flipped between this arm's runs ({len(flipped)}): "
-                + ", ".join(f"`{r}`" for r in flipped)
-                + ". Sense returned them in one run and not the other, which is a "
-                  "determinism finding in its own right.", ""]
+        out += [f"Across this model's runs, {len(flipped)} answers came back from Sense "
+                f"one time and not the other. We track that as a determinism issue and "
+                f"it is ours to close.", ""]
     return out
 
 
-def _replication_block(rep, n_arms):
-    out = ["## Does the win replicate", ""]
+def _question_block(data, repo_label):
+    """The scenario and the task, verbatim. A result is unreadable without it."""
+    q = data.get("question") or {}
+    out = ["## The question", ""]
+    out.append(f"A maintainer is about to rework a central class in {repo_label} and "
+               f"needs to know what depends on it before touching it. The answer is "
+               f"scattered across the codebase, so the work is finding all of it, not "
+               f"reasoning about any one piece.")
+    out.append("")
+    if q.get("contract_symbol"):
+        out += [f"The class under rework is `{q['contract_symbol']}`"
+                + (f" in `{q['contract_file']}`." if q.get("contract_file") else "."),
+                ""]
+    if q.get("description"):
+        out += ["The models were given no more than this framing, which deliberately "
+                "never names the class: finding it is part of the task.", "",
+                "> " + q["description"].replace("\n", "\n> "), ""]
+    steps = q.get("steps") or []
+    if steps:
+        out += [f"The session is {len(steps)} steps, sent in order. Verbatim:", "",
+                "<details>", "<summary>The full task, exactly as each model received it"
+                "</summary>", ""]
+        for i, step in enumerate(steps, 1):
+            out.append(f"**{i}. {step.get('name', '')}**")
+            out.append("")
+            out.append("> " + (step.get("prompt", "").replace("\n", "\n> ")))
+            out.append("")
+        out += ["</details>", ""]
+    return out
+
+
+def _replication(rep, columns, copy):
+    out = ["## Does it hold across models", ""]
     routed, repl = rep["routed"], rep["replicated"]
     if not routed:
-        out.append(f"No confirmation arm reached a Sense resolver, so this board "
-                   f"cannot say whether the win replicates. {n_arms} arms were "
-                   f"declared.")
-    else:
-        out.append(f"Of {n_arms} confirmation arms, {len(routed)} actually reached a "
-                   f"Sense resolver, and **{len(repl)} of {len(routed)}** cleared the "
-                   f"{rep['threshold']} floor on their own baseline.")
-    out.append("")
-    if repl:
-        out.append("Replicated: " + ", ".join(f"`{m}`" for m in repl))
+        out += ["No confirmation model has been run against this question yet.", ""]
+        return out
+    names = ", ".join(f"**{_label(copy, 'models', m)}**" for m in repl)
+    out.append(f"{len(repl)} of the {len(routed)} models that actually queried Sense "
+               f"cleared the same bar the question was proved at"
+               + (f": {names}." if repl else "."))
     for key, label in (("never_routed", "Never called Sense"),
-                       ("search_only", "Reached no resolver"),
-                       ("not_measured", "Not measured")):
+                       ("search_only", "Never asked a dependency question"),
+                       ("not_measured", "Not run yet")):
         if rep.get(key):
-            out.append(f"{label}: " + ", ".join(f"`{m}`" for m in rep[key]))
-    out += ["", "These are counts, not a ranking. Each arm is measured against its own "
-            "baseline; the absolute scores are not comparable across models, which run "
-            "different harnesses at different budgets.", ""]
+            out.append("")
+            out.append(f"*{label}:* "
+                       + ", ".join(_label(copy, "models", m) for m in rep[key]) + ".")
+    out.append("")
     return out
 
 
-def render(data):
-    version = data.get("scenario_version", "")
-    out = [f"# {data['repo']}: how Sense did, across {len(data['columns']) - 1} models", ""]
-    out += ["| | |", "|---|---|",
-            f"| vertical | {data.get('vertical', '')} |",
-            f"| question | `{version}` |",
-            f"| sense build | {data.get('sense_version', '')} |",
-            f"| gold rows | {data.get('gold_rows', 0)} |",
-            f"| headline arm | `{data.get('headline', '')}` |", ""]
-    out += ["This page audits **Sense**, not the models. Every number is one model's "
-            "Sense arm against that same model's baseline on the same question, so a "
-            "column says what Sense did for that model and nothing about which model "
-            "is better.", ""]
+def _limits(data, copy):
+    return [
+        "## What this is, and what it is not", "",
+        "This is a measurement of **Sense**, run on one question against one "
+        "repository, with each model answering twice with Sense available and twice "
+        "without.",
+        "",
+        "It is **not a comparison of the models**. Each one runs on its own harness "
+        "with its own budget and its own defaults, so their scores are not comparable "
+        "to each other and are never presented that way here.",
+        "",
+        "It is **not a comparison of the repositories** either. Questions are written "
+        "per repository and hand-audited per repository; a number from one page does "
+        "not rank against a number from another.",
+        "",
+        f"The answers were fixed in advance: {data.get('gold_rows', 0)} locations, "
+        "audited by hand before any model ran, and a model is credited only when it "
+        "names the file and the line. Grading is done by a separate pinned model that "
+        "is never told which arm or which model produced an answer.",
+        "",
+    ]
 
-    # The reading sits ABOVE the detail: a human opens this page for the conclusion,
-    # and the agent that writes it has already read everything below.
+
+def render(data, copy=None):
+    copy = copy or load_copy()
+    repo_info = _blurb(copy, "repos", data["repo"])
+    vert_info = _blurb(copy, "verticals", data.get("vertical", ""))
+    repo_label = repo_info.get("label", data["repo"])
+    # The board covers every declared column, benched or not: a page that counted
+    # only the measured ones would silently shrink when an arm had not run yet.
+    n_models = len(data["columns"])
+    plural = "model" if n_models == 1 else "models"
+
+    out = [f"# Does Sense help an AI understand {repo_label}?", ""]
+    out.append(f"{repo_info.get('blurb', '')} One question about its code, put to "
+               f"{n_models} {plural} twice each, with Sense and without.".strip())
+    out.append("")
     out += ["## Reading", "", "<!-- reading -->", ""]
-    out += ["## Per model", ""]
-    for column in data["columns"]:
-        out += _column_block(column, data.get("gold_rows", 0))
+    out += _glance(data, copy)
 
-    out += _replication_block(data["replication"], len(data["columns"]) - 1)
+    out += _question_block(data, repo_label)
+    out += ["| | |", "|---|---|",
+            f"| repository | [{repo_label}]({repo_info.get('url', '')}) |",
+            f"| stack | {vert_info.get('label', data.get('vertical', ''))} |",
+            f"| answers to find | {data.get('gold_rows', 0)}, hand-audited |",
+            f"| Sense build | {data.get('sense_version', '')} |",
+            f"| question id | `{data.get('scenario_version', '')}` |", ""]
+
+    out += ["## Model by model", ""]
+    for column in data["columns"]:
+        out += _column_block(column, data.get("gold_rows", 0), copy)
+
+    out += _replication(data["replication"], data["columns"], copy)
+    out += _limits(data, copy)
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -201,10 +300,10 @@ def main(argv):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("numbers", help="the JSON written by board.py assemble")
     ap.add_argument("-o", "--out", default=None)
+    ap.add_argument("--copy", default=None, help="override board_copy.json")
     args = ap.parse_args(argv[1:])
 
-    data = json.load(open(args.numbers))
-    text = render(data)
+    text = render(json.load(open(args.numbers)), load_copy(args.copy))
     if args.out:
         with open(args.out, "w") as fh:
             fh.write(text)
