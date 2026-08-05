@@ -1,0 +1,179 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 on chatwoot - a first draft, no previous rubric to supersede.
+#
+# WHY specificity demands the enclosing routine: every scored row is a call inside a def,
+# or - for the `Notification` row - a constant in a class body, so the enclosing definition
+# is demanded for all eighteen, and it is the part a search result does not print.
+#
+# WHY justification demands the consequence for the routine's OWN job: eleven of the
+# eighteen enclosing routines are named after some other job entirely, and the other seven
+# echo the contract's own word. The consequence is the demand that holds on all eighteen,
+# so it carries the axis where the routine name alone would not.
+#
+# TWO steps, matching the two-step probe. Step names MUST match scenarios/chatwoot.yaml
+# exactly (the judge pairs by name).
+
+audience: 'An AI coding agent that will use this answer to safely rework the Chatwoot
+  conversation record - the object the whole product is organised around, that a customer''s
+  back-and-forth with the support team is filed under. Score for that agent, not a human
+  reader and not a docs page. A perfect answer leaves the agent able to change that class
+  knowing two things: how the system gets hold of the right one of these when a reply
+  arrives from outside and all it holds are the mail headers - traced through the routines
+  that make that path up - and every other place that would have to be reviewed or changed
+  with the class, each pinned to an exact file:line with the consequence of the change on
+  that place stated. The dependents that matter are mostly not code named after this class.
+  They are single touches inside routines doing some other job entirely - rolling up a
+  telemetry count, casting a saved filter''s operand, building the query an automation rule
+  is evaluated against, claiming a row so two bulk runs cannot collide, computing an unread
+  badge, sweeping housekeeping leftovers, folding one customer into another, suppressing a
+  notification, sending a batched email in the background, drawing an installation-wide
+  admin chart, serving an unauthenticated survey page, routing a chat-thread reply back in,
+  rendering a link preview, restricting an agent''s visible list, deciding whether an
+  automated replier may still speak, validating an argument an assistant supplied - and
+  they are scattered across the application tree, the library tree and a second application
+  tree for the paid edition. A weak answer covers the main application tree thoroughly and
+  treats the rest of the repository as if it were not there; or collapses a run of
+  dependents into one line with a shared reason and no location on any of them; or gives
+  file:line with nothing said about what would break, which leaves the agent knowing where
+  the name appears and not what its change would do.
+
+  '
+steps:
+- name: Map the conversation-record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is the inbound-mail matching path traced end to end as one connected path,
+
+        rather than listed as places the class is mentioned? A strong answer reaches the
+
+        routing decision that admits an arriving message to this path, the piece that runs
+
+        the candidate matches in a declared order and stops at the first hit, each separate
+
+        attempt and the identifier it keys off, the fallback that prepares a fresh record
+
+        when none matched, and the point where a merely prepared record is made permanent.
+
+        Credit is for showing how they connect and in what order, not for the count. Could
+
+        the next step act from this map with small targeted lookups rather than a fresh
+
+        exploration?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every place carry an exact file:line AND the name of the routine it lives
+
+        in? A bare filename is not specific. A file:line with no routine named around it
+
+        is not specific - the maintainer asked whose code it is, not where the character
+
+        offset falls. A routine named without the file:line where it is defined is not
+
+        specific either.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it contributes to the matching path -
+
+        which identifier it keys off, what it scopes the match by, what it falls back to,
+
+        why it refuses? Do the closing sentences say what a rework must preserve in terms
+
+        of behaviour, rather than restating the method names?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate what it verified by reading from what it inferred from a
+
+        name? Guessing at a fallback it never opened is worse than saying it did not
+
+        check. Is completeness claimed without saying how it was established?
+
+        '
+- name: Audit every dependent of the conversation-record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'THE DISCRIMINATOR. Does the audit reach the dependents that are not doing this
+
+        record''s job at all - the single touches inside routines named after telemetry, a
+
+        saved filter, an automation rule, a background claim, an unread badge, a
+
+        housekeeping sweep, a customer merge, a notification guard, an admin chart, a
+
+        public survey page, a chat integration, a restricted agent view, an automated
+
+        replier - or does it re-list the class''s own surface, the controllers and jobs
+
+        named after it, and the models that merely declare an association to it? Is the
+
+        answer organised by area with each area worked to the end, and does it reach
+
+        BEYOND the main application tree into the library tree and the second application
+
+        tree carrying the paid edition, or is it dense in one tree and silent in the
+
+        others? Areas it could not finish should be declared as unfinished rather than
+
+        quietly summarised.
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does EVERY dependent carry its own exact file:line AND the name of the routine
+
+        the dependency sits inside? Nearly every dependent in scope here is a call inside a
+
+        method, so a file:line with no routine named around it is not specific, and a
+
+        routine named without a file:line is not specific either. Several dependents named
+
+        together on one line as a set that shares a reason is the failure this criterion
+
+        exists to catch: however correct the shared reason is, it is one item, not a set of
+
+        located dependents, and it should be scored as one. A bare filename does not count.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each dependent carry one phrase on what that place would start getting wrong
+
+        if the class changed under it? The consequence must be about that place''s own job -
+
+        what breaks for the telemetry being reported, the filter operand being cast, the
+
+        automation rule being evaluated, the row being claimed, the badge being counted, the
+
+        sweep being scoped, the customer records being merged, the notification being
+
+        suppressed, the background email being sent, the admin chart being drawn, the survey
+
+        page being served, the chat reply being routed, the link preview being rendered, the
+
+        agent''s list being restricted, the automated replier being gated, the assistant''s
+
+        argument being validated - not a restatement of the line of code.
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say how it convinced itself the audit is exhaustive, and name
+
+        where it is likely still thin? An unqualified claim of completeness over a codebase
+
+        this size is overconfidence. Naming an area it knows it did not finish, and what it
+
+        left there, is worth more than a confident list that quietly stops.
+
+        '

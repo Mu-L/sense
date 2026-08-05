@@ -1,0 +1,533 @@
+name: Chatwoot work session - audit the conversation-record contract before a rework
+repo: chatwoot
+contract_symbol: Conversation
+contract_file: app/models/conversation.rb
+# ======================================================================================
+# SEVEN-STEP WORK SESSION (plans/03-expand.md), CYCLE 6 on this repo. EXPANSION.
+# Expands the cycle-6 two-step probe, kept byte-for-byte at
+# scenarios/chatwoot.yaml.minibench-cycle6.bak.
+# ======================================================================================
+#
+# THE MINI-BENCH THAT AUTHORISED THIS EXPANSION (results/loop/chatwoot/minibench.md,
+# both arms, x1, unscored, at the real wall), quoted:
+#
+#   baseline `dependents` 3 of 13 = 0.231     sense `dependents` 10 of 13 = 0.769
+#   delta +0.538                              PROCEED (<= 0.50 and >= +0.50, both met)
+#   .../sense/chatwoot/run-1/run_meta.json    sense    wall 340 of 480 exit 0 watchdog None valid True
+#   .../baseline/chatwoot/run-1/run_meta.json baseline wall 376 of 408 exit 0 watchdog None valid True
+#
+#   Neither arm was cut off, so the baseline's 3 of 13 is a real floor and not truncation.
+#   The baseline route was a category walk - 26 tool calls, 19 of them searches, one
+#   hand-named subsystem per call - and the subsystems it guessed (webhook, mailer, jobs,
+#   listener, llm formatter, crm, slack, captain, csat, fcm) are largely NOT where the gold
+#   rows live. `contract` was baseline 9 of 14, sense 11 of 14: an anchor group, not a gate.
+#
+# WHAT THIS EXPANSION MOVED, AND WHAT IT DID NOT:
+#   NOT MOVED. The probe's step 2 is carried into slot 4 BYTE-IDENTICAL, prompt and checks,
+#   and the `dependents` gold is carried BYTE-IDENTICAL, all thirteen rows. Move either and
+#   +0.538 stops describing this scenario. The probe's step 1 is carried into slot 2, also
+#   byte-identical, with its `contract` gold.
+#   ADDED. Five new steps around them (1, 3, 5, 6, 7) and two NON-SCORING gold groups,
+#   `write-path` (6 rows, step 3) and `guards` (5 rows, step 5), both carried from the
+#   cycle-4 seven-step session and RE-OPENED line by line in the clone this cycle - every
+#   one of the eleven lines and its enclosing `def` was read, quoted, and confirmed before
+#   it was written here. No credit is taken from a script tally and none from the .bak.
+#   NOT ADDED: a `specs` group for step 7. A GOLD ROW MUST BE CITEABLE IN THE FORM THE ASK
+#   DEMANDS, and step 7 asks for tests to be "updated or added": the banked Status control
+#   measured its two spec rows at cited 0 of 2 in 10 of 10 runs, both arms, both models,
+#   because the arms name the spec FILE and there is no line to cite for a file that does
+#   not exist yet. Step 7 still asks for the test surface - the rubric scores it - but
+#   nothing in gold hangs on it.
+#
+# MCP REACHABILITY OF THE ELEVEN ADDED ROWS (bench/lib/mcp_probe.py, this cycle). They are
+# NON-SCORING, so this is recorded for honesty, not as a gate:
+#   In the shown `sense_blast Conversation --file app/models/conversation.rb` payload (5):
+#     remove_orphan_conversations_service.rb, conversations/base_controller.rb,
+#     csat_survey_controller.rb, message_window_service.rb, response_builder_job.rb
+#   NOT in that payload, reached by a second, DIFFERENT probe (6):
+#     sense_search "conversation created event dispatched to listeners" returns
+#       conversation_builder.rb and action_cable_listener.rb; sense_graph ConversationPolicy
+#       returns conversation_policy.rb; sense_search "dispatcher publishes event
+#       synchronously and asynchronously" returns sync_dispatcher.rb and async_dispatcher.rb;
+#       sense_search "outbound webhook payload delivery listener" returns webhook_listener.rb.
+#   All eleven are MCP-reachable. None of the six absent-from-blast rows scores.
+#
+# THE SESSION ACCUMULATES. Steps 1 to 3 are worked before the discriminator, so both arms
+# arrive at step 4 with wall and context already spent. That is part of the measurement:
+# the mini-bench asked the same question cold and the paid cell asks it at step 4 of 7.
+#
+# ------------------------------------------------------------------------------------
+# TRAJECTORY - every cycle, and which side of the window it fell on.
+# The window is BOTH conditions at once: plain arm <= 0.50 AND ours >= plain + 0.50.
+# Quoted from results/loop/chatwoot/cycles.jsonl and the five minibench/validate reads.
+#
+#   cycle 1  "enclosing routine"     baseline 1.00   sense 1.00   delta  0.00
+#            FAR SIDE - baseline side. One `rg --pcre2 '(::)?Conversation'` over three
+#            trees returned 112 hits = the whole candidate set; twenty lines of Ruby in
+#            ONE tool call resolved every hit's enclosing class/def. 18 of 18 rows.
+#   cycle 2  "four hiding mechanisms" baseline 0.75  sense 0.6875 delta -0.0625
+#            FAR SIDE - baseline side. The ask listed four hiding mechanisms; the
+#            transcript ran one grep per bullet. Baseline killed at the wall, still 0.75.
+#   cycle 3  "never names the record" baseline 0.00  sense 0.1333 delta +0.133
+#            FAR SIDE - our side. The sense arm obeyed the text clause literally and
+#            excluded 13 of 15 gold files. 0.133 was the CEILING for an obedient arm.
+#   cycle 4  "caller of a toucher, no text clause"
+#            mini-bench   baseline 0.00   sense 0.60   delta +0.60  PASS (both arms cut off)
+#            seven-step   baseline 0.3333 sense 0.6667 delta +0.33  DO-NOT-PAY
+#            INSIDE the window on the baseline condition, SHORT on ours by 0.17. The best
+#            cell this repo has produced.
+#   cycle 5  "caller of a toucher, re-golded onto cycle 4's sense-only rows"
+#            mini-bench   baseline 0.50   sense 0.4167 delta -0.083  REQUESTION
+#            FAR SIDE - baseline side, and NEGATIVE. sense-only rows: ZERO.
+#
+# WHICH SIDE THIS DRAFT CORRECTS FROM, AND HOW FAR IT INTENDS TO MOVE:
+#   From cycle 5's BASELINE-side landing (0.50), back through cycle 4's position, and the
+#   move is aimed at OUR side of the delta, not at pushing the baseline lower. Target
+#   shape: baseline near cycle 4's 0.00-0.33, ours at 0.80+. Cycles 3 and 5 are both
+#   cases of correcting the previous complaint and landing on the far side; this draft
+#   changes ONE thing about the ask (the distance demand) and holds step 1 fixed, as it
+#   has been fixed for six cycles.
+#
+# ------------------------------------------------------------------------------------
+# WHAT CYCLE 5 DID WRONG, WITH THE MEASUREMENT
+#
+#   1. IT CHANGED THE ASK AND THE GOLD IN THE SAME CYCLE. Cycle 4's step-2 prompt and
+#      cycle 5's differ by two added sentences; the gold went from 15 rows to 12. Both
+#      moved, so neither result is attributable.
+#
+#   2. ONE OF THE TWO ADDED SENTENCES WAS THE LEAK. Quoted from cycle 5's step 2:
+#        "the same go-between is handed the work from more than one place, and those
+#         places are not neighbours"
+#      That sentence says: one constructor, several call sites, scattered. Quoted from
+#      results/loop/chatwoot/minibench.md, baseline calls 6 and 7:
+#        rg -n --no-heading -g '!spec/**' -g '*.rb' '\.new\([^)]*conversation|
+#          \.perform_later\([^)]*conversation|\.with\([^)]*conversation' app lib enterprise
+#      and the read's own conclusion: "The ask told the baseline what to grep for."
+#      It took `d:public-widget-create` and `c:go-between-permission` off that sweep.
+#      Both added sentences are gone from this draft.
+#
+#   3. THE EXCLUSION CLAUSE COSTS THE SENSE ARM MORE THAN IT COSTS THE BASELINE, TWICE
+#      MEASURED. Cycle 3's clause ("never naming the record at all") capped the sense arm
+#      at 0.133. Cycle 5's clause ("if that line does the work on the record itself it is
+#      out of scope however far from the record it sits") left six of twelve rows at
+#      `neither` - and all six ARE in the shown blast payload, checked row by row against
+#      mcp_probe output this cycle. The arm was shown them and filtered them out. Every
+#      exclusion clause is gone from this draft; the distance demand is a RANKING
+#      ("lead with the ones furthest out"), never a gate.
+#
+#   4. RE-GOLDING ONTO n=1 SENSE-ONLY ROWS DID NOT HOLD. Cycle 5 kept all seven of cycle
+#      4's sense-only rows as the spine; three of them (`d:contact-attachments`,
+#      `d:contact-conversations`, `d:enterprise-record-mixin`) went baseline=1 in cycle 5.
+#      The law asks for ~5 runs per arm before re-golding and this line has ~1 per cycle.
+#      So this draft does NOT gold on "sense took it once". It golds on the intersection
+#      of what the BASELINE has missed in every cycle where the row was gold - a longer
+#      record, and the only one with more than one observation behind it.
+#
+# ------------------------------------------------------------------------------------
+# SEAM PROFILE (bench/lib/seam_hunt.py, MCP defaults), quoted verbatim:
+#
+#   === Conversation  (lang=ruby, token='Conversation', hops=mcp-default, conf=mcp-default) ===
+#     app caller files : 59   (total incl test/non-app: 61)
+#     SCATTER (dirs)   : 40
+#     GREP-NOISE       : 'Conversation' in 61 app files   PRECISION=0.97  (lower=grep-hostile)
+#     VERDICT          : SCATTERED + grep-clean
+#
+#   PRECISION = 0.97: 59 caller files inside 61 grep-hit files. READ IT STRAIGHT - the
+#   cycle-5 header recorded PRECISION 0.00 and explained it as a resolver gap; that zero
+#   was an artefact of calling seam_hunt WITHOUT `--file app/models/conversation.rb` on an
+#   ambiguous symbol, so the numerator was empty. With the file passed the number is 0.97.
+#   That is the near-transcription band: the calibration on the record is 0.078 before a
+#   banked +1.00, 0.78 for a deliberate control tie, ~0.94 for a cell that handed its
+#   baseline 17 of 18 rows in one grep. 0.97 is the mechanical explanation for five cycles
+#   of baseline 0.50-1.00, and it is the honest headline number for this repo.
+#
+#   THE WHOLE POOL IS IN THAT BAND, not just this anchor. Profiled this cycle, each with
+#   its `--file`:  Message 0.97 (35/36), Contact 1.11 (31/28), Inbox 0.93 (25/27),
+#   Account 0.93 (57/61). Chatwoot names its classes at their call sites everywhere, so
+#   swapping the anchor does not move the profile. PRECISION RANKS, IT NEVER KILLS, and
+#   NO-ANCHOR is a property of the pool's ability to yield twelve dependent files across
+#   six areas - which this anchor does, thirteen across twelve. So: DRAFT, and the run
+#   decides. But the ranking is recorded, because it is what a human needs to see if this
+#   cell parks.
+#
+# WHAT THE ARM IS SHOWN (bench/lib/mcp_probe.py, sense_blast, no min_confidence).
+# `sense_blast Conversation` is AMBIGUOUS on this repo and returns a disambiguation hint
+# naming four matches; with file: app/models/conversation.rb it returns, quoted:
+#
+#   "risk":"high","risk_factors":["89 direct callers"],
+#   direct_callers 60 (cap-limited from 89)   indirect_callers 20   affected_files 88
+#   affected_via_composition 17   production_affected 97   test_affected 36
+#   "completeness": {"verdict":"partial","resolved":97,"hidden":174}
+#
+#   ALL THIRTEEN `dependents` rows below are in that shown set - checked one by one against
+#   the probe output this cycle. Seven arrive as `indirect_callers` carrying `via` and
+#   `hops` (hops 2 to 5); six as `direct_callers` whose pinned line is a hand-off or a
+#   `super`. The `indirect_callers` block is capped at 20 and cut alphabetically - nothing
+#   past `app/controllers/api/v1/accounts/i...` appears - so no enterprise-tree row is
+#   golded on an indirect edge; the six enterprise rows are all direct_callers.
+#
+#   THE FIRST BLAST CALL COSTS A ROUND TRIP and it is a property of the run, not a defect:
+#   the bare call returns "ambiguous": true, "matches": 4 and the arm must retry with the
+#   file. gold_confidence_check.py reports `shown 0, missing 13` without --file and
+#   `shown 13, missing 0` with `--file app/models/conversation.rb`; the second is the run's
+#   real shown set (the cycle-4 sense arm made 27 blast/graph calls and reached the
+#   payload; the cycle-5 arm reached it in two). Recorded so the next phase does not read
+#   the bare-call zero as a gold defect.
+#
+#   WHAT THE PAYLOAD HANDS THE ARM THAT MATCHES THIS ASK'S ANSWER SHAPE: each
+#   `indirect_callers` row is `{ref, via, hops}` - the outer place, the link, and the
+#   distance. That IS the deliverable step 2 asks for, as data. No text search computes
+#   hop distance; that is this draft's whole thesis and the next phase measures it.
+#
+# MEMORIZATION (bench/lib/memorization_probe.py Conversation), quoted:
+#   "ok": false, "recall": 0.333, "hits_n": 12, "truth_n": 36,
+#   "reason": "closed-book recall 0.333 (12 members named) >= 0.3 - recited, both arms
+#              already know it"
+#   hits: assigned_to, before_create, before_save, last_activity_at, last_incoming_message,
+#         last_user_message_at, recent_messages, toggle_priority, toggle_status,
+#         unassigned, unread_incoming_messages, unread_messages
+#   READ IT AT ROW LEVEL, which is what the law asks: what is recited is the CLASS'S OWN
+#   member list - scopes, predicates and callbacks ON the record. Not one of the twelve is
+#   a gold row, and no `dependents` row is a member of this class; they are hand-off lines
+#   in thirteen other files, six of them in the paid-edition tree. A famous repo is not
+#   disqualified; a memorized row is, and there is none.
+#
+# ------------------------------------------------------------------------------------
+# THE AXIS SENTENCE - what this scenario measures:
+#   A dependent is separated from the record by DISTANCE, not by syntax. Its line asks
+#   something, that thing asks something else, and only the last link goes near the
+#   record - two, three and five links deep in this codebase, through routines named
+#   after jobs that have nothing to do with this record. The mechanism is CHAIN LENGTH.
+#
+# THE KIND OF QUESTION, said out loud (plans/01-author.md, DECIDE):
+#   The ring sweep is EMPTY on this repo - `ring_sweep.py --top 12` returns
+#   "0 candidate(s) above the bar", all twelve anchors at 0 rows / 0 files / 0 vias - so
+#   "what HOLDS X" is off the menu here and is not proposed.
+#   WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS: it is a set of
+#   CHAINS ORDERED BY LENGTH. Membership is decided by how many hands the work passes
+#   through before something touches the record, and the length is the deliverable. A
+#   text search prints the near end of every chain - the 61 files that write the name -
+#   and cannot tell you which files sit three hands behind them, because chain length is
+#   not a property of any line's text. `rg Conversation` returns nothing at all for
+#   app/actions/contact_identify_action.rb and for the contact-merge endpoint; both are
+#   gold, both are three-to-five links out.
+#   This is still the FIRST sort of occurrence question and the header says so rather
+#   than dressing it up. What makes this one the winning sort and not the losing sort, if
+#   it is: the ordering is by graph distance, which is the one thing the grep route has
+#   never been able to compute in five cycles, and the payload hands it over as data.
+#
+# GOLD RAILS observed for the ADDED groups too: one item per FILE, no file shared with
+# another group, every line opened in the clone and its enclosing routine confirmed.
+# GOLD RAILS observed: one item per FILE; every `dependents` row appears in the shown
+# sense_blast payload quoted above; every line below was opened in the clone and read this
+# cycle before it was written here - no credit is taken from a script tally.
+description: |
+  You are a maintainer about to rework the record that stands for a single back-and-forth
+  between a customer and the support team - the one the whole product is organised around,
+  that the rest of the system keeps having to ask about. The rework will change what that
+  record hands back to the code that asks it questions. Work the steps below in order, in
+  one sitting: each one builds on what the last one established, so do not restart your
+  exploration at each step. The hard part is not the record itself - it is how far out
+  the code that breaks actually sits, and how little the routines in between have to do
+  with this record. Throughout, an answer that points at a place must give an exact
+  file:line a teammate could jump straight to, plus one phrase on why it matters. A bare
+  filename does not count, and a missed dependent is a regression shipped.
+steps:
+- name: Orient in the codebase
+  prompt: "Task: orient yourself. In a few sentences plus file:line references, what is this
+    project, how is the code organized, and where does the record that stands for a single
+    back-and-forth between a customer and the support team sit - the one the rest of the
+    system keeps having to ask about - along with the shared pieces its behaviour is
+    assembled from? Hand the next agent a map so they can act with small, targeted lookups,
+    not a fresh exploration of the codebase. No Explore agents.
+    "
+  checks:
+  - type: response_richness
+    value: '3'
+    required: true
+    description: Project shape and the record's place in it, with file:line
+  - type: mcp_tool_used
+    value: sense_search
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_conventions
+    required: false
+    layer: adoption
+- name: Map the conversation-record contract
+  prompt: "Task: orient, and be thorough - the rest of the ticket is built on this. Start
+    with the one part of this record's job that the whole inbound-mail side leans on:
+    getting hold of the right one of these when a message arrives from outside and all the
+    system holds are the headers that came with it. Trace that path end to end. Show where
+    an arriving message is decided to belong to this path at all, the piece that runs the
+    candidate matches in order, each separate way a match is attempted and what identifier
+    it keys off, the fallback that starts a fresh record when none of them matched, and the
+    point where a record that was only prepared is finally made permanent. For each one
+    give the file:line, the name of the routine it lives in, and one phrase on what it
+    contributes to that path. Then say, in a few sentences, what a rework would have to
+    preserve for that path to keep working. A place named without the routine it lives in
+    does not count, and neither does a routine named without the file:line where it is
+    defined.
+    "
+  checks:
+  - type: response_richness
+    value: '8'
+    required: true
+    description: Inbound matching path traced through the routines that make it up, each located
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+- name: Trace how one of these records is created and taken apart
+  prompt: "Task: trace the lifecycle, building on the map you already have. Follow one of
+    these records from the point where the system decides it needs one it does not have
+    yet, through it being brought into existence and later changed, and on to the point
+    where it is removed again, and say what runs around each of those moments. Something is
+    told every time one of these appears or changes; find the piece that does the telling,
+    and show that it hands the news on along two different routes at once. For every layer
+    give the file:line and the name of the routine it lives in, and mark which parts run
+    inline, in the request that triggered them, and which are handed off to run later in the
+    background. Where something is handed off, say what it is handed the record by - the
+    record itself, or something it can be looked up from again - because that is what a
+    rework of the contract has to keep working.
+    "
+  checks:
+  - type: response_richness
+    value: '4'
+    required: true
+    description: Lifecycle traced through its routines at file:line, inline vs deferred marked
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+- name: Audit every dependent of the conversation-record contract
+  prompt: "Task: this is the core of the ticket, and you are working it with the budget the
+    first part already cost you. Widen back out from that one path to the record class as a
+    whole and find the code that would change behaviour once the rework lands. What makes
+    this hard, and what I want you working at, is DISTANCE. Some of what breaks sits right
+    up against the record. Most of it does not: it asks something else, and that thing asks
+    something else again, and only the last link in the chain ever goes near the record.
+    Chains that long are ordinary here, and the links in the middle are named after jobs
+    that have nothing to do with this record at all, so following one outwards is the whole
+    exercise. So work outwards, link by link, and keep going until the chain runs out - do
+    not stop at the first thing you land on, because the place that actually breaks is
+    usually further out than that. The ones I care about most are the ones furthest out,
+    so lead with those and satisfy yourself you have not stopped short; the near ones are
+    welcome too, they are just not what I am short of. For every place you report, give
+    the exact file:line, then the chain running from that line down to the record - what
+    it asks, what that asks in turn, and so on until something finally reaches the record
+    - how far out it sits, and one phrase on what that place starts getting wrong once the
+    record stops handing back what it hands back today. Be exhaustive across every tree in
+    this codebase, including the ones you would not think to look in twice, and group what
+    you find by area. A bare filename does not count, a place you cannot give the chain
+    for does not count, and a missed dependent is a regression shipped.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Distant dependents, each located at file:line with its chain to the record and its distance
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+- name: Trace the guards that confirm a real, current record
+  prompt: "Task: work runs against one of these records all over the codebase, and some of
+    what that work is handed is not one at all, or is one the caller is not entitled to act
+    on, or is one whose state has moved on since it was picked up. Trace how the code
+    satisfies itself, before it acts, that what it holds really is one of these and is still
+    a current one it may act on: where an identifier arriving from outside is turned into a
+    record or into a refusal rather than an error further down, where the question of whether
+    this caller may see this one at all is settled, and where code that has been holding one
+    for a while re-checks that the state it decided on is still the state it has. Give the
+    file:line and the enclosing routine for each guard, and say in one phrase what it is
+    protecting the caller from.
+    "
+  checks:
+  - type: response_richness
+    value: '3'
+    required: true
+    description: Guards located at file:line in their routines, with what each protects against
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+- name: Assess the blast radius of the contract change
+  prompt: "Task: you are about to change what this record hands back. Assess the full blast
+    radius across everything you have found: which dependents are at risk, which are most
+    likely to break, and what must be re-verified afterwards. Rank by risk and say what
+    drives the ranking - separate the ones that would fail loudly and immediately from the
+    ones that would keep running and quietly return something different, which are the
+    expensive ones. Use file:line throughout and name the routine that carries each risk, not
+    just the file it is in. A missed high-risk dependent is the one that pages someone.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Dependents ranked by risk at file:line in their routines, not relisted
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+- name: Produce the change + verification map
+  prompt: "Task: produce the complete map for landing this safely: the pieces of the contract
+    itself you will edit, every dependent that has to be reviewed or touched grouped by area,
+    and the tests that would have to be updated or added to cover the behaviour that moves.
+    Use file:line and the enclosing routine throughout, so a teammate could land the change
+    from your map alone without re-exploring the codebase.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: An actionable map - edits at file:line, dependents by area, and the test surface
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
+# Gold is the must-find audit of what depends on the conversation record. FOUR groups, of
+# which only `dependents` is the discriminator; `contract`, `write-path` and `guards` are
+# what BOTH arms are expected to reach - they dilute, they do not decide.
+# TWO groups CARRIED BYTE-IDENTICAL FROM THE MINI-BENCH (do not touch either):
+#   - `contract` (14, NON-SCORING anchors): the class file; the eight files of the
+#     inbound-mail matching path (step 1's targets); and the five LINKS the thirteen
+#     dependents' chains run through. The links are the obvious ring by construction -
+#     they are what a name search returns - and they must NOT score, because scoring them
+#     scores the search. Cycle 5 carried 18 contract rows including four association
+#     declarations that one grep returns in a single command; those four are dropped, per
+#     the cycle-5 read's own point that the contract half was burning wall in both arms
+#     for nothing.
+#   - `dependents` (13, THE DISCRIMINATOR): one row per FILE, across TWELVE distinct
+#     directories in two trees (`app`, `enterprise`). Not one is on the matching path step
+#     1 traces, and not one appears in the `contract` group.
+#
+# TWO groups ADDED BY THE EXPANSION, both NON-SCORING, neither ever faced by a baseline:
+#   - `write-path` (6, step 3): the inline creation point, the two routes the record's
+#     appearance and change hooks fan out along, one listener on each route, and the
+#     teardown. One row per FILE and no file shared with any other group. Five of the six
+#     are NOT in the shown `sense_blast` payload; their reachability was probed separately
+#     and is recorded in the header. They are non-scoring precisely because that asymmetry
+#     would otherwise be untested gold.
+#   - `guards` (5, step 5): identifier-to-record-or-refusal on a dashboard route and on a
+#     public one, the may-this-caller-see-it decision, the reply-window check, and the
+#     re-read of state by a background job that has been holding a record. One row per
+#     FILE, none shared.
+#   EVERY ONE OF THE ELEVEN was opened in the clone this cycle and its line quoted back
+#   with the `def` it sits inside - `create_new_conversation`, `dispatch`, `dispatch`,
+#   `conversation_created`, `conversation_created`, `perform`, `conversation`, `show?`,
+#   `set_conversation`, `can_reply?`, `conversation_pending?`. No row is taken from the
+#   cycle-4 .bak on trust and none from a script tally.
+#
+# THE PROPERTY THAT DEFINES THIS GROUP: the pinned line is separated from the record by at
+# least one further link. Seven rows are `indirect_callers` in the shown payload, carrying
+# `via` and `hops` (2 to 5). Six are `direct_callers` whose pinned line is a `super` or a
+# subclass hook - the record's behaviour is extended from a module or a subclass, and the
+# extension is what the rework moves under.
+#
+# HOW THE THIRTEEN WERE CHOSEN - the baseline's own record, not one run:
+#   Rows the BASELINE has never cited in ANY cycle where they were gold, quoted from the
+#   credit tables in results/loop/chatwoot/validate.md and the archived minibench reads:
+#     d:contact-identify           neither in cycle 3, neither in cycle 4
+#     d:contact-merge-api          neither in cycle 3, neither in cycle 4
+#     d:facebook-builder           sense-only c4, neither c5
+#     d:instagram-builder          sense-only c4, neither c5
+#     d:messenger-scope-override   neither c4, neither c5
+#     d:enterprise-sla-payload     sense-only c4, neither c5
+#     d:enterprise-permission-override  neither c5
+#     d:enterprise-update-params        neither c5
+#   Those eight are the spine. Five more of the same shape complete the group:
+#     d:contact-attachments, d:contact-conversations, d:assignment-endpoint - sense-only in
+#       cycle 4, baseline-cited in cycle 5 off the leaked `.new(...conversation` sweep that
+#       this draft removes. Kept, and named here as the rows most at risk if the leak is
+#       not really what took them.
+#     d:enterprise-record-mixin - same, and the cycle-5 route that took it was the
+#       `prepend_mod_with|include_mod_with` grep, which cycle 5's ask invited by saying
+#       "folded in from elsewhere". This draft says nothing about how a link is spelled.
+#     d:captain-search - NEW this cycle, never benched. A fourth caller of the same access
+#       link from a third tree.
+#   SAY WHAT IT COSTS IF THAT JUDGEMENT IS WRONG: if all five behave as they did in cycle
+#   5 rather than cycle 4, the baseline sits at 5 of 13 = 0.38 - still under the bar's
+#   ceiling, and ours would need 0.88 to clear +0.50. If they behave as in cycle 4 the
+#   baseline sits near 0.
+#
+# WHAT IT IS NOT: token-darkness. Eleven of these thirteen files write the record's name
+# somewhere and they are all gold anyway; two (the contact-identify action and the
+# contact-merge endpoint) do not, and they are gold for their hop distance, not for their
+# silence. The group is selected for chain length and nothing else. Cycle 3 lost the cell
+# by wording the ask as if darkness and distance were the same thing.
+#
+# WHAT WAS CONSIDERED AND REJECTED, so the next cycle does not re-walk it. Each was opened
+# and read this cycle:
+#   app/channels/room_channel.rb:50 - payload says `via Contact, hops 2`. Opened it: the
+#     file is presence tracking, touches ContactInbox / OnlineStatusTracker, and no chain
+#     from it reaches the record. FALSE EDGE, not gold.
+#   app/controllers/api/v1/accounts/agent_bots_controller.rb:6 - payload says `via AgentBot,
+#     hops 2`. Opened it: CRUD on agent bots, avatar job, nothing conversational.
+#     FALSE EDGE, not gold.
+#   app/controllers/api/v1/accounts/inbox_csat_templates_controller.rb:28 - payload says
+#     `via CsatTemplateUtilityAnalysisService#perform, hops 3`. Opened both: the controller
+#     hands to CsatTemplateUtilityAnalysisService, which constructs
+#     Captain::CsatUtilityAnalysisService and touches no conversation. FALSE EDGE, and
+#     cycle 5 rejected the same edge independently.
+#   enterprise/lib/captain/tools/update_priority_tool.rb:36 - `[nil] + Conversation.priorities.keys`
+#     reads the record's own enum head-on. Zero links out; it would be a near row in a
+#     group built on distance, so it is left out rather than diluting.
+#   enterprise/app/services/captain/llm/faq_generator_service.rb:30 - opened it: builds an
+#     LLM system prompt from a Document, no conversation anywhere. FALSE EDGE.
+#   app/builders/notification_builder.rb:49 `ConversationPolicy.new(...)` - a real hand-off
+#     and a real chain, but the baseline CITED it in cycle 1 and again in cycle 4
+#     (`d:notification-gate`, baseline-only). A row the grep route has taken twice is a
+#     gift, so it is out.
+#   app/models/concerns/push_data_helper.rb - textbook hand-off on the merits, but the
+#     payload is cap-limited at 60 of 89 direct callers and this file is one of the ones
+#     cut (`direct_callers_by_area` reports `app/models/concerns: 3`, two are listed).
+#     NOT GOLD - a row the payload cannot serve can only ever score zero.
+# DO NOT TAKE A CREDIT FROM A SCRIPT TALLY: these seven are what a tally would have taken.
+gold:
+- {id: contract-model, group: contract, match: [app/models/conversation.rb], relation: "app/models/conversation.rb:54 `class Conversation < ApplicationRecord` - the contract under rework; the lines below it mix in the concerns its behaviour is assembled from"}
+- {id: c:application-mailbox, group: contract, match: [app/mailboxes/application_mailbox.rb], relation: "app/mailboxes/application_mailbox.rb:10 `routing(` - the front door; the lambda it opens decides an arriving mail belongs to this path at all"}
+- {id: c:reply-mailbox, group: contract, match: [app/mailboxes/reply_mailbox.rb], relation: "app/mailboxes/reply_mailbox.rb:24 `@conversation = Mailbox::ConversationFinder.new(mail).find` - inside `ReplyMailbox#find_conversation`, the before_processing hook every inbound reply enters through"}
+- {id: c:finder, group: contract, match: [app/services/mailbox/conversation_finder.rb], relation: "app/services/mailbox/conversation_finder.rb:15 `@strategies.each do |strategy_class|` - inside `Mailbox::ConversationFinder#find`, the piece that runs the candidate matches in the declared order and returns the first that hits"}
+- {id: c:base-strategy, group: contract, match: [app/services/mailbox/conversation_finder_strategies/base_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/base_strategy.rb:12 `def find`, raising NotImplementedError at :13 - the contract every match attempt implements; the comment at :10 declares the return type as the record or nil"}
+- {id: c:receiver-uuid, group: contract, match: [app/services/mailbox/conversation_finder_strategies/receiver_uuid_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/receiver_uuid_strategy.rb:9 `Conversation.find_by(uuid: uuid)` - inside `#find`, the first attempt; it keys off the uuid embedded in the reply-to address"}
+- {id: c:in-reply-to, group: contract, match: [app/services/mailbox/conversation_finder_strategies/in_reply_to_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/in_reply_to_strategy.rb:23 `conversation = Conversation.find_by(uuid: uuid)` - inside `#find`, the second attempt; it keys off the In-Reply-To header and falls back to the record hanging off a matched message"}
+- {id: c:references, group: contract, match: [app/services/mailbox/conversation_finder_strategies/references_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/references_strategy.rb:41 `conversation = Conversation.find_by(uuid: uuid, inbox_id: @channel.inbox.id)` - inside `#find_conversation_from_reference`, the third attempt; it walks the References header and scopes the match to the channel's inbox"}
+- {id: c:new-conversation, group: contract, match: [app/services/mailbox/conversation_finder_strategies/new_conversation_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/new_conversation_strategy.rb:57 `@conversation = ::Conversation.new(` - inside `#build_conversation`, the fallback that PREPARES an unsaved record; the reply mailbox is what makes it permanent"}
+- {id: c:link-permission, group: contract, match: [app/services/conversations/permission_filter_service.rb], relation: "app/services/conversations/permission_filter_service.rb:19 `conversations.where(inbox: user.inboxes.where(account_id: account.id))` - inside `Conversations::PermissionFilterService#accessible_conversations`, the LINK four dependents' chains run through; the relation arrives as a constructor argument and this narrows it to the inboxes the agent may see. What a name search returns, so non-scoring"}
+- {id: c:link-assignment, group: contract, match: [app/services/conversations/assignment_service.rb], relation: "app/services/conversations/assignment_service.rb:17 `conversation.assignee = assignee` - inside `Conversations::AssignmentService#assign_agent`, the LINK d:assignment-endpoint's chain runs through; this service is what writes the assignee and saves the record. Non-scoring"}
+- {id: c:link-merge, group: contract, match: [app/actions/contact_merge_action.rb], relation: "app/actions/contact_merge_action.rb:34 `Conversation.where(contact_id: @mergee_contact.id).update(contact_id: @base_contact.id)` - inside `ContactMergeAction#merge_conversations`, the LINK at the far end of both contact-side chains; it is the only line in either chain that names the record. Non-scoring"}
+- {id: c:link-presenter, group: contract, match: [app/presenters/conversations/event_data_presenter.rb], relation: "app/presenters/conversations/event_data_presenter.rb:8 `id: display_id,` - inside `Conversations::EventDataPresenter#push_data`; the class is a SimpleDelegator, so every key of the broadcast payload is a bare method call handed straight through to the wrapped record. The LINK under d:enterprise-sla-payload, and what a token grep returns, so non-scoring"}
+- {id: c:link-update-params, group: contract, match: [app/controllers/api/v1/accounts/conversations_controller.rb], relation: "app/controllers/api/v1/accounts/conversations_controller.rb:47 `@conversation.update!(permitted_update_params)` - inside `#update`, the LINK under d:enterprise-update-params; this is the write the paid-edition module widens from underneath, and it is the loudest conversation file in the tree, so non-scoring"}
+- {id: d:contact-identify, group: dependents, match: [app/actions/contact_identify_action.rb], relation: "app/actions/contact_identify_action.rb:121 `ContactMergeAction.new(` - inside `#merge_contact`, reached from `#process_contact_merge` at :50, itself reached from three sibling guards at :33, :39 and :46; the merge action's `#merge_conversations` is what rewrites the records' contact_id. Payload rows: {hops 3,4,5}. Nothing in this file writes the record's name"}
+- {id: d:contact-merge-api, group: dependents, match: [app/controllers/api/v1/accounts/actions/contact_merges_controller.rb], relation: "app/controllers/api/v1/accounts/actions/contact_merges_controller.rb:6 `contact_merge_action = ContactMergeAction.new(` - inside `#create`, the dashboard endpoint for merging two customers; the record rewrite is two links further down, in the action's `#merge_conversations`. Payload row: {via ContactMergeAction#perform, hops 3}"}
+- {id: d:facebook-builder, group: dependents, match: [app/builders/messages/facebook/message_builder.rb], relation: "app/builders/messages/facebook/message_builder.rb:56 `@conversation ||= set_conversation_based_on_inbox_config` - inside `#conversation`, the memo every inbound message on this channel goes through; the routine it calls at :59 branches on the inbox's single-thread setting and only its branches touch the record. Payload row: {via #set_conversation_based_on_inbox_config, hops 2}"}
+- {id: d:instagram-builder, group: dependents, match: [app/builders/messages/instagram/base_message_builder.rb], relation: "app/builders/messages/instagram/base_message_builder.rb:60 `@conversation ||= set_conversation_based_on_inbox_config` - inside `#conversation`; the chain runs :60 -> `#set_conversation_based_on_inbox_config` at :63 -> `#find_conversation_scope` at :71 or `#build_conversation`, and only the last link queries the record. Payload row: {via #set_conversation_based_on_inbox_config, hops 3}"}
+- {id: d:messenger-scope-override, group: dependents, match: [app/builders/messages/instagram/messenger/message_builder.rb], relation: "app/builders/messages/instagram/messenger/message_builder.rb:25 `def find_conversation_scope` - the subclass hook the parent's `#set_conversation_based_on_inbox_config` calls; the Messenger variant narrows the match to instagram_direct_message threads at :27, so the parent's behaviour changes here without the parent naming this file"}
+- {id: d:contact-attachments, group: dependents, match: [app/controllers/api/v1/accounts/contacts/attachments_controller.rb], relation: "app/controllers/api/v1/accounts/contacts/attachments_controller.rb:5 `conversations = Conversations::PermissionFilterService.new(` - inside `#index`; which of a customer's attachments an agent may see is decided inside the service, and :11 feeds the filtered set into the attachment query. Payload row: {via Conversations::PermissionFilterService, hops 2}"}
+- {id: d:contact-conversations, group: dependents, match: [app/controllers/api/v1/accounts/contacts/conversations_controller.rb], relation: "app/controllers/api/v1/accounts/contacts/conversations_controller.rb:9 `conversations = Conversations::PermissionFilterService.new(` - inside `#index`; the endpoint builds a candidate set at :4 and then delegates the whole access decision, ordering the survivors by the record's last_activity_at at :15. Payload row: {via Conversations::PermissionFilterService, hops 2}"}
+- {id: d:assignment-endpoint, group: dependents, match: [app/controllers/api/v1/accounts/conversations/assignments_controller.rb], relation: "app/controllers/api/v1/accounts/conversations/assignments_controller.rb:16 `resource = Conversations::AssignmentService.new(` - inside `#set_agent`; `@conversation` arrives from a parent controller's before_action and the whole assignment write happens one link down, inside the service. Payload row: {via Conversations::AssignmentService, hops 2}"}
+- {id: d:captain-search, group: dependents, match: [enterprise/app/services/captain/tools/copilot/search_conversations_service.rb], relation: "enterprise/app/services/captain/tools/copilot/search_conversations_service.rb:52 `Conversations::PermissionFilterService.new(` - inside `#permissible_conversations`, the assistant tool's own hand-off to the same access-decision link from a third tree; `#get_conversations` at :35 starts from whatever the service hands back and narrows it further"}
+- {id: d:enterprise-permission-override, group: dependents, match: [enterprise/app/services/enterprise/conversations/permission_filter_service.rb], relation: "enterprise/app/services/enterprise/conversations/permission_filter_service.rb:5 `super` - inside `#perform` of a module folded over the access-decision link; :3 diverts to a custom-role branch and this line hands every other case back down the chain, so which records an agent sees is decided across two files that never call each other by name"}
+- {id: d:enterprise-update-params, group: dependents, match: [enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb], relation: "enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb:19 `super.merge(params.permit(:sla_policy_id))` - inside `#permitted_update_params` of a module folded into the dashboard controller; the write itself is `super`'s, one link down, and this line widens what may be written without touching the record"}
+- {id: d:enterprise-record-mixin, group: dependents, match: [enterprise/app/models/enterprise/conversation.rb], relation: "enterprise/app/models/enterprise/conversation.rb:19 `super || call_attributes_changed?` - inside `#allowed_keys?` of a module folded into the record itself; with `#list_of_keys` at :13 it OVERRIDES two of the record's own methods through `super`, so the rebroadcast rules are decided by a hand-off back up the ancestor chain"}
+- {id: d:enterprise-sla-payload, group: dependents, match: [enterprise/app/presenters/enterprise/conversations/event_data_presenter.rb], relation: "enterprise/app/presenters/enterprise/conversations/event_data_presenter.rb:4 `super.merge(` - inside `#push_data` of a module folded over the delegating presenter; `super` hands the whole payload out to the delegator, which is itself a delegator onto the record, and three more fields are merged onto the result at :5-:7"}
+- {id: w:builder, group: write-path, match: [app/builders/conversation_builder.rb], relation: "app/builders/conversation_builder.rb:17 `::Conversation.create!(conversation_params)` - inside `ConversationBuilder#create_new_conversation`; the point where the system, having first tried to reuse one at line 5, brings a new record into existence INLINE in the request that triggered it"}
+- {id: w:sync-dispatch, group: write-path, match: [app/dispatchers/sync_dispatcher.rb], relation: "app/dispatchers/sync_dispatcher.rb:4 `publish(event_object.method_name, event_object)` - inside `SyncDispatcher#dispatch`; route ONE of the two the record's creation and update hooks fan out along - it publishes in the caller's own thread, so the listeners named at line 8 run INLINE and are handed the record OBJECT itself"}
+- {id: w:async-dispatch, group: write-path, match: [app/dispatchers/async_dispatcher.rb], relation: "app/dispatchers/async_dispatcher.rb:3 `EventDispatcherJob.perform_later(event_name, timestamp, data)` - inside `AsyncDispatcher#dispatch`; route TWO - the same event is enqueued, so the listeners further down the file run LATER in the background and are handed the record through a serialized job argument, which is what a contract rework has to keep round-trippable"}
+- {id: w:action-cable, group: write-path, match: [app/listeners/action_cable_listener.rb], relation: "app/listeners/action_cable_listener.rb:69 `broadcast(account, tokens, CONVERSATION_CREATED, conversation.push_event_data)` - inside `#conversation_created`; the INLINE (sync-route) listener, which turns the freshly created record into the websocket payload the dashboard renders"}
+- {id: w:webhook, group: write-path, match: [app/listeners/webhook_listener.rb], relation: "app/listeners/webhook_listener.rb:21 `payload = conversation.webhook_data.merge(event: __method__.to_s)` - inside `#conversation_created`; the BACKGROUND (async-route) listener, which re-reads the record for the outbound webhook body before handing it on to be delivered"}
+- {id: w:orphan-teardown, group: write-path, match: [app/services/internal/remove_orphan_conversations_service.rb], relation: "app/services/internal/remove_orphan_conversations_service.rb:15 `Conversation.where(id: conversation_ids).destroy_all` - inside `#perform`; the removal path, run in batches over the query built lower in the file, and `destroy_all` rather than `delete_all` is what still fires the record's own before_destroy and after_destroy_commit hooks"}
+- {id: g:conversation-scope, group: guards, match: [app/controllers/api/v1/accounts/conversations/base_controller.rb], relation: "app/controllers/api/v1/accounts/conversations/base_controller.rb:7 `@conversation ||= Current.account.conversations.find_by!(display_id: params[:conversation_id])` - inside `#conversation`, a before_action; an outside display id becomes a record scoped to the current account or a 404, and the next line authorizes it - this is what stops every nested endpoint acting on another account's record"}
+- {id: g:policy, group: guards, match: [app/policies/conversation_policy.rb], relation: "app/policies/conversation_policy.rb:11 `administrator? || agent_bot? || agent_can_view_conversation?` - inside `ConversationPolicy#show?`; the may-this-caller-see-this-one decision, resolved further down the file from the record's own inbox and team"}
+- {id: g:csat-uuid, group: guards, match: [app/controllers/public/api/v1/csat_survey_controller.rb], relation: "app/controllers/public/api/v1/csat_survey_controller.rb:18 `@conversation = Conversation.find_by!(uuid: params[:id])` - inside `#set_conversation`, a before_action on a PUBLIC controller; a customer-supplied uuid becomes a record or a 404 before anything reaches through it for the survey message"}
+- {id: g:message-window, group: guards, match: [app/services/conversations/message_window_service.rb], relation: "app/services/conversations/message_window_service.rb:10 `return true if messaging_window.blank?` - inside `#can_reply?`; the still-actionable check - whether the channel's reply window has closed on this record - decided from the channel type and the last incoming message further down the file"}
+- {id: g:captain-stale, group: guards, match: [enterprise/app/jobs/captain/conversation/response_builder_job.rb], relation: "enterprise/app/jobs/captain/conversation/response_builder_job.rb:215 `status = Conversation.uncached { Conversation.where(id: @conversation.id).pick(:status) }` - inside `#conversation_pending?`; a background job that has been holding a record re-reads its status straight from the database, bypassing the query cache, because the state may have moved on since it was picked up"}

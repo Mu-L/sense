@@ -1,0 +1,198 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 2 on chatwoot. Supersedes the cycle-1 rubric, kept at
+# scenarios/chatwoot.rubric.yaml.enclosing-routine-cycle1.bak, whose step-2 criteria
+# demanded the ENCLOSING ROUTINE for every dependent. That demand was met by a baseline
+# in one tool call (a twenty-line Ruby script walking upward from each search hit to its
+# `def`/`class`), scoring 18 of 18 - so the routine name is dropped as the discriminating
+# demand and does not appear below.
+#
+# WHY step 2's map_quality asks about a RESTRICTION rather than a count: the audit is
+# defined as the complement of what a name search prints. An answer that lists code
+# writing the record's class name plainly is answering the question the maintainer
+# explicitly excluded, however correct each entry is. The criterion has to reward the
+# restriction being honoured, not the length of the list.
+#
+# WHY specificity no longer demands the routine: the four hiding mechanisms mean the
+# dependency often sits in a class body, an `included do` block, an association walk in a
+# controller action, or a delegated payload hash - the enclosing definition is sometimes
+# the file itself. Demanding it would penalise a correct answer on the rows that carry the
+# axis. file:line plus the consequence is the whole demand now.
+#
+# TWO steps, matching the two-step probe. Step names MUST match scenarios/chatwoot.yaml
+# exactly (the judge pairs by name).
+
+audience: 'An AI coding agent that will use this answer to safely rework the Chatwoot
+  conversation record - the object the whole product is organised around, that a customer''s
+  back-and-forth with the support team is filed under. Score for that agent, not a human
+  reader and not a docs page. A perfect answer leaves the agent able to change that class
+  knowing two things: how the system gets hold of the right one of these when a reply
+  arrives from outside and all it holds are the mail headers - traced through the routines
+  that make that path up - and then, separately, which code breaks under that change
+  WITHOUT ever writing the class''s name, each such place pinned to an exact file:line with
+  the consequence for that place stated. That second part is the hard half and it is
+  deliberately narrow: code that says the name plainly is out of scope, because a
+  maintainer doing the rework already sees it. What is in scope is behaviour mixed into the
+  record from a file that only ever refers to itself; a wrapper that forwards every
+  question straight through to the record and so names none of what it asks for; a
+  collection reached through an association hung off some other record; and the record
+  handed along as an argument by a caller that did not name it either, leaving the file
+  that breaks using only what it was given. Those places are scattered across the
+  application tree and a second application tree carrying the paid edition, in models,
+  concerns, presenters, services, jobs and controllers. A weak answer re-lists the code
+  that names the class - the finder strategies, the mailboxes, the query builders -
+  because a name search returns them; or names the right kind of place but leaves it as a
+  bare filename; or gives file:line with nothing said about what would break, which leaves
+  the agent knowing where to look and not what its change would do.
+
+  '
+steps:
+- name: Map the conversation-record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is the inbound-mail matching path traced end to end as one connected path,
+
+        rather than listed as places the class is mentioned? A strong answer reaches the
+
+        routing decision that admits an arriving message to this path, the piece that runs
+
+        the candidate matches in a declared order and stops at the first hit, each separate
+
+        attempt and the identifier it keys off, the fallback that prepares a fresh record
+
+        when none matched, and the point where a merely prepared record is made permanent.
+
+        Credit is for showing how they connect and in what order, not for the count. Could
+
+        the next step act from this map with small targeted lookups rather than a fresh
+
+        exploration?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every place carry an exact file:line AND the name of the routine it lives
+
+        in? A bare filename is not specific. A file:line with no routine named around it
+
+        is not specific - the maintainer asked whose code it is, not where the character
+
+        offset falls. A routine named without the file:line where it is defined is not
+
+        specific either.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it contributes to the matching path -
+
+        which identifier it keys off, what it scopes the match by, what it falls back to,
+
+        why it refuses? Do the closing sentences say what a rework must preserve in terms
+
+        of behaviour, rather than restating the method names?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate what it verified by reading from what it inferred from a
+
+        name? Guessing at a fallback it never opened is worse than saying it did not
+
+        check. Is completeness claimed without saying how it was established?
+
+        '
+- name: Audit every dependent of the conversation-record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'THE DISCRIMINATOR, and it is about a RESTRICTION, not a count. The maintainer
+
+        asked only for code that breaks WITHOUT writing the record class''s name. Does the
+
+        audit honour that? A strong answer is dense in the four places such code hides:
+
+        behaviour mixed into the record from a separate file that only ever refers to
+
+        itself; a wrapper that forwards every question straight through to the record;
+
+        collections reached through an association declared on some other record; and the
+
+        record handed along as an argument, so the file that breaks uses only what it was
+
+        given. A weak answer re-lists the code that says the name plainly - the lookup
+
+        strategies, the mailboxes, the query builders, the telemetry counts - because that
+
+        is what a name search returns, and it is exactly what was excluded. Padding the
+
+        list with excluded entries is worse than a shorter list that respects the
+
+        restriction, and should pull this criterion down. Does the answer reach BEYOND the
+
+        main application tree into the second application tree carrying the paid edition,
+
+        and across model concerns, presenters, services, jobs and controllers, or is it
+
+        dense in one kind of place and silent about the rest? Areas it could not finish
+
+        should be declared unfinished rather than quietly summarised.
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does EVERY place carry its own exact file:line? A bare filename does not count -
+
+        the whole difficulty here is that the record''s name is not on the line, so a
+
+        filename alone leaves the agent to find it again. Several places named together on
+
+        one line as a set that shares a reason is the failure this criterion exists to
+
+        catch: however correct the shared reason is, it is one item, not a set of located
+
+        dependents, and it should be scored as one. Naming the routine or the file''s own
+
+        class is welcome context but is not required and earns nothing on its own.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it would start getting wrong if the
+
+        record changed under it? The consequence must be about that place''s own job - the
+
+        assignment that stops being made, the activity message that stops being posted, the
+
+        push payload that loses a field, the reply window that is computed wrong, the
+
+        upload that stops being refused, the read receipt that stops being written, the
+
+        merged customer whose history is left behind, the restricted list an agent should
+
+        not see - not a restatement of the line of code, and not a restatement of the
+
+        hiding mechanism. Does the answer also say WHICH of the four ways each place hides,
+
+        so the agent knows what to look for next time and why a name search failed this
+
+        time?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say how it convinced itself this audit is exhaustive, given that
+
+        the thing it is looking for is defined by the absence of a searchable name? An
+
+        unqualified claim of completeness is overconfidence here more than anywhere.
+
+        Naming a hiding mechanism it knows it did not work to the end, and what it expects
+
+        is still there, is worth more than a confident list that quietly stops.
+
+        '

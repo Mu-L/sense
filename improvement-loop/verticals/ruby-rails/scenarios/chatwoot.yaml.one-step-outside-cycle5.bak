@@ -1,0 +1,315 @@
+name: Chatwoot work session - audit the conversation-record contract before a rework
+repo: chatwoot
+contract_symbol: Conversation
+contract_file: app/models/conversation.rb
+# ======================================================================================
+# TWO-STEP PROBE SCENARIO (plans/01-author.md), CYCLE 5 on this repo. RE-QUESTION.
+# Supersedes the cycle-4 seven-step session, kept byte-for-byte at
+# scenarios/chatwoot.yaml.handoff-7step-cycle4.bak.
+# ======================================================================================
+#
+# THE ANCHOR IS UNCHANGED - `Conversation`, five cycles running. ITERATE ON THE QUESTION,
+# KEEP THE ANCHOR. What changes this cycle is the gold group, and it changes off measured
+# per-row credit, not off taste.
+#
+# ------------------------------------------------------------------------------------
+# TRAJECTORY - every cycle, and which side of the window it fell on.
+# The window is BOTH conditions at once: plain arm <= 0.50 AND ours >= plain + 0.50.
+# Quoted from results/loop/chatwoot/cycles.jsonl and the four minibench/validate reads.
+#
+#   cycle 1  "enclosing routine"     baseline 1.00  sense 1.00   delta  0.00
+#            FAR SIDE - baseline side. One `rg --pcre2 '(::)?Conversation'` over three
+#            trees returned 112 hits = the whole candidate set, and twenty lines of Ruby
+#            in ONE tool call resolved every hit's enclosing class/def. 18 of 18 rows.
+#   cycle 2  "never names it"        baseline 0.75  sense 0.6875 delta -0.0625
+#            FAR SIDE - baseline side. The ask listed four hiding mechanisms; the
+#            transcript ran one grep per bullet. Baseline killed at the wall, still 0.75.
+#   cycle 3  "caller of a toucher"   baseline 0.00  sense 0.1333 delta +0.133
+#            FAR SIDE - our side. The ask's "never naming the record at all" clause was
+#            obeyed literally by the sense arm, which excluded 13 of 15 gold files on that
+#            ground. 0.133 was the CEILING for an arm obeying the prompt, not a tool miss.
+#   cycle 4  "hand-off, no text clause"
+#            mini-bench   baseline 0.00  sense 0.60   delta +0.60   PASS (both arms cut off)
+#            seven-step   baseline 0.3333 sense 0.6667 delta +0.33  DO-NOT-PAY
+#            INSIDE the window on the baseline condition (0.3333 <= 0.50), SHORT on ours
+#            by 0.17. First cycle in four that landed in neither ditch.
+#
+# WHICH SIDE THIS DRAFT CORRECTS FROM, AND HOW FAR IT INTENDS TO MOVE:
+#   From cycle 4's OUR-SIDE shortfall. The baseline condition is already met and the
+#   wording that met it is kept almost verbatim; the move is +0.17 on the delta, not a
+#   swing across the window. Nothing here is aimed at pushing the baseline lower - the
+#   cycle-3 ditch is what that produces.
+#
+# ------------------------------------------------------------------------------------
+# WHAT MOVED, AND THE MEASUREMENT BEHIND EACH MOVE
+# Source: bench/lib/credit_table.py over the cycle-4 pair (results/loop/chatwoot/validate.md),
+# and bench/lib/inverse_frequency.py over results/claude-opus-5/validation.
+#
+#   1. THE SEVEN MEASURED SENSE-ONLY DEPENDENTS ARE KEPT, ALL OF THEM. Quoted:
+#        sense-only  d:assignment-endpoint, d:contact-attachments, d:contact-conversations,
+#                    d:enterprise-record-mixin, d:enterprise-sla-payload,
+#                    d:facebook-builder, d:instagram-builder
+#      Baseline 0 of 7, sense 7 of 7. That is the measured discriminator and it is now the
+#      spine of the group rather than 7 of 15 of it.
+#
+#   2. THE FIVE ROWS THE BASELINE TOOK ARE OUT. Quoted from the credit table:
+#        baseline-only  d:activity-concern, d:notification-gate
+#        both           d:assignment-concern, d:push-payload, d:widget-contact-identify
+#      The route that took them is named in validate.md: `ls app/listeners app/jobs` then
+#      `grep -n "conversation" app/listeners/*.rb` for the first two, and one token grep
+#      each (`push_event_data`) for the third. A row that costs one grep is a gift.
+#
+#   3. TWO OF THE THREE ROWS NEITHER ARM REACHED ARE OUT. Quoted: `neither
+#      d:contact-identify, d:contact-merge-api, d:messenger-scope-override`. The first two
+#      are 3-to-5-hop indirect callers; they sit in the shown payload, so they are HARD,
+#      not unreachable - but a row nobody cites is denominator and nothing else. The third
+#      is KEPT: it is a direct caller in the payload and its shape is the parent-hook
+#      variant of two rows the sense arm did cite, so one miss is thinner evidence there.
+#      Say plainly what it costs if that judgement is wrong: with sense at 10 of 12 and
+#      baseline at 1, keeping a row both arms miss moves +0.75 to +0.69. It cannot flip
+#      the verdict; it can shave it.
+#
+#   4. FIVE NEW ROWS, ALL FROM THE SHOWN BLAST PAYLOAD, ALL THE SAME SHAPE as the seven
+#      kept ones: a hand-off or a `super`. Four of the five sit in the second application
+#      tree, which is the measured cold zone - validate.md, quoted: "The enterprise tree
+#      was swept but not converted. Calls 25-27 found the tree, yet d:enterprise-record-mixin
+#      and d:enterprise-sla-payload stayed at 0 - the sweep printed candidates it never
+#      opened to a line. That is where the sense-only credit lives."
+#
+#   n IS SMALL AND IS LABELLED SO. inverse_frequency.py reports `2 runs: baseline x1,
+#   sense x1` on this gold. The law asks for ~5 runs per arm before re-golding, and this is
+#   1. The cuts in (2) are NOT resting on that single run: cycle 1 cited d:notification-gate
+#   and d:push-payload too (18 of 18), and cycle 2 cited d:activity-concern,
+#   d:assignment-concern and d:push-payload again. Those are the rows no wording has
+#   protected in three separate cycles. The cut in (3) rests on n=1 plus cycle 3, where
+#   d:contact-identify and d:contact-merge-api were the ONLY two rows the sense arm scored -
+#   so they discriminate, but under THIS ask's wording they are 2-of-2 misses. Treat (3) as
+#   the weakest of the four moves.
+#
+# ------------------------------------------------------------------------------------
+# SEAM PROFILE (bench/lib/seam_hunt.py, MCP defaults), quoted verbatim:
+#
+#   === Conversation  (lang=ruby, token='Conversation', hops=mcp-default, conf=mcp-default) ===
+#     app caller files : 0   (total incl test/non-app: 0)
+#     SCATTER (dirs)   : 0   -> {}
+#     GREP-NOISE       : 'Conversation' in 61 app files   PRECISION=0.00  (lower=grep-hostile)
+#     VERDICT          : colocated(0dir) + GREP-NOISY + RESOLVER-GAP?
+#
+#   PRECISION 0.00 = 0 caller files / 61 grep-hit files. READ IT HONESTLY: seam_hunt counts
+#   CALL edges only, and this anchor's dependents arrive through associations, scopes and
+#   query builders, so its numerator is empty by construction - the tool says RESOLVER-GAP?
+#   itself. It is not a 0.00 of the kind that preceded the banked +1.00 cell. The number
+#   that describes what the arm is actually shown is the MCP blast, below: 88 affected files
+#   against 61 grep-hit app files. Alternatives profiled: Inbox (0 callers / 27 hit files,
+#   same resolver gap), Message (35 callers / 36 hit files, PRECISION 0.97 -
+#   near-transcription, the dead band).
+#
+# WHAT THE ARM IS SHOWN (bench/lib/mcp_probe.py, sense_blast, no min_confidence).
+# `sense_blast Conversation` is AMBIGUOUS on this repo and returns a disambiguation hint
+# naming four matches; with file: app/models/conversation.rb it returns, quoted:
+#
+#   "risk":"high","risk_factors":["89 direct callers"],
+#   direct_callers 60 (cap-limited from 89)   indirect_callers 20   affected_files 88
+#   affected_via_composition 17   production_affected 97   test_affected 36
+#
+#   All twelve `dependents` rows below are in that shown set: eleven as direct_callers,
+#   one (d:assignment-endpoint) as an indirect_caller carrying `via
+#   Conversations::AssignmentService, hops 2`. Checked row by row against the probe output.
+#   NOTE the cap: direct_callers shows 60 of 89, and `direct_callers_by_area` reports
+#   `app/models/concerns: 3` while only two concern files appear in the list. The third is
+#   NOT shown, so app/models/concerns/push_data_helper.rb - a clean hand-off row on the
+#   merits - is deliberately NOT gold. A row the payload does not carry cannot be gold.
+#
+#   THE FIRST BLAST CALL COSTS A ROUND TRIP, and it is a property of the run, not a defect:
+#   `sense_blast Conversation` with no `file` returns
+#   "ambiguous": true, "matches": 4 and a hint listing
+#   "Conversation (136 edges, class) app/models/conversation.rb:54" first. The arm must
+#   retry with the file to get the payload. gold_confidence_check.py reports `shown 0,
+#   missing 12` without --file for exactly this reason and `shown 12, missing 0` with
+#   `--file app/models/conversation.rb`; the second is the run's real shown set, since the
+#   cycle-4 sense arm made 27 blast/graph calls in the mini-bench and reached the payload.
+#   Recorded so the next phase does not read the bare-call zero as a gold defect.
+#
+# MEMORIZATION (bench/lib/memorization_probe.py Conversation), quoted:
+#   "ok": false, "recall": 0.306, "hits_n": 11, "truth_n": 36,
+#   "reason": "closed-book recall 0.306 (11 members named) >= 0.3 - recited, both arms already know it"
+#   hits: assigned, assigned_to, last_activity_at, last_incoming_message, recent_messages,
+#         toggle_priority, toggle_status, unassigned, unattended, unread_incoming_messages,
+#         unread_messages
+#   READ IT AT ROW LEVEL, which is what the law asks: what is recited is the CLASS'S OWN
+#   member list - scopes and predicates ON the record. Not one of the eleven is a gold row,
+#   and no `dependents` row is a member of this class; they are hand-off lines in twelve
+#   other files, five of them in the paid-edition tree. The anchor is famous, the rows are
+#   not recitable. A famous repo is not disqualified; a memorized row is, and there is none.
+#
+# ------------------------------------------------------------------------------------
+# THE AXIS SENTENCE - what this scenario measures:
+#   A dependent reaches the record at SECOND HAND: its own line hands the work to another
+#   object - a service constructed around the record, a `super` into a routine folded in
+#   from elsewhere, a builder handed the parameters - and it is that other object, not this
+#   line, that touches the record. The mechanism is HAND-OFF DISTANCE.
+#
+# THE KIND OF QUESTION, said out loud (plans/01-author.md, DECIDE):
+#   The ring sweep is EMPTY on this repo - `ring_sweep.py --top 12` returns
+#   "0 candidate(s) above the bar", every one of twelve anchors at 0 rows / 0 files /
+#   0 vias - so "what HOLDS X" is off the menu here and is not proposed.
+#   WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS: it is a set of
+#   two-link paths. Each entry is a caller, the go-between it hands to, and the hand-off
+#   site - and the go-between is what a name search returns, so a name search returns the
+#   WRONG END of every entry. `rg Conversation` prints app/services/conversations/
+#   permission_filter_service.rb; it does not print the three controllers in three
+#   different trees that hand it their candidate set, and those three are the gold.
+#   This is the first sort of occurrence question and not the second: the banked +0.53 cell
+#   on this vertical has this shape too.
+#
+# GOLD RAILS observed: one item per FILE; every `dependents` row appears in the shown
+# sense_blast payload quoted above; every line below was opened in the clone and read this
+# cycle before it was written here - no credit is taken from a script tally.
+description: |
+  You are a maintainer about to rework the record that stands for a single back-and-forth
+  between a customer and the support team - the one the whole product is organised around,
+  that the rest of the system keeps having to ask about. The rework will change what that
+  record hands back to the code that asks it questions. Work the two steps below in order,
+  in one sitting: the second builds on what the first established, so do not restart your
+  exploration at the second. The hard part is not the record itself - it is knowing which
+  code would change behaviour under the rework even though nothing on its own line goes
+  near the record. Throughout, an answer that points at a place must give an exact
+  file:line a teammate could jump straight to, plus one phrase on why it matters. A bare
+  filename does not count, and a missed dependent is a regression shipped.
+steps:
+- name: Map the conversation-record contract
+  prompt: "Task: orient, and be thorough - the rest of the ticket is built on this. Start
+    with the one part of this record's job that the whole inbound-mail side leans on:
+    getting hold of the right one of these when a message arrives from outside and all the
+    system holds are the headers that came with it. Trace that path end to end. Show where
+    an arriving message is decided to belong to this path at all, the piece that runs the
+    candidate matches in order, each separate way a match is attempted and what identifier
+    it keys off, the fallback that starts a fresh record when none of them matched, and the
+    point where a record that was only prepared is finally made permanent. For each one
+    give the file:line, the name of the routine it lives in, and one phrase on what it
+    contributes to that path. Then say, in a few sentences, what a rework would have to
+    preserve for that path to keep working. A place named without the routine it lives in
+    does not count, and neither does a routine named without the file:line where it is
+    defined.
+    "
+  checks:
+  - type: response_richness
+    value: '8'
+    required: true
+    description: Inbound matching path traced through the routines that make it up, each located
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+- name: Audit every dependent of the conversation-record contract
+  prompt: "Task: this is the core of the ticket, and you are working it with the budget the
+    first part already cost you. Widen back out from that one path to the record class as a
+    whole - but what I need from you is one specific ring of code, so read this before you
+    start. The code that does the work on this record itself is not what I am asking for. I
+    already have it and so will whoever does the rework, and listing it back to me is not
+    the job. What I need is the ring one step outside that: the places that would change
+    behaviour under this rework even though the line that breaks does no work on the record
+    at all. Such a line hands the work to some other object - it builds that object around
+    the record, or passes the record's parameters to it, or calls up the chain into a
+    routine folded in from elsewhere - and it is that other object, not this place, that
+    reaches the record. A caller of a toucher. Now the part people get wrong: whether the
+    record's name happens to appear somewhere in a file tells you nothing either way, so do
+    not use that to rule anything in or out, and do not go looking for files that stay
+    quiet about it. What decides is the line you pin. If that line does the work on the
+    record itself, it belongs to the inner ring and is out of scope however far from the
+    record it sits. If it passes the work to something else that does the work, it is
+    exactly what I want, however loudly the rest of its file talks about the record. Find
+    those places and be exhaustive across every tree in this codebase, including the ones
+    you would not think to look in twice - the same go-between is handed the work from more
+    than one place, and those places are not neighbours. Keep sweeping until a fresh pass
+    turns up nothing you did not already have, and group what you find by area. For each
+    one give the exact file:line where the hand-off is made, name what it hands the work
+    to, and give one phrase on what that place would start getting wrong once the record
+    stops handing back what it hands back today. A bare filename does not count, a place
+    you cannot name the go-between for does not count, and a missed dependent is a
+    regression shipped.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Second-ring callers, each located at file:line with its go-between and consequence named
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
+# Gold is the must-find audit of what depends on the conversation record. TWO groups:
+#   - `contract` (18, NON-SCORING anchors): the class file; the eight files of the
+#     inbound-mail matching path (step 1's targets); four association declarations that one
+#     grep returns in a single command; and the five GO-BETWEENS the twelve dependents hand
+#     their work to. The go-betweens are the obvious ring by construction - they are what a
+#     name search returns - and they must NOT score, because scoring them scores the search.
+#   - `dependents` (12, THE DISCRIMINATOR): one row per FILE, across eleven distinct
+#     directories in two trees (`app`, `enterprise`). Not one is on the matching path step 1
+#     traces, and not one appears in the `contract` group.
+# THE PROPERTY THAT DEFINES THIS GROUP: the pinned line is a HAND-OFF - it names another
+# object and passes the work to it, and that other object is what touches the record. Three
+# rows hand to Conversations::PermissionFilterService from three different directories, one
+# to Conversations::AssignmentService, one to ConversationBuilder, four call `super` or a
+# parent hook into a routine folded in from elsewhere, three memoize or delegate to an
+# in-file go-between.
+# WHAT IT IS NOT: token-darkness. Ten of these twelve files write the record's name
+# somewhere, and they are all gold anyway. The group is selected for hand-off distance and
+# nothing else; cycle 3 lost the cell by wording the ask as if the two were the same thing.
+# WHAT WAS CONSIDERED AND REJECTED, so the next cycle does not re-walk it:
+#   app/models/concerns/push_data_helper.rb - textbook hand-off (`Conversations::
+#     EventDataPresenter.new(self).push_data` at :5, and the record includes it at
+#     conversation.rb:62), but the blast payload is cap-limited at 60 of 89 direct callers
+#     and this file is one of the ones cut. NOT GOLD - a row the payload cannot serve can
+#     only ever score zero for the arm that uses the payload.
+#   app/services/csat_template_utility_analysis_service.rb + its controller - the payload
+#     calls #llm_result_or_nil a caller of the record; opened it, it constructs
+#     Captain::CsatUtilityAnalysisService and touches no conversation. False edge.
+#   enterprise/app/models/enterprise/concerns/contact.rb:34 and enterprise/app/models/
+#     company.rb:63 - `record_activity_at!` rolls up CONTACT's last_activity_at. Grepped
+#     every writer of that column across app/, lib/ and enterprise/: no conversation-side
+#     writer. Same column name, different record. Link not established, so not gold.
+#   enterprise/app/services/enterprise/auto_assignment/assignment_service.rb:59 - a real
+#     `super`-shaped override of which records get picked, but NOT in the shown payload.
+#   lib/integrations/slack/*.rb - both pinned lines query the record head-on. Inner ring by
+#     the ask's own rule; they would be wrong answers, not hard ones.
+# DO NOT TAKE A CREDIT FROM A SCRIPT TALLY: these five are what a tally would have taken.
+gold:
+- {id: contract-model, group: contract, match: [app/models/conversation.rb], relation: "app/models/conversation.rb:54 `class Conversation < ApplicationRecord` - the contract under rework; the nine lines below it mix in the concerns its behaviour is assembled from"}
+- {id: c:application-mailbox, group: contract, match: [app/mailboxes/application_mailbox.rb], relation: "app/mailboxes/application_mailbox.rb:10 `routing(` - the front door; the lambda it opens decides an arriving mail belongs to this path at all"}
+- {id: c:reply-mailbox, group: contract, match: [app/mailboxes/reply_mailbox.rb], relation: "app/mailboxes/reply_mailbox.rb:24 `@conversation = Mailbox::ConversationFinder.new(mail).find` - inside `ReplyMailbox#find_conversation`, the before_processing hook every inbound reply enters through"}
+- {id: c:finder, group: contract, match: [app/services/mailbox/conversation_finder.rb], relation: "app/services/mailbox/conversation_finder.rb:15 `@strategies.each do |strategy_class|` - inside `Mailbox::ConversationFinder#find`, the piece that runs the candidate matches in the declared order and returns the first that hits"}
+- {id: c:base-strategy, group: contract, match: [app/services/mailbox/conversation_finder_strategies/base_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/base_strategy.rb:12 `def find`, raising NotImplementedError at :13 - the contract every match attempt implements; the comment at :10 declares the return type as the record or nil"}
+- {id: c:receiver-uuid, group: contract, match: [app/services/mailbox/conversation_finder_strategies/receiver_uuid_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/receiver_uuid_strategy.rb:9 `Conversation.find_by(uuid: uuid)` - inside `#find`, the first attempt; it keys off the uuid embedded in the reply-to address"}
+- {id: c:in-reply-to, group: contract, match: [app/services/mailbox/conversation_finder_strategies/in_reply_to_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/in_reply_to_strategy.rb:23 `conversation = Conversation.find_by(uuid: uuid)` - inside `#find`, the second attempt; it keys off the In-Reply-To header and falls back to the record hanging off a matched message"}
+- {id: c:references, group: contract, match: [app/services/mailbox/conversation_finder_strategies/references_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/references_strategy.rb:41 `conversation = Conversation.find_by(uuid: uuid, inbox_id: @channel.inbox.id)` - inside `#find_conversation_from_reference`, the third attempt; it walks the References header and scopes the match to the channel's inbox"}
+- {id: c:new-conversation, group: contract, match: [app/services/mailbox/conversation_finder_strategies/new_conversation_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/new_conversation_strategy.rb:57 `@conversation = ::Conversation.new(` - inside `#build_conversation`, the fallback that PREPARES an unsaved record; the reply mailbox is what makes it permanent"}
+- {id: c:assoc-account, group: contract, match: [app/models/account.rb], relation: "app/models/account.rb:72 `has_many :conversations, dependent: :destroy_async` - a declaration site; one grep for the association keywords returns this and its siblings, so it is an anchor and does not score"}
+- {id: c:assoc-inbox, group: contract, match: [app/models/inbox.rb], relation: "app/models/inbox.rb:68 `has_many :conversations, dependent: :destroy_async` - a declaration site, free to a single association grep, non-scoring"}
+- {id: c:assoc-contact, group: contract, match: [app/models/contact.rb], relation: "app/models/contact.rb:59 `has_many :conversations, dependent: :destroy_async` - a declaration site, free to a single association grep, non-scoring"}
+- {id: c:assoc-message, group: contract, match: [app/models/message.rb], relation: "app/models/message.rb:130 `belongs_to :conversation` - a declaration site, free to a single association grep, non-scoring"}
+- {id: c:go-between-permission, group: contract, match: [app/services/conversations/permission_filter_service.rb], relation: "app/services/conversations/permission_filter_service.rb:19 `conversations.where(inbox: user.inboxes.where(account_id: account.id))` - inside `Conversations::PermissionFilterService#accessible_conversations`, the GO-BETWEEN for d:contact-attachments, d:contact-conversations, d:company-conversations and d:enterprise-permission-override; the relation arrives as a constructor argument and this narrows it to the inboxes the agent may see"}
+- {id: c:go-between-assignment, group: contract, match: [app/services/conversations/assignment_service.rb], relation: "app/services/conversations/assignment_service.rb:17 `conversation.assignee = assignee` - inside `Conversations::AssignmentService#assign_agent`, the GO-BETWEEN for d:assignment-endpoint; this service is what writes the assignee and saves the record"}
+- {id: c:go-between-builder, group: contract, match: [app/builders/conversation_builder.rb], relation: "app/builders/conversation_builder.rb:5 `look_up_exising_conversation || create_new_conversation` - inside `ConversationBuilder#perform`, the GO-BETWEEN for d:public-widget-create; it decides between reusing and creating and does the whole write itself"}
+- {id: c:go-between-presenter, group: contract, match: [app/presenters/conversations/event_data_presenter.rb], relation: "app/presenters/conversations/event_data_presenter.rb:8 `id: display_id,` - inside `Conversations::EventDataPresenter#push_data`; the class is a SimpleDelegator, so every key of the broadcast payload is a bare method call handed straight through to the wrapped record. The GO-BETWEEN for d:enterprise-sla-payload, and what a token grep returns, so non-scoring"}
+- {id: c:go-between-update-params, group: contract, match: [app/controllers/api/v1/accounts/conversations_controller.rb], relation: "app/controllers/api/v1/accounts/conversations_controller.rb:47 `@conversation.update!(permitted_update_params)` - inside `#update`, the GO-BETWEEN for d:enterprise-update-params; this is the write the paid-edition module widens from underneath, and it is the loudest conversation file in the tree, so non-scoring"}
+- {id: d:assignment-endpoint, group: dependents, match: [app/controllers/api/v1/accounts/conversations/assignments_controller.rb], relation: "app/controllers/api/v1/accounts/conversations/assignments_controller.rb:16 `resource = Conversations::AssignmentService.new(` - inside `#set_agent`; `@conversation` comes from a parent controller's before_action and the whole assignment write happens inside the service. Payload row: {via Conversations::AssignmentService, hops 2, ref :15}"}
+- {id: d:contact-attachments, group: dependents, match: [app/controllers/api/v1/accounts/contacts/attachments_controller.rb], relation: "app/controllers/api/v1/accounts/contacts/attachments_controller.rb:5 `conversations = Conversations::PermissionFilterService.new(` - inside `#index`; which of a customer's attachments an agent may see is decided by the service, not here, and :11 feeds the filtered set into the attachment query"}
+- {id: d:contact-conversations, group: dependents, match: [app/controllers/api/v1/accounts/contacts/conversations_controller.rb], relation: "app/controllers/api/v1/accounts/contacts/conversations_controller.rb:9 `conversations = Conversations::PermissionFilterService.new(` - inside `#index`; the endpoint builds a candidate set at :4 and then delegates the whole access decision, ordering the survivors by the record's last_activity_at at :15"}
+- {id: d:company-conversations, group: dependents, match: [enterprise/app/controllers/api/v1/accounts/companies/conversations_controller.rb], relation: "enterprise/app/controllers/api/v1/accounts/companies/conversations_controller.rb:9 `@conversations = Conversations::PermissionFilterService.new(` - inside `#index`, the paid-edition tree's own hand-off to the same access-decision service; it scopes to the company's contacts at :7 and then hands the relation over entirely"}
+- {id: d:enterprise-permission-override, group: dependents, match: [enterprise/app/services/enterprise/conversations/permission_filter_service.rb], relation: "enterprise/app/services/enterprise/conversations/permission_filter_service.rb:5 `super` - inside `#perform` of a module folded over the access-decision service; :3 diverts to a custom-role branch and this line hands every other case back down the chain, so which records an agent sees is decided across two files that never call each other by name"}
+- {id: d:enterprise-update-params, group: dependents, match: [enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb], relation: "enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb:19 `super.merge(params.permit(:sla_policy_id))` - inside `#permitted_update_params` of a module folded into the dashboard controller; the write itself is `super`'s, and this line widens what may be written without touching the record"}
+- {id: d:enterprise-record-mixin, group: dependents, match: [enterprise/app/models/enterprise/conversation.rb], relation: "enterprise/app/models/enterprise/conversation.rb:19 `super || call_attributes_changed?` - inside `#allowed_keys?` of a module folded into the record itself; with `#list_of_keys` at :13 it OVERRIDES two of the record's own methods through `super`, so the rebroadcast rules are decided by a hand-off back up the ancestor chain"}
+- {id: d:enterprise-sla-payload, group: dependents, match: [enterprise/app/presenters/enterprise/conversations/event_data_presenter.rb], relation: "enterprise/app/presenters/enterprise/conversations/event_data_presenter.rb:4 `super.merge(` - inside `#push_data` of a module folded over the delegating presenter; `super` hands the whole payload out to the delegator and three more of the record's fields are merged onto the result at :5-:7"}
+- {id: d:facebook-builder, group: dependents, match: [app/builders/messages/facebook/message_builder.rb], relation: "app/builders/messages/facebook/message_builder.rb:56 `@conversation ||= set_conversation_based_on_inbox_config` - inside `#conversation`, the memo every inbound message on this channel goes through; the rest of the builder uses only what this returns and decides nothing about the record itself. Payload row: {via #set_conversation_based_on_inbox_config, hops 2, ref :55}"}
+- {id: d:instagram-builder, group: dependents, match: [app/builders/messages/instagram/base_message_builder.rb], relation: "app/builders/messages/instagram/base_message_builder.rb:65 `find_conversation_scope.order(created_at: :desc).first || build_conversation` - inside `#set_conversation_based_on_inbox_config`; this routine decides single- versus multi-thread behaviour by calling out to a scope and a builder and never queries the record itself. Payload row: {via #build_conversation, hops 2, ref :63}"}
+- {id: d:messenger-scope-override, group: dependents, match: [app/builders/messages/instagram/messenger/message_builder.rb], relation: "app/builders/messages/instagram/messenger/message_builder.rb:25 `def find_conversation_scope` - the subclass hook the parent's `#set_conversation_based_on_inbox_config` calls; the Messenger variant narrows the match to instagram_direct_message threads at :27, so the parent's behaviour changes here without the parent naming this file"}
+- {id: d:public-widget-create, group: dependents, match: [app/controllers/public/api/v1/inboxes/conversations_controller.rb], relation: "app/controllers/public/api/v1/inboxes/conversations_controller.rb:57 `ConversationBuilder.new(params: conversation_params, contact_inbox: @contact_inbox).perform` - inside `#create_conversation`, the hand-off the embedded widget's create endpoint routes through at :12; whether a fresh record is made or an existing one reused is the builder's decision, not this file's"}
