@@ -193,3 +193,16 @@ gold:
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MissingCostIsNotZero(unittest.TestCase):
+    """The subscription arms report no dollar cost. Zero would be a false claim."""
+
+    def test_a_mean_over_nulls_is_unknown_not_zero(self):
+        self.assertIsNone(board._mean([None, None]))
+
+    def test_a_mean_ignores_the_nulls_rather_than_counting_them(self):
+        self.assertEqual(board._mean([None, 4.0, 2.0]), 3.0)
+
+    def test_a_real_mean_still_rounds_to_cents(self):
+        self.assertEqual(board._mean([2.851, 2.549]), 2.7)

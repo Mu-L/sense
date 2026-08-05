@@ -314,3 +314,30 @@ class SessionCost(unittest.TestCase):
     def test_the_plural_is_passed_in_never_guessed(self):
         self.assertEqual(rb._plural(1, "search", "searches"), "1 search")
         self.assertEqual(rb._plural(40, "search", "searches"), "40 searches")
+
+
+class UnpricedArms(unittest.TestCase):
+    """GPT, Kimi, GLM and Mistral run flat-rate: total_cost_usd is null by design."""
+
+    def _col(self, cost):
+        return {"session": {
+            "baseline": {"wall_time_seconds": 426, "token_total_billed": 33066,
+                         "cost_usd": cost, "grep_count": 40, "read_count": 0,
+                         "mcp_count": 0},
+            "sense": {"wall_time_seconds": 414, "token_total_billed": 36918,
+                      "cost_usd": cost, "grep_count": 14, "read_count": 1,
+                      "mcp_count": 8}}}
+
+    def test_an_unpriced_arm_says_so_instead_of_printing_zero(self):
+        out = "\n".join(rb._session_bullets(self._col(None)))
+        self.assertIn("not priced", out)
+        self.assertIn("flat-rate plan", out)
+        self.assertNotIn("$0.00", out)
+
+    def test_an_unpriced_arm_still_reports_time_and_tokens(self):
+        out = "\n".join(rb._session_bullets(self._col(None)))
+        self.assertIn("7.1 min", out)
+        self.assertIn("33,066", out)
+
+    def test_a_priced_arm_still_shows_dollars(self):
+        self.assertIn("$2.85", "\n".join(rb._session_bullets(self._col(2.85))))

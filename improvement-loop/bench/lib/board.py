@@ -132,7 +132,16 @@ def _scored(root, arm, repo):
 
 
 def _mean(values):
-    return round(sum(values) / len(values), 2) if values else None
+    """Mean over the values that exist. None is absent, never zero.
+
+    The subscription arms report no dollar cost at all by design (see
+    parse-codex-result.py and parse-opencode-result.py, which emit
+    total_cost_usd null because a flat-rate plan has no per-token price). Summing
+    that as zero would print "$0.00 with Sense" on a public page, which is a
+    claim we cannot make.
+    """
+    real = [v for v in values if v is not None]
+    return round(sum(real) / len(real), 2) if real else None
 
 
 def session(root, repo):
@@ -148,13 +157,9 @@ def session(root, repo):
         if not runs:
             continue
         out[arm] = {
-            "wall_time_seconds": _mean([m.get("wall_time_seconds", 0) for m in runs]),
-            "token_total_billed": _mean([m.get("token_total_billed", 0) for m in runs]),
-            "cost_usd": _mean([m.get("cost_usd", 0) for m in runs]),
-            "tool_calls": _mean([m.get("tool_calls", 0) for m in runs]),
-            "grep_count": _mean([m.get("grep_count", 0) for m in runs]),
-            "read_count": _mean([m.get("read_count", 0) for m in runs]),
-            "mcp_count": _mean([m.get("mcp_count", 0) for m in runs]),
+            key: _mean([m.get(key) for m in runs])
+            for key in ("wall_time_seconds", "token_total_billed", "cost_usd",
+                        "tool_calls", "grep_count", "read_count", "mcp_count")
         }
     return out
 

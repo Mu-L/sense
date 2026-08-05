@@ -152,12 +152,23 @@ def _session_bullets(column):
     b, s = ses.get("baseline"), ses.get("sense")
     if not b or not s:
         return []
-    return [
-        f"- **time** {_mins(b['wall_time_seconds'])} on its own, "
-        f"{_mins(s['wall_time_seconds'])} with Sense",
-        f"- **tokens billed** {b['token_total_billed']:,.0f} on its own, "
-        f"{s['token_total_billed']:,.0f} with Sense",
-        f"- **cost** ${b['cost_usd']:.2f} on its own, ${s['cost_usd']:.2f} with Sense",
+    out = []
+    if b.get("wall_time_seconds") and s.get("wall_time_seconds"):
+        out.append(f"- **time** {_mins(b['wall_time_seconds'])} on its own, "
+                   f"{_mins(s['wall_time_seconds'])} with Sense")
+    if b.get("token_total_billed") and s.get("token_total_billed"):
+        out.append(f"- **tokens billed** {b['token_total_billed']:,.0f} on its own, "
+                   f"{s['token_total_billed']:,.0f} with Sense")
+    # Dollars only where the harness reported them. The subscription arms have no
+    # per-token price, and a missing cost is stated as unknown, never as zero.
+    if b.get("cost_usd") is not None and s.get("cost_usd") is not None:
+        out.append(f"- **cost** ${b['cost_usd']:.2f} on its own, "
+                   f"${s['cost_usd']:.2f} with Sense")
+    else:
+        out.append("- **cost** not priced: this model runs on a flat-rate plan, so "
+                   "there is no per-token cost to report. Compare the billed tokens "
+                   "instead.")
+    return out + [
         f"- **how it worked** {_plural(b['grep_count'], 'search', 'searches')} and "
         f"{_plural(b['read_count'], 'file read', 'file reads')} on its own; "
         f"{_plural(s['mcp_count'], 'Sense call', 'Sense calls')}, "
