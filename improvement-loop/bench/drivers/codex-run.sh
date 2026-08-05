@@ -314,10 +314,16 @@ PY
     if [[ -n "$survey_sid" ]]; then
       echo "[codex]   survey turn (post-scoring artifact)" >&2
       survey_raw="$out/survey-raw.jsonl"
-      # NB: `codex exec resume` has no -C/--cd flag (unlike `codex exec`); the
-      # working root comes from the `cd "$repo_dir"` in the invocation below.
-      # Passing -C here fails with "unexpected argument '-C'" and errors the turn.
-      survey_args=(exec resume "$survey_sid" --json -s "$SANDBOX" -m "$MODEL"
+      # NB: `codex exec resume` takes a SUBSET of `codex exec`'s flags. It has no
+      # -C/--cd (the working root comes from the `cd "$repo_dir"` below) and no
+      # -s/--sandbox: `codex exec resume --help` lists only -c, -i, -m,
+      # --skip-git-repo-check, --ignore-user-config, --json, -o. Passing -s made
+      # clap read it as the PROMPT positional and kill the turn with
+      # "tip: to pass '-s' as a value, use '-- -s'", so every survey since has been
+      # empty. The sandbox posture is carried by -c sandbox_mode instead, which
+      # keeps the survey turn as read-only as the scored turn it resumes.
+      survey_args=(exec resume "$survey_sid" --json -m "$MODEL"
+                   -c "sandbox_mode=\"$SANDBOX\""
                    --skip-git-repo-check --ignore-user-config
                    -c 'approval_policy="never"'
                    -c 'shell_environment_policy.inherit=all'
