@@ -301,10 +301,10 @@ class SessionCost(unittest.TestCase):
     def test_time_is_in_minutes_not_seconds(self):
         self.assertIn("7.1 min on its own, 6.9 min with Sense", self._bullets())
 
-    def test_the_total_moved_is_shown_beside_what_was_billed(self):
+    def test_the_total_moved_is_the_only_token_figure(self):
         out = self._bullets()
         self.assertIn("2,394,712 on its own, 1,748,326 with Sense", out)
-        self.assertIn("33,066 on its own, 36,918 with Sense", out)
+        self.assertNotIn("33,066", out)
 
     def test_the_tool_mix_is_shown_so_the_delta_has_a_shape(self):
         self.assertIn("40 searches and 0 file reads on its own; 8 Sense calls, "
@@ -335,9 +335,10 @@ class TokensNotDollars(unittest.TestCase):
         self.assertIn("**tokens used** 2,394,712 on its own, 1,748,326 with Sense", out)
         self.assertIn("cached context included", out)
 
-    def test_billed_tokens_are_kept_beside_the_total(self):
-        self.assertIn("**of which billed** 33,066 on its own, 36,918 with Sense",
-                      "\n".join(rb._session_bullets(self._col())))
+    def test_billed_tokens_do_not_appear(self):
+        out = "\n".join(rb._session_bullets(self._col()))
+        self.assertNotIn("billed", out)
+        self.assertNotIn("33,066", out)
 
     def test_no_dollar_figure_reaches_the_page_even_when_one_arm_has_a_price(self):
         out = "\n".join(rb._session_bullets(self._col(cost=2.85)))
