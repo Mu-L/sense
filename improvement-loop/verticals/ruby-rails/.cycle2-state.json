@@ -1,4 +1,3 @@
 {
-  "discourse": "gate",
-  "discourse#reruns": "0"
+  "discourse": "bench"
 }

@@ -172,6 +172,43 @@ def session(root, repo):
     return out
 
 
+def _run_metas(root, arm, repo):
+    out = []
+    for path in sorted(glob.glob(os.path.join(root, arm, repo, "run-*", "run_meta.json"))):
+        try:
+            out.append(json.load(open(path)))
+        except (OSError, ValueError):
+            continue
+    return out
+
+
+def timeouts(root, repo):
+    """The wall each arm was given, and how it was set.
+
+    THE WALL IS NOT THE SAME ON EVERY HARNESS and the board has to say so. The
+    Claude runner runs the SENSE arm first at the default ceiling and derives the
+    baseline's wall from it (paired sense run x1.2), which asks "given the time it
+    takes WITH the tool, can you get there without it". The metered runners have no
+    matched budget: both arms get one fixed ceiling, and that ceiling differs per
+    model (Codex max(600, repo), opencode max(1200, repo), opencode/kimi
+    max(3000, repo)). A wider wall favours the BASELINE, so a page that hides this
+    is overstating those columns rather than flattering them.
+    """
+    out = {}
+    for arm in ("baseline", "sense"):
+        metas = _run_metas(root, arm, repo)
+        if not metas:
+            continue
+        secs = [m.get("session_timeout_seconds") for m in metas
+                if m.get("session_timeout_seconds")]
+        bases = {m.get("timeout_basis") for m in metas if m.get("timeout_basis")}
+        out[arm] = {
+            "seconds": _mean(secs),
+            "basis": sorted(bases)[0] if bases else None,
+        }
+    return out
+
+
 def _cited_ids(root, arm, repo):
     """Every gold id this arm cited in ANY of its runs."""
     seen = set()
@@ -238,6 +275,7 @@ def _column(root, repo, model, gold, source):
         "sense_version": row.get("sense_version"),
         "recorded_at": row.get("recorded_at"),
         "session": session(root, repo),
+        "timeouts": timeouts(root, repo),
         "sense_only_reach": sense_only_reach(root, repo),
         "coverage": coverage(root, repo, gold),
         "routing": mech.get("routing", []),

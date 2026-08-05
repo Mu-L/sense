@@ -351,3 +351,56 @@ class TokensNotDollars(unittest.TestCase):
         out = "\n".join(rb._session_bullets(col))
         self.assertNotIn("tokens used", out)
         self.assertIn("7.1 min", out)
+
+
+class TheClockIsDisclosed(unittest.TestCase):
+    """A wider wall favours the BASELINE, so hiding it overstates that column."""
+
+    def _col(self, model, timeouts):
+        c = _col(_mech([_counts(reach=18)], rb.REACH), model=model)
+        c["timeouts"] = timeouts
+        return c
+
+    def test_a_matched_budget_says_which_arm_the_other_was_derived_from(self):
+        out = "\n".join(rb._budget_bullet(self._col("claude-opus-5", {
+            "sense": {"seconds": 480.0, "basis": "default ceiling"},
+            "baseline": {"seconds": 502.0,
+                         "basis": "matched budget: paired sense run 407s x 1.2"}})))
+        self.assertIn("480s with Sense, 502s without", out)
+        self.assertIn("derived from the first", out)
+
+    def test_a_codex_arm_says_it_is_one_fixed_ceiling_for_both(self):
+        out = "\n".join(rb._budget_bullet(self._col("gpt-5.6-sol", {
+            "sense": {"seconds": 600.0, "basis": None},
+            "baseline": {"seconds": 600.0, "basis": None}})))
+        self.assertIn("600s", out)
+        self.assertIn("fixed ceiling for both arms", out)
+        self.assertIn("Codex", out)
+
+    def test_an_opencode_arm_names_its_own_larger_ceiling(self):
+        out = "\n".join(rb._budget_bullet(self._col("kimi-for-coding/k3", {
+            "sense": {"seconds": 3000.0, "basis": None},
+            "baseline": {"seconds": 3000.0, "basis": None}})))
+        self.assertIn("3000s", out)
+        self.assertIn("Kimi", out)
+
+    def test_the_harness_is_inferred_from_the_model_id(self):
+        self.assertEqual(rb._harness("claude-opus-5"), "claude")
+        self.assertEqual(rb._harness("gpt-5.6-sol"), "codex")
+        self.assertEqual(rb._harness("glm-5.2:cloud"), "opencode")
+        self.assertEqual(rb._harness("kimi-for-coding/k3"), "opencode")
+
+    def test_a_column_with_no_timeout_data_still_states_the_rule(self):
+        out = "\n".join(rb._budget_bullet(self._col("glm-5.2:cloud", {})))
+        self.assertIn("fixed ceiling for both arms", out)
+
+    def test_the_page_says_the_clocks_differ_and_which_way_it_cuts(self):
+        data = {"repo": "d", "vertical": "ruby-rails", "gold_rows": 20,
+                "scenario_version": "sha256:abcd", "sense_version": "s",
+                "headline": "claude-opus-5", "question": {},
+                "columns": [_col(_mech([_counts(reach=18)], rb.REACH))],
+                "replication": {"routed": [], "replicated": [], "never_routed": [],
+                                "search_only": [], "not_measured": [], "threshold": 0.5}}
+        out = rb.render(data)
+        self.assertIn("not all given the same clock", out)
+        self.assertIn("helps the arm WITHOUT Sense", out)

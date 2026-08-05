@@ -172,6 +172,48 @@ def _session_bullets(column):
     ]
 
 
+# What each harness gives an arm when nothing derives it. Stated here because the
+# metered runners record no timeout_basis, so the page cannot read it back off disk.
+FIXED_WALL = {
+    "codex": "a fixed ceiling for both arms (Codex: the larger of 600s and the repo's own)",
+    "opencode": "a fixed ceiling for both arms (opencode: the larger of 1200s, or 3000s "
+                "for Kimi, and the repo's own)",
+}
+
+
+def _harness(model):
+    if model.startswith("claude-"):
+        return "claude"
+    if model.startswith(("gpt-", "o3", "o4", "codex")):
+        return "codex"
+    return "opencode"
+
+
+def _budget_bullet(column):
+    """How long each arm got, and who decided it.
+
+    A wider wall favours the BASELINE, so a page that leaves this out overstates the
+    columns whose baseline had the most time. The Claude runner derives the baseline's
+    wall from its own sense run; the metered runners give both arms one fixed ceiling
+    that differs per model. Same table, two different questions, and the reader is
+    owed that.
+    """
+    t = column.get("timeouts") or {}
+    b, s = t.get("baseline") or {}, t.get("sense") or {}
+    # `or ""`, not a get default: the key EXISTS and is null on every metered
+    # arm, so a default would never be reached and .startswith would crash.
+    if (b.get("basis") or "").startswith("matched budget") and s.get("seconds"):
+        return [f"- **time allowed** {s['seconds']:.0f}s with Sense, "
+                f"{b['seconds']:.0f}s without, the second derived from the first so the "
+                f"question is \"given the time it takes WITH Sense, can you get there "
+                f"without it\""]
+    fixed = FIXED_WALL.get(_harness(column["model"]))
+    secs = s.get("seconds") or b.get("seconds")
+    if secs:
+        return [f"- **time allowed** {secs:.0f}s, {fixed or 'the same for both arms'}"]
+    return [f"- **time allowed** {fixed}"] if fixed else []
+
+
 def _glance_row(column, copy):
     label = _label(copy, "models", column["model"])
     if not column.get("measured"):
@@ -296,6 +338,7 @@ def _column_block(column, gold_rows, copy):
                    f"Sense but unused {_n(avg[IGNORED])}, found without Sense "
                    f"{_n(avg[FOUND_ANYWAY])}, reached by neither {_n(avg[MISSED])}")
     out += _session_bullets(column)
+    out += _budget_bullet(column)
     out.append(f"- **runs** {runs['baseline']} without Sense, {runs['sense']} with, {src}")
     out.append("")
     out += _coverage_chart(column, copy, gold_rows)
@@ -370,6 +413,13 @@ def _limits(data, copy):
         "It is **not a comparison of the models**. Each one runs on its own harness "
         "with its own budget and its own defaults, so their scores are not comparable "
         "to each other and are never presented that way here.",
+        "",
+        "**The arms are not all given the same clock**, and each column says what it "
+        "got. The Claude harness runs Sense first and then gives the no-Sense arm the "
+        "time Sense took plus a margin, which asks whether the same ground is reachable "
+        "without the tool. The other harnesses give both arms one fixed ceiling, and that "
+        "ceiling is larger. A longer clock helps the arm WITHOUT Sense, so those columns "
+        "are the harder test, not the easier one.",
         "",
         "It is **not a comparison of the repositories** either. Questions are written "
         "per repository and hand-audited per repository; a number from one page does "
