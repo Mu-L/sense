@@ -41,17 +41,17 @@ if [ -n "${VERTICAL:-}" ] && [ -n "${BENCH_MODEL:-}" ]; then
 else
   RESULTS_DIR="${RESULTS_DIR:-$_results_base}"
 fi
-# BENCH_VALIDATION=1 -> the unscored validation run (plans/04-validate.md). It is a
+# BENCH_VALIDATION=1 -> the unscored validation run (plans/cycle-1-craft-the-scenario/04-validate.md). It is a
 # measurement of whether the scenario is the right scenario, and its number may never
 # settle anything. The isolation is the RESULTS ROOT, not a flag the scorer has to
 # honour: pergroup.py/scorer.py walk RESULTS_DIR, so a validation run is invisible to
 # them by construction and no measurement instrument had to change to make it so.
 # BENCH_SCORING rides along for run_meta.json, so a file copied out of the tree still
 # says what it is.
-# BENCH_MINIBENCH=1 -> the two-step probe run (plans/02-minibench.md), unscored like a
+# BENCH_MINIBENCH=1 -> the two-step probe run (plans/cycle-1-craft-the-scenario/02-minibench.md), unscored like a
 # validation run and isolated from it by its own root. It cannot share the validation
 # tree: both write <root>/<arm>/<repo>/run-1, so the seven-step pair would overwrite the
-# two-step pair at the same path and plans/04-validate.md's session row would compare a
+# two-step pair at the same path and plans/cycle-1-craft-the-scenario/04-validate.md's session row would compare a
 # run against itself. It takes precedence over BENCH_VALIDATION when both are set.
 if [ "${BENCH_MINIBENCH:-0}" = 1 ]; then
   case "$RESULTS_DIR" in

@@ -2,7 +2,7 @@
 # vertical-loop.sh - the mechanical per-repo loop of the vertical bench.
 #
 # THE SCRIPT OWNS THE ORDER, THE STATE, THE GATES AND EVERY SPAWN. It never judges.
-# Where a phase needs judgment it spawns a headless agent on one file from plans/,
+# Where a phase needs judgment it spawns a headless agent on one file from plans/cycle-1-craft-the-scenario/,
 # and refuses to advance until that agent's artifact is on disk, its verifier exits 0
 # and its verdict JSON parses (`require_verdict`, backed by lib/verdict_check.py).
 # An exit code is a claim; the artifact is the fact. That guard used to exist once,
@@ -26,16 +26,16 @@
 #
 # Phases (a state file resumes at the next one; re-run to advance):
 #   index      ensure-index.sh                                    [auto]
-#   author     AGENT plans/01-author.md    -> 2-step yaml+rubric+gold  [DRAFT|NO-ANCHOR]
+#   author     AGENT 01-author.md    -> 2-step yaml+rubric+gold  [DRAFT|NO-ANCHOR]
 #   minibench  both arms x1 UNSCORED on the 2-step scenario, then
-#              AGENT plans/02-minibench.md      [PROCEED|REQUESTION|NO-ANCHOR]
-#   expand     AGENT plans/03-expand.md    -> 7-step scenario, then COMMIT it
+#              AGENT 02-minibench.md      [PROCEED|REQUESTION|NO-ANCHOR]
+#   expand     AGENT 03-expand.md    -> 7-step scenario, then COMMIT it
 #   preflight  render prompt + loopA preflight (resolve_oracle)   [auto]
-#   validate   both arms x1 UNSCORED, then AGENT plans/04-validate.md  [PAY|DO-NOT-PAY]
+#   validate   both arms x1 UNSCORED, then AGENT 04-validate.md  [PAY|DO-NOT-PAY]
 #   bench      runs-variance.sh Opus x2 (PAID)                    [auto]
 #   report     pergroup.py verdict; WIN -> harvest, else diagnosis
 #   harvest    loopA-scan.sh harvest (mine the paid transcripts)  [auto] -> done
-#   handoff    not in the chain - AGENT plans/05-handoff.md, spawned only when the
+#   handoff    not in the chain - AGENT 05-handoff.md, spawned only when the
 #              authoring cycle hits its ceiling, to hand the human a readable page
 #
 # Usage:
@@ -72,7 +72,7 @@ CLONES="${SENSE_CLONES:-$HOME/Developer/luuuc/oss/sense-benchmark/sense}"
 IL_ROOT="$(cd "$BENCH_DIR/.." && pwd)"
 VDIR="$IL_ROOT/verticals/$VERTICAL"
 SCEN_DIR="$VDIR/scenarios"
-PLANS="$IL_ROOT/plans"
+PLANS="$IL_ROOT/plans/cycle-1-craft-the-scenario"
 STATE="$VDIR/.loop-state.json"
 PHASES=(index author minibench expand preflight validate bench report harvest done)
 
@@ -195,7 +195,7 @@ headless() { # <cwd> <out.json> <prompt> [extra claude args...]
 # the baseline took and the route it took it by - so losing one costs the next draft
 # exactly the information that would have improved it.
 #
-# NOT called by the authoring phase, deliberately: plans/01-author.md opens by reading
+# NOT called by the authoring phase, deliberately: 01-author.md opens by reading
 # minibench.md to decide it is in a re-question cycle. Archiving before authoring would
 # hide the credit table from the phase that exists to answer it.
 archive_read() {
@@ -211,7 +211,7 @@ spawn_plan() {
   local plan="$PLANS/$1" name="$PHASE"
   [ -f "$plan" ] || { echo "[$PHASE] missing plan: $plan" >&2; exit 1; }
   mkdir -p "$LOOPDIR" "$DRYRUN"
-  echo "## [$PHASE] spawning the phase agent on plans/$1"
+  echo "## [$PHASE] spawning the phase agent on ${PLANS#"$IL_ROOT/"}/$1"
   local prompt
   prompt="$(cat "$PLANS/laws.md"; echo; cat "$plan"; cat <<EOF
 
@@ -376,7 +376,7 @@ PY
 requeue_expand() {
   local label="$1"; shift
   mkdir -p "$LOOPDIR"
-  # The brief is how the instruction reaches the agent: plans/03-expand.md reads this file
+  # The brief is how the instruction reaches the agent: 03-expand.md reads this file
   # when it exists. Printing it to the console only tells the human.
   { echo "# Brief for this expansion (written by the loop, $label)"
     echo

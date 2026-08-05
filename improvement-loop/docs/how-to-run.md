@@ -174,7 +174,7 @@ stall dressed as deference. (Ratified 2026-07-15.)
 
 - The phase map and who runs what: [`README.md`](README.md). The goal above it all:
   [`goal.md`](goal.md).
-- **What a phase actually does is its plan, not a page here**: [`../plans/`](../plans) -
+- **What a phase actually does is its plan, not a page here**: [`../plans/cycle-1-craft-the-scenario/`](../plans/cycle-1-craft-the-scenario) -
   `01-author.md`, `02-minibench.md`, `03-expand.md`, `04-validate.md`, and the one-line law list `laws.md`. The
   driver hands them to the agent; you read them to know what it was told.
 - Standing laws with their provenance: [`campaign-laws.md`](campaign-laws.md). How cells lose,

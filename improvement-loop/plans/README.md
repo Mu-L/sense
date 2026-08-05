@@ -23,7 +23,10 @@ the driver prepends to every plan.
 
 ## The files
 
-| File | Phase it runs | Verdicts |
+One folder per cycle. `cycle-1-craft-the-scenario/` is the only one: it takes a repo and
+hands back a scenario ready to be benched globally.
+
+| File in `cycle-1-craft-the-scenario/` | Phase it runs | Verdicts |
 |---|---|---|
 | `01-author.md` | anchor, question, two-step probe scenario, gold | `DRAFT`, `NO-ANCHOR` |
 | `02-minibench.md` | read the two-arm run, rule on expanding | `PROCEED`, `REQUESTION`, `NO-ANCHOR` |

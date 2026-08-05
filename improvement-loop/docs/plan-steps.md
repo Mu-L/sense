@@ -1,6 +1,6 @@
 # Plan steps, in order
 
-What each phase actually runs, and why. The plan files in `plans/` are the authority at
+What each phase actually runs, and why. The plan files in `plans/cycle-1-craft-the-scenario/` are the authority at
 runtime; this page is the map a human reads to see the loop end to end.
 
 Authoring is a **cycle**, and the driver runs it unattended. `NO-ANCHOR`, `REQUESTION` and

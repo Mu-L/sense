@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Behaviour pins for the unscored validation run (plans/04-validate.md).
+"""Behaviour pins for the unscored validation run (plans/cycle-1-craft-the-scenario/04-validate.md).
 
 The load-bearing pin is `test_the_scorer_cannot_see_a_validation_run`: the isolation is the
 RESULTS ROOT, not a flag a measurement instrument has to honour. That choice is deliberate -
@@ -73,10 +73,10 @@ class ValidationRoutingTest(unittest.TestCase):
 
 
 class MinibenchRoutingTest(unittest.TestCase):
-    """The two-step probe run (plans/02-minibench.md) is unscored like a validation run and
+    """The two-step probe run (plans/cycle-1-craft-the-scenario/02-minibench.md) is unscored like a validation run and
     lands in its own root. The two CANNOT share one: both write <root>/<arm>/<repo>/run-1,
     so the seven-step pair would overwrite the two-step pair at the same path and
-    plans/04-validate.md's session row would compare a run against itself."""
+    plans/cycle-1-craft-the-scenario/04-validate.md's session row would compare a run against itself."""
 
     def test_a_minibench_run_lands_under_minibench(self):
         d, scoring = _paths(VERTICAL="php-laravel", BENCH_MODEL="claude-opus-5",

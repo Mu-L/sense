@@ -1,7 +1,7 @@
 # improvement-loop / docs
 
 **The authority on DESIGN, read by a human.** The authority at RUNTIME is
-[`../plans/`](../plans), handed to an agent by the driver. If a session opens a page here
+[`../plans/cycle-1-craft-the-scenario/`](../plans/cycle-1-craft-the-scenario), handed to an agent by the driver. If a session opens a page here
 mid-run, that is a bug report: what it needed was missing from its plan, and it goes in the
 plan. Scripts live in [`../bench/`](../bench); nothing here is executable.
 

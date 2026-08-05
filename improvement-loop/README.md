@@ -16,8 +16,10 @@ improvement-loop/
 │   ├── bootstrap/        one command that stands a vertical up: bash bench/bootstrap/run.sh
 │   ├── lib/              orchestration, gates, scoring
 │   └── drivers/          the loop drivers
-├── plans/                what the driver HANDS AN AGENT: one file per judgment phase,
-│                         plus laws.md. Authority at runtime.
+├── plans/                what the driver HANDS AN AGENT. Authority at runtime.
+│   └── cycle-1-craft-the-scenario/
+│                         one file per judgment phase, plus laws.md: the cycle that
+│                         turns a repo into a scenario ready to bench.
 ├── docs/                 the rule-book a HUMAN reads: manifesto, judging contract,
 │   │                     campaign laws, cross-cutting fact-packs, method. Authority on
 │   └── parked/           design. Loop one-pagers that are not live.

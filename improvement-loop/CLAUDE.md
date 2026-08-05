@@ -78,8 +78,8 @@ reached* - need a second, DIFFERENT probe before they are stated at all.
 
 | Need | Read |
 |---|---|
-| the phase you are running | `plans/<phase>.md` - authority at runtime |
-| the laws in one line each | `plans/laws.md` |
+| the phase you are running | `plans/cycle-1-craft-the-scenario/<phase>.md` - authority at runtime |
+| the laws in one line each | `plans/cycle-1-craft-the-scenario/laws.md` |
 | why the design is what it is | `docs/` - authority on design, not at runtime |
 | a script | `bench/lib/`, `bench/drivers/`, `bench/bootstrap/` |
 
