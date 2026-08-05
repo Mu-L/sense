@@ -120,7 +120,15 @@ BOARD="$VDIR/reports/$REPO-${VERSION#sha256:}.md"
 # abandoned run would leave a half-written board standing as the finished one.
 BOARD_STAGE="$LOOPDIR/board.md"
 
-advance() { state_set "$REPO" "$1"; echo "## [$REPO] -> $1"; }
+# STATUS.md is the page a resuming session reads and nothing else re-renders it: cycle 1
+# re-renders at every transition for exactly this reason. Rendering is $0, read-only and
+# write-only in the other direction (it decides nothing), so it must never take the loop
+# down - hence the `|| true`.
+advance() {
+  state_set "$REPO" "$1"
+  bash "$LIB/render-status.sh" "$VERTICAL" >/dev/null 2>&1 || true
+  echo "## [$REPO] -> $1"
+}
 
 # spawn_plan <plan-file> - hand one plan to a headless agent, laws first. The laws are
 # PREPENDED, never linked: a plan that ends in "see the laws" is the bug the split of
@@ -250,6 +258,28 @@ do_publish() {
       exit 1; }
   mkdir -p "$(dirname "$BOARD")"
   cp "$BOARD_STAGE" "$BOARD"
+  # The page says what we measured; the ledger says why we ran it and what it taught,
+  # and it is where a later session asks whether this cell is still live. Appended once
+  # per (repo, question) - the key is the guard, exactly as bootstrap/scaffold is.
+  local ledger="$VDIR/LEDGER.md" key="cycle2/$REPO/board"
+  if [ -f "$ledger" ] && grep -q "| $key |" "$ledger"; then
+    echo "## [publish] $key already in LEDGER.md, not duplicating"
+  else
+    local before after
+    before="$(python3 "$LIB/ledger_check.py" "$VERTICAL" 2>&1 | grep -c "^  - " || true)"
+    { echo; python3 "$LIB/cycle2_ledger.py" "$NUMBERS" \
+        --date "$(date -u +%Y-%m-%d)"; } >> "$ledger"
+    # Gate on the DELTA, never on the whole file: the ledger carries pre-existing
+    # findings from before the schema tightened, and holding a publish hostage to
+    # history would block every board forever. What this cycle ADDS must be clean.
+    after="$(python3 "$LIB/ledger_check.py" "$VERTICAL" 2>&1 | grep -c "^  - " || true)"
+    if [ "$after" -gt "$before" ]; then
+      echo "[publish] the ledger entry ADDED $((after - before)) schema finding(s):"
+      python3 "$LIB/ledger_check.py" "$VERTICAL" 2>&1 | grep "$key" | sed 's/^/          /'
+      exit 1
+    fi
+    echo "## [publish] $key appended to LEDGER.md ($after finding(s), unchanged)"
+  fi
   echo "## [publish] ${BOARD#"$IL_ROOT/"} stands. It is tracked, so it ships with the repo."
   advance done
 }

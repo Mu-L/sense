@@ -69,6 +69,10 @@ reached* - need a second, DIFFERENT probe before they are stated at all.
   instrument already writes its output down (`scored.json`, `sense-io.jsonl`, `banked.jsonl`),
   so reaching into an older cycle's code is never necessary. `transcript_miss.py` is the
   pattern: read-only, $0, over transcripts that already exist.
+  **The carve-out is WRITE-ONLY HUMAN SURFACES** (`render-status.sh` and STATUS.md): they
+  decide nothing, no loop reads them, and no measurement can move because of them, so a second
+  cycle extends them rather than building a second page nobody thinks to open. The rule
+  protects what feeds a decision, not what feeds a reader.
 - **NO PREDICTORS BEFORE A SCENARIO EXISTS.** A win is CRAFTED for a repo, never detected by
   a script beforehand. Anything scoring a repo before there is a task to score it against is
   a predictor. A **killer** runs against a scenario that exists and may kill it; a

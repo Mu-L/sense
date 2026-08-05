@@ -186,6 +186,43 @@ ledger_section() {
 # a verdict skips its agent entirely. That session re-ran the loop, watched the driver replay
 # a two-day-old NO-AXIS, and reported it as a fresh result. So the verdict on disk renders
 # beside the phase, and the cell says which way the next run goes.
+# Cycle 2: where each cell is on the road to a published board, and which pages
+# already stand. STATUS.md is where a resuming session looks; before this it could
+# only see cycle 1 and read as though nothing else existed.
+cycle2_section() {
+  local st="$IL_ROOT/verticals/$KEY/.cycle2-state.json"
+  local reports="$IL_ROOT/verticals/$KEY/reports"
+  if [ ! -f "$st" ] && [ ! -d "$reports" ]; then
+    echo "_no cycle 2 run yet. Eligible cells:_ \`bash bench/drivers/cycle2-board.sh --eligible\`"
+    return
+  fi
+  if [ -f "$st" ]; then
+    python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+rows = [(k, v) for k, v in sorted(d.items()) if '#' not in k]
+if not rows:
+    print('_no cell has entered cycle 2 yet._')
+else:
+    print('| repo | phase | re-runs |')
+    print('|---|---|---|')
+    for k, v in rows:
+        print(f'| {k} | {v} | {d.get(k + chr(35) + \"reruns\", 0)} |')
+" "$st"
+    echo
+  fi
+  if [ -d "$reports" ] && [ -n "$(ls -A "$reports" 2>/dev/null)" ]; then
+    echo "Published boards:"
+    echo
+    for f in "$reports"/*.md; do
+      [ -f "$f" ] || continue
+      echo "- \`reports/$(basename "$f")\`"
+    done
+  else
+    echo "_no board published yet._"
+  fi
+}
+
 loop_position_section() {
   local st="$IL_ROOT/verticals/$KEY/.loop-state.json"
   if [ ! -f "$st" ]; then
@@ -256,6 +293,10 @@ else:
   echo "## Loop position (\`.loop-state.json\`)"
   echo
   loop_position_section
+  echo
+  echo "## Cycle 2: cross-model boards (\`.cycle2-state.json\`, \`reports/\`)"
+  echo
+  cycle2_section
   echo
   echo "## Banked cells (\`verticals/${KEY}/banked.jsonl\`)"
   echo
