@@ -24,7 +24,7 @@ Three checks, all mechanical:
      directory, or a raw log name has no business on a published page.
 
 Usage:
-    board_check.py <board.md> <numbers.json> [--verdict <report.verdict.json>]
+    board_check.py <board.md> <numbers.json> [--verdict <read.verdict.json>]
 """
 import argparse
 import json
@@ -118,7 +118,7 @@ def main(argv):
     ap.add_argument("board")
     ap.add_argument("numbers")
     ap.add_argument("--verdict", default=None,
-                    help="report.verdict.json, whose `figures` must match the prose")
+                    help="read.verdict.json, whose `figures` must match the prose")
     args = ap.parse_args(argv[1:])
 
     declared, missing = None, []

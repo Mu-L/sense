@@ -243,7 +243,7 @@ do_render() {
 }
 
 do_read() {
-  rm -f "$LOOPDIR/report.verdict.json"
+  rm -f "$LOOPDIR/read.verdict.json"
   spawn_plan 02-report.md read
   require_verdict read "READING"
   advance publish
@@ -251,7 +251,7 @@ do_read() {
 
 do_publish() {
   python3 "$LIB/board_check.py" "$BOARD_STAGE" "$NUMBERS" \
-    --verdict "$LOOPDIR/report.verdict.json" || {
+    --verdict "$LOOPDIR/read.verdict.json" || {
       echo "[publish] REFUSED. The page is NOT publishable as written."
       echo "          Re-run --phase read; the agent rewrites its own section."
       state_set "$REPO" read

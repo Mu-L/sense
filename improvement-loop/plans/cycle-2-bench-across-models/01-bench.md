@@ -72,14 +72,21 @@ Write `$LOOPDIR/bench.md`: one short section per arm, each carrying the arm's ro
 states, its measured run count, and the one line of quoted output you based the call on.
 Then the verdict.
 
-Write `$LOOPDIR/bench.verdict.json`:
+Write `$LOOPDIR/validity.verdict.json` - named for the PHASE, which is how the driver
+looks it up:
 
     {
-      "verdict": "BOARD" | "RERUN",
-      "rerun": ["<model id>", ...],
-      "keep":  ["<model id>", ...],
-      "notes": "<one line, or the blocked reason>"
+      "phase":    "validity",
+      "repo":     "<repo>",
+      "verdict":  "BOARD" | "RERUN",
+      "artifact": "verticals/<vertical>/results/cycle2/<repo>/bench.md",
+      "rerun":    ["<model id>", ...],
+      "keep":     ["<model id>", ...],
+      "notes":    "<one line, or the blocked reason>"
     }
+
+`phase`, `repo` and `artifact` are required by the driver's guard and `artifact` is
+checked to EXIST, relative to `improvement-loop/`.
 
 `BOARD` means every arm is either a measurement or a reported finding, and the page can
 be built. `RERUN` names the arms the driver must run again and nothing else.
@@ -87,7 +94,8 @@ be built. `RERUN` names the arms the driver must run again and nothing else.
 ## DONE WHEN
 
 - `bench.md` exists and names every arm in `$ARMS`.
-- `bench.verdict.json` parses and its verdict is one of the two.
+- `validity.verdict.json` parses, carries all five required keys, and its verdict is one
+  of the two.
 - Every arm appears in exactly one of `rerun` or `keep`.
 - Every claim in `bench.md` is quoted command output.
 

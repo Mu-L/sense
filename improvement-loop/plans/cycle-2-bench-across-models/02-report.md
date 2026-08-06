@@ -54,13 +54,20 @@ hedging stacks ("appears to somewhat suggest"). Say the thing.
 Replace the line `<!-- reading -->` in `$BOARD` with your section. Change nothing else in
 that file: not a heading, not a table, not a chart, not a word of the generated prose.
 
-Write `$LOOPDIR/report.verdict.json`:
+Write `$LOOPDIR/read.verdict.json` - named for the PHASE, which is how the driver looks
+it up:
 
     {
-      "verdict": "READING",
-      "figures": ["<every number you used, as it appears in the numbers JSON>"],
-      "notes": "<one line, or the blocked reason>"
+      "phase":    "read",
+      "repo":     "<repo>",
+      "verdict":  "READING",
+      "artifact": "verticals/<vertical>/results/cycle2/<repo>/board.md",
+      "figures":  ["<every number you used, as it appears in the numbers JSON>"],
+      "notes":    "<one line, or the blocked reason>"
     }
+
+`phase`, `repo` and `artifact` are required by the driver's guard and `artifact` is
+checked to EXIST, relative to `improvement-loop/`.
 
 `figures` is how the next gate checks you: every number in your section must appear in it,
 and every entry must appear in the numbers JSON.
