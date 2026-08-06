@@ -3,8 +3,8 @@
   "chatwoot#reruns": "0",
   "discourse": "done",
   "discourse#reruns": "2",
-  "mastodon": "gate",
-  "mastodon#reruns": "0",
+  "mastodon": "done",
+  "mastodon#reruns": "2",
   "rails": "gate",
   "rails#reruns": "0"
 }
