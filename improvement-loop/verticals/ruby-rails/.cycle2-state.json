@@ -5,6 +5,6 @@
   "discourse#reruns": "2",
   "mastodon": "done",
   "mastodon#reruns": "2",
-  "rails": "gate",
-  "rails#reruns": "0"
+  "rails": "done",
+  "rails#reruns": "2"
 }
