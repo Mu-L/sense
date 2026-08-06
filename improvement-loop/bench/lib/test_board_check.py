@@ -9,7 +9,8 @@ NUMBERS = {"repo": "chatwoot", "gold_rows": 38,
                                     "delta": 0.2632},
                         "sense_only_reach": ["a"] * 11,
                         "session": {"sense": {"wall_time_seconds": 414.0,
-                                              "token_total_all": 1748326}}}]}
+                                              "token_total_all": 1748326},
+                                    "baseline": {"token_total_all": 905453.5}}}]}
 
 
 def _board(reading, tail="\n## Model by model\n\nbody\n"):
@@ -40,6 +41,9 @@ class Figures(unittest.TestCase):
     def test_a_million_scale_token_total_counts(self):
         self.assertEqual(bc.check(_board("It moved 1,748,326 tokens."), NUMBERS), [])
 
+    def test_a_two_run_mean_quoted_to_its_own_decimal_counts(self):
+        self.assertEqual(bc.check(_board("It moved 905,453.5 tokens."), NUMBERS), [])
+
     def test_a_rounded_delta_counts(self):
         self.assertEqual(bc.check(_board("It gained +0.26 overall."), NUMBERS), [])
 
@@ -48,6 +52,11 @@ class Figures(unittest.TestCase):
 
     def test_a_share_stated_as_a_percentage_counts(self):
         self.assertEqual(bc.check(_board("It reached 87% of them."), NUMBERS), [])
+
+    def test_a_version_inside_a_model_name_is_not_a_figure(self):
+        out = bc.check(_board("Claude Opus 5 led the board."), NUMBERS,
+                       declared=[])
+        self.assertEqual(out, [])
 
     def test_an_invented_figure_is_refused(self):
         out = bc.check(_board("It found 29 answers."), NUMBERS)

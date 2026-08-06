@@ -1,8 +1,8 @@
 {
   "chatwoot": "gate",
   "chatwoot#reruns": "0",
-  "discourse": "gate",
-  "discourse#reruns": "0",
+  "discourse": "done",
+  "discourse#reruns": "2",
   "mastodon": "gate",
   "mastodon#reruns": "0",
   "rails": "gate",

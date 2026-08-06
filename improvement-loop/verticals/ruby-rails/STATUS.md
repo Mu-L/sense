@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-06 05:53 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-06 09:10 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -20,11 +20,13 @@ Resume: `VERTICAL=ruby-rails bash bench/drivers/vertical-loop.sh <repo>`
 | repo | phase | re-runs |
 |---|---|---|
 | chatwoot | gate | 0 |
-| discourse | gate | 0 |
+| discourse | done | 2 |
 | mastodon | gate | 0 |
 | rails | gate | 0 |
 
-_no board published yet._
+Published boards:
+
+- `reports/discourse-1def723310067e48.md`
 
 Resume: `VERTICAL=ruby-rails bash bench/drivers/cycle2-board.sh <repo>`
 
@@ -98,10 +100,18 @@ _Rows are re-derivable from the results tree: `banked.py rebuild verticals/<key>
 - `claude-opus-5/validation/f6a017bb2fc1451e/validation/f6a017bb2fc1451e/sense/discourse` - 1 run(s)
 - `claude-opus-5/validation/validation/baseline/rails` - 1 run(s)
 - `claude-opus-5/validation/validation/sense/rails` - 1 run(s)
+- `glm-5.2_cloud/1def723310067e48/baseline/discourse` - 2 run(s)
+- `glm-5.2_cloud/1def723310067e48/sense/discourse` - 2 run(s)
+- `gpt-5.6-sol/1def723310067e48/baseline/discourse` - 2 run(s)
+- `gpt-5.6-sol/1def723310067e48/sense/discourse` - 2 run(s)
+- `kimi-for-coding_k3/1def723310067e48/baseline/discourse` - 2 run(s)
+- `kimi-for-coding_k3/1def723310067e48/sense/discourse` - 2 run(s)
+- `ollama-cloud_mistral-large-3_675b/1def723310067e48/baseline/discourse` - 2 run(s)
+- `ollama-cloud_mistral-large-3_675b/1def723310067e48/sense/discourse` - 2 run(s)
 
 ## Ledger
 
-- latest entry: 2026-08-04 | bench/discourse-paid-WIN | the loop recovered from its own failure mode, unattended
+- latest entry: 2026-08-06 | cycle2/discourse/board | the question put to every arm
 - full narrative: `LEDGER.md` (this folder)
 - decision-errors intake: 0 open incident(s) (`../../docs/decision-errors.md`)
 

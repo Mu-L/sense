@@ -30,6 +30,7 @@ import argparse
 import json
 import re
 import sys
+from pathlib import Path
 
 NUMBER_RE = re.compile(r"(?<![\w/:.-])[+-]?\d[\d,]*(?:\.\d+)?%?(?![\w.-])")
 # Paths and artifacts that only exist inside the private results tree.
@@ -76,8 +77,12 @@ def allowed_figures(data):
         # .0f as well as %g: %g flips to scientific notation past six significant
         # digits, so a million-token total came out as "1.74833e+06" and no honest
         # figure on the page could ever match it.
-        out.update({f"{v:g}", f"{v:.0f}", f"{v:.2f}", f"{v:.4f}",
-                    f"{abs(v):g}", f"{abs(v):.0f}", f"{abs(v):.2f}", f"{abs(v):.4f}"})
+        # .1f as well, and it is not a rounding: a token total is a mean over two
+        # runs, so the leaf itself carries one decimal, and quoting it verbatim was
+        # refused as invented while every rounding of it passed.
+        out.update({f"{v:g}", f"{v:.0f}", f"{v:.1f}", f"{v:.2f}", f"{v:.4f}",
+                    f"{abs(v):g}", f"{abs(v):.0f}", f"{abs(v):.1f}",
+                    f"{abs(v):.2f}", f"{abs(v):.4f}"})
         if abs(v) <= 1:
             # The page states shares as percentages in prose.
             out.update({f"{v * 100:g}", f"{v * 100:.0f}", f"{v * 100:.1f}"})
@@ -85,6 +90,20 @@ def allowed_figures(data):
             # And durations in minutes, the way the bullets do.
             out.add(f"{v / 60:.1f}")
     return {s.lstrip("+") for s in out}
+
+
+def _without_model_names(text):
+    """A model's own name is not a figure: "Claude Opus 5" is not a claim of 5.
+
+    The regex already skips a version glued into an id (`gpt-5.6-sol`), but a
+    label carries its number as a separate word and read as an undeclared 5.
+    """
+    copy = json.load(open(Path(__file__).with_name("board_copy.json")))
+    for key, entry in copy.get("models", {}).items():
+        for name in (entry.get("label", ""), key):
+            if name:
+                text = text.replace(name, "")
+    return text
 
 
 def check(board_text, data, declared=None):
@@ -97,13 +116,14 @@ def check(board_text, data, declared=None):
     if not section.strip():
         problems.append("the Reading section is empty")
 
+    prose = _without_model_names(section)
     allowed = allowed_figures(data)
     if declared is not None:
-        undeclared = sorted(_numbers_in(section) - {str(d) for d in declared})
+        undeclared = sorted(_numbers_in(prose) - {str(d) for d in declared})
         if undeclared:
             problems.append("figures used but not declared in the verdict: "
                             + ", ".join(undeclared))
-    for figure in sorted(_numbers_in(section)):
+    for figure in sorted(_numbers_in(prose)):
         if figure not in allowed:
             problems.append(f"figure {figure!r} is not derivable from the numbers JSON")
 
