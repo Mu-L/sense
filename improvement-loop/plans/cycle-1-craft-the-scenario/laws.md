@@ -22,10 +22,10 @@ they are not re-argued at runtime.
   FROM the cell it was meant to judge. If turning the knob one way always makes us look better,
   it is a dial and not a measurement. A blend whose delta is a convex combination of its terms
   is safe by construction: it lands BETWEEN them and cannot manufacture a win neither supports.
-- **OPUS-4.8 IS HISTORY; WE SCORE OPUS-5 FORWARD (ruling, 2026-08-04).** Banked opus-4.8
-  numbers are labelled historical, never deleted, and they do NOT constrain a scoring change.
-  The killer "it must hold on the banked cell" was treating a record on a retired model as a
-  live constraint. Killers still bind on every cell benched on the headline model.
+- **WE SCORE THE HEADLINE MODEL FORWARD (ruling, 2026-08-04).** A number banked on a RETIRED
+  model is historical and does NOT constrain a scoring change. The killer "it must hold on the
+  banked cell" was treating a record on a retired model as a live constraint. Killers still
+  bind on every cell benched on the headline model.
 - **THE FIRST MEASUREMENT IS A REAL BASELINE ARM.** Nothing kills a draft before a two-arm run
   has answered its question at a real wall. Every cheaper substitute this bench has built - the
   token-cover battery, the import screen, the scored adversary probe, the hand-run read-cost

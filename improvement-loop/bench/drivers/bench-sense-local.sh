@@ -125,10 +125,12 @@ Options:
               saves ~20min on nextjs alone.
   --repo      Comma-separated repo filter (e.g. flask,gin)
   --runs      Runs per scenario for variance estimation (default: 1)
-  --model     Session model id. Anthropic ids (e.g. claude-opus-4-8) run on the
-              subscription; ids with a tag colon (e.g. deepseek-v4-pro:cloud)
-              route to the local Ollama daemon (host via \$OLLAMA_BASE_URL,
-              default http://localhost:11434). Default: claude-opus-4-8.
+  --model     Session model id, REQUIRED - there is no default, because a
+              hardcoded one outlives the model. Take it from the vertical's
+              arms.txt (verticals/<key>/arms.txt). Anthropic ids carry no tag
+              colon; ids with one (e.g. deepseek-v4-pro:cloud) route to the
+              local Ollama daemon (host via \$OLLAMA_BASE_URL, default
+              http://localhost:11434).
   --timeout   Per-session wall-clock seconds (default: scorer.py TIME_CEILINGS).
               NEVER raise this to rescue an arm that ran out of clock:
               can't-finish-at-budget is a RESULT, not an invalid run. See the
@@ -237,7 +239,7 @@ unset ANTHROPIC_API_KEY BENCHMARK_ANTHROPIC_API_KEY
 
 command -v claude >/dev/null || { echo "claude CLI not found in PATH" >&2; exit 1; }
 
-# Provider routing. Anthropic model ids carry no tag colon (claude-opus-4-8,
+# Provider routing. Anthropic model ids carry no tag colon (claude-opus-5,
 # claude-fable-5); Ollama ids always do (deepseek-v4-pro:cloud, qwen3.5:9b).
 # A colon in $MODEL therefore routes the SESSION to the local Ollama daemon's
 # Anthropic-compatible endpoint instead of the subscription. The override is

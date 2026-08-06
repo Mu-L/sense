@@ -46,7 +46,9 @@
 #   bash bench/drivers/vertical-loop.sh <repo> --reset        # back to index
 #   bash bench/drivers/vertical-loop.sh --status              # all repos' phases
 #
-# Env: VERTICAL (REQUIRED, no default), MODELS (default claude-opus-4-8),
+# Env: VERTICAL (REQUIRED, no default), MODELS (default: the headline arm in
+#      verticals/<key>/arms.txt - never a hardcoded id, so retiring a model is a
+#      one-line arms.txt edit),
 #      RUNS (default 2), SENSE_CLONES (default ~/Developer/luuuc/oss/sense-benchmark/sense).
 set -uo pipefail
 
