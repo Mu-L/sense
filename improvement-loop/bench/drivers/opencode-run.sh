@@ -147,9 +147,10 @@ if [[ -z "$SENSE_RELEASE" ]]; then
   SENSE_RELEASE_EXACT="false"
 fi
 
-if [[ -n "$SESSION_TIMEOUT" ]]; then SECS="$SESSION_TIMEOUT"; else
-  SECS=$(python3 -c "import sys;sys.path.insert(0,'$LIB_DIR');from scorer import TIME_CEILINGS,DEFAULT_TIME_CEILING;print(max($OPENCODE_MAX_SECS,TIME_CEILINGS.get('$REPO',DEFAULT_TIME_CEILING)))")
+if [[ -n "$SESSION_TIMEOUT" ]]; then SECS_CEILING="$SESSION_TIMEOUT"; else
+  SECS_CEILING=$(python3 -c "import sys;sys.path.insert(0,'$LIB_DIR');from scorer import TIME_CEILINGS,DEFAULT_TIME_CEILING;print(max($OPENCODE_MAX_SECS,TIME_CEILINGS.get('$REPO',DEFAULT_TIME_CEILING)))")
 fi
+MATCHED_BUDGET_MULT="${MATCHED_BUDGET_MULT:-1.2}"
 
 # Stall-aware watchdog. A flat wall-clock cap GUILLOTINES slow-but-working sense
 # runs: the sense arm streams more tool calls + steps, so on heavy scenarios it
@@ -187,14 +188,50 @@ run_guarded() {  # $1 = raw file (absolute); $2.. = command
 }
 
 IFS=',' read -ra TOOLS <<< "$TOOLS_CSV"
-# Optional sense-first ordering (BENCH_SENSE_FIRST=1): run the heavier sense arm
-# into the fresher window. Default keeps the input order. 3.2-safe (no mapfile).
-ORDERED=(); while IFS= read -r _t; do [ -n "$_t" ] && ORDERED+=("$_t"); done < <(pace_order_tools "${TOOLS[@]}")
-TOOLS=("${ORDERED[@]}")
+# MATCHED BUDGET: the sense arm ALWAYS runs first when both are selected, because the
+# baseline's wall is derived from it. This reorders a user-supplied "baseline,sense"
+# rather than rejecting it - the pairing is the point, not a pacing preference, so it
+# is structural here and not left to BENCH_SENSE_FIRST.
+_reordered=()
+for _t in "${TOOLS[@]}"; do [[ "$_t" == sense ]] && _reordered+=("$_t"); done
+for _t in "${TOOLS[@]}"; do [[ "$_t" != sense ]] && _reordered+=("$_t"); done
+TOOLS=("${_reordered[@]}")
+TOOLS_CSV="$(IFS=,; echo "${TOOLS[*]}")"
 arm_idx=0
-for tool in "${TOOLS[@]}"; do
+# The arms are a QUEUE, not a fixed list, so a sense arm that did not finish can be
+# re-entered ahead of the arms still to come (see the retry below). Held as a
+# whitespace-delimited string rather than an array: this runs under `set -u` on bash
+# 3.2, where slicing an array down to empty is an unbound-variable error.
+arm_queue="${TOOLS[*]}"
+sense_retried=0; sense_wall=""; sense_valid=""
+while [[ -n "$arm_queue" ]]; do
+  tool="${arm_queue%% *}"
+  if [[ "$arm_queue" == *" "* ]]; then arm_queue="${arm_queue#* }"; else arm_queue=""; fi
   repo_dir="$SENSE_BENCH_ROOT/$tool/$REPO"
   [[ -d "$repo_dir/.git" ]] || { echo "[opencode] SKIP $tool: clone missing at $repo_dir" >&2; continue; }
+
+  # THE BASELINE'S WALL IS THE SENSE ARM'S WALL PLUS A MARGIN. A fixed equal wall measures
+  # "who reaches more given generous time"; this measures "given the time it takes WITH the
+  # tool, can you get there without it" - the question a user actually has. An explicit
+  # --timeout still wins, so a deliberate override is never silently replaced.
+  #
+  # THE ONE WAY THIS COULD LIE is a sense arm that dies early: a short wall would hand the
+  # baseline a rigged budget and manufacture a win. So the derivation accepts only VALID,
+  # non-watchdogged sense runs, and when there is none the baseline does not run at all -
+  # the cell voids instead of scoring. A win can never be bought by failing fast.
+  SECS="$SECS_CEILING"; timeout_basis="default ceiling"
+  if [[ "$tool" != sense && -z "$SESSION_TIMEOUT" ]]; then
+    if [[ "$sense_valid" != true ]]; then
+      echo "[opencode] SKIP baseline $REPO: its paired sense run is missing or not valid." >&2
+      echo "           Nothing to compare against and no honest wall to derive - RE-RUN THE SENSE ARM." >&2
+      continue
+    fi
+    SECS=$(python3 -c "import math,sys; print(int(math.ceil(float(sys.argv[1])*float(sys.argv[2]))))" "$sense_wall" "$MATCHED_BUDGET_MULT")
+    timeout_basis="matched budget: paired sense run ${sense_wall}s x $MATCHED_BUDGET_MULT"
+    echo "[opencode]   matched budget: baseline wall = ${SECS}s (paired sense run ${sense_wall}s)" >&2
+  fi
+  export BENCH_TIMEOUT_BASIS="$timeout_basis"
+
   # Inter-arm spacing so the second arm starts in a less-drained window.
   [ "$arm_idx" -gt 0 ] && pace_sleep "$OPENCODE_PACE_SECONDS" "between arms (next $tool/$REPO)"
   arm_idx=$(( arm_idx + 1 ))
@@ -450,6 +487,7 @@ KIND = {0: None, 124: "hard_cap_timeout", 125: "stalled_midrun", 126: "no_first_
 meta = {
     "tool": tool, "repo": repo, "scenario": scen,
     "wall_time_seconds": int(wall), "model": model,
+    "timeout_basis": os.environ.get("BENCH_TIMEOUT_BASIS") or "default ceiling",
     "repo_commit": commit or None, "tool_version": ver or None,
     "harness": "opencode", "provider": (model.split("/", 1)[0] if "/" in model else "opencode"),
     "auth_mode": "opencode_cli", "mode": "single_prompt",
@@ -516,6 +554,28 @@ PY
   echo "[opencode]   $tool rc=$rc wall=${wall}s attempts=$attempts out_tok=$otok answer_chars=$achars$flag" >&2
   # Throttle-health line per session so onset is observable live.
   pace_health_log "$REPO" "$tool" "$wall" "$otok" "$achars" "$attempts" "$hclass"
+
+  if [[ "$tool" == sense ]]; then
+    sense_wall="$wall"
+    sense_valid=$(python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+print('true' if (d.get('valid') is True and not d.get('watchdog_kind')) else 'false')
+" "$out/run_meta.json")
+    # ONE RETRY FOR A SENSE ARM THAT DID NOT FINISH. The baseline derives its wall from
+    # its paired sense run, so a watchdogged or crashed sense run takes the baseline down
+    # with it and the whole cell is lost. The retry re-enters the sense arm AHEAD of the
+    # arms still queued and lands in the next free run-N, so nothing is overwritten and
+    # the baseline pairs with the run that finished. ONE retry, never a loop:
+    # cannot-finish-at-budget is a RESULT, and a scenario that needs three attempts is
+    # saying something we must not average away.
+    if [[ "$sense_valid" != true && $sense_retried -eq 0 ]]; then
+      sense_retried=1
+      arm_queue="sense${arm_queue:+ $arm_queue}"
+      echo "[opencode]   sense arm did not finish (valid=$sense_valid) - RETRYING the sense arm once" >&2
+      echo "[opencode]      A second failure stands as the result; the watchdog is not raised." >&2
+    fi
+  fi
 
   # Post-run agent survey (sense arm, VALID runs only: hclass=ok, so cap/
   # truncation/offload runs are never surveyed; process: loops doc
