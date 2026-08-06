@@ -1,3 +1,10 @@
 {
-  "discourse": "bench"
+  "chatwoot": "gate",
+  "chatwoot#reruns": "0",
+  "discourse": "gate",
+  "discourse#reruns": "0",
+  "mastodon": "gate",
+  "mastodon#reruns": "0",
+  "rails": "gate",
+  "rails#reruns": "0"
 }

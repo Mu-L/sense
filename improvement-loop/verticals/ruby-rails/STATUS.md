@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-05 20:49 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-06 05:53 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -19,7 +19,10 @@ Resume: `VERTICAL=ruby-rails bash bench/drivers/vertical-loop.sh <repo>`
 
 | repo | phase | re-runs |
 |---|---|---|
-| discourse | bench | 0 |
+| chatwoot | gate | 0 |
+| discourse | gate | 0 |
+| mastodon | gate | 0 |
+| rails | gate | 0 |
 
 _no board published yet._
 
@@ -38,8 +41,6 @@ _Rows are re-derivable from the results tree: `banked.py rebuild verticals/<key>
 
 ## Results cells on disk (`verticals/ruby-rails/results`)
 
-- `claude-opus-4-8/validation/f576efebe028db23/baseline/mastodon` - 1 run(s)
-- `claude-opus-4-8/validation/f576efebe028db23/sense/mastodon` - 1 run(s)
 - `claude-opus-5/1def723310067e48/baseline/discourse` - 2 run(s)
 - `claude-opus-5/1def723310067e48/sense/discourse` - 2 run(s)
 - `claude-opus-5/24f720898c0385b9/baseline/chatwoot` - 2 run(s)
