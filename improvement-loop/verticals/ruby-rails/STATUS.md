@@ -1,6 +1,6 @@
 # ruby-rails - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-06 14:51 GMT by `bench/lib/render-status.sh ruby-rails`.
+> AUTO-RENDERED 2026-08-06 17:19 GMT by `bench/lib/render-status.sh ruby-rails`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -19,18 +19,20 @@ Resume: `VERTICAL=ruby-rails bash bench/drivers/vertical-loop.sh <repo>`
 
 | repo | phase | re-runs |
 |---|---|---|
-| chatwoot | gate | 0 |
+| chatwoot | done | 2 |
 | discourse | done | 2 |
 | mastodon | done | 2 |
 | rails | done | 2 |
 
 Published boards:
 
+- `reports/chatwoot-24f720898c0385b9.md`
 - `reports/discourse-1def723310067e48.md`
 - `reports/mastodon-27dfc6000a5e98f3.md`
 - `reports/rails-3f210bcde96c18e1.md`
 
-Resume: `VERTICAL=ruby-rails bash bench/drivers/cycle2-board.sh <repo>`
+Start:  `VERTICAL=ruby-rails bash bench/drivers/cycle2-board.sh --eligible`, then
+`VERTICAL=ruby-rails bash bench/drivers/cycle2-board.sh <repo>` for one of them.
 
 ## Banked cells (`verticals/ruby-rails/banked.jsonl`)
 
@@ -104,24 +106,32 @@ _Rows are re-derivable from the results tree: `banked.py rebuild verticals/<key>
 - `claude-opus-5/validation/validation/sense/rails` - 1 run(s)
 - `glm-5.2_cloud/1def723310067e48/baseline/discourse` - 2 run(s)
 - `glm-5.2_cloud/1def723310067e48/sense/discourse` - 2 run(s)
+- `glm-5.2_cloud/24f720898c0385b9/baseline/chatwoot` - 2 run(s)
+- `glm-5.2_cloud/24f720898c0385b9/sense/chatwoot` - 2 run(s)
 - `glm-5.2_cloud/27dfc6000a5e98f3/baseline/mastodon` - 2 run(s)
 - `glm-5.2_cloud/27dfc6000a5e98f3/sense/mastodon` - 3 run(s)
 - `glm-5.2_cloud/3f210bcde96c18e1/baseline/rails` - 2 run(s)
 - `glm-5.2_cloud/3f210bcde96c18e1/sense/rails` - 3 run(s)
 - `gpt-5.6-sol/1def723310067e48/baseline/discourse` - 2 run(s)
 - `gpt-5.6-sol/1def723310067e48/sense/discourse` - 2 run(s)
+- `gpt-5.6-sol/24f720898c0385b9/baseline/chatwoot` - 2 run(s)
+- `gpt-5.6-sol/24f720898c0385b9/sense/chatwoot` - 2 run(s)
 - `gpt-5.6-sol/27dfc6000a5e98f3/baseline/mastodon` - 2 run(s)
 - `gpt-5.6-sol/27dfc6000a5e98f3/sense/mastodon` - 2 run(s)
 - `gpt-5.6-sol/3f210bcde96c18e1/baseline/rails` - 2 run(s)
 - `gpt-5.6-sol/3f210bcde96c18e1/sense/rails` - 2 run(s)
 - `kimi-for-coding_k3/1def723310067e48/baseline/discourse` - 2 run(s)
 - `kimi-for-coding_k3/1def723310067e48/sense/discourse` - 2 run(s)
+- `kimi-for-coding_k3/24f720898c0385b9/baseline/chatwoot` - 2 run(s)
+- `kimi-for-coding_k3/24f720898c0385b9/sense/chatwoot` - 2 run(s)
 - `kimi-for-coding_k3/27dfc6000a5e98f3/baseline/mastodon` - 2 run(s)
 - `kimi-for-coding_k3/27dfc6000a5e98f3/sense/mastodon` - 3 run(s)
 - `kimi-for-coding_k3/3f210bcde96c18e1/baseline/rails` - 2 run(s)
 - `kimi-for-coding_k3/3f210bcde96c18e1/sense/rails` - 2 run(s)
 - `ollama-cloud_mistral-large-3_675b/1def723310067e48/baseline/discourse` - 2 run(s)
 - `ollama-cloud_mistral-large-3_675b/1def723310067e48/sense/discourse` - 2 run(s)
+- `ollama-cloud_mistral-large-3_675b/24f720898c0385b9/baseline/chatwoot` - 2 run(s)
+- `ollama-cloud_mistral-large-3_675b/24f720898c0385b9/sense/chatwoot` - 2 run(s)
 - `ollama-cloud_mistral-large-3_675b/27dfc6000a5e98f3/baseline/mastodon` - 2 run(s)
 - `ollama-cloud_mistral-large-3_675b/27dfc6000a5e98f3/sense/mastodon` - 2 run(s)
 - `ollama-cloud_mistral-large-3_675b/3f210bcde96c18e1/baseline/rails` - 2 run(s)
@@ -129,7 +139,7 @@ _Rows are re-derivable from the results tree: `banked.py rebuild verticals/<key>
 
 ## Ledger
 
-- latest entry: 2026-08-06 | cycle2/rails/board | the question put to every arm
+- latest entry: 2026-08-06 | cycle2/chatwoot/board | the question put to every arm
 - full narrative: `LEDGER.md` (this folder)
 - decision-errors intake: 0 open incident(s) (`../../docs/decision-errors.md`)
 
