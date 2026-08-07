@@ -189,20 +189,57 @@ do_gate() {
 
 do_bench() {
   # Which arms to run: everything on a first pass, only the named ones on a re-entry.
-  local todo="$ARMS"
+  local todo="$ARMS" runs="$RUNS" keep="${KEEP_RUNS:-0}" start=1 rerun=0
   if [ -f "$LOOPDIR/validity.verdict.json" ]; then
     todo="$(python3 -c "import json
 d=json.load(open('$LOOPDIR/validity.verdict.json'))
 print(' '.join(d.get('rerun') or []))" 2>/dev/null)"
     [ -n "$todo" ] || todo="$ARMS"
+    rerun=1
   fi
-  echo "## [bench] VERTICAL=$VERTICAL RUNS=$RUNS arms: $todo"
-  # KEEP_RUNS: a re-entry appends beside what is already on disk rather than wiping a
-  # cell that may hold the only copy of a scored run.
-  MODELS="$todo" RUNS="$RUNS" KEEP_RUNS="${KEEP_RUNS:-0}" \
+  # A RERUN buys ONE more run per named arm, filed BESIDE the existing ones.
+  # This used to pass KEEP_RUNS=0, which made runs-variance hit its "REFUSING to
+  # wipe a cell that holds scored runs" gate and `continue` - so a RERUN verdict
+  # spent three validity spawns and produced no runs at all, then published. The
+  # append knobs (START_RUN + KEEP_RUNS) already existed; the driver just never
+  # used them. START_RUN clears the runs already on disk: RUNS base plus the
+  # rerun attempt, which do_validity has already incremented.
+  if [ "$rerun" = 1 ]; then
+    local n; n="$(state_get "$REPO#reruns")"; n="${n:-0}"
+    runs=1; keep=1; start=$((RUNS + n))
+  fi
+  echo "## [bench] VERTICAL=$VERTICAL RUNS=$runs START_RUN=$start arms: $todo"
+  local before after
+  before="$(_count_runs $todo)"
+  MODELS="$todo" RUNS="$runs" KEEP_RUNS="$keep" START_RUN="$start" \
     bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || {
       echo "[bench] FAILED"; exit 1; }
+  after="$(_count_runs $todo)"
+  # A rerun that added no run directory did NOT happen. Advancing anyway is what
+  # let a board claim a third run it never bought. Counting is the check rather
+  # than looking for run-$start by name: the metered runners pick their own next
+  # free slot per arm, so the new run's number is not START_RUN's to predict.
+  if [ "$rerun" = 1 ] && [ "$after" -le "$before" ]; then
+    echo "[bench] RERUN added no run for any of: $todo (still $after on disk)" >&2
+    echo "        Nothing was appended, so the board would repeat the same numbers." >&2
+    exit 1
+  fi
   advance validity
+}
+
+# How many run-N directories the named arms hold for this repo, both arms summed.
+# The model-id -> directory rule is bench-paths.sh's (`tr '/:' '__'`); the glob
+# spans the scenario-version segment between the model root and the arm.
+_count_runs() {
+  local m msan d n=0
+  for m in "$@"; do
+    msan="$(printf '%s' "$m" | tr '/:' '__')"
+    for d in "$VDIR/results/$msan"/*/baseline/"$REPO"/run-* \
+             "$VDIR/results/$msan"/*/sense/"$REPO"/run-*; do
+      [ -d "$d" ] && n=$((n + 1))
+    done
+  done
+  echo "$n"
 }
 
 do_validity() {
