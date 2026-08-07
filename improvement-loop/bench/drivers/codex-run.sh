@@ -71,12 +71,37 @@ command -v sense >/dev/null || { echo "sense not found in PATH (needed for the s
 # Don't let a stray API key bill the wrong wallet; Codex uses its own auth.json.
 unset ANTHROPIC_API_KEY BENCHMARK_ANTHROPIC_API_KEY
 
-# macOS ships no `timeout`; prefer GNU, then gtimeout, else no ceiling. The
-# seconds get baked into TO once SECS is known (below), so the invocation stays
-# `"${TO[@]}" codex …`; on macOS TO=(env) is a no-op prefix (no ceiling).
-TIMEOUT_BIN=""
+# macOS ships no `timeout`; prefer GNU, then gtimeout, else a pure-bash watchdog.
+# The seconds get baked into TO once SECS is known (below), so the invocation stays
+# `"${TO[@]}" codex …`.
+#
+# THIS USED TO FALL BACK TO `env`, i.e. to NO CEILING AT ALL. On any machine without
+# coreutils the matched budget was computed, written to run_meta.session_timeout_seconds
+# and printed to the log - and never enforced: three gpt-5.6-sol baselines ran past their
+# recorded ceiling by up to 57% (mastodon run-1: 258s allowed, 404s taken) with
+# watchdog_kind null, because nothing was there to kill them. An artifact that records a
+# ceiling it did not apply is worse than one with no ceiling: the fairness claim on the
+# board reads as measured when it was not. bench-sense-local.sh has carried this same
+# fallback all along; this is codex's copy of it, deliberately local because each runner
+# owns its own process guard (opencode has run_guarded).
+bash_timeout() {
+  local secs=$1; shift
+  "$@" &
+  local pid=$!
+  ( sleep "$secs"; kill -TERM "$pid" 2>/dev/null; sleep 5; kill -KILL "$pid" 2>/dev/null ) &
+  local watchdog=$!
+  local rc=0
+  wait "$pid" 2>/dev/null || rc=$?
+  kill "$watchdog" 2>/dev/null
+  wait "$watchdog" 2>/dev/null
+  # SIGTERM-killed -> report 124 to match GNU timeout's exit code, which is what
+  # run_validity.WATCHDOG_CODES reads as hard_cap_timeout.
+  [[ $rc -eq 143 ]] && rc=124
+  return $rc
+}
 if command -v timeout >/dev/null; then TIMEOUT_BIN=timeout
-elif command -v gtimeout >/dev/null; then TIMEOUT_BIN=gtimeout; fi
+elif command -v gtimeout >/dev/null; then TIMEOUT_BIN=gtimeout
+else TIMEOUT_BIN=bash_timeout; fi
 
 # Baseline isolation: a PATH with the sense binary's directory removed, so the
 # control arm cannot call `sense` (CLI channel); Codex can use the CLI, and
@@ -180,7 +205,7 @@ while [[ -n "$arm_queue" ]]; do
     echo "[codex]   matched budget: baseline wall = ${SECS}s (paired sense run ${sense_wall}s)" >&2
   fi
   export BENCH_TIMEOUT_BASIS="$timeout_basis"
-  if [[ -n "$TIMEOUT_BIN" ]]; then TO=("$TIMEOUT_BIN" "$SECS"); else TO=(env); fi
+  TO=("$TIMEOUT_BIN" "$SECS")   # TIMEOUT_BIN is always set: bash_timeout is the floor.
 
   # Inter-arm spacing so the second arm starts in a less-drained window.
   [ "$arm_idx" -gt 0 ] && pace_sleep "$OPENCODE_PACE_SECONDS" "between arms (next $tool/$REPO)"
@@ -281,11 +306,16 @@ PY
 
   commit=$(git -C "$repo_dir" rev-parse --short HEAD 2>/dev/null || echo "")
   # sense_* binary provenance rides only on the sense arm, mirroring ver.
-  ver=""; ref=""; dirty="false"; release=""; rel_exact="true"
+  ver=""; ref=""; dirty="false"; release=""; rel_exact="true"; sbuild=""
   if [[ "$tool" == sense ]]; then
     ver="$SVER"; ref="$SENSE_REF"; dirty="$SENSE_DIRTY"; release="$SENSE_RELEASE"; rel_exact="$SENSE_RELEASE_EXACT"
+    # The BUILD, not the version string. board.gate compares `sense --version`,
+    # which two different dirty trees both print identically; this runner was the
+    # one that never stamped a key, so all four gpt-5.6-sol columns went to the
+    # board unchecked. Mirrors opencode-run.sh.
+    sbuild="$(python3 "$LIB_DIR/sense_build.py" --key 2>/dev/null || echo '')"
   fi
-  python3 - "$tool" "$REPO" "$SCEN_NAME" "$wall" "$MODEL" "$commit" "$ver" "$rc" \
+  SENSE_BUILD_KEY="$sbuild" python3 - "$tool" "$REPO" "$SCEN_NAME" "$wall" "$MODEL" "$commit" "$ver" "$rc" \
               "$ts_iso" "$SECS" "$ref" "$dirty" "$release" \
               "$SENSE_PITCH" "$SENSE_PURPOSE" "$SENSE_LINK" \
               "$SCEN_VER" "$SCEN" "$LIB_DIR" "$rel_exact" > "$out/run_meta.json" <<'PY'
@@ -312,6 +342,7 @@ meta = {
     # sense arm only; the release TAG (not sense_ref) is the final-data match key.
     "sense_ref": ref or None,
     "sense_dirty": dirty == "true",
+    "sense_build_key": os.environ.get("SENSE_BUILD_KEY") or None,
     "sense_release": release or None,
     "sense_release_exact": (rel_exact == "true") if release else None,
     "sense_pitch": pitch or None,
@@ -355,6 +386,7 @@ print('true' if (d.get('valid') is True and not d.get('watchdog_kind')) else 'fa
       arm_queue="sense${arm_queue:+ $arm_queue}"
       echo "[codex]   sense arm did not finish (valid=$sense_valid) - RETRYING the sense arm once" >&2
       echo "[codex]      A second failure stands as the result; the watchdog is not raised." >&2
+      park_superseded "$out"
     fi
   fi
   # Throttle-health line per session. codex exec yields no per-stream token/answer
