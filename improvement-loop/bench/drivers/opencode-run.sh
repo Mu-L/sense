@@ -52,10 +52,9 @@ SENSE_BENCH_ROOT="${SENSE_BENCH_ROOT:-$(cd "$PROJECT_ROOT/.." && pwd)/sense-benc
 TOOLS_CSV="baseline,sense"; REPO=""; MODEL="kimi-for-coding/k3"
 SESSION_TIMEOUT=""; KEEP_RAW=0
 # Stability knobs (cloud/subscription providers over opencode can be flaky). See the watchdog below.
-# Record whether the caller pinned these BEFORE defaulting, so the metered-arm
-# bump below only fires when they were left at the default (an explicit override wins).
+# Record whether the caller pinned this BEFORE defaulting, so the metered-arm bump
+# below only fires when it was left at the default (an explicit override wins).
 OPENCODE_MAX_SECS_SET="${OPENCODE_MAX_SECS+1}"
-OPENCODE_STALL_IDLE_SET="${OPENCODE_STALL_IDLE+1}"
 OPENCODE_MAX_SECS="${OPENCODE_MAX_SECS:-1200}"     # hard ceiling floor (was a flat 600 that killed slow-but-working sense runs)
 OPENCODE_FIRST_GRACE="${OPENCODE_FIRST_GRACE:-240}" # allow this long for the FIRST streamed byte (MCP cold start); 0 bytes past it = a hang
 OPENCODE_STALL_IDLE="${OPENCODE_STALL_IDLE:-150}"   # after output starts, kill only if the stream goes silent this long (stuck mid-run)
@@ -108,10 +107,20 @@ esac
 # the exam and its failure is the finding. Classify with the transcript tell
 # (assistant-text chars vs tool calls), never from the exit code. Full rule and
 # the two-classes table: lib/scorer.py -> TIME_CEILINGS.
+#
+# THE STALL CARVE-OUT IS GONE (was OPENCODE_STALL_IDLE=600 here). Nothing recorded WHY
+# Kimi needed 4x the stall tolerance of every other opencode arm, and an undocumented
+# per-model constant in a fairness-critical path is the thing most likely to be wrong
+# later: it held one arm to a different standard than the rest of the same harness.
+# Kimi now takes the standard 150s like every other opencode model. The hard cap stays
+# at 3000s, which IS evidenced - Kimi's runs are genuinely long (a sense run at 1003s, a
+# discourse baseline at 1346s), so a 1200s ceiling would cut runs that finish today.
+# If Kimi does pause in the 150-600s band, it will now surface as stalled_midrun on its
+# sense arm - visible, parked and retried - which is the measurement that would justify
+# a carve-out. Re-add one only with that number attached.
 case "$MODEL" in
   *kimi*)
-    [ -z "$OPENCODE_STALL_IDLE_SET" ] && OPENCODE_STALL_IDLE=600
-    [ -z "$OPENCODE_MAX_SECS_SET" ]   && OPENCODE_MAX_SECS=3000
+    [ -z "$OPENCODE_MAX_SECS_SET" ] && OPENCODE_MAX_SECS=3000
     ;;
 esac
 
@@ -574,6 +583,7 @@ print('true' if (d.get('valid') is True and not d.get('watchdog_kind')) else 'fa
       arm_queue="sense${arm_queue:+ $arm_queue}"
       echo "[opencode]   sense arm did not finish (valid=$sense_valid) - RETRYING the sense arm once" >&2
       echo "[opencode]      A second failure stands as the result; the watchdog is not raised." >&2
+      park_superseded "$out"
     fi
   fi
 
