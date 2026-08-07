@@ -86,6 +86,16 @@ reached* - need a second, DIFFERENT probe before they are stated at all.
   x1 is a SAMPLE: it may not close a question, settle a win or a loss, or enter an article.
 - **CANNOT-FINISH-AT-BUDGET IS A RESULT.** Never raise the watchdog to rescue a stalled arm.
   A failed exam is not an invalid exam - stop and read the transcripts.
+- **ONE SENSE RETRY, NEVER A LOOP - AND THE REPLACED RUN IS PARKED, NEVER SCORED.** The sense
+  arm runs first and its wall IS the baseline's budget (`paired sense wall x 1.2`); a
+  watchdogged sense run is a censored wall, so nothing honest derives from it. The retry
+  exists to recover an uncensored wall, NOT to buy Sense a second draw at scoring. So: it is
+  sense-only (a timed-out baseline is the measurement - it is the win condition, never
+  re-run it); the replaced run is parked, not scored (`park_superseded` in
+  lib/bench-paths.sh, `run-N` -> `failed-run-N`), because counting a run you declared unfit
+  AND its replacement is a double count; and the cap of ONE is load-bearing - with parking
+  in place, a higher cap would let Sense re-roll and silently delete its own failures. A
+  second failure stands as the result. Full rule in plans/cycle-1-craft-the-scenario/laws.md.
 - **THE LOOP CANNOT RECORD A LOSS.** It wins, parks, or hands up a swap with the numbers
   attached. A sub-floor verdict is a routed lever.
 - **STOPPER.** A bug in anything whose output becomes a number that decides something

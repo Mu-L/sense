@@ -164,6 +164,24 @@ they are not re-argued at runtime.
   x1 is a sample: it may not close a question, settle a win or a loss, or enter an article.
 - **CANNOT-FINISH-AT-BUDGET IS A RESULT.** Never raise the watchdog to rescue a stalled arm. A
   failed exam is not an invalid exam - stop and read the transcripts.
+- **ONE SENSE RETRY, NEVER A LOOP - AND THE REPLACED RUN IS PARKED, NEVER SCORED.** The sense
+  arm runs first and its wall IS the baseline's budget (`paired sense wall x 1.2`), so a
+  watchdogged sense run is a *censored* wall - it says "at least the ceiling", not what the
+  work took - and nothing honest can be derived from it. That, and only that, is why the
+  retry exists: to recover an uncensored wall, never to buy Sense a second draw at scoring.
+  Two consequences bind.
+  **The retry is sense-only.** A baseline that runs out of `sense_wall x 1.2` is the
+  measurement, not a malfunction - it is the win condition itself, and 12 such runs are
+  where cycle 2's result actually lives. Never "fix" a timed-out baseline by re-running it.
+  **The replaced run is parked** (`park_superseded`, lib/bench-paths.sh: `run-N` ->
+  `failed-run-N`). Scoring both the run you declared unfit and its replacement is a double
+  count - it put 3 sense runs against a 2-run baseline in two cycle-2 cells, with the
+  superseded 0.0 still in the mean.
+  **The cap is load-bearing.** Because the replaced run is parked, raising the retry cap
+  above one would let Sense re-roll until it got a clean run and quietly delete every
+  failure on the way - the exact bias this loop exists to avoid. One retry: a second
+  failure STANDS as the result and is scored. Do not raise it. If a cell needs three
+  attempts, that is the finding.
 - **COSTING MORE IS A PRODUCT FINDING, NOT A STOPPER.** A cell that wins its discriminator at
   a cost premium says the arm is not reaching at parity, which is a lever, not a halt. The
   cost axis is priced tokens - every billed token in input-token equivalents - never the
