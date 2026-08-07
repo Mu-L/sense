@@ -106,3 +106,16 @@ def test_parked_and_probe_dirs_are_off_board():
 def test_a_normal_run_is_on_board():
     assert not rv.is_parked("claude-opus-4-8/sense/dolt/run-4")
     assert not rv.is_parked("gpt-5.5/baseline/consul/run-1")
+
+
+def test_a_superseded_run_leaves_the_scored_set(tmp_path):
+    """park_superseded (lib/bench-paths.sh) renames run-N -> failed-run-N, and that
+    rename IS the whole mechanism: every reader globs `run-*`. A retried sense arm used
+    to leave both the replaced attempt and its replacement in the cell - 3 sense runs
+    against a 2-run baseline, with the superseded 0.0 still in the mean."""
+    cell = tmp_path / "sense" / "mastodon"
+    for name in ("run-1", "failed-run-2", "run-3"):
+        (cell / name).mkdir(parents=True)
+        (cell / name / "scored.json").write_text("{}")
+    kept = [p.split("/")[-2] for p in rv.measured_runs(str(cell))]
+    assert kept == ["run-1", "run-3"]

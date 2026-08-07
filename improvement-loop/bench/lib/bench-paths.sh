@@ -107,3 +107,34 @@ if [ -n "${BENCH_SCENARIO_VERSION:-}" ]; then
   RESULTS_DIR="$RESULTS_DIR/$_sv"
 fi
 export RESULTS_DIR SCENARIOS_DIR VERTICAL BENCH_MODEL BENCH_SCORING BENCH_SCENARIO_VERSION
+
+# park_superseded <run_dir> - take a run OUT of the scored set without deleting it.
+#
+# WHY. The sense arm is retried when its run could not serve its STRUCTURAL role: the
+# baseline's wall is derived from the paired sense run, so a watchdogged or crashed
+# sense run has to be replaced before the baseline can run at all. Scoring both the
+# replaced attempt AND its replacement is a double count - it left one cell with 3
+# sense runs against a 2-run baseline, and put the superseded 0.0 in the mean as well.
+#
+# NOT for a run that merely failed the exam. A baseline that ran out of its matched
+# budget is a RESULT and keeps its score (cannot-finish-at-budget is a standing rule);
+# 12 such baseline runs are exactly where the win shows. Only a run the harness itself
+# replaced is parked, and only the first - the retry is capped at one, so a second
+# failure stands as the result.
+#
+# HOW. `failed-` is the existing superseded prefix (run_validity._PARKED_PREFIXES), and
+# every reader globs `run-*` (score.sh, banked, board, mechanism_table), so the rename
+# is the whole mechanism. The transcript stays on disk for a later read.
+park_superseded() {
+  local dir="$1" base parent parked n=1
+  [ -d "$dir" ] || return 0
+  parent="$(dirname "$dir")"; base="$(basename "$dir")"
+  parked="$parent/failed-$base"
+  while [ -e "$parked" ]; do parked="$parent/failed-$base-$n"; n=$((n + 1)); done
+  if mv "$dir" "$parked" 2>/dev/null; then
+    echo "[bench] parked superseded run: $(basename "$parked")" >&2
+  else
+    echo "[bench] WARN: could not park superseded run $dir" >&2
+  fi
+  return 0
+}

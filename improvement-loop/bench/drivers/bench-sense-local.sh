@@ -765,6 +765,7 @@ print('true' if (d.get('valid') is True and not d.get('watchdog_kind')) else 'fa
           arm_queue="sense${arm_queue:+ $arm_queue}"
           _log "  sense arm did not finish (valid=$run_valid) - RETRYING the sense arm once"
           _log "     A second failure stands as the result; the watchdog is not raised."
+          park_superseded "$result_dir"
         fi
       fi
 
