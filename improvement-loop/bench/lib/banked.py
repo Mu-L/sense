@@ -34,25 +34,37 @@ import os
 import re
 import sys
 
+import run_validity
+
 THRESHOLD = 0.50
 # A scenario-version segment: 16 hex chars, the one-root-per-question directory.
 VERSION_DIR = re.compile(r"^[0-9a-f]{16}$")
 
 
 def _runs(root, arm, repo):
-    base = os.path.join(root, arm, repo)
-    paths = sorted(glob.glob(os.path.join(base, "run-*", "scored.json")))
-    if not paths and os.path.exists(os.path.join(base, "scored.json")):
-        paths = [os.path.join(base, "scored.json")]
-    return paths
+    """This arm's MEASUREMENT runs, via the one shared gate.
+
+    This used to carry its own copy of the glob and lean on scored.json's
+    `failed` alone, which made it the fourth instrument answering "which runs
+    count" its own way - the exact split run_validity.measured_runs exists to
+    end. The two agree on today's cells; a run whose crash the scorer did not
+    flag is where they would not.
+    """
+    return run_validity.measured_runs(os.path.join(root, arm, repo))
 
 
 def collect(root, arm, repo):
     """group -> [(cited, total), ...] per surviving run, plus per-run overalls.
 
-    Mirrors pergroup.collect, including its one judgement call: a run marked
-    `failed` is skipped, never blended in as a real 0.0 (that manufactured a false
-    loss once already). test_banked.py pins the two against each other.
+    Mirrors pergroup.collect, including its one judgement call: a run that did not
+    MEASURE the arm is skipped, never blended in as a real 0.0 (that manufactured a
+    false loss once already). test_banked.py pins the two against each other.
+
+    A run the wall clock cut short is NOT one of those: a failed exam is still an
+    exam, so `truncated_at_ceiling` and `never_reached_synthesis` keep their real
+    0.0 (run_validity's standing rule). Only harness artifacts drop out. The
+    `failed` check below is scored.json's own stamp, kept as a second line behind
+    _runs rather than as the only one.
     """
     by_group, overall, tokens = {}, [], []
     for path in _runs(root, arm, repo):

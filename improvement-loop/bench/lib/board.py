@@ -44,6 +44,7 @@ import sys
 
 import banked
 import mechanism_table
+import run_validity
 
 THRESHOLD = 0.50
 VERSION_DIR = re.compile(r"^[0-9a-f]{16}$")
@@ -160,7 +161,7 @@ def session(root, repo):
     """
     out = {}
     for arm in ("baseline", "sense"):
-        runs = [s.get("metrics") or {} for s in _scored(root, arm, repo)]
+        runs = _scored_metrics_with_wall(root, arm, repo)
         if not runs:
             continue
         out[arm] = {
@@ -170,6 +171,40 @@ def session(root, repo):
                         "mcp_count")
         }
     return out
+
+
+def _scored_metrics_with_wall(root, arm, repo):
+    """Each MEASUREMENT run's metrics, with a zero wall time healed from run_meta.
+
+    Two fixes to what this arm's cost row used to say. Measurement artifacts are
+    dropped through run_validity, the same gate matrix.py and scoreboard.py use:
+    two crashed Kimi sessions were averaged into a published time. And a zero
+    wall is healed from run_meta, because scorer.py reads wall time from the
+    Claude transcript's `duration_ms`, which the codex and opencode harnesses
+    never emit - so every non-Claude arm scored 0 seconds while its run_meta held
+    the real number, and the board printed a blank "time with Sense" for four of
+    five columns. A zero here is the scorer failing to read a wall, never a
+    session that took no time.
+    """
+    out = []
+    for path in run_validity.measured_runs(os.path.join(root, arm, repo)):
+        try:
+            metrics = dict(json.load(open(path)).get("metrics") or {})
+        except (OSError, ValueError):
+            continue
+        if not metrics.get("wall_time_seconds"):
+            metrics["wall_time_seconds"] = _wall_from_meta(path)
+        out.append(metrics)
+    return out
+
+
+def _wall_from_meta(scored_path):
+    """This run's wall time as its own runner recorded it, or None."""
+    meta_path = os.path.join(os.path.dirname(scored_path), "run_meta.json")
+    try:
+        return json.load(open(meta_path)).get("wall_time_seconds") or None
+    except (OSError, ValueError):
+        return None
 
 
 def _run_metas(root, arm, repo):

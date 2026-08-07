@@ -36,7 +36,8 @@ ROUTING IS A STATE ABOVE THE TABLE. A Sense arm that never called Sense is a
 baseline with extra config, and its delta says nothing about the product. The
 MCP log separates the cases the score cannot:
 
-    harness-failure  no log, or no frames        -> not a measurement, re-run
+    harness-failure  no log, no frames, or a run -> not a measurement, re-run
+                     run_validity calls invalid
     never-routed     frames, but no tools/call   -> a real routing finding
     search-only      calls, but no blast/graph   -> reached no resolver
     routed           at least one blast/graph
@@ -53,6 +54,8 @@ import json
 import os
 import re
 import sys
+
+import run_validity
 
 REF_RE = re.compile(r'"ref"\s*:\s*"([^"\s:]+):(\d+)"')
 BARE_REF_RE = re.compile(r'\b([\w./-]+\.\w{1,5}):(\d+)\b')
@@ -120,7 +123,7 @@ def read_run(run_dir):
     for cid in calls:
         returned |= _refs_with_line(results.get(cid, ""))
 
-    if not frames:
+    if not frames or not _is_measurement(run_dir):
         routing = "harness-failure"
     elif not calls:
         routing = "never-routed"
@@ -148,6 +151,19 @@ def read_run(run_dir):
         "returned_paths": sorted(returned),
         "cited_ids": sorted(cited),
     }
+
+
+def _is_measurement(run_dir):
+    """Did this run measure the arm, per the one shared classifier?
+
+    A crashed harness still writes the MCP handshake frames, so the log alone
+    cannot tell "the model chose not to call Sense" from "the session died before
+    it could". Two Kimi runs died that way and were published as a routing gap on
+    our side, blanking a reach cell that held 18 sense-only answers. The runner
+    already stamped the crash in run_meta; ask run_validity, the one classifier,
+    rather than inventing a second rule (A DEAD SERVER IS NOT A MODEL CHOICE).
+    """
+    return run_validity.measured(os.path.join(run_dir, "scored.json"))
 
 
 def _path_matches(gold_path, returned_paths):

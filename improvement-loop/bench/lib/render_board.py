@@ -436,6 +436,27 @@ def _limits(data, copy):
     ]
 
 
+_TIMES = {1: "once", 2: "twice", 3: "three times", 4: "four times"}
+_WORD = {1: "one", 2: "two", 3: "three", 4: "four"}
+
+
+def _run_spread(data):
+    """How many times each arm actually ran, said honestly.
+
+    This was hardcoded "twice each" and printed that on the two pages where an
+    arm ran three times: a third run is bought when two arms disagree, so the
+    count varies by design and the sentence has to read it rather than assume it.
+    """
+    counts = sorted({n for col in data["columns"]
+                     for n in (col.get("runs") or {}).values() if n})
+    if not counts:
+        return "twice each"
+    if len(counts) == 1:
+        return f"{_TIMES.get(counts[0], f'{counts[0]} times')} each"
+    lo, hi = _WORD.get(counts[0], counts[0]), _WORD.get(counts[-1], counts[-1])
+    return f"{lo} to {hi} times each"
+
+
 def render(data, copy=None):
     copy = copy or load_copy()
     repo_info = _blurb(copy, "repos", data["repo"])
@@ -448,7 +469,8 @@ def render(data, copy=None):
 
     out = [f"# Does Sense help an AI understand {repo_label}?", ""]
     out.append(f"{repo_info.get('blurb', '')} One question about its code, put to "
-               f"{n_models} {plural} twice each, with Sense and without.".strip())
+               f"{n_models} {plural} {_run_spread(data)}, with Sense and "
+               f"without.".strip())
     out.append("")
     out += ["## Reading", "", "<!-- reading -->", ""]
     out += _glance(data, copy)
