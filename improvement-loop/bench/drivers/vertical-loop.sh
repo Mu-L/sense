@@ -38,6 +38,15 @@
 #   handoff    not in the chain - AGENT 05-handoff.md, spawned only when the
 #              authoring cycle hits its ceiling, to hand the human a readable page
 #
+# SPENDING PHASES ARE LAUNCHED DETACHED, AND THE LAUNCH IS CONFIRMED WITH `ps`. minibench,
+# validate and bench each run real agent sessions for tens of minutes. Killing the process
+# between its two arms does not merely cost time: the finished arm is a burned run that can
+# never be paired (the baseline's budget derives from its PAIRED sense wall), and the killed
+# arm leaves a transcript with no run_meta.json. `pair_for` below catches the half-pair; it
+# does not prevent it. A shell owned by an agent harness is NOT detached, and `setsid` does
+# not exist on macOS - use `screen -dmS` or an explicit nohup+disown, then `ps`. Measured
+# 2026-08-10: php-laravel/coolify lost a 312s sense run to a reaped launcher.
+#
 # Usage:
 #   bash bench/drivers/vertical-loop.sh <repo>                 # run from saved phase
 #   bash bench/drivers/vertical-loop.sh <repo> --symbol ProductVariant --file product/models.py
@@ -475,29 +484,14 @@ do_index() {
 #   SCENARIO VERSION, because a re-authored question inherited the previous question's
 #   pair, so the loop read a ceiling off a baseline that had answered a different
 #   scenario. run_meta.json has carried scenario_version all along; it gated nothing.
+# A run counts here only if it MEASURED the arm: lib/pair_scan.py drops parked runs
+# (`failed-run-*`, `_*`) and void ones (`valid: false`, a harness artifact) by asking
+# run_validity, the one classifier every reader shares. It is not restated inline: the
+# obvious hand-written version of the rule is `rc != 0`, which would sweep up every
+# timed-out baseline - and a baseline that runs out of clock is VALID and is the win
+# condition. Measured 2026-08-10: a crashed baseline read as half of a complete pair.
 runs_for() {
-  python3 - "$1" "$REPO" "$2" "${3:-}" <<'PY'
-import json, os, sys
-root, repo, want, arm = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
-for dirpath, _, filenames in os.walk(root):
-    if "run_meta.json" not in filenames or "transcript.json" not in filenames:
-        continue
-    if repo not in dirpath.split(os.sep):
-        continue
-    try:
-        with open(os.path.join(dirpath, "run_meta.json")) as fh:
-            meta = json.load(fh)
-    except (OSError, ValueError):
-        continue
-    if meta.get("scenario_version") != want:
-        continue
-    # `tool` is the run's own record of which arm produced it - authoritative where the
-    # directory name is only a convention.
-    if arm and meta.get("tool") != arm:
-        continue
-    print(os.path.join(dirpath, "transcript.json"))
-    break
-PY
+  python3 "$LIB/pair_scan.py" "$1" "$REPO" "$2" "${3:-}"
 }
 
 # pair_for <root> <scenario_version> - non-empty only when BOTH arms ran this question.
@@ -679,8 +673,12 @@ do_minibench() {
     # POST-CONDITION, not just the exit code: the runner has returned 0 with the run
     # actually failed. An exit code is a claim; the transcript on disk is the fact.
     if [ -z "$(pair_for "$MINIBENCH_DIR" "$scen_ver")" ]; then
-      echo "[minibench] the runner exited 0 but wrote NO transcript for $REPO - treating"
+      echo "[minibench] the runner exited 0 but wrote NO MEASURING pair for $REPO - treating"
       echo "            as a FAILED run. Nothing advances on an absent artefact."
+      echo "            A VOID arm reads as absent here (parked, or valid:false), and the"
+      echo "            runner has already spent its one retry: this is the second void of"
+      echo "            the same run. It is not a result and nothing is scored from it -"
+      echo "            HUMAN DIRECTION is needed before this phase runs again."
       exit 1
     fi
   fi
@@ -829,8 +827,10 @@ do_validate() {
     # a claim; the transcript on disk is the fact. Generalised into require_verdict for
     # every agent phase - this one guards a runner, so it stays here too.
     if [ -z "$(pair_for "$VALIDATION_DIR" "$scen_ver")" ]; then
-      echo "[validate] the runner exited 0 but wrote NO transcript for $REPO - treating as a FAILED"
+      echo "[validate] the runner exited 0 but wrote NO MEASURING pair for $REPO - treating as a FAILED"
       echo "           validation. Nothing advances to a paid bench on an absent artefact."
+      echo "           A VOID arm reads as absent here (parked, or valid:false). A second void"
+      echo "           of the same run is not a result and needs HUMAN DIRECTION, never a pay call."
       # OUT OF CLOCK IS A ROUTED LEVER, NOT A STOP. The runner has already spent its one
       # retry by the time this is asked, so every sense run watchdogged means the scenario
       # cannot be answered inside the ceiling - twice. The ceiling is never raised; the

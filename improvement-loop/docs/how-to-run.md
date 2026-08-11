@@ -85,7 +85,19 @@ Verify-after-write: the CLI can silently no-op (comment quirk in the conf; `todo
   `.loop-state.json` and resumes from it, never restarts. Loop 4 parks per arm on a cap hit by writing
   the state + exact resume command into that arm's prompt file (`sweep-resume.sh` resumes). Bootstrap and Loops
   5, 6 are checklist runs: re-running them skips what is done (idempotent scripts).
-- **To stop deliberately:** just stop; nothing needs a shutdown step. To resume: the pickup line above.
+- **State is safe to interrupt; an IN-FLIGHT ARM is not.** The two are different axes and only the
+  first one is free. Stopping BETWEEN phases costs nothing: the phase file resumes. Stopping INSIDE a
+  phase that is running a session kills a cell between its arms - the finished arm is a burned run
+  that can never be paired (the baseline's budget derives from its PAIRED sense wall) and the killed
+  arm leaves a transcript with no `run_meta.json`. So: **launch a spending phase (`minibench`,
+  `validate`, `bench`) detached, and confirm it with `ps` before walking away.** An agent-managed
+  background task is not detached - it is reaped with its launcher, and `setsid` does not exist on
+  macOS. Measured 2026-08-10: php-laravel/coolify lost a 312s sense run this way.
+- **If a phase IS killed mid-pair, do nothing but re-run it.** The one-armed run is already invisible
+  to every reader (`runs_for` requires a `run_meta.json`), so it is not cleanup and it is not a
+  deletion decision: the phase re-runs and APPENDS a fresh pair beside it.
+- **To stop deliberately:** stop between phases; nothing needs a shutdown step. To resume: the pickup
+  line above.
 - **Never** delete run directories to redo a cell (re-runs add; deletion is human-approved only), and
   never commit bench files mid-campaign.
 

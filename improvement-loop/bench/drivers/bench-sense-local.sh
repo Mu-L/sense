@@ -508,6 +508,7 @@ for scenario_name in "${scenarios[@]}"; do
     # 3.2, where slicing an array down to empty is an unbound-variable error.
     arm_queue="${TOOLS[*]}"
     sense_retried=0
+    baseline_retried=0
     while [[ -n "$arm_queue" ]]; do
       tool="${arm_queue%% *}"
       if [[ "$arm_queue" == *" "* ]]; then arm_queue="${arm_queue#* }"; else arm_queue=""; fi
@@ -765,6 +766,30 @@ print('true' if (d.get('valid') is True and not d.get('watchdog_kind')) else 'fa
           arm_queue="sense${arm_queue:+ $arm_queue}"
           _log "  sense arm did not finish (valid=$run_valid) - RETRYING the sense arm once"
           _log "     A second failure stands as the result; the watchdog is not raised."
+          park_superseded "$result_dir"
+        fi
+      else
+        # ONE RETRY FOR A BASELINE THE HARNESS VOIDED - AND THE PREDICATE IS NOT THE SENSE
+        # ONE. The sense arm retries on `valid != true` OR a watchdog, because its wall
+        # budgets the baseline and a censored wall budgets nothing. The baseline retries
+        # ONLY on `valid: false`, the five artifact classes where the harness (not the arm)
+        # decided the outcome. A watchdogged baseline is VALID - `truncated_at_ceiling` and
+        # `never_reached_synthesis` are the arm's own result and the WIN CONDITION - so it
+        # is never re-run: that would delete the very outcome the bench exists to measure.
+        # Measured 2026-08-10: php-laravel/coolify's baseline died on a provider api_error
+        # at 447s of its 550s wall with zero answer text, nothing retried it, and the phase
+        # tried to judge a pair with one arm in it.
+        base_valid=$(python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+print('true' if d.get('valid') is not False else 'false')
+" "$result_dir/run_meta.json")
+        if [[ "$base_valid" != true && $baseline_retried -eq 0 ]]; then
+          baseline_retried=1
+          arm_queue="$tool${arm_queue:+ $arm_queue}"
+          _log "  baseline arm VOID (valid=false) - the harness decided this, not the arm."
+          _log "     RETRYING the baseline once. A second void does not stand as a result:"
+          _log "     the phase halts on an incomplete pair and asks for human direction."
           park_superseded "$result_dir"
         fi
       fi

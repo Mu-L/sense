@@ -12,6 +12,15 @@ anything, expanding the scenario, editing the yaml or its gold, re-scoring, rais
 the paid bench, any other repo. You do not re-author - a routed `REQUESTION` sends the credit
 table back to the authoring phase, which owns the rewrite.
 
+**Both arms are guaranteed to be MEASUREMENTS.** Run validity is mechanical, not a judgment:
+the runner classifies every run (`lib/run_validity.py`), retries a void arm once and parks the
+void one, and the phase halts rather than reaching you if a pair is still incomplete. So the
+three verdicts below are always issuable, and none of them is a comment on arm health. If you
+are ever handed a void arm anyway (`valid: false`, or a parked `failed-run-*`), that is a
+defect in the driver: **write it down and STOP - do not invent a fourth verdict, and do not
+average a harness artifact into a number.** Note that OUT OF CLOCK IS NOT VOID: a watchdogged
+arm is valid, it is the arm's own result, and for the baseline it is the win condition.
+
 ## RUN
 
 `$REPO`, `$VERTICAL`, `$VDIR`, `$YAML`, `$RDIR` (the mini-bench results root) are exported.

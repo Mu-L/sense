@@ -12,6 +12,15 @@ anything, running the paid bench, editing the scenario or its gold, re-scoring, 
 watchdog, any other repo. You do not diagnose a paid loss - a separate phase owns that. You do
 not fix the harness.
 
+**Both arms are guaranteed to be MEASUREMENTS.** Run validity is mechanical, not a judgment:
+the runner classifies every run (`lib/run_validity.py`), retries a void arm once and parks the
+void one, and this phase halts rather than reaching you if a pair is still incomplete. So
+`PAY` and `DO-NOT-PAY` are always issuable and neither is a comment on arm health. If you are
+ever handed a void arm anyway (`valid: false`, or a parked `failed-run-*`), that is a defect in
+the driver: **write it down and STOP - never spend on a pair you cannot read.** Note that OUT
+OF CLOCK IS NOT VOID: a watchdogged arm is valid, it is the arm's own result, and for the
+baseline it is the win condition.
+
 ## RUN
 
 `$REPO`, `$VERTICAL`, `$VDIR`, `$RDIR` (the validation results root) are exported. Work from

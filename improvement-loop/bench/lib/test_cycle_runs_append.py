@@ -59,7 +59,12 @@ def pair_for(root, version, repo="mastodon"):
         m = re.search(rf"^{name}\(\) \{{\n(.*?)^\}}", text, re.S | re.M)
         assert m, f"{name}() not found in vertical-loop.sh - the pins below test nothing"
         bodies.append(f"{name}() {{\n{m.group(1)}}}")
-    script = f'REPO="{repo}"\n' + "\n".join(bodies) + f'\npair_for "{root}" "{version}"'
+    # $LIB is the driver's own name for bench/lib, and runs_for now delegates the
+    # "did this run MEASURE the arm" question to lib/pair_scan.py. Without it the
+    # extracted body resolves /pair_scan.py, prints nothing, and every emptiness pin
+    # below passes for the wrong reason.
+    script = (f'REPO="{repo}"\nLIB="{LIB}"\n' + "\n".join(bodies)
+              + f'\npair_for "{root}" "{version}"')
     out = subprocess.run(["bash", "-c", script], capture_output=True, text=True, check=True)
     return out.stdout.strip()
 
