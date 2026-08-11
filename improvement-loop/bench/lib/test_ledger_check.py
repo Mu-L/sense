@@ -17,9 +17,9 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from ledger_check import (KEY_CONTRACT, VERDICT_KEY, results_cells,
-                          check_provenance, check_stopper,
-                          parse_entries)
+from ledger_check import (KEY_CONTRACT, LAWS_CHECKED_FROM, VERDICT_KEY,
+                          check_laws_checked, check_provenance, check_stopper,
+                          parse_entries, results_cells)
 
 
 def _entry(key, provenance=None, date="2026-07-30"):
@@ -186,3 +186,41 @@ class ResultsCellsAtAnyDepth(unittest.TestCase):
 
     def test_a_tree_with_no_runs_yields_nothing(self):
         self.assertEqual(self._cells("m/aaaa/sense/repo"), set())
+
+
+def _laws_entry(key, laws=None, date=LAWS_CHECKED_FROM):
+    lines = [f"## {date} | {key} | a title\n", "- **What:** x\n"]
+    if laws:
+        lines.append(f"- **Laws checked:** {laws}\n")
+    entries, findings = parse_entries(lines)
+    assert not findings, findings
+    return entries
+
+
+class LawsCheckedTest(unittest.TestCase):
+    """Rule 11. A close that names no law is the shape that closed coolify on a grep
+    screen - the banning law sat unread, and nothing in the write path asked."""
+
+    def test_a_close_naming_no_law_fails(self):
+        findings = check_laws_checked(_laws_entry("loop3/coolify/close"))
+        self.assertEqual(len(findings), 1, findings)
+        self.assertIn("Laws checked", findings[0])
+
+    def test_a_swap_and_a_ruling_are_held_to_it_too(self):
+        for key in ("loop3/coolify/swap", "ruling/some-decision"):
+            self.assertEqual(len(check_laws_checked(_laws_entry(key))), 1, key)
+
+    def test_naming_the_laws_passes(self):
+        entries = _laws_entry("loop3/coolify/close",
+                              "NO GREP SCREEN IS A GATE - checked, the close does not rest on one")
+        self.assertEqual(check_laws_checked(entries), [])
+
+    def test_entries_before_the_ruling_are_not_rewritten(self):
+        """Forward-only, like rule 9: the record is never edited backwards."""
+        entries = _laws_entry("loop3/coolify/close", date="2026-07-30")
+        self.assertEqual(check_laws_checked(entries), [])
+
+    def test_a_run_entry_is_not_a_conclusion_and_is_not_asked(self):
+        """loop2/<repo>/run-N records what happened; a close/swap/ruling concludes FROM it."""
+        self.assertEqual(check_laws_checked(_laws_entry("loop2/coolify/run-1")), [])
+        self.assertEqual(check_laws_checked(_laws_entry("bootstrap/slate")), [])

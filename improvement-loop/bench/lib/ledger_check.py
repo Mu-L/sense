@@ -44,6 +44,13 @@ Verifies shape and coverage, NOT immutability (.doc has no git history):
      UNVERIFIABLE - a finding of its own, because "did it change" has no answer without a
      baseline, and a check that cannot fire is worse than a short list.
 
+ 11. laws checked (by ruling, forward-only from LAWS_CHECKED_FROM): a `loop3/<repo>/close`,
+     a `loop3/<repo>/swap` or any `ruling/<slug>` entry carries **Laws checked:** naming the
+     laws in plans/cycle-1-craft-the-scenario/laws.md the conclusion was tested against. Born
+     2026-08-11 from a repo closed on a grep screen - the law banning that ("NO GREP SCREEN IS
+     A GATE, IN ANY FORM ... the import screen in its old home rejected four of four banked
+     wins") sat unread in a file the operator session believed was addressed to phase agents.
+
 Usage: python3 ledger_check.py <vertical-key> <vertical-doc-dir>
        e.g.: python3 ledger_check.py laravel 05-laravel-vertical
 Exit 0 = clean, 1 = findings printed.
@@ -58,6 +65,10 @@ FIELDS = ["What", "Why", "Alternatives", "Lesson", "Scores", "Cost", "Links"]
 CODENAME = re.compile(r"\b(G-\d+|F-[A-Z0-9]+(?:-[A-Za-z0-9]+)*)\b")
 EXIT_TAG = re.compile(r"Exit: (check|rule|fixture|parked)\(")
 VERDICT_KEY = re.compile(r"^(loop2/[^/]+/run-\d+|loop3/[^/]+/(swap|close))$")
+# Rule 11 scope: the entries that CONCLUDE, not the ones that record. loop2/<repo>/run-N
+# writes down what a run did and is held to Provenance instead; a close, a swap and a
+# ruling each end an axis, a repo or an argument, and that is where a law goes unchecked.
+CONCLUSION_KEY = re.compile(r"^(loop3/[^/]+/(swap|close)|ruling/[^/]+)$")
 # The subscription side of Cost = the FLEET, as a spawn count. Deliberately strict: an
 # earlier draft accepted any mention of "session", which passed every dollars-only entry
 # on the phrase "one session segment" (that is time, not fleet). The spawn count is the
@@ -104,12 +115,20 @@ KEY_CONTRACT = [
         r"^finding/[^/]+$",
         r"^correction/[^/]+$",
         r"^cycle2/[^/]+/board$",
+        # Added 2026-08-11, same reason as the three above: a real harness-fix entry was
+        # written under `fix/<slug>` and rule 9 had been red on it ever since. The file is
+        # append-only, so the heading cannot be re-keyed; a rule that flags a real entry
+        # and offers no legal repair is the error.
+        r"^fix/[^/]+$",
     )
 ]
 # Forward-only by ruling: the entries recorded before KEY_CONTRACT_FROM keep
 # their drifted keys and are never rewritten. A date, not a grandfather list, so the
 # exemption cannot quietly grow.
 KEY_CONTRACT_FROM = "2026-07-16"
+# Rule 11 is forward-only for the same reason rule 9 is: the entries written before the
+# rule existed were written under a different contract and are never rewritten.
+LAWS_CHECKED_FROM = "2026-08-11"
 
 
 def parse_entries(lines):
@@ -223,6 +242,35 @@ def check_provenance(entries):
             findings.append(
                 f"entry '{key}' (line {n}): per-repo verdict entry missing **Provenance:** "
                 f"(sense version, pin SHA, scenario + date; the stale-verdict mechanization)"
+            )
+    return findings
+
+
+def check_laws_checked(entries):
+    """Rule 11: a close, a swap or a ruling names the laws it was tested against.
+
+    Forward-only from LAWS_CHECKED_FROM, same shape as rule 9. Born 2026-08-11: an
+    operator session closed a repo on a grep screen ("blast's payload is a subset of
+    what one grep prints"), forecast the cell from per-row rates pooled across
+    thirteen DIFFERENT asks, and recommended authoring for token-darkness - each one
+    banned by a law in plans/.../laws.md, and none of them in the digest that session
+    was working from. Writing the entry is the last moment before a conclusion becomes
+    the record, so the field is required THERE: naming a law forces opening the file.
+
+    The field is prose on purpose. There is no list of valid law names to check
+    against - a checker that matched names would be satisfied by pasting them.
+    """
+    findings = []
+    for key, n, body, date in entries:
+        if date < LAWS_CHECKED_FROM:
+            continue
+        if not CONCLUSION_KEY.match(key):
+            continue
+        if not field_text(body, "Laws checked"):
+            findings.append(
+                f"entry '{key}' (line {n}): missing **Laws checked:** - a close, swap or "
+                f"ruling names the laws in plans/cycle-1-craft-the-scenario/laws.md it was "
+                f"tested against (rule 11, entries dated on/after {LAWS_CHECKED_FROM})"
             )
     return findings
 
@@ -377,6 +425,7 @@ def main(argv):
     findings += check_provenance(entries)
     findings += check_cost_currency(entries)
     findings += check_key_contract(lines)
+    findings += check_laws_checked(entries)
     findings += check_stopper(entries, product_root)
 
     if findings:

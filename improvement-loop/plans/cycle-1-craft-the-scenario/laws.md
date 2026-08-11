@@ -1,7 +1,15 @@
 # LAWS
 
-The standing laws of this bench. One line each, statement only. They bind every phase and
-they are not re-argued at runtime.
+The standing laws of this bench. One line each, statement only. They bind every phase, AND
+every session that touches this bench - including the operator session driving it by hand,
+which no driver injects a plan into and which is therefore the one that reads them by choice.
+They are not re-argued at runtime.
+
+**A summary of this file is not this file.** A paraphrase kept somewhere closer to hand will
+omit the law you are about to break - measured 2026-08-11: an operator session closed a repo
+on a grep screen, forecast a cell from pooled per-row rates, and recommended authoring for
+token-darkness, having read a ten-law digest that contained none of the seven laws those three
+moves break. Read this file before any verdict, close, swap, kill, or LEDGER entry.
 
 ## What may be concluded
 

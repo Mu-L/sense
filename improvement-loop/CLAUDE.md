@@ -52,7 +52,23 @@ assumption. Before stating a finding, quote the output that shows it; if you can
 you have not verified it. Negative claims - *cannot, no, never, dead, nonexistent, not
 reached* - need a second, DIFFERENT probe before they are stated at all.
 
-## Standing laws
+## The laws are in laws.md, and they bind YOU
+
+`plans/cycle-1-craft-the-scenario/laws.md` is the complete, authoritative set. **Read it before
+any verdict, close, swap, kill, pay call, or LEDGER entry** - not only when running a phase.
+It binds the operator session too, and the operator session is the one no driver hands a plan
+to, so it is the one that has to open the file on purpose.
+
+This page used to paraphrase ten of those laws here. That digest is DELETED, because it read
+as the complete set while omitting the ones that bite. Measured 2026-08-11: an operator session
+closed a repo on a grep screen, forecast a cell from per-row rates pooled across thirteen
+different asks, and recommended authoring for token-darkness - three moves banned by
+`NO GREP SCREEN IS A GATE`, `THE FIRST MEASUREMENT IS A REAL BASELINE ARM`, `PRECISION RANKS,
+IT NEVER KILLS` and `TOKEN-DARKNESS IS NOT THE MECHANISM`, none of which were in the digest it
+was working from. A summary of the laws is not the laws.
+
+Two laws live HERE and are not in `laws.md` - they govern the code around the bench rather than
+what may be concluded from a run:
 
 - **A SCRIPT IS NOT A RULE UNTIL YOU PROVE IT RUNS AND IT GATES.** Before citing a script as a
   constraint, or opening it to edit, establish both. **Used** has three states, not two:
@@ -73,35 +89,6 @@ reached* - need a second, DIFFERENT probe before they are stated at all.
   decide nothing, no loop reads them, and no measurement can move because of them, so a second
   cycle extends them rather than building a second page nobody thinks to open. The rule
   protects what feeds a decision, not what feeds a reader.
-- **NO PREDICTORS BEFORE A SCENARIO EXISTS.** A win is CRAFTED for a repo, never detected by
-  a script beforehand. Anything scoring a repo before there is a task to score it against is
-  a predictor. A **killer** runs against a scenario that exists and may kill it; a
-  **predictor** guesses before one does and is banned.
-- **MCP IS THE ONLY SURFACE.** Every check that queries Sense goes through the MCP server
-  (`mcp_probe.probe`), never the CLI. The CLI diverges by design - different defaults, caps
-  and budget - so a CLI call measures a surface no arm touches. Enforced by `mcp_only_check.py`.
-- **ONE REPO AT A TIME, TO A VERDICT.** No second repo's scenario is authored while the first
-  is mid-diagnosis. A parked repo resumes from `.loop-state.json`, it never restarts.
-- **EVERY ARM GETS 2 RUNS PER CELL**, a third when the two disagree too much. A cell benched
-  x1 is a SAMPLE: it may not close a question, settle a win or a loss, or enter an article.
-- **CANNOT-FINISH-AT-BUDGET IS A RESULT.** Never raise the watchdog to rescue a stalled arm.
-  A failed exam is not an invalid exam - stop and read the transcripts.
-- **ONE SENSE RETRY, NEVER A LOOP - AND THE REPLACED RUN IS PARKED, NEVER SCORED.** The sense
-  arm runs first and its wall IS the baseline's budget (`paired sense wall x 1.2`); a
-  watchdogged sense run is a censored wall, so nothing honest derives from it. The retry
-  exists to recover an uncensored wall, NOT to buy Sense a second draw at scoring. So: it is
-  sense-only (a timed-out baseline is the measurement - it is the win condition, never
-  re-run it); the replaced run is parked, not scored (`park_superseded` in
-  lib/bench-paths.sh, `run-N` -> `failed-run-N`), because counting a run you declared unfit
-  AND its replacement is a double count; and the cap of ONE is load-bearing - with parking
-  in place, a higher cap would let Sense re-roll and silently delete its own failures. A
-  second failure stands as the result. Full rule in plans/cycle-1-craft-the-scenario/laws.md.
-- **THE LOOP CANNOT RECORD A LOSS.** It wins, parks, or hands up a swap with the numbers
-  attached. A sub-floor verdict is a routed lever.
-- **STOPPER.** A bug in anything whose output becomes a number that decides something
-  (`gold.py`, `scorer.py`, `judge.py`, `pergroup.py`, `screen.py`, `grounding.py`,
-  `efficiency.py`) halts the line: no new cells, no verdicts, no swaps, until the human rules.
-  You may only continue without a ruling if you can PROVE zero impact with a re-score diff.
 
 ## Where things live
 
