@@ -3,55 +3,41 @@
 # Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
 # / justification 0.20 / uncertainty 0.15.
 #
-# CYCLE 3 / ATTEMPT 19 on coolify, SEVEN-STEP WORK SESSION
+# ROUND 4, CYCLE 2 on coolify, SEVEN-STEP WORK SESSION
 # (plans/cycle-1-craft-the-scenario/03-expand.md). SEVEN steps, names verbatim and in the
 # order of scenarios/coolify.yaml - the judge pairs by name and nothing else.
 #
-# SHORTENED FOR THE WALL (second expansion pass, on the loop's written brief: CANNOT FINISH AT
-# BUDGET - the sense arm hard-capped at 480 s on run-1 AND on the retry, so the watchdog is not
-# raised and the session is made answerable instead). What the run measured: 51 tool calls and
-# the last one at 280 s, then the whole seven-step answer written in one block from 280 s, and
-# the clock stopped inside step 5 of 7 - "Step 5 - The guards" was the last heading emitted, and
-# the retry stopped inside step 4. So the arm was not lost, it was writing an answer the wall
-# does not fit.
-# WHAT WAS CUT, AND FROM WHERE (every cut is a demand for less OUTPUT, not a step removed -
-# seven steps, same names, same order):
-#   step 2  the per-declaration commentary on the composition, and the write-time normalisation
-#           and previous-value questions, which were a separate hunt of their own.
-#   step 3  the removal path's ordering, and the inline/handed-off cut reduced from a second
-#           pass over both paths to one line per hand-off.
-#   step 5  the "stored judgement read back as current" shape dropped, and the absence census
-#           reduced to at least one unguarded line. Scored on coverage of the SHAPES now.
-#   step 6  from ranking every place with three fields each to the top of the order in full and
-#           the tail in a line; re-verification for the top only.
-#   step 7  from re-listing every downstream place to one line per area with one located
-#           example, plus separately only the places whose change differs from their area's.
-# NOT CUT: step 4, in any respect - see below - and the one-sweep population paragraph at the
-# end of step 3, which step 4's own text leans on. Each shortened step's `response_richness`
-# floor moved down with its demand (8/10/12/12/14/16 -> 6/8/10/10/12/14); step 4's stayed at 6.
+# WHAT THIS FILE IS. The rubric of the superseded seven-step
+# (scenarios/coolify.rubric.yaml.session-baseline-assembled.bak), carried forward with exactly
+# ONE block rewritten: `Orient in the codebase`. Every other block, including the discriminator,
+# is unchanged.
 #
-# WHAT THE EXPANSION DID TO THIS FILE, AND WHAT IT LEFT ALONE.
-#   LEFT ALONE: the block for `Audit every dependent of the server contract` is the probe
-#   rubric's step-2 block, SLICED out verbatim by the assembling script rather than retyped.
-#   That step is the discriminator, its prompt and its thirteen scored rows are byte-identical
-#   to the ones the mini-bench measured (baseline 4 of 13 = 0.308, sense 13 of 13, delta
-#   +0.692), and re-writing how it is JUDGED would move the number just as surely as
-#   re-writing the ask.
-#   SPLIT: the probe rubric's step-1 block scored two things in one - the identity lifecycle,
-#   and the SHAPE of the affected population. Those are now `Map the server contract` (the
-#   composition and the identity fields and the per-request identity map) and `Trace the write
-#   path and the teardown` (creation, seeding, removal, inline against out-of-process, and the
-#   one-sweep population shape at the end).
-#   ADDED: `Orient in the codebase`, `Trace the guards`, `Assess the blast radius` and `Plan
-#   the change and the verification map`.
+# WHY THAT ONE BLOCK MOVED. The superseded scenario asked for the affected population TWICE -
+# its step 1 asked "which parts of that layout is the subject touched from at all? Name each
+# part once, with a single example located at file:line", and its step 3 asked for "the areas
+# it lands in, each named once with a single example located at file:line". Its paid-gate
+# validation returned DO-NOT-PAY: baseline 7 of 13 = 0.538 against sense 8 of 13 = 0.615,
+# delta +0.077, with results/loop/coolify/validate.md reading the route as "given three prior
+# steps of context, the baseline's own earlier greps had already surfaced the periphery, so
+# step 4 became a re-read rather than a discovery". The scenario now spends that sweep once,
+# at the end of step 3. This rubric follows: step 1 scores a map of the PRODUCT, and scoring
+# "which parts the subject is reached from" is now explicitly withheld there, because rewarding
+# it is how a rubric buys back an enumeration the ask just refused.
+#
+# LEFT ALONE, DELIBERATELY: the block for `Audit every dependent of the server contract` is the
+# probe rubric's step-2 block, sliced out verbatim rather than retyped. That step is the
+# discriminator; its prompt and its thirteen scored rows are byte-identical to what this cycle's
+# mini-bench measured (baseline 1 of 13 = 0.077, sense 11 of 13 = 0.846, delta +0.769), and
+# re-writing how it is JUDGED would move the number as surely as re-writing the ask.
 #
 # WHAT CARRIES FORWARD FROM THE PROBE RUBRIC AND MUST KEEP CARRYING.
-#   1. NO STEP BEFORE THE DISCRIMINATOR SCORES AN ENUMERATION. Attempt 13's step 1 asked for
-#      the whole working ground one located line at a time; its baseline wrote a covering token
-#      sweep to satisfy that and re-read the same output in the next step, closing at 11 of 14
-#      dependents. So `Orient in the codebase` scores a MAP and explicitly not a roll, and the
-#      population part of `Trace the write path and the teardown` scores the SHAPE - areas, one
-#      located example each, and reach - with an exhaustive list earning nothing extra there.
+#   1. NO STEP BEFORE THE DISCRIMINATOR SCORES AN ENUMERATION. An earlier attempt's step 1
+#      asked for the whole working ground one located line at a time; its baseline wrote a
+#      covering token sweep to satisfy that and re-read the same output in the next step,
+#      closing at 11 of 14 dependents. So `Orient in the codebase` scores a MAP and explicitly
+#      not a roll, and the population part of `Trace the write path and the teardown` scores
+#      the SHAPE - areas, one located example each, and reach - with an exhaustive list earning
+#      nothing extra there.
 #   2. THE DISCRIMINATOR SCORES WHERE THE PLACE LIVES, not only what it keeps: measured across
 #      every run on the headline model, the baseline sits at 0.70 on rows in machine-named paths
 #      against 0.35 on rows outside them, and all thirteen scored paths are outside them.
@@ -116,14 +102,17 @@ steps:
         defined, and treated from there on as a single subject rather than as a word to search
         for? An answer that leaves the subject as a token, or that names several types as
         candidates without settling on one, has failed the part everything later is built on.
-        Then the layout: does the answer describe how this product is organised in the tree's
-        own terms, and say which parts of that organisation the subject is touched from at all,
-        with each part named once and characterised in a phrase? Score whether the parts are
-        genuinely distinct and correctly characterised, and whether the reach claim is plausible
-        against what was actually looked at. Do NOT reward an enumeration of any part's
-        contents: it was not asked for, and a long located list here is a worse answer than a
-        short accurate map, because the step is orientation and the budget it spends is taken
-        from the later parts.
+        Then the layout, and score it as a map of the PRODUCT: does the answer describe how this
+        codebase is organised in the tree's own terms rather than in handed-down categories, and
+        does each part it names carry a phrase on the kind of work that part does? Score whether
+        the parts are genuinely distinct and correctly characterised.
+        Withhold credit for two things here, both of them deliberate. An enumeration of any
+        part's contents: it was not asked for, and a long located list is a worse answer than a
+        short accurate map, because the budget it spends is taken from the later parts. And a
+        roll of where the subject is reached from: the step forbids it in as many words, that
+        question is asked once later and in a particular form, and an answer that supplies it
+        here has done the session's central sweep twice out of one budget. Neither absence is a
+        gap - do not mark the answer down for either.
     specificity:
       weight: 0.25
       question: |
@@ -134,10 +123,9 @@ steps:
     justification:
       weight: 0.2
       question: |
-        Does each part of the layout come with a phrase on what kind of work it does and why the
-        subject is touched from there - rather than a restatement of the path? Is the claim that
-        this is the only type standing for one of these machines actually justified, or merely
-        asserted?
+        Does each part of the layout come with a phrase on the kind of work it does - what that
+        part is FOR - rather than a restatement of the path? Is the claim that this is the only
+        type standing for one of these machines actually justified, or merely asserted?
     uncertainty:
       weight: 0.15
       question: |
