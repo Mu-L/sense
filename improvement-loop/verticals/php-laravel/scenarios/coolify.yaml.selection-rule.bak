@@ -1,0 +1,402 @@
+# ============================================================================
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md)
+# CYCLE 1, ATTEMPT 10 on coolify - a RE-QUESTION routed back from measured runs.
+# ANCHOR KEPT (`Server`). THE AXIS AND THE GOLD GROUP BOTH CHANGE. Why the gold changes
+# this time, when nine attempts held it, is the whole of the first section below.
+#
+# TRAJECTORY (every previous cycle, quoted, and which side of the window it fell on)
+#   The window is: plain arm at or below 0.50 of `dependents` AND ours at least +0.50 above.
+#   baseline / ours on `dependents`, from each cycle's `scored.json`:
+#     a1 0.9444 / 1.0000  CEILING   `Server`, "every place that would have to be reviewed"
+#     a2 0.8462 / 0.8462  CEILING   `instant_remote_process`, the layer one hop back
+#     a3 0.3571 / 0.5714  FLOOR-OK  identity keepsakes, near edge excluded
+#     a4 0.9286 / 0.5714  CEILING   same axis, six value-shapes named in the ask
+#     a5 0.0000 / 0.3333  FLOOR-OK  exclusion sharpened ("the map is not the answer")
+#     a6 0.7500 / 0.9167  CEILING   near edge required as a first pass inside step 2
+#     a7 void   / 0.7500  NEITHER   ground moved into step 1; baseline died inside the ground
+#     a8 0.0000 / 0.2500  FLOOR-OK  ground CHARACTERISED as counts; our arm's worst
+#     a9 0.9167 / 0.8333  CEILING   a7's step 1 restored + "holds no machine" selection test
+#   Four cycles on the ceiling side, three on the floor side, one uninformative. Nothing has
+#   held both at once. THIS DRAFT CORRECTS FROM THE CEILING SIDE (a9, baseline 0.9167).
+#
+# THE KILLER THAT MOVED THE GOLD, RUN THIS SESSION
+#   Nine attempts declined to re-gold, on the cross-tab "the same twelve rows are 0/12 to the
+#   baseline under a5, 9/12 under a6 and 0/12 under a7, so the ASK moves the number and the
+#   ROW does not". CONFOUND, RUN: cross-tab the baseline's row count against whether the
+#   baseline RUN REACHED SYNTHESIS. Every one of the three 0/12 baselines is a run that never
+#   produced an answer, quoted from the reads on disk:
+#     a5  "102 calls, 71 of them searches, a long unguided token sweep that never converged"
+#     a7  "cut off at the hard cap having produced 71 answer chars"  (7 tool calls)
+#     a8  "62 calls, 44 greps, never converged", died at the wall
+#   Restricted to the baselines that FINISHED, the per-row rates are the opposite of the
+#   claim (aggregated this session over the five results roots that share the a5-a9 gold ids,
+#   `cited` from each `scored.json.gold_recall.details`):
+#     finished baselines: a6 9 of 12, a9 11 of 12. Every row 1/2 or 2/2 except
+#     d:shared-env-var 0/2 and d:ssl-certificate 1/2.
+#   So the row identity DOES decide it, and the floor was never once bought by wording - it
+#   was bought by a baseline that ran out of wall. On this gold a finished baseline scores
+#   0.75 to 0.94. The gold is the lever this campaign has not pulled. Nine asks say so.
+#
+# WHAT MAKES THIS GOLD DIFFERENT, MEASURED, RECORDED, NEVER A GATE
+#   a9's measured route is two sweeps, quoted from its read: `grep -rn 'Server \$'` plus
+#   `grep -rn 'server_id\|server_uuid\|serverUuid\|serverId'`, temp file, annotated in-process,
+#   "One Read against 32 Bash", 11 of 12. ALL TWELVE a9 gold files carry an identity token.
+#   Counted this session over the FIFTEEN files in this draft's `dependents`:
+#     identity tokens (`server_id|server_uuid|serverUuid|serverId|server_name`) present in
+#       5 of 15 files; ABSENT from 10.
+#     `Server $` type-hint present in 9 of 15; absent from 6.
+#     `server->settings` present in 2 of 15.
+#     named by NEITHER sweep: app/Models/Team.php, app/Models/PrivateKey.php,
+#       app/Models/CloudProviderToken.php, app/Livewire/SharedVariables/Server/Index.php.
+#   Recorded, not acted on, per NO GREP SCREEN IS A GATE: `grep -rn -- '->server\b'` over
+#   app/bootstrap/routes/resources prints 1314 lines across 191 files, and
+#   `grep -rn -- 'server->settings'` prints 200 lines across 38 files. A covering grep for
+#   this axis exists and prints far too much to be an answer; whether the arm runs one to
+#   closure inside its wall is what the next phase measures, not this header.
+#   The lexical point is not darkness (TOKEN-DARKNESS IS NOT THE MECHANISM - a banked +0.53
+#   cell has 16 of 16 gold files carrying its anchor token). It is that the ONE route measured
+#   to reach 0.75-0.94 on this repo names five of these fifteen files and no more.
+#   Four gold files were also chosen because a9's baseline never cited them: Team, PrivateKey,
+#   CloudProviderToken and the shared-variables index are new to gold entirely. Every file
+#   a9's baseline DID cite is either absent here or demoted into the non-scoring anchors
+#   (app/Livewire/Project/Shared/Destination.php, a9's `d:additional-network-pivot`).
+#
+# THE KIND OF QUESTION, AND WHAT THE ANSWER IS THAT IS NOT A LIST OF PLACES A NAME APPEARS
+#   Per place the answer is THE RULE BY WHICH THAT PLACE ENDS UP WITH A MACHINE: which set of
+#   candidates it draws from, what it falls back to when that set is empty, and whether it
+#   covers the one machine it started from or every machine the work is spread over. A search
+#   prints where a name occurs; it cannot print a selection rule, and two lines whose text is
+#   nearly identical differ entirely on it - one place takes the machine the work belongs to
+#   (app/Jobs/ScheduledTaskJob.php:91), the one beside it picks a machine AT RANDOM out of a
+#   filtered set and silently falls back to the first one when that set is empty
+#   (app/Jobs/ApplicationDeploymentJob.php:368 against :366).
+#   This is NOT the retention kind, and that is a run and not a preference:
+#     python3 bench/lib/ring_sweep.py $CLONE --top 12
+#       -> "0 candidate(s) above the bar", all twelve anchors `rows 0  files 0  vias 0`.
+#   Zero rings, as on both Ruby repos swept, so "what HOLDS X" is off the menu here.
+#
+# THE AXIS, IN ONE SENTENCE
+#   Every scored dependent decides WHICH machine a piece of work lands on without naming one -
+#   it derives the machine from whatever the work belongs to, or picks it out of a filtered
+#   candidate set, or substitutes a different machine for the build, or fans the work out over
+#   every machine a resource is spread across, or counts machines to decide whether an action
+#   is allowed at all - so its dependency on the contract is carried by a SELECTION RULE
+#   rather than by a name, a stored identifier or a call.
+#
+# THE SUPERSEDED QUESTION, WITH THE NUMBER THAT KILLED IT
+#   a9's step 2: "At the far side of nearly every place on that list, one identifying piece of
+#   a machine was taken out and kept ... Test each candidate the same way: at the line itself,
+#   is a machine in hand, or only a piece of one?" -> baseline 11 of 12 = 0.9167, ours 10 of
+#   12 = 0.8333, delta -0.0833. Its own read: "the clause written to make the arm walk outward
+#   from the population instead named the token that prints the population."
+#   Kept at verticals/php-laravel/scenarios/coolify.yaml.keepsake-holds-no-machine.bak
+#   (a8 population-census, a7 step1-ground, a6 two-pass-toll, a5 map-not-answer,
+#   a4 one-set-far-edge, a3 identity-scrap, a2 handoff-layer, a1 class-teardown).
+#
+# WHAT IS KEPT FROM a9, DELIBERATELY, AND WHY
+#   STEP 1 STAYS AN ENUMERATION OF THE WORKING GROUND. Sorted by whether the ask made the arm
+#   enumerate the direct population anywhere, our arm separates: enumerated a6 0.9167 / a6
+#   run-2 0.6667 / a7 0.7500 / a9 0.8333, not enumerated a3 0.5714 / a5 0.3333 / a8 0.2500.
+#   Its first half is re-pointed at THIS contract (how a piece of work gets attached to a
+#   machine) instead of at identity normalisation, because a step 1 that maps the wrong
+#   contract starves the step that scores.
+#   The confound named in a9's read still stands and is not claimed away: both ceiling-side
+#   baselines that finished were enumerated cycles, so the enumeration may also feed the
+#   baseline. What this draft changes ALONGSIDE it is the thing that costs the baseline
+#   specifically - the gold files its measured sweeps do not name. That is the pairing the
+#   read asked for: "if the next draft keeps the enumeration, it must change something else
+#   that costs the baseline specifically, and say what."
+#
+# INTENDED LANDING, AND WHAT FALSIFIES IT
+#   Baseline at or below 0.45, ours at 0.75 or better. If the baseline lands near 0.75 again
+#   with ten of fifteen gold files off its identity sweep, then the sweep was never the cause
+#   and the remaining explanation is that a competent baseline reconstructs any structurally
+#   coherent set from area walks - which would be the finding, and it is a repo-level one, not
+#   another wording cycle. If OUR arm lands under 0.60, the failure is selection inside the
+#   payload again (a8: "It had the rows in hand and answered past them"), not discovery.
+#
+# SEAM PROFILE (bench/lib/seam_hunt.py, three candidates, quoted, run this session)
+#   python3 bench/lib/seam_hunt.py $CLONE Server --propose
+#     app caller files 45 (53 incl test) | SCATTER (dirs) 23
+#     GREP-NOISE 'Server' in 295 app files   PRECISION=0.15   SCATTERED + GREP-NOISY
+#   python3 bench/lib/seam_hunt.py $CLONE Application --propose
+#     app caller files 35 (50 incl test) | SCATTER 18
+#     GREP-NOISE 'Application' in 142 app files   PRECISION=0.25   SCATTERED + GREP-NOISY
+#   python3 bench/lib/seam_hunt.py $CLONE Team --propose
+#     app caller files 26 (28 incl test) | SCATTER 14
+#     GREP-NOISE 'Team' in 104 app files   PRECISION=0.25   SCATTERED + GREP-NOISY
+#   PRECISION RANKS, IT NEVER KILLS. `Server` is lowest at 0.15 and widest at 23 dirs, and it
+#   is the anchor nine cycles of measurement are attached to. ANCHOR KEPT.
+#
+# EVERY SCORED ROW IS IN THE SHOWN BLAST PAYLOAD (RUN THIS SESSION, NOT ASSUMED)
+#   python3 bench/lib/mcp_probe.py $CLONE '[{"name":"sense_blast","arguments":{"symbol":"Server"}}]'
+#     no min_confidence passed. risk high ("174 direct callers"), direct_callers 46,
+#     affected_via_composition 89, affected_symbols 298, production_affected 169,
+#     importers_not_reached_count 81, truncated true. Union of file paths = 101.
+#   All fifteen scored paths and all four anchor paths are in that union, intersected path by
+#   path this session. Which section carries each scored one:
+#     direct_callers ("calls Server"):
+#       app/Jobs/ApplicationDeploymentJob.php:297 / :1926 / :3211
+#       app/Actions/Application/StopApplicationOneServer.php:13
+#       app/Actions/Docker/GetContainersStatus.php:42   (also composes, :21)
+#       app/Livewire/Project/Shared/GetLogs.php:125     (also composes, :24)
+#       app/Livewire/SharedVariables/Server/Index.php:13
+#     affected_via_composition only ("composes Server", at the class-declaration line):
+#       app/Livewire/Project/Application/DeploymentNavbar.php:13
+#       app/Jobs/ScheduledTaskJob.php:24     app/Jobs/PushServerUpdateJob.php:41
+#       app/Jobs/VolumeCloneJob.php:14       app/Jobs/DatabaseBackupJob.php:34
+#       app/Livewire/Project/CloneMe.php:17  app/Models/Team.php:19
+#       app/Models/PrivateKey.php:15         app/Models/CloudProviderToken.php:7
+#       app/Models/Service.php:20
+#   The payload's `ref` is the enclosing definition or the class line - NOT ONE of the fifteen
+#   arrives at the line the gold pins. Every line below was opened and read in this session;
+#   no credit is taken from a script tally.
+#
+# MEMORIZATION (bench/lib/memorization_probe.py, quoted, run this session)
+#   python3 bench/lib/memorization_probe.py $CLONE Server --json /tmp/memo10.json
+#     {"ok": false, "ran": true, "recall": 0.579, "hits_n": 62, "truth_n": 107, "said_n": 95,
+#      "samples": [0.579, 0.561, 0.533],
+#      "reason": "closed-book recall 0.579 (62 members named) >= 0.3 - recited, both arms
+#                 already know it"}
+#   THE FLAG IS ABOUT THE ANCHOR, NOT ABOUT ANY SCORED ROW, and the killer was run. What comes
+#   back recited is the machine class's OWN member list (isFunctional, buildServers,
+#   destinations, forceDisableServer, getContainers, isBuildServer ...), every member of which
+#   is defined in the contract file - an ANCHOR here, and it does not score. Intersecting the
+#   probe's recorded hits against every function DEFINED in the fifteen scored files returns
+#   three collisions and no credits: `applications` / `booted` in app/Models/Team.php and
+#   app/Models/PrivateKey.php, plus `databases` in app/Models/Service.php - generic Eloquent
+#   relation names that every model in this stack declares, none of which is the credit for
+#   its row. No scored credit is a member the model can recite; every one is a line-level fact
+#   (a random pick out of a filtered set, a null fallback, a branch on two machines being the
+#   same, an existence check that blocks a delete).
+#
+# THE RISKS IN THIS DRAFT, NAMED
+#   1. A covering grep for this axis EXISTS: `->server` prints 1314 lines over 191 files and
+#      `additional_servers` prints about forty. The bet is that neither is a shortlist an arm
+#      can convert into located rows inside its wall, and that the two cheap sweeps that
+#      reached 0.75-0.94 do not name ten of these files. That bet is what the next phase
+#      measures; nothing here settles it.
+#   2. Our arm has to select fifteen specific lines out of a 101-file payload, and a8 is the
+#      precedent for having the rows in hand and answering past them. Step 2 demands the
+#      selection rule per place, which is the sharpest per-row obligation this campaign has
+#      written, but it is a pull and not a guarantee.
+#   3. Two rows sit one grep apart: app/Models/PrivateKey.php:328 and
+#      app/Models/CloudProviderToken.php:39 are both `$this->servers()->exists()`, so one
+#      `grep -rn 'servers()->exists()'` prints both - 2 of 15 = 0.13 of the group. Recorded.
+#   4. The enumeration in step 1 is the shared cause the a9 read flagged and it is unresolved:
+#      it may lift the baseline as it lifts ours. Named, not fixed, because removing it is the
+#      variable that produced our arm's two worst cells.
+#
+# ONE DEFECT CARRIED FORWARD FROM ATTEMPT 5
+#   Every `match` fragment below was re-checked against `git ls-files` this session and each
+#   returns exactly 1 file.
+# ============================================================================
+
+name: Coolify work session - audit the server contract before a rework
+repo: coolify
+contract_symbol: Server
+contract_file: app/Models/Server.php
+
+description: |
+  You are a maintainer about to rework how a piece of work in this product gets attached to
+  one of the remote machines it deploys onto. Today that attachment is implicit: most of the
+  code that runs work on a machine never says which machine, it arrives at one from whatever
+  the work belongs to, or picks one out of the candidates that happen to qualify at that
+  moment. The rework makes the machine an explicit part of the work, so every place that
+  today derives, chooses, substitutes, spreads or counts machines on its own has to be
+  reviewed - and those are the places that will keep running afterwards while quietly
+  targeting a different machine than they used to. Before you touch it you have to know two
+  things: how a piece of work is attached to a machine today, and how far the change reaches -
+  in particular every place that reaches a machine without being handed one. Throughout, an
+  answer that points at a place must give an exact file:line a teammate could jump straight
+  to, plus one phrase on why it matters. A bare filename does not count, a set of names
+  offered together with one shared reason and no location on any of them does not count, and a
+  missed dependent is a regression shipped.
+
+steps:
+  - name: Map the server contract
+    prompt: >
+      Task: orient, and be thorough - the rest of the ticket is built on this and nothing
+      later will send you back for it. Two things, both in this answer.
+      First, how a piece of work is attached to one of these machines today. Trace it end to
+      end: what a deployable thing actually stores about the machine it runs on, and whether
+      it stores that the same way for every kind of deployable thing; where a machine is
+      resolved back out of that stored attachment when the machine itself was not loaded; how
+      a thing can end up attached to more than one machine at once and where that extra
+      attachment is recorded; and which qualities of a machine decide whether it is eligible to
+      receive work at all, and where that eligibility is expressed as a query rather than as a
+      question asked of one machine.
+      Second, and this is the larger half: the working ground. Every place in this product
+      that is handed one of these machines and works with it while it has it in front of it -
+      all of them, not a representative sample, laid out one line each with the exact
+      file:line and the routine that line sits in. Group them however the code itself falls
+      out, and treat a group as finished only when every place inside it is listed separately
+      with its own location; a group you summarise instead of listing reads as a group with
+      nothing in it, and so does a name given without a location.
+      Then say, in a few sentences, what a rework of this attachment would have to preserve for
+      everything you have just written down to keep meaning what it means today. A place named
+      without the routine it lives in does not count, and neither does a routine named without
+      the file:line where it is defined.
+    checks:
+      - type: response_richness
+        value: "12"
+        required: true
+        description: The attachment traced end to end through the routines that store, resolve, extend and qualify it, and the working ground enumerated one place per line, each located
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the server contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the first
+      part already cost you. You have the working ground written down. Now go past its edge.
+      Somewhere before each of those places got its machine, something decided WHICH machine it
+      would be - and that decision is almost never made where a machine is named. It is made by
+      code that was holding something else entirely and arrived at a machine from it, or that
+      had several to choose between and applied a rule, or that swapped in a different machine
+      for part of the job, or that had to cover every machine the work is spread across instead
+      of the one it started from, or that only needed to know how many there are to decide
+      whether the action was allowed. Find every place that makes such a decision.
+      Test each candidate the same way: at that line, was the machine given to this code, or
+      did this code work out which one it should be? A place that was handed the machine and
+      acts on it is ground you have already covered and is not what I am asking for now,
+      however much of the product it runs. Work outward from the ground you already have rather
+      than starting a fresh search, and follow the decision rather than the machine: the place
+      that decides is usually not the place that acts, and it is the first one that carries the
+      risk. A place like that is often doing some other job altogether, and nothing on the line
+      announces a machine - only that something was derived, filtered, swapped, spread or
+      counted.
+      For every one of them the answer has two parts, and only two: the exact file:line where
+      the machine is decided, and the routine that line sits in; and one phrase naming the rule
+      it applies - what it derives the machine from, or what set it picks out of and what it
+      falls back to when that set is empty. Keep both short - I want the coverage, not the
+      prose. If you run short, say what you had still not looked at rather than closing on what
+      you have. A file:line with no routine named around it does not count, a place named
+      without its rule does not count, and a missed one is a regression shipped.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every place that decides which machine the work lands on, located at file:line with the routine it sits in and the rule it applies
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ---- ANCHORS: where the attachment between work and machine is DEFINED - the contract
+  # ---- centre and its obvious write path. Step 1's answer. Both arms reach these and they
+  # ---- do NOT score. Every line was opened and read in this session. None of these four
+  # ---- files appears in `dependents`.
+  - id: contract-model
+    group: contract
+    match: [Models/Server.php]
+    relation: "app/Models/Server.php:522 `private static function usableByBuildServerStatus(bool $isBuildServer): Builder` - eligibility to receive work expressed as a QUERY, not as a question asked of one machine: :525 `->whereRelation('settings', 'is_reachable', true)`, :526 `'is_usable', true`, :527 `'is_swarm_worker', false`, :528 `'is_build_server', $isBuildServer` and :529 `'force_disabled', false`; the sibling at :855 `public static function buildServers($teamId)` returns the build-eligible set with a WEAKER filter (:857, reachable and build-flagged only), and it is that set a deployment picks a machine out of at random"
+  - id: c:destination-resolve
+    group: contract
+    match: [Models/StandaloneDocker.php]
+    relation: "app/Models/StandaloneDocker.php:127 `public function getServerAttribute(): ?Server` - the resolve side of the attachment: the eager-loaded short-circuit at :130 `if ($this->relationLoaded('server'))`, otherwise :135 `$server = Server::findCached($this->server_id);` and the relation is stuffed back at :139 `$this->setRelation('server', $server);`; every `->server` walk out of a deployment target in this product bottoms out here, which is why a place can hold a machine it never loaded"
+  - id: c:additional-attachment
+    group: contract
+    match: [Models/Application.php]
+    relation: "app/Models/Application.php:532 `public function additional_servers()` returning `belongsToMany(Server::class, 'additional_destinations')->withPivot('standalone_docker_id', 'status')` at :534-:535, beside `additional_networks()` at :538 - the definition of a thing attached to MORE THAN ONE machine at once; the same file derives health over that set at :825 `$main_server_functional = $this->destination?->server?->isFunctional() ?? false;` and :832-:834, which is the pattern every scored fan-out row repeats elsewhere"
+  - id: c:promote-destination
+    group: contract
+    match: [Shared/Destination.php]
+    relation: "app/Livewire/Project/Shared/Destination.php:115 `public function promote(int $network_id, int $server_id)` - the obvious write path for the attachment: the transaction at :121 swaps the main target at :123-:126 `'destination_id' => $network->id`, detaches the old pivot at :127-:129 and re-attaches the previous main target as an extra at :130 `->attach($mainDestination->id, ['server_id' => $mainDestination->server->id])`; the candidate list this screen offers is itself filtered at :45-:57 against the eligible set and the thing's existing machines"
+
+  # ---- DEPENDENTS: fifteen rows, ONE PER FILE, across eight areas (app/Jobs,
+  # ---- app/Livewire/Project/Application, app/Actions/Application, app/Actions/Docker,
+  # ---- app/Livewire/Project, app/Models, app/Livewire/Project/Shared,
+  # ---- app/Livewire/SharedVariables/Server). Every row is in the shown `sense_blast`
+  # ---- payload for `Server` quoted in the header, and every line below was opened and read
+  # ---- in this session.
+
+  # -- the machine is PICKED out of a filtered candidate set, with a silent fallback
+  - id: d:build-server-random
+    group: dependents
+    match: [ApplicationDeploymentJob.php]
+    relation: "app/Jobs/ApplicationDeploymentJob.php:368 `$this->build_server = $buildServers->random();` inside the `if (data_get($this->application, 'settings.is_build_server_enabled'))` branch opened at :361 - the build half of a deployment runs on a machine chosen AT RANDOM out of `Server::buildServers($teamId)->get()` (:363), with the empty-set fallback at :366 `$this->build_server = $this->server;` logged as 'No suitable build server found' at :365, the chosen id stamped onto the queue row at :369, and the switch that makes the rest of the job act on it at :398 `$this->server = $this->build_server;`"
+  - id: d:cancel-build-target
+    group: dependents
+    match: [Application/DeploymentNavbar.php]
+    relation: "app/Livewire/Project/Application/DeploymentNavbar.php:110 `$server = Server::ownedByCurrentTeam()->find($build_server_id);` inside the `if ($this->application->settings->is_build_server_enabled)` at :109, against :112 for the other branch - cancelling a deployment has to kill the container on whichever machine the build actually went to, and the two candidate ids are reconstructed at :100-:101 from the queue row with the thing's own target as the fallback (`?? $this->application->destination->server_id`); pick the wrong branch and the kill command is sent to a machine that is not running the build"
+
+  # -- the machine is DERIVED from whatever the work belongs to, and the derivation differs
+  # -- by what kind of thing that is
+  - id: d:task-resource-server
+    group: dependents
+    match: [ScheduledTaskJob.php]
+    relation: "app/Jobs/ScheduledTaskJob.php:91 `$this->server = $this->resource->destination->server;` in `initializeExecutionContext(): void` (def at :74) - a scheduled task holds no machine at all; it is resolved from whichever kind of thing the task hangs off, chosen at :81-:87, after the two relation paths are eager-loaded BY STRING at :77-:78 (`'service.destination.server.settings'`, `'application.destination.server.settings'`), and the routine just above it takes the machine's timezone by a DIFFERENT path per kind at :97 against :99"
+  - id: d:backup-server-branch
+    group: dependents
+    match: [DatabaseBackupJob.php]
+    relation: "app/Jobs/DatabaseBackupJob.php:106 `$this->server = $this->database->service->server;` on the service-database branch opened at :104 `if (data_get($this->backup, 'database_type') === ServiceDatabase::class)`, against :110 `$this->server = $this->database->destination->server;` on the other - the machine a backup runs on is derived two different ways depending on what kind of database it is, and the only guard is the null check at :113 that throws 'Server not found?!'; every remote command in this job (:142, :591, :726) goes to whichever one that branch produced"
+  - id: d:service-own-attachment
+    group: dependents
+    match: [Models/Service.php]
+    relation: "app/Models/Service.php:1515 `public function server()` returning `belongsTo(Server::class)` - a service is attached to its machine DIRECTLY, unlike an application which must be walked through its deployment target (`destination()` is the morphTo at :1505 on the same class), which is precisely why the backup job above needs two branches; the health of a whole service is then derived from that single relation at :135 `return $this->server->isFunctional();` inside `serverStatus(): Attribute` (def at :131)"
+
+  # -- the work must cover EVERY machine the thing is spread over, not the one it started from
+  - id: d:status-fanout-split
+    group: dependents
+    match: [PushServerUpdateJob.php]
+    relation: "app/Jobs/PushServerUpdateJob.php:209 `$this->allApplicationsWithAdditionalServers = $this->applications->filter(function ($application) {` with the predicate `return $application->additional_servers_count > 0;` at :210, against the complement built at :206-:208 - one machine reports its containers and this job splits everything on it into things that live on one machine and things that do not, because the second kind cannot be judged from this machine's report alone; the second set is handed off whole at :787 `$this->allApplicationsWithAdditionalServers->each(function ($application) {` to a cross-machine check at :788"
+  - id: d:container-status-skip
+    group: dependents
+    match: [GetContainersStatus.php]
+    relation: "app/Actions/Docker/GetContainersStatus.php:53 `if ($application->additional_servers->count() > 0) {` inside the loop opened at :52 over `$this->applications = $this->server->applications();` (:50) - the same decision at the other end: anything spread across more machines is pushed aside at :54, sent to the cross-machine check at :55 and filtered out of this machine's pass at :56-:58, so this action deliberately does NOT decide status for a thing whose machines it cannot all see"
+  - id: d:stop-one-server
+    group: dependents
+    match: [StopApplicationOneServer.php]
+    relation: "app/Actions/Application/StopApplicationOneServer.php:15 `if ($application->destination->server->isSwarm()) {` in `handle(Application $application, Server $server)` (def at :13) - the machine to act on arrives as the second argument, but the eligibility question is asked of a DIFFERENT machine: the thing's main target, walked out of its deployment target, and a swarm answer there returns early at :16 and stops nothing anywhere; the containers are then found and killed on the passed machine at :22 and :29-:35"
+
+  # -- the machine is derived twice over, for a source and a target, and the two are compared
+  - id: d:clone-source-target
+    group: dependents
+    match: [Project/CloneMe.php]
+    relation: "app/Livewire/Project/CloneMe.php:209 `$sourceServer = $database->destination->server;` with `$targetServer = $newDatabase->destination->server;` at :210, handed to `VolumeCloneJob::dispatch($sourceVolume, $targetVolume, $sourceServer, $targetServer, $newPersistentVolume);` at :212 - neither machine is chosen here by name: both are walked out of the old and the new thing's deployment targets, and the same three lines repeat for the two service shapes at :340-:343 and :395-:398; the machine the operator actually picked on this screen is only an integer (:35) resolved at :90"
+  - id: d:volume-clone-same-machine
+    group: dependents
+    match: [VolumeCloneJob.php]
+    relation: "app/Jobs/VolumeCloneJob.php:33 `if (! $this->targetServer || $this->targetServer->id === $this->sourceServer->id) {` in `handle()` (def at :30) - the receiving end of that pair, and the whole strategy turns on it: same machine (or no target at all, the nullable at :24) copies the volume locally at :34, different machines streams it between two machines at :36; the branch is decided by comparing the two derived machines, so a change in how a thing is attached silently reroutes data over the network or fails to"
+
+  # -- the machine is not used at all: it is COUNTED, and the count decides whether the action
+  # -- is allowed
+  - id: d:team-server-quota
+    group: dependents
+    match: [Models/Team.php]
+    relation: "app/Models/Team.php:116 `$servers = $team->servers->count();` in `public static function serverLimitReached(?Team $team = null)` (def at :109), compared against the plan's allowance at :115 and returned at :118 `return $servers >= $serverLimit;` - a gate that decides whether another machine may exist at all, and the sibling `serverOverflow()` at :130 asks the inverse at :132; no machine is touched here, only how many there are, and every add-a-machine path in the product is gated on it"
+  - id: d:key-in-use-guard
+    group: dependents
+    match: [Models/PrivateKey.php]
+    relation: "app/Models/PrivateKey.php:328 `return $this->servers()->exists()` as the FIRST clause of `isInUse()` (def at :326), or-ed with three other kinds at :329-:331 and consumed by `safeDelete()` at :336 `if (! $this->isInUse())` - a key may not be deleted while any machine still uses it, so the existence of an attachment, and not any machine, is what blocks the action; the check never loads a machine and never names one"
+  - id: d:token-in-use-guard
+    group: dependents
+    match: [Models/CloudProviderToken.php]
+    relation: "app/Models/CloudProviderToken.php:39 `return $this->servers()->exists();` in `public function hasServers(): bool` (def at :37), over the relation declared at :32-:35 - the same shape one level out: whether a provider credential is still attached to any machine decides whether the operator may remove it, and the answer is an existence query with no machine in hand"
+
+  # -- the machine set is fetched for a screen, and where it is fetched from decides what the
+  # -- operator can act on
+  - id: d:logs-ownership-check
+    group: dependents
+    match: [Shared/GetLogs.php]
+    relation: "app/Livewire/Project/Shared/GetLogs.php:127 `if (! Server::ownedByCurrentTeam()->where('id', $this->server->id)->exists()) {` opening `getLogs($refresh = false)` (def at :125) - before any log is streamed the machine this component holds is re-checked against the set the current team owns, and a miss returns 'Unauthorized.' at :128; the eligibility question is asked of a SET, not of the machine, so which set that query returns decides what an operator is allowed to see"
+  - id: d:shared-vars-cached-set
+    group: dependents
+    match: [SharedVariables/Server/Index.php]
+    relation: "app/Livewire/SharedVariables/Server/Index.php:15 `$this->servers = Server::ownedByCurrentTeamCached();` in `mount()` (def at :13), into the `public Collection $servers` declared at :11 - the machines whose shared variables an operator can edit come out of a CACHED set rather than a live query, so the screen's population is whatever that cache last held; nothing on the line says which machines those are or when the set was built"

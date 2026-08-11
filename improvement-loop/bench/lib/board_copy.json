@@ -39,10 +39,6 @@
       "label": "Claude Opus 5",
       "blurb": "Anthropic's Claude Opus 5, run through Claude Code."
     },
-    "claude-fable-5": {
-      "label": "Claude Fable 5",
-      "blurb": "Anthropic's Claude Fable 5, run through Claude Code."
-    },
     "gpt-5.6-sol": {
       "label": "GPT-5.6",
       "blurb": "OpenAI's GPT-5.6, run through the Codex CLI."

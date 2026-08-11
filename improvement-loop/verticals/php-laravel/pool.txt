@@ -1,0 +1,184 @@
+# php-laravel candidate pool - one `repo-key|git-url|framework?|stars|pushed`
+# per line. stars and pushed come from the search that found the repo, so
+# the maintained and used screens cost ZERO API calls: a 156-candidate pool
+# is thinned to the handful worth cloning for free. A hand-added line may
+# omit them, and then those two screens fall back to one API call for it.
+#
+# WRITTEN BY hunt.py from the declared queries in stacks/php-laravel.conf.
+# Re-running the hunt reproduces it; widening it means editing that conf,
+# or adding a line here by hand, which the hunt will not overwrite without
+# --force.
+#
+# The third field marks a FRAMEWORK-role repo (something others build ON):
+# eligible for the framework slot, never for the big slot, because the
+# pillar rule keeps the framework from being the campaign's sole win.
+#
+# stack: composer.json:laravel/framework|illuminate/support|illuminate/contracts
+#
+# Queries run, and what each contributed:
+#    60 hits,  48 new  --language php --topic laravel --stars ">1000"
+#    60 hits,  33 new  laravel --language php --stars ">2000"
+#    60 hits,  45 new  --language php --size ">40000" --stars ">300"
+#    33 hits,  25 new  --language php --topic self-hosted --stars ">1000"
+
+# 160 candidates
+seclists|https://github.com/danielmiessler/SecLists.git||72730|2026-08-10
+coolify|https://github.com/coollabsio/coolify.git||60331|2026-08-10
+nextcloud-server|https://github.com/nextcloud/server.git||36373|2026-08-10
+laravel-framework|https://github.com/laravel/framework.git|framework|34859|2026-08-10
+filament|https://github.com/filamentphp/filament.git|framework|31745|2026-08-09
+symfony|https://github.com/symfony/symfony.git||31117|2026-08-10
+bagisto|https://github.com/bagisto/bagisto.git||27957|2026-08-10
+monica|https://github.com/monicahq/monica.git||25011|2026-04-24
+firefly-iii|https://github.com/firefly-iii/firefly-iii.git||24274|2026-08-10
+laravel-crm|https://github.com/krayin/laravel-crm.git||23656|2026-08-07
+livewire|https://github.com/livewire/livewire.git||23568|2026-08-10
+matomo|https://github.com/matomo-org/matomo.git||21751|2026-08-10
+wordpress|https://github.com/WordPress/WordPress.git||21324|2026-08-09
+phpunit|https://github.com/sebastianbergmann/phpunit.git||20042|2026-08-10
+laravel-debugbar|https://github.com/fruitcake/laravel-debugbar.git||19276|2026-08-04
+bookstack|https://github.com/BookStackApp/BookStack.git||18980|2026-08-10
+codeigniter|https://github.com/bcit-ci/CodeIgniter.git||18167|2024-07-15
+koel|https://github.com/koel/koel.git||17212|2026-08-09
+flarum|https://github.com/flarum/flarum.git|framework|16367|2026-07-08
+freshrss|https://github.com/FreshRSS/FreshRSS.git||15735|2026-08-10
+cachet|https://github.com/cachethq/cachet.git||15210|2026-08-10
+laravel-ide-helper|https://github.com/barryvdh/laravel-ide-helper.git||14953|2026-08-04
+snipe-it|https://github.com/grokability/snipe-it.git||14787|2026-08-10
+yii2|https://github.com/yiisoft/yii2.git||14304|2026-08-09
+qloapps|https://github.com/Qloapps/QloApps.git||14219|2026-08-07
+phpstan|https://github.com/phpstan/phpstan.git||14066|2026-08-10
+phpspreadsheet|https://github.com/PHPOffice/PhpSpreadsheet.git||13971|2026-08-09
+php-cs-fixer|https://github.com/PHP-CS-Fixer/PHP-CS-Fixer.git||13548|2026-08-09
+sage|https://github.com/roots/sage.git||13255|2026-06-01
+laravel-permission|https://github.com/spatie/laravel-permission.git||12954|2026-07-03
+wallabag|https://github.com/wallabag/wallabag.git||12890|2026-08-10
+showdoc|https://github.com/star7th/showdoc.git||12846|2026-08-07
+laravel-excel|https://github.com/SpartnerNL/Laravel-Excel.git||12699|2026-08-06
+phabricator|https://github.com/phacility/phabricator.git||12299|2024-04-12
+magento2|https://github.com/magento/magento2.git||12166|2026-08-05
+yourls|https://github.com/YOURLS/YOURLS.git||12148|2026-08-07
+aureuserp|https://github.com/aureuserp/aureuserp.git||11730|2026-08-05
+jwt-auth|https://github.com/tymondesigns/jwt-auth.git||11492|2026-03-06
+leantime|https://github.com/Leantime/leantime.git||11291|2026-08-05
+laravel-admin|https://github.com/z-song/laravel-admin.git||11147|2026-05-02
+october|https://github.com/octobercms/october.git|framework|11141|2026-08-05
+cphalcon|https://github.com/phalcon/cphalcon.git||10832|2026-08-10
+unopim|https://github.com/unopim/unopim.git||10831|2026-08-10
+php_codesniffer|https://github.com/squizlabs/PHP_CodeSniffer.git||10773|2024-04-01
+webshell|https://github.com/tennc/webshell.git||10767|2024-12-24
+mockery|https://github.com/mockery/mockery.git||10726|2026-08-08
+woocommerce|https://github.com/woocommerce/woocommerce.git||10455|2026-08-10
+sspanel-uim|https://github.com/Anankke/SSPanel-UIM.git||10405|2026-08-01
+rector|https://github.com/rectorphp/rector.git||10399|2026-08-10
+mautic|https://github.com/mautic/mautic.git||10310|2026-08-10
+orm|https://github.com/doctrine/orm.git||10171|2026-08-09
+akaunting|https://github.com/akaunting/akaunting.git||10046|2026-08-10
+awsome-front-end-learning-resource|https://github.com/helloqingfeng/Awsome-Front-End-learning-resource.git||10037|2024-03-16
+avbook|https://github.com/guyueyingmu/avbook.git||10014|2024-06-01
+invoiceninja|https://github.com/invoiceninja/invoiceninja.git||9985|2026-08-08
+kanboard|https://github.com/kanboard/kanboard.git||9785|2026-08-01
+dbal|https://github.com/doctrine/dbal.git||9703|2026-08-10
+heimdall|https://github.com/linuxserver/Heimdall.git||9295|2026-08-03
+prestashop|https://github.com/PrestaShop/PrestaShop.git||9186|2026-08-10
+pterodactyl-panel|https://github.com/pterodactyl/panel.git||9127|2026-08-03
+php-code-coverage|https://github.com/sebastianbergmann/php-code-coverage.git||8925|2026-08-10
+solidtime|https://github.com/solidtime-io/solidtime.git||8846|2026-08-10
+owncloud-core|https://github.com/owncloud/core.git||8831|2026-08-10
+cakephp|https://github.com/cakephp/cakephp.git||8794|2026-08-07
+aimeos-laravel|https://github.com/aimeos/aimeos-laravel.git|framework|8673|2026-07-23
+privatebin|https://github.com/PrivateBin/PrivateBin.git||8519|2026-08-10
+sylius|https://github.com/Sylius/Sylius.git||8510|2026-08-10
+crater|https://github.com/crater-invoice-inc/crater.git||8339|2024-08-10
+wallos|https://github.com/ellite/Wallos.git||8333|2026-07-19
+opencart|https://github.com/opencart/opencart.git||8176|2026-08-09
+phpmyadmin|https://github.com/phpmyadmin/phpmyadmin.git||7909|2026-08-09
+lang|https://github.com/Laravel-Lang/lang.git||7775|2026-08-09
+php-timer|https://github.com/sebastianbergmann/php-timer.git||7738|2026-08-10
+diff|https://github.com/sebastianbergmann/diff.git||7653|2026-08-07
+phpword|https://github.com/PHPOffice/PHPWord.git||7584|2026-07-16
+dolibarr|https://github.com/Dolibarr/dolibarr.git||7500|2026-08-10
+tinker|https://github.com/laravel/tinker.git||7440|2026-07-24
+laravel-dompdf|https://github.com/barryvdh/laravel-dompdf.git||7287|2026-07-09
+laravel-mongodb|https://github.com/mongodb/laravel-mongodb.git||7074|2026-08-05
+pixelfed|https://github.com/pixelfed/pixelfed.git||7055|2026-06-29
+flarum-framework|https://github.com/flarum/framework.git|framework|6740|2026-08-10
+larastan|https://github.com/larastan/larastan.git||6482|2026-07-30
+laravel-modules|https://github.com/nWidart/laravel-modules.git||6194|2026-04-13
+laravel-medialibrary|https://github.com/spatie/laravel-medialibrary.git||6157|2026-08-10
+laravel-backup|https://github.com/spatie/laravel-backup.git||6019|2026-08-07
+entrust|https://github.com/Zizaco/entrust.git||6006|2025-01-08
+clockwork|https://github.com/itsgoingd/clockwork.git||5945|2026-08-09
+speedtest-tracker|https://github.com/alexjustesen/speedtest-tracker.git||5886|2026-08-08
+laravel-activitylog|https://github.com/spatie/laravel-activitylog.git||5879|2026-08-07
+socialite|https://github.com/laravel/socialite.git||5747|2026-07-24
+telescope|https://github.com/laravel/telescope.git||5209|2026-08-05
+polr|https://github.com/cydrobolt/polr.git||5096|2024-05-28
+kimai|https://github.com/kimai/kimai.git||4873|2026-08-10
+laravel-datatables|https://github.com/yajra/laravel-datatables.git||4867|2026-07-31
+statamic-cms|https://github.com/statamic/cms.git|framework|4863|2026-08-10
+librenms|https://github.com/librenms/librenms.git||4827|2026-08-10
+platform|https://github.com/orchidsoftware/platform.git||4787|2026-08-05
+corcel|https://github.com/corcel/corcel.git||4777|2025-03-19
+collision|https://github.com/nunomaduro/collision.git||4657|2026-08-04
+freescout|https://github.com/freescout-help-desk/freescout.git||4466|2026-08-07
+laravel-query-builder|https://github.com/spatie/laravel-query-builder.git||4461|2026-08-07
+log-viewer|https://github.com/opcodesio/log-viewer.git||4392|2026-06-11
+tenancy|https://github.com/archtechx/tenancy.git||4388|2026-08-08
+attendize|https://github.com/Attendize/Attendize.git||4266|2024-08-20
+horizon|https://github.com/laravel/horizon.git||4160|2026-08-04
+personal-management-system|https://github.com/Volmarg/personal-management-system.git||4126|2026-08-04
+2fauth|https://github.com/Bubka/2FAuth.git||4095|2026-07-12
+jetstream|https://github.com/laravel/jetstream.git||4056|2026-07-25
+laravel-adminlte|https://github.com/jeroennoten/Laravel-AdminLTE.git||4003|2026-08-02
+twill|https://github.com/area17/twill.git|framework|3965|2026-07-31
+hi.events|https://github.com/HiEventsDev/Hi.Events.git||3963|2026-08-09
+shaarli|https://github.com/shaarli/Shaarli.git||3888|2026-08-09
+laravel-s|https://github.com/hhxsv5/laravel-s.git||3881|2026-07-20
+laravel-generator|https://github.com/InfyOmLabs/laravel-generator.git||3826|2024-05-07
+laravel-nestedset|https://github.com/lazychaser/laravel-nestedset.git||3803|2026-04-11
+openai-php-laravel|https://github.com/openai-php/laravel.git||3748|2026-07-27
+linkstack|https://github.com/LinkStackOrg/LinkStack.git||3737|2026-07-21
+laravelshoppingcart|https://github.com/Crinsane/LaravelShoppingcart.git||3705|2024-03-30
+laravel-localization|https://github.com/mcamara/laravel-localization.git||3560|2026-08-06
+learn-laravel-5|https://github.com/johnlui/Learn-Laravel-5.git||3457|2023-07-22
+laravel-auditing|https://github.com/owen-it/laravel-auditing.git||3456|2026-07-17
+laravel-apidoc-generator|https://github.com/mpociot/laravel-apidoc-generator.git||3452|2024-05-23
+passport|https://github.com/laravel/passport.git||3412|2026-07-22
+seotools|https://github.com/artesaos/seotools.git||3364|2026-03-28
+linkace|https://github.com/Kovah/LinkAce.git||3324|2026-08-10
+laravel-analytics|https://github.com/spatie/laravel-analytics.git||3240|2026-06-26
+laravel-log-viewer|https://github.com/rap2hpoutre/laravel-log-viewer.git||3192|2026-05-12
+vito|https://github.com/vitodeploy/vito.git||3181|2026-08-08
+laravel-vue-spa|https://github.com/cretueusebiu/laravel-vue-spa.git||3026|2022-10-19
+tracker|https://github.com/antonioribeiro/tracker.git||2931|2024-01-19
+laravel-gitscrum|https://github.com/gitscrum-core/laravel-gitscrum.git||2909|2025-05-14
+laravel-wechat|https://github.com/overtrue/laravel-wechat.git||2898|2026-05-07
+iseed|https://github.com/orangehill/iseed.git||2896|2026-06-24
+codefever|https://github.com/PGYER/codefever.git||2757|2024-12-10
+laravel-snappy|https://github.com/barryvdh/laravel-snappy.git||2754|2026-03-23
+laravel-sitemap|https://github.com/spatie/laravel-sitemap.git||2618|2026-08-07
+captcha|https://github.com/mewebstudio/captcha.git||2580|2026-06-08
+laravel-messenger|https://github.com/cmgmyr/laravel-messenger.git||2573|2026-03-18
+laravel.io|https://github.com/laravelio/laravel.io.git||2497|2026-08-07
+laravel-translatable|https://github.com/spatie/laravel-translatable.git||2457|2026-06-26
+laravel-shop|https://github.com/summerblue/laravel-shop.git||2449|2023-01-07
+package-skeleton-laravel|https://github.com/spatie/package-skeleton-laravel.git||2431|2026-08-03
+laravel-geoip|https://github.com/Torann/laravel-geoip.git||2228|2026-04-10
+laravel-filemanager|https://github.com/UniSharp/laravel-filemanager.git||2152|2026-08-09
+laravel-queue-rabbitmq|https://github.com/vyuldashev/laravel-queue-rabbitmq.git||2123|2026-05-22
+laracom|https://github.com/jsdecena/laracom.git||2037|2025-04-06
+dreeve|https://github.com/dreeveapp/dreeve.git||2022|2026-08-10
+projectsend|https://github.com/projectsend/projectsend.git||1959|2026-08-08
+databasement|https://github.com/David-Crty/databasement.git||1926|2026-08-09
+fossbilling|https://github.com/FOSSBilling/FOSSBilling.git||1668|2026-08-10
+zentaopms|https://github.com/easysoft/zentaopms.git||1666|2026-07-30
+slink|https://github.com/andrii-kryvoviaz/slink.git||1578|2026-08-08
+winter|https://github.com/wintercms/winter.git|framework|1509|2026-08-10
+koillection|https://github.com/benjaminjonard/koillection.git||1284|2026-08-05
+xbackbone|https://github.com/sergix44/xbackbone.git||1161|2026-08-01
+pi.alert|https://github.com/leiweibau/Pi.Alert.git||1157|2026-08-08
+whisper-money|https://github.com/whisper-money/whisper-money.git||1094|2026-08-10
+ph7-social-dating-cms|https://github.com/pH7Software/pH7-Social-Dating-CMS.git||1051|2026-08-09
+pricebuddy|https://github.com/jez500/pricebuddy.git||1042|2026-08-09
+many-notes|https://github.com/brufdev/many-notes.git||1038|2026-08-09

@@ -1,0 +1,183 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 8 on coolify, TWO-STEP PROBE (plans/cycle-1-craft-the-scenario/01-author.md).
+# TWO steps, names verbatim and in the order of scenarios/coolify.yaml (the judge pairs by
+# name).
+#
+# WHAT CHANGED FROM THE ATTEMPT-7 RUBRIC: step 1's second job stops being the working ground
+# ENUMERATED and becomes the same population CHARACTERISED - how many places reach a machine at
+# all, split three ways by HOW they reach it, with a completeness position, and only the
+# unclassifiable cases located. So step 1's map_quality now scores whether the three classes
+# are genuinely distinguished rather than whether every place was listed, and an enumeration
+# earns nothing extra. Step 2 is untouched except for the sentence that referred back to the
+# enumeration. What did not change: a near-edge list still earns nothing on step 2's
+# map_quality, and step 2's axis sentence is attempt 6's, unedited. Attempt 6 measured the
+# plain arm at 0.75 with an enumerated ground inside step 2 and ours at 0.9167; attempt 7 moved
+# that enumeration into step 1 and its baseline never finished it, so the enumeration is what
+# this attempt removes.
+#
+# WHY map_quality carries the most weight on the discriminator: this scenario's axis is A VALUE
+# WITH A LIFETIME, not a call, not a held reference and not a hand-off. Every scored place kept
+# something small - a number, a handle, a name, a composed key, an identifier belonging to
+# somebody else's system - after the machine itself was gone from its hands, and trusts it to
+# still resolve later.
+#
+# WHY specificity demands the routine AND what was kept: a file:line here is not
+# self-explaining. Two near-identical lines differ entirely on this axis depending on how long
+# the value lives, so naming WHAT was kept is part of locating the dependency, not a bonus.
+audience: |
+  An AI coding agent that will use this answer to safely rework what identifies one of the
+  remote machines Coolify deploys onto - so that a machine can be renamed, re-addressed and
+  replaced by a stand-in without a piece of identity taken earlier silently pointing at the
+  wrong machine, or at none. Score for that agent, not a human reader and not a docs page.
+  A perfect answer leaves the agent able to make that change knowing two things: how identity
+  is established, changed and torn down today - where the identifying fields are normalised as
+  the record is written, where the previous value of a changing one is preserved, where
+  creation seeds further records including ones holding a COPY of an identifying field rather
+  than a link, where a lookup by identity is served from a per-request cache and where that
+  cache is emptied, and what the removal path leaves behind - each traced through the routines
+  that make it up; and how far the change reaches BEYOND the code that is handed a machine and
+  acts on it.
+  That far layer is what decides the answer. It is places doing some other job entirely -
+  rendering an alert that leaves this product for somebody else's endpoint, baking a handle
+  into a deep link inside a queued message, filing a generated certificate against a number,
+  stamping a number into a row whose only job is to join two things, carrying a choice through
+  a browser redirect as a bare parameter, building a cached search projection out of copied
+  fields, queueing work against a number instead of a machine, holding an identifier that
+  belongs to a cloud provider so the same machine can be named over there, comparing a handle
+  that arrived in a broadcast payload against the one it holds - which often never touch a
+  machine at all and break only because a value they kept stops resolving. Each must be pinned
+  to an exact file:line, with the kept value named, its lifetime stated, and the consequence
+  for that place spelled out.
+  A weak answer stops at the near edge however densely it lists it; or collapses a run of
+  places into one line with a shared reason and no location on any of them; or gives file:line
+  without saying what was kept, which leaves the agent knowing where a number appears and not
+  what depends on it still meaning something.
+steps:
+- name: Map the server contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is the identity lifecycle traced as one connected story - established, changed, cached,
+        torn down - rather than listed as places a field is mentioned? The step asks for four
+        jobs along that lifecycle: where the identifying fields are normalised as the record is
+        written and where the previous value of the changing one is preserved; where creation
+        seeds further records from the new machine, including any that take a COPY of an
+        identifying field rather than a link back to it; where a lookup by identity is served
+        out of a per-request cache instead of the database and where that cache is emptied; and
+        what the removal path does and does not clean up behind it. The question is COVERAGE OF
+        THE JOBS - all four shown and connected is the full answer, and noticing the copies is
+        the part that makes the next step tractable.
+        The step then asks for a SECOND job, and it is a CHARACTERISATION, not a listing: how
+        big the population that reaches one of these machines is, and how that total splits
+        three ways - the places that ask a machine to do something, the places that carry one
+        around as part of what they themselves are whether or not they ask it anything, and the
+        places that name this kind of thing and never ask it for anything at all. An enumeration
+        of places is NOT what was asked for and earns nothing extra here; what is scored is
+        whether the three classes are genuinely distinguished from each other rather than
+        collapsed into one count of mentions, whether each figure is accompanied by how it was
+        arrived at, and whether the answer takes a position on how complete the total is - is
+        this the real total, or as far as this session got, and on what basis. The hard cases -
+        the places that could not be confidently assigned to one of the three - are the only
+        places this step asks to be located, and their presence is evidence the classification
+        was actually attempted rather than asserted. Could the next step act from this shape
+        with small targeted lookups rather than a fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer DOES name - the lifecycle routines, and the hard cases it
+        could not classify - carry an exact file:line AND the name of the routine it lives in?
+        A bare filename is not specific. A file:line with no routine named around it is not
+        specific - the maintainer asked whose code it is, not where the character offset falls.
+        A routine named without the file:line where it is defined is not specific either. Where
+        the answer names a cached lookup, a preserved previous value or a seeded copy, is the
+        line that actually writes or reads it located, and not just asserted from the name of
+        the surrounding hook? For the three figures, specificity means saying what was counted
+        and how - a number with no stated basis is the least specific answer available here.
+    justification:
+      weight: 0.2
+      question: |
+        Does each place carry one phrase on what it contributes to identity - what it
+        normalises, what it preserves, what it copies rather than links, what it serves without
+        going to the database, what it leaves behind - and does the closing statement say what a
+        rework would have to preserve for the population JUST DESCRIBED to keep meaning what it
+        means today, rather than restating the hook names? For the three figures, is there a
+        reason given for which class is largest and by how much, rather than three bare numbers?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name
+        or from a familiar framework convention? Model lifecycle hooks and cache helpers invite
+        confident guessing; saying which parts were actually opened is worth more. This step
+        asks outright how sure the total is; a confident round number with no stated basis, or
+        silence on whether anything was out of reach, scores lowest here, and an honest "this
+        is what I could resolve, this is what I could not" scores highest even when the figure
+        is partial.
+- name: Audit every dependent of the server contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        THE DISCRIMINATOR, and it is A VALUE WITH A LIFETIME together with BREADTH OF AREA. The
+        working ground - the places that are handed one of these machines and act on them - was
+        characterised in the previous step, and this step sends the agent past its edge.
+        So a near-edge list earns nothing here, however dense or well located it is, and
+        repeating the previous step's answer is not progress: those places hold the machine
+        itself. Does the audit reach the layer past them - the
+        places that merely KEPT something, a number in a stored record or in a row that exists
+        only to join two things, a handle pasted into a link or into a message that leaves this
+        product, a display name copied into a saved value, an identifier belonging to a system
+        this product does not own, a string composed out of one of those and used to gate,
+        count or de-duplicate, a handle that arrived from outside the process and is compared
+        against the one held here? The places that decide this step sit as much in the outbound
+        alert payloads and the deep links built inside queued messages, the small records filed
+        against a number and read back long afterwards, the join rows that hold nothing but the
+        number, the wizard step that carries a choice through a browser redirect as a bare
+        parameter, the cached search projection built out of copied fields, the work queued
+        against a number instead of a machine, the identifiers held for somebody else's API and
+        the broadcast payload compared by string, as in the code that acts on a machine. An
+        answer that is dense in one tree and silent in the others has enumerated inside one
+        search scope and mistaken that for the codebase. Does the answer say, for each place,
+        WHAT was kept and HOW LONG IT LIVES - inside one request, inside one stored record, or
+        outside this product entirely - which is the distinction a reading of the line alone
+        does not give? Where the answer ran short, is what it had still not looked at declared
+        rather than quietly closed over?
+    specificity:
+      weight: 0.25
+      question: |
+        Does EVERY place carry its own exact file:line AND the name of the routine the line sits
+        inside AND what it kept? All three, because a location alone does not identify this kind
+        of dependency: the same line shape means something different depending on whether the
+        value dies with the request or is written to a row. Several places named together on one
+        line as a set that shares a reason is the failure this criterion exists to catch:
+        however correct the shared reason is, it is one item, not a set of located places, and
+        it should be scored as one. A bare filename does not count.
+    justification:
+      weight: 0.2
+      question: |
+        Does each place carry one phrase on what IT would start getting wrong the first time the
+        value it kept no longer resolves to the machine it came from? The consequence must be
+        about that place's own job - the delivered alert that names a machine nobody can find,
+        the deep link sitting in a mailbox that leads nowhere, the certificate filed against a
+        re-used number, the join row that quietly attaches a resource to the wrong machine, the
+        wizard that creates a resource against the wrong machine, the search entry that
+        navigates the operator somewhere stale, the queued regeneration that runs against
+        whatever the number resolves to later, the provider call that reports on an instance we
+        no longer own, the browser update that never arrives because two handles stopped
+        matching - not a restatement of the line. Does it distinguish a value that fails loudly
+        from one that resolves to the wrong thing silently?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer say how it convinced itself the audit is exhaustive, and name where it is
+        likely still thin? An unqualified claim of completeness over a codebase this size is
+        overconfidence. Naming an area it knows it did not finish, and what it left there, is
+        worth more than a confident list that quietly stops. Kept values that never sit beside
+        anything naming a machine - a number in a fillable list, a number in a pivot row, a
+        string built into a key or a URL, a value copied at creation and never refreshed - are
+        the ones an audit of the obvious surface misses, and saying which of those it went
+        looking for and how is worth more than asserting full coverage.

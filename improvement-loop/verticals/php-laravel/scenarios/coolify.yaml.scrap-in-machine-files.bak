@@ -1,0 +1,341 @@
+# ============================================================================
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md)
+# CYCLE 1, ATTEMPT 12 on coolify - a RE-QUESTION routed back from measured runs.
+# ANCHOR KEPT (`Server`, precision 0.15). THE QUESTION IS RESTORED TO THE ONE ASK IN TWELVE
+# THAT PUT A FINISHED BASELINE BELOW THE FLOOR, and the gold is rebuilt so that our arm can
+# reach what that ask asks for - which is the half that failed the first time.
+#
+# TRAJECTORY (every previous cycle, quoted from its own minibench read, and which side of the
+# window it fell on). The window is: plain arm at or below 0.50 of `dependents` AND ours at
+# least +0.50 above. baseline / ours on `dependents`:
+#     a1  0.9444 / 1.0000  CEILING   class teardown - every place that would have to be reviewed
+#     a2  0.8462 / 0.8462  CEILING   the layer one hop back (anchor swapped, and swapped back)
+#     a3  0.3571 / 0.5714  FLOOR-OK  IDENTITY SCRAP, near edge excluded  <- the only finished
+#                                    baseline below the floor in twelve attempts
+#     a4  0.9286 / 0.5714  CEILING   same axis with six value-shapes named in the ask
+#     a5  0.0000 / 0.3333  FLOOR-OK  exclusion sharpened; baseline died at the wall
+#     a6  0.7500 / 0.9167  CEILING   near edge required as a first pass inside step 2
+#     a7  void   / 0.7500  NEITHER   ground moved into step 1; baseline died in the ground
+#     a8  0.0000 / 0.2500  FLOOR-OK  ground characterised as counts; baseline died at the wall
+#     a9  0.9167 / 0.8333  CEILING   keepsake axis + a `holds no machine` selection test
+#     a10 0.8000 / 0.9333  CEILING   selection rule; baseline FINISHED with 164s unspent
+#     a11 0.9286 / 1.0000  CEILING   population answer; baseline 13 of 14 in a 19-search ladder
+#   Seven cycles on the ceiling side. Three on the floor side, and TWO OF THE THREE were
+#   bought by a baseline that ran out of wall (a5, a8), not by the question. Exactly one
+#   cycle - a3 - put a baseline that FINISHED below the floor.
+#
+#   THIS DRAFT CORRECTS FROM THE CEILING SIDE (a11, baseline 0.9286, delta capped at +0.0714
+#   before it was scored). The move it makes is not another rewording of a fresh axis: eleven
+#   asks have now been written and nine of them landed on the ceiling. It goes BACK to a3's
+#   axis and a3's selection test, and spends this cycle on the half a3 lost - our own arm,
+#   which reached 8 of 14 there. Intended distance: from a baseline at 0.93 to a baseline near
+#   0.36, with ours at or above 0.86 rather than a3's 0.57.
+#
+# WHY a3 AND NOT a9, WHEN THEY SHARE SIX ROWS (this is the bet, and it is n=1 on each side)
+#   a3 and a9 ask about the same family on the same anchor and their baselines scored 0.3571
+#   and 0.9167. The rows are not intrinsically dark - under a9's wording a baseline cited
+#   eleven of twelve of them. So the variable that moved 0.56 of the scale here is the WORDING,
+#   not the row set, and this draft takes the wording that suppressed rather than the wording
+#   that handed over. Both sides are a single run. That is stated, not hidden, and the
+#   mini-bench is the test.
+#
+# WHAT a3 SAID ITS OWN DEFECT WAS, QUOTED FROM results/dryrun/coolify/minibench.3.md
+#   "What must change is that the ask does not make `sense_blast` the obvious first move on
+#   this contract. The arm read the ask, searched for the Server model, walked two `callers`
+#   graphs off `findCached` and `flushIdentityMap`, got a small answer, and abandoned the
+#   instrument for grep at second 16 - then burned 445 more seconds duplicating the baseline."
+#   and "The ask must name a change to a concrete thing whose blast radius IS the answer - 'we
+#   are changing X, what breaks' - rather than an open audit of how Server identity is
+#   consumed, which reads as a search problem and gets a search route."
+#   Both are acted on here. Step 2 states that the record itself is being replaced and asks
+#   what breaks; and EVERY scored row is a row the shown blast payload carries, which a3's
+#   gold was never checked against (its report records every gold row as CITED-NOT-RETURNED
+#   off `sense_graph`, because the arm asked graph and never asked blast).
+#
+# THE KILLERS, RUN THIS SESSION (checks that could have killed this draft, not confirmed it)
+#   ARITHMETIC. 14 scored rows, recall caps at 1.00, so +0.50 is reachable ONLY if the
+#   baseline cites 7 files or fewer. a3's baseline cited 5 of 14 on this family; a9's cited 11
+#   of 12 on six of the same files. If this baseline cites 8, the cell is dead before it is
+#   scored and that is the falsifier, not a disappointment.
+#   CONFOUND: is a3's 0.3571 a wall death rather than the question? Quoted from
+#   results/dryrun/coolify/minibench.3.md:
+#     ".../baseline/coolify/run-1/run_meta.json baseline wall 461 of 555 exit 0 watchdog None
+#      valid True None"
+#   461 of 555 - it stopped 94 seconds short of its budget with 51 tool calls spent and 5 of
+#   14 rows. Not censored. That is the one clean sub-floor observation this repo owns, and it
+#   is why the axis comes back rather than a twelfth new one.
+#   PER-UNIT: the five rows a3's baseline DID cite are named in its read - `d:boarding-by-
+#   address`, `d:cleanup-execution`, `d:high-disk-usage`, `d:shared-vars-show`,
+#   `d:storage-check-key`. All five files are cut from this gold. The nine it missed are kept.
+#   n: a3 is one run per arm, a9 is one run per arm, and the inverse-frequency ranking over
+#   the a3-era gold (`inverse_frequency.py coolify results/claude-opus-5/minibench`) is n=4
+#   total, below the ~5-run bar the plan sets - so it ORDERED nothing and cut nothing. What it
+#   does show, and what is recorded per row below, is that `d:container-stopped` sits at
+#   baseline 0/2 sense 2/2 and `d:shared-env-var` / `d:ssl-certificate` at baseline 0/2 sense
+#   1/2 - the three rarest-cited rows on the board, and all three are kept.
+#   NEGATIVE SPACE: what did I not search? A second, different probe for one shape spelled
+#   the way this repo spells it - `grep -rn "WithoutOverlapping" app/Jobs` - prints eight
+#   sibling files that each bake a machine's handle into a queue lock key
+#   (ConnectProxyToNetworksJob, DockerCleanupJob, PushServerUpdateJob, RestartProxyJob,
+#   ServerCheckJob, ServerCloudProviderStatusCheckJob, ServerConnectionCheckJob,
+#   ServerPatchCheckJob). ONE of the eight is gold, deliberately: a group carrying several of
+#   them would be a group one grep prints. The consequence is recorded and not acted on - a
+#   complete human answer here is larger than this gold, and an arm that lists the other seven
+#   scores nothing for them in either direction.
+#
+# THE MECHANISM, AND WHAT MAKES IT DIFFERENT FROM THE ROWS EVERY CEILING CYCLE HANDED OVER
+#   Every ceiling cycle scored rows where the machine is IN HAND at the scored line - it was
+#   passed in, held in a property, or fetched one line above - and in this language a machine
+#   in hand is written down: a typed parameter, a typed property, a static call. That is why
+#   `grep -rn "Server \$server"` and `grep -rn "Server::"` reconstructed those sets with no
+#   file reads at all.
+#   The rows here are the opposite case. At the scored line there is NO machine. There is a
+#   value that was taken off one earlier and then kept - in a stored row, in a component's
+#   state between requests, in a cache or lock entry, in a link, in a message body that leaves
+#   this process - and the code there later trusts that value to still mean the same machine.
+#   Nothing on those lines says a remote machine is involved, and most of the files are doing
+#   some other job entirely.
+#   Recorded, per NO GREP SCREEN IS A GATE, and deciding nothing: covering greps for PARTS of
+#   this family exist (`server_id`, `server_uuid`, `WithoutOverlapping`), which is exactly the
+#   route a3's baseline ran - 51 calls, 37 of them searches, area by area, closing on 5 of 14.
+#   Whether an arm runs enough of them to closure at `path:line` inside its wall is what the
+#   mini-bench measures, and a grep has been wrong about this repo in both directions.
+#
+# THE AXIS, IN ONE SENTENCE
+#   Every scored dependent keeps a scrap of a machine's identity after the machine itself is
+#   gone from its hands - a number in a stored row, a handle in a cache key, a lock name, a
+#   link, an outbound message - and later trusts that scrap to still resolve to the same
+#   machine, which is precisely what a rework of identity withdraws.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF PLACES A NAME APPEARS
+#   Per place the answer is WHICH scrap is kept, HOW LONG it outlives the machine object
+#   (inside one request, inside one stored row, or outside this product entirely), and WHAT
+#   THAT PLACE STARTS GETTING WRONG the first time the scrap no longer resolves - and those
+#   three differ between lines whose text is nearly identical. A stored number on a
+#   certificate row is orphaned by a delete; the same stored number on a deployment queue row
+#   is read back weeks later to cancel a build on the wrong machine; a handle in a mux cache
+#   key survives a restart and reuses a connection to a machine that has been replaced; a
+#   handle in an outbound message body has already left the product and cannot be corrected at
+#   all. A search prints the occurrence; it cannot print the lifetime or the failure.
+#   This is NOT the retention kind, and that is a run, not a preference:
+#     python3 bench/lib/ring_sweep.py $CLONE --top 12
+#       -> `0 candidate(s) above the bar`, all twelve anchors `rows 0  files 0  vias 0`.
+#   Zero rings, so `what HOLDS X` is off the menu on this repo.
+#
+# SEAM PROFILE (bench/lib/seam_hunt.py, three candidates, quoted, run this session)
+#   python3 bench/lib/seam_hunt.py $CLONE Server --propose
+#     app caller files 45 (53 incl test) | SCATTER (dirs) 23
+#     GREP-NOISE 'Server' in 295 app files      PRECISION=0.15   SCATTERED + GREP-NOISY
+#   python3 bench/lib/seam_hunt.py $CLONE Application --propose
+#     app caller files 35 (50 incl test) | SCATTER 18
+#     GREP-NOISE 'Application' in 142 app files PRECISION=0.25   SCATTERED + GREP-NOISY
+#   python3 bench/lib/seam_hunt.py $CLONE ServerSetting --propose
+#     app caller files 4 (6 incl test) | SCATTER 3
+#     GREP-NOISE 'ServerSetting' in 8 app files PRECISION=0.50   colocated(3dir) + GREP-NOISY
+#   PRECISION RANKS, IT NEVER KILLS. `Server` is lowest at 0.15 and widest at 23 dirs, and it
+#   is the anchor twelve cycles of measurement are attached to. ANCHOR KEPT.
+#
+# EVERY SCORED ROW IS IN THE SHOWN BLAST PAYLOAD (RUN THIS SESSION, NOT ASSUMED)
+#   python3 bench/lib/mcp_probe.py $CLONE '[{"name":"sense_blast","arguments":{"symbol":"Server"}}]'
+#   No `min_confidence` passed. 31419 chars; 46 `direct_callers` and 89 `affected_via_
+#   composition` rows, union of distinct php paths = 101. All fourteen scored paths and all
+#   four anchor paths were intersected against that union path by path this session; every one
+#   is inside it. This is the check a3 never ran, and it is the half of a3 that failed.
+#
+# MEMORIZATION (bench/lib/memorization_probe.py $CLONE Server --json)
+#   Closed-book recall of the anchor's own member names is 0.514 (55 of 107 named), so the
+#   model can recite what a machine record offers. It is a gold-time constraint and not an
+#   admission verdict: not one scored row is a member of the anchor. Every scored row is a
+#   line-level fact in a different file - a cache-key string, a fillable entry, an assignment
+#   into component state - and none appears in the probe's answer. Churn-dating cannot
+#   discriminate on this clone: it is a single pinned snapshot and `git log -1 --format=%as`
+#   returns 2026-07-30 for all fourteen files.
+# ============================================================================
+name: Coolify work session - audit the server contract before a rework
+repo: coolify
+contract_symbol: Server
+contract_file: app/Models/Server.php
+
+description: |
+  You are a maintainer about to rework what identifies one of the remote machines this product
+  deploys onto. Today a machine is a row with a number, a short handle, a display name and a
+  network address, and code all over the product treats any one of those as a durable way of
+  getting back to it later. The rework breaks that: the record is replaced wholesale, so a
+  machine can be renamed, re-addressed, retired and stood in for by a different one, and a
+  scrap of identity taken today is no longer guaranteed to mean the same machine when it is
+  read back tomorrow.
+  Before you touch it you have to know two things: how a machine's identity is established,
+  changed and torn down today, and every place that kept one of those scraps past the moment
+  it had the machine itself - the places that will silently point at the wrong machine, or at
+  no machine, without a single line of them changing.
+  Throughout, an answer that points at a place must give an exact file:line a teammate could
+  jump straight to, plus one phrase on why it matters. A bare filename does not count, a set
+  of names offered together with one shared reason and no location on any of them does not
+  count, and a missed dependent is a regression shipped.
+
+steps:
+  - name: Map the server contract
+    prompt: >
+      Task: orient, and be thorough - the rest of the ticket is built on this and nothing later
+      will send you back for it. Two things, both in this answer.
+      First, the identity itself. What identifies one of these machines, and where that identity
+      is established, changed and destroyed. Trace it end to end: where the identifying fields
+      are set as the record is written; where a lookup by identity is served out of a
+      per-request cache rather than the store, and where that cache is emptied; where a freshly
+      created machine causes further records to be seeded from it, including any that take a
+      COPY of an identifying field rather than a link back to it; and what the removal path does
+      and does not clean up behind it.
+      Second, and this is the larger half: the working ground. Every place in this product that
+      is handed one of these machines and works with it while it has it in front of it - all of
+      them, not a representative sample, laid out one line each with the exact file:line and the
+      routine that line sits in. Group them however the code itself falls out, and treat a group
+      as finished only when every place inside it is listed separately with its own location; a
+      group you summarise instead of listing reads as a group with nothing in it, and so does a
+      name given without a location.
+      Then say, in a few sentences, what a rework of identity would have to preserve for
+      everything you have just written down to keep meaning what it means today. A place named
+      without the routine it lives in does not count, and neither does a routine named without
+      the file:line where it is defined.
+    checks:
+      - type: response_richness
+        value: "12"
+        required: true
+        description: The identity lifecycle traced through the routines that establish, cache, seed and tear it down, and the working ground enumerated one place per line, each located
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the server contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the first part
+      already cost you. Take it as settled that the whole record is being replaced, and answer
+      the only question that matters after that: what breaks.
+      Not the working ground. You have that written down, and everything on it is holding a
+      machine while it works - it will be handed the new one and it will be fine. What I need is
+      the other kind of place entirely: every place that kept a SCRAP of a machine's identity
+      after the machine itself was gone from its hands, and later trusts that scrap to still
+      mean the same machine when it comes back to it - a request later, a restart later, or in
+      another system entirely. That trust is exactly what this rework withdraws, and none of
+      those places will change by a single line when it does.
+      Test each candidate the same way, at the line itself: is a piece of the machine being
+      lifted off it here and put somewhere that will outlive it, or read back out of somewhere
+      after the machine itself was gone? If instead a machine came in and the code simply acted
+      on it while it had it, that is the ground you already covered. Expect most of what is left
+      to be doing some other job altogether, in a part of the product that is not about
+      machines, with nothing on the line announcing that one is involved.
+      For every one of them the answer has three parts and only three: the exact file:line where
+      the scrap is taken, kept or read back, and the routine that line sits in; how long that
+      scrap outlives the machine it was taken from - inside one request, inside one stored
+      record, or outside this product entirely; and one phrase on what this place starts getting
+      wrong the first time it no longer resolves to the machine it came from. Keep it short: I
+      want the coverage, the lifetime and the failure, not the prose.
+      Organise the answer by area, one section per area, and treat an area as finished only when
+      every place inside it is listed separately with its own location. If you run short, say
+      what you had still not looked at rather than closing on what you have. A file:line with no
+      routine named around it does not count, a place named without its lifetime and its failure
+      does not count, and a missed one is a regression shipped.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every identity-keeping place located at file:line with the routine it sits in, the lifetime of the scrap it keeps and what that place gets wrong once the scrap no longer resolves
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ---- ANCHORS: the contract centre, its identity map and its obvious write and removal
+  # ---- paths. Step 1's answer. Both arms reach these and they do NOT score. Every line below
+  # ---- was opened and read this session. None of these four files appears in `dependents`.
+  - id: contract-model
+    group: contract
+    match: [Models/Server.php]
+    relation: "app/Models/Server.php:230 `public static function findCached($id): ?static` - identity resolved out of a per-request identity map keyed on the machine's number, flushed at :222 / :356 / :375 via :251 `public static function flushIdentityMap(): void`; the identity fields themselves and :1229 `muxFilename()` returning `'mux_'.$this->uuid` are what every scored row keeps a piece of"
+  - id: c:server-setting
+    group: contract
+    match: [Models/ServerSetting.php]
+    relation: "app/Models/ServerSetting.php:59 `'server_id',` in the fillable list and :249 `return $this->belongsTo(Server::class);` - the companion record seeded from a freshly created machine, holding the machine's number rather than the machine; the obvious first hop off the contract and reached by both arms"
+  - id: c:server-delete
+    group: contract
+    match: [Server/Delete.php]
+    relation: "app/Livewire/Server/Delete.php:34 `public function delete($password, $selectedActions = [])` ending at :60 `$this->server->delete();` - the removal path, the moment after which every scrap kept elsewhere resolves to nothing"
+  - id: c:validate-server
+    group: contract
+    match: [Server/ValidateServer.php]
+    relation: "app/Actions/Server/ValidateServer.php:26 `public function handle(Server $server)` - the machine handed in and worked on with it in hand, the canonical shape of the working ground that step 2 excludes"
+
+  # ---- DEPENDENTS: the scored group. Fourteen files, eight areas, one row per file. Every one
+  # ---- appears in the shown `sense_blast` payload for the contract (checked path by path this
+  # ---- session). At every scored line there is NO machine in hand - only a value taken off one
+  # ---- earlier and kept somewhere that outlives it.
+  - id: d:container-stopped
+    group: dependents
+    match: [Container/ContainerStopped.php]
+    relation: "app/Notifications/Container/ContainerStopped.php:114 `'server_uuid' => $this->server->uuid,` - the machine's handle copied into the body of an outbound webhook that leaves this product entirely, so the scrap lives in someone else's system and can never be corrected from here; baseline 0/2, sense 2/2 in the inverse-frequency ranking, and the single row a1's near-perfect baseline (17 of 18) missed"
+  - id: d:ssl-certificate
+    group: dependents
+    match: [Models/SslCertificate.php]
+    relation: "app/Models/SslCertificate.php:16 `'server_id',` in the fillable list - a certificate row stores the machine's bare number and nothing else about it, so the scrap lives as long as the row and is orphaned rather than repointed when the machine it came from is replaced; baseline 0/2, sense 1/2, one of the two rarest-cited rows on the board"
+  - id: d:shared-env-var
+    group: dependents
+    match: [Models/SharedEnvironmentVariable.php]
+    relation: "app/Models/SharedEnvironmentVariable.php:22 `'server_id',` in the fillable list - a shared variable scoped to a machine by its stored number, read back on every later request that resolves the variable's scope; baseline 0/2, sense 1/2"
+  - id: d:destination-identity-map
+    group: dependents
+    match: [Models/StandaloneDocker.php]
+    relation: "app/Models/StandaloneDocker.php:135 `$server = Server::findCached($this->server_id);` inside `getServerAttribute()` at :127 - a destination that holds only the stored number and resolves it back through the per-request identity map, so the scrap is trusted twice over: once as a stored value and once as a cache key"
+  - id: d:mux-cache-key
+    group: dependents
+    match: [Helpers/SshMultiplexingHelper.php]
+    relation: "app/Helpers/SshMultiplexingHelper.php:347 `Cache::put(\"ssh_mux_connection_time_{$server->uuid}\", time(), config('constants.ssh.mux_persist_time') + 300);` inside `storeConnectionMetadata()` - the machine's handle baked into a cache key that outlives the request and the process, read back at :214 and cleared at :352, so a replaced machine can be judged to have a live multiplexed connection it never opened"
+  - id: d:patch-lock-key
+    group: dependents
+    match: [Jobs/ServerPatchCheckJob.php]
+    relation: "app/Jobs/ServerPatchCheckJob.php:26 `return [(new WithoutOverlapping('server-patch-check-'.$this->server->uuid))->expireAfter(600)->dontRelease()];` - the handle concatenated into a queue lock name that lives in the queue backend across restarts, so overlap is prevented against a string rather than against a machine"
+  - id: d:storage-cache-key
+    group: dependents
+    match: [Jobs/PushServerUpdateJob.php]
+    relation: "app/Jobs/PushServerUpdateJob.php:180 `$storageCacheKey = 'storage-check:'.$this->server->id;` read at :181 and written at :185, forgotten at :188 - the machine's bare number concatenated into a cache key whose value is the last disk percentage seen, so a reissued number inherits another machine's threshold state and its alert is suppressed"
+  - id: d:metrics-redirect-uuid
+    group: dependents
+    match: [Server/Charts.php]
+    relation: "app/Livewire/Server/Charts.php:47 `$this->redirect(route('server.metrics', ['server_uuid' => $this->server->uuid]), navigate: true);` - the handle pasted into a link handed to the browser, so the scrap outlives this request in the user's address bar and is resolved again on the next one"
+  - id: d:sentinel-event-uuid
+    group: dependents
+    match: [Server/Sentinel.php]
+    relation: "app/Livewire/Server/Sentinel.php:86 `if ($event['serverUuid'] === $this->server->uuid) {` - a handle arriving on a broadcast event from another process compared as a string against the one held here, so the match is between two scraps and not between two machines"
+  - id: d:proxy-config-request-uuid
+    group: dependents
+    match: [Proxy/DynamicConfigurations.php]
+    relation: "app/Livewire/Server/Proxy/DynamicConfigurations.php:66 `$this->server = Server::ownedByCurrentTeam()->whereUuid(request()->server_uuid)->first();` - the machine re-resolved from a handle carried in on the request rather than from anything held, and the `->first()` means a handle that no longer resolves yields null rather than an error"
+  - id: d:deployment-queue-id
+    group: dependents
+    match: [Application/DeploymentNavbar.php]
+    relation: "app/Livewire/Project/Application/DeploymentNavbar.php:100 `$build_server_id = $this->application_deployment_queue->build_server_id ?? $this->application->destination->server_id;` and :101 the same for `server_id` - numbers written onto a deployment queue row when the deployment started and read back much later to find the machine a cancel must be run on, at :110 / :112"
+  - id: d:new-resource-state-id
+    group: dependents
+    match: [Project/New/Select.php]
+    relation: "app/Livewire/Project/New/Select.php:409 `$this->server_id = $server->id;` - the number kept in component state and re-sent by the browser on every subsequent request of the wizard, then written into the created records at :441 and :456, so the scrap spans the whole multi-request flow"
+  - id: d:new-destination-state-id
+    group: dependents
+    match: [Destination/New/Docker.php]
+    relation: "app/Livewire/Destination/New/Docker.php:47 `$this->serverId = (string) $this->selectedServer->id;` - the number stringified into component state, resolved back at :61 `$this->servers->find($this->serverId)` and written into the new destination at :87 / :98, so the machine is gone from its hands between the two halves of the form"
+  - id: d:global-search-state-id
+    group: dependents
+    match: [Livewire/GlobalSearch.php]
+    relation: "app/Livewire/GlobalSearch.php:1194 `'id' => $s->id,` mapped into the component's own array of choices, kept as `selectedServerId` at :1208 and resolved back at :1217 `Server::ownedByCurrentTeam()->find($this->selectedServerId)` on a later request - a picked machine reduced to a number that is trusted for the rest of the session"

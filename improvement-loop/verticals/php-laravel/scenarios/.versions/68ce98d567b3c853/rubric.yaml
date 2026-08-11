@@ -1,0 +1,162 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 12 on coolify, TWO-STEP PROBE (plans/cycle-1-craft-the-scenario/01-author.md).
+# TWO steps, names verbatim and in the order of scenarios/coolify.yaml (the judge pairs by
+# name).
+#
+# WHAT CHANGED FROM THE ATTEMPT-11 RUBRIC: the axis goes BACK, not forward. Attempt 11 scored
+# AN ANSWER ABOUT THE POPULATION - code that never receives a machine and asks the machines as
+# a whole a question. Its baseline reached 13 of 14 in a nineteen-search grep ladder with zero
+# file reads, so that axis is retired. This rubric scores THE IDENTITY SCRAP: a place that kept
+# a piece of a machine's identity after the machine itself was gone from its hands, and later
+# trusts that piece to still mean the same machine. It is attempt 3's axis, which produced the
+# only finished baseline below the floor in twelve attempts (0.3571, 461s of a 555s wall, 51
+# tool calls), and the half attempt 3 lost was our own arm at 0.5714 - so step 2 is written to
+# make the blast radius of the record itself the answer, and step 1 keeps the enumerated
+# working ground, the one variable our arm has separated on (0.83-0.93 enumerated, 0.25-0.57
+# not).
+#
+# WHY map_quality carries the most weight on the discriminator: the answer to step 2 is not a
+# set of locations, it is a set of SCRAPS WITH LIFETIMES. Two lines of nearly identical text
+# differ entirely in how long the value they keep outlives the machine - one request, one
+# stored row, or another system altogether - and therefore in what can still be corrected when
+# identity is reworked. Naming that is the answer.
+#
+# WHY specificity demands the routine AND the lifetime AND the failure: a file:line here is not
+# self-explaining, and the failure this criterion exists to catch is a run of places named
+# together under one shared reason with no location on any of them.
+audience: |
+  An AI coding agent that will use this answer to safely rework what identifies a remote machine
+  in Coolify - the record, its number, its handle, its display name and its address - given that
+  after the rework a machine can be renamed, re-addressed, retired and stood in for by a
+  different one. Score for that agent, not a human reader and not a docs page.
+  A perfect answer leaves the agent able to make that change knowing two things: how a machine's
+  identity works today - where the identifying fields are set as the record is written, where a
+  lookup by identity is served out of a per-request cache rather than the store and where that
+  cache is emptied, where a freshly created machine seeds further records including any that
+  take a COPY of an identifying field rather than a link back to it, and what the removal path
+  does and does not clean up - each traced through the routines that make it up; and how far the
+  change reaches BEYOND the code that is handed a machine and works with it in hand.
+  That far layer is what decides the answer. It is every place that kept a scrap of identity
+  after the machine was gone from its hands and later trusts it: a number stored on a row that
+  belongs to something else entirely; a handle concatenated into a cache key or a queue lock
+  name that survives a restart; a number kept in a screen's state between requests and resolved
+  again on the next one; a handle pasted into a link handed to a browser; a handle written into
+  a message body that leaves this product for a system we do not control; a value arriving back
+  on an event and compared as a string against the one held here. Each must be pinned to an
+  exact file:line, with the routine named, with how long the scrap outlives the machine it came
+  from - inside one request, inside one stored record, or outside this product entirely - and
+  with what that place starts getting wrong the first time the scrap no longer resolves.
+  A weak answer stops at the code that is handed a machine, however densely it lists it; or
+  collapses a run of places into one line with a shared reason and no location on any of them;
+  or gives file:line without the lifetime and the failure, which leaves the agent knowing where
+  a value is written and not what breaks when it stops meaning what it meant.
+steps:
+- name: Map the server contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is a machine's identity traced as one connected story - established, cached, copied,
+        destroyed - rather than listed as places a name is mentioned? The step asks for four jobs
+        along that story: where the identifying fields are set as the record is written; where a
+        lookup by identity is served out of a per-request cache rather than the store, and where
+        that cache is emptied; where a freshly created machine causes further records to be
+        seeded from it, including any that take a COPY of an identifying field rather than a link
+        back to it (noticing that difference is the part that makes the next step tractable); and
+        what the removal path does and does not clean up behind it. The question is COVERAGE OF
+        THE JOBS - all four shown and connected is the full answer.
+        The step then asks for a SECOND job and it is an ENUMERATION: every place in the product
+        that is handed one of these machines and works with it, one line each, each located.
+        Score whether it is genuinely complete rather than a representative sample, whether the
+        grouping follows the code rather than a tidy label, and whether every place inside every
+        group carries its own location - a group summarised instead of listed is a group with
+        nothing in it, and so is a name given without a location. Could the next step act from
+        this ground with small targeted lookups rather than a fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer names carry an exact file:line AND the name of the routine it
+        lives in? A bare filename is not specific. A file:line with no routine named around it is
+        not specific - the maintainer asked whose code it is, not where the character offset
+        falls. A routine named without the file:line where it is defined is not specific either.
+        Where the answer names a write path, a cached lookup, a seeded companion record or a
+        removal, is the line that actually writes, caches, seeds or deletes located, and not just
+        asserted from the name of the surrounding class or relation?
+    justification:
+      weight: 0.2
+      question: |
+        Does each place carry one phrase on what it contributes to identity - what it sets, what
+        it caches and on what key, what it copies rather than links, what the removal takes with
+        it - and does the closing statement say what a rework of identity would have to preserve
+        for the ground JUST ENUMERATED to keep meaning what it means today, rather than restating
+        relation names?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name or
+        from a familiar framework convention? Relation accessors, model event hooks and cached
+        lookups invite confident guessing; saying which parts were actually opened is worth more.
+        Is anything the session could not resolve named as such rather than smoothed over, and is
+        the completeness of the enumerated ground stated honestly - the real total, or as far as
+        this session got, and on what basis?
+- name: Audit every dependent of the server contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        THE DISCRIMINATOR, and it is THE KEPT SCRAP together with BREADTH OF AREA. The working
+        ground - the places handed one of these machines that act on it in hand - was enumerated
+        in the previous step, and this step asks for the opposite kind of place: the line where a
+        piece of a machine is lifted off it and put somewhere that will outlive it, or read back
+        out of somewhere after the machine itself is gone. So a near-edge list - code handed a
+        machine that simply acts on it - earns nothing here however dense or well located, and
+        repeating the previous step's answer is not progress. Does the audit reach that layer -
+        a number stored on a row whose subject is something else entirely, orphaned rather than
+        repointed when the machine goes; a number written onto a queued or historical record and
+        read back much later to act on the machine it names; a handle concatenated into a cache
+        key or a queue lock name that survives the request and the process; a number kept in a
+        screen's state across the several requests of a flow and resolved again each time; a
+        handle pasted into a link handed to a browser; a handle written into a message body that
+        leaves this product entirely; a handle arriving back on an event and compared as a string
+        against the one held here? These places sit as much in the models, the notifications, the
+        shared helpers, the queued jobs and the multi-request screens as anywhere near the code
+        that runs commands; an answer dense in one tree and silent in the others has enumerated
+        inside one search scope and mistaken that for the codebase. Above all: does the answer
+        state, for each place, HOW LONG THE SCRAP OUTLIVES THE MACHINE - one request, one stored
+        record, or outside this product - which is the distinction a reading of the line alone
+        does not give, and the distinction that decides what can still be corrected? Where the
+        answer ran short, is what it had still not looked at declared rather than quietly closed
+        over?
+    specificity:
+      weight: 0.25
+      question: |
+        Does EVERY place carry its own exact file:line AND the name of the routine the line sits
+        inside AND the lifetime of the scrap it keeps? All three, because a location alone does
+        not identify this kind of dependency: two lines of nearly identical shape differ entirely
+        depending on whether the value dies with the request, sits in a stored row, or has
+        already left this product. Several places named together on one line as a set that shares
+        a reason is the failure this criterion exists to catch: however correct the shared reason
+        is, it is one item, not a set of located places, and it should be scored as one. A bare
+        filename does not count.
+    justification:
+      weight: 0.2
+      question: |
+        Does each place carry one phrase on what IT would start getting wrong the first time the
+        scrap it kept no longer resolves to the machine it came from - pointing at the wrong
+        machine, at no machine, reusing a connection that is not there, suppressing an alert,
+        cancelling on the wrong host, orphaning a row - rather than a generic restatement that
+        identity is used here? Is the consequence specific to that place, or the same sentence
+        copied down the list?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Where the answer could not tell whether a value is a kept scrap or a machine still in
+        hand, does it say so and say what it would take to settle it, rather than asserting?
+        Is the coverage claim honest - what areas were swept, which were not reached, and whether
+        the list is offered as complete or as what this session got to? A confident "that is all
+        of them" with an unexamined area behind it is worth less than a shorter list that names
+        the gap.

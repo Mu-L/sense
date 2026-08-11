@@ -7,6 +7,14 @@
     "sense_version": "",
     "symbols": "3347"
   },
+  "coolify": {
+    "built_at": "2026-08-10T12:36:29Z",
+    "edges": "31300",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "2116"
+  },
   "discourse": {
     "built_at": "2026-07-31T17:31:30Z",
     "edges": "365223",
@@ -14,6 +22,22 @@
     "git_head": "",
     "sense_version": "",
     "symbols": "12388"
+  },
+  "filament": {
+    "built_at": "2026-08-10T12:50:10Z",
+    "edges": "74181",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "5660"
+  },
+  "laravel-framework": {
+    "built_at": "2026-08-10T12:43:46Z",
+    "edges": "138261",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "3001"
   },
   "mastodon": {
     "built_at": "2026-07-31T17:19:53Z",
@@ -30,5 +54,13 @@
     "git_head": "",
     "sense_version": "",
     "symbols": "4014"
+  },
+  "snipe-it": {
+    "built_at": "2026-08-10T12:52:37Z",
+    "edges": "21252",
+    "fingerprint": "5b5754fc0f0e95ae|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "8233"
   }
 }

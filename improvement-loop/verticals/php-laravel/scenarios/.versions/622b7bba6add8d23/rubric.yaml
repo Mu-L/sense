@@ -1,0 +1,215 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 2 on coolify, TWO-STEP PROBE (plans/cycle-1-craft-the-scenario/01-author.md).
+# TWO steps, names verbatim and in the order of scenarios/coolify.yaml (the judge pairs
+# by name). It replaces the attempt-1 rubric, whose step 2 rewarded naming the class's
+# dependents; the baseline reached 17 of 18 of those (cited_recall 0.9444) and the scored
+# group has been replaced entirely.
+#
+# WHY map_quality carries the most weight on the discriminator: this scenario's axis is the
+# HAND-OFF, not the mention and not the direct call. Every scored place ends its own work by
+# passing the job to something else - it queues work for later, invokes a single-purpose
+# operation, or calls a routine on another object named after that other object's job - and
+# that receiver is what reaches the machine. Naming the receiver is the part no search result
+# prints, because the receiver's identity is exactly what is missing from the line.
+#
+# WHY specificity demands the enclosing routine: every scored row is a hand-off line inside a
+# def, so the routine is demanded for all of them.
+#
+# WHAT MUST NOT EARN CREDIT ON STEP 2: the direct users of the execution path. The step tells
+# the agent to leave them out, and they are step 1's answer. A dense list of the places that
+# call the execution path themselves is the failure mode this rubric exists to catch, because
+# it is the answer a search over the path's name produces.
+audience: 'An AI coding agent that will use this answer to safely rework the Coolify path that
+
+  runs a command on a remote machine the product deploys onto - the path that takes a command,
+
+  decides what privileges it needs, gets it onto the machine and hands back what happened.
+
+  Score for that agent, not a human reader and not a docs page. A perfect answer leaves the
+
+  agent able to change that path knowing two things: how the path works end to end today -
+
+  how a command is built into something sendable, where the privilege decision is made and out
+
+  of what, where a connection is reused, and how the wait-for-it form differs from the
+
+  streamed one - each traced through the routines that make it up; and every place whose own
+
+  job ends with it handing the work to something else that reaches a machine afterwards, each
+
+  pinned to an exact file:line, with the receiver of the hand-off and the consequence for that
+
+  place both stated. The dependents that matter are not the code that runs a command. They are
+
+  places doing some other job entirely - answering an API request for logs, acknowledging an
+
+  inbound push from a git provider, queueing a deploy and replying that it is queued, guarding
+
+  a UI control against a double click, deleting a backup, advancing a queue after a
+
+  cancellation, reading a compose file - which never touch the execution path at all and break
+
+  only because of what the thing they handed to goes on to do. A weak answer re-lists the
+
+  direct users of the execution path, which the step explicitly excludes; or collapses a run
+
+  of hand-offs into one line with a shared reason and no location on any of them; or gives
+
+  file:line with no receiver named and no consequence, which leaves the agent knowing where a
+
+  dispatch happens and not what its change would do.
+
+  '
+steps:
+- name: Map the server contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is the remote-execution path traced end to end as one connected path, rather than
+
+        listed as places a helper is mentioned? The step asks for four jobs along that path - where a
+
+        command is turned into something that can be sent, where the elevated-privilege decision is
+
+        made and what it is made from, where an existing connection is reused instead of opened again,
+
+        and where the wait-for-the-result form differs from the form whose output is streamed back -
+
+        so the question is COVERAGE OF THE JOBS. All four shown and connected into a path is the full
+
+        answer. Could the next step act from this map with small targeted lookups rather than a fresh
+
+        exploration?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every place carry an exact file:line AND the name of the routine it lives in? A
+
+        bare filename is not specific. A file:line with no routine named around it is not specific -
+
+        the maintainer asked whose code it is, not where the character offset falls. A routine named
+
+        without the file:line where it is defined is not specific either. Where the answer names a
+
+        reused connection or a privilege flag, is the thing it is read out of located too, and not
+
+        just asserted?
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it contributes to the path - what it builds,
+
+        what it decides, what it saves a second call from paying, what it returns instead of raising -
+
+        and does the closing statement say what a rework would have to preserve in terms of BEHAVIOUR
+
+        for existing callers, rather than restating the function names?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate what it verified by reading from what it inferred from a name
+
+        or from a familiar framework convention? A conventional helper layout invites confident
+
+        guessing; saying which parts were actually opened is worth more. Is completeness claimed
+
+        without saying how it was established?
+
+        '
+- name: Audit every dependent of the server contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'THE DISCRIMINATOR, and it is ONE HOP BACK together with BREADTH OF AREA. Does the
+
+        audit reach the places that never touch the execution path - the ones whose own work ends with
+
+        handing the job to something else that reaches a machine afterwards - or does it re-list the
+
+        direct users of that path, which the step told it to leave out? The places that decide this
+
+        step sit as much in the API endpoints that answer with a queued acknowledgement, the inbound
+
+        webhooks that acknowledge a push and queue a deployment several hops from any machine, the UI
+
+        components that dispatch a job and then guard themselves against a second click, the
+
+        single-purpose operations whose entire body is one call to a routine on another object, and
+
+        the global helper that advances a queue by dispatching the next unit of work, as in the code
+
+        that runs a command itself. An answer that is dense in one tree and silent in the others has
+
+        enumerated inside one search scope and mistaken that for the codebase. Does the answer name,
+
+        for each place, the RECEIVER of the hand-off - the job it queued, the operation it invoked, or
+
+        the routine on another object it called - which is the link a reading of the line alone does
+
+        not give? Is the answer organised by area with each area worked to the end, and are areas it
+
+        could not finish declared as unfinished rather than quietly summarised? Re-listing the places
+
+        that call the execution path directly is not this question, however many of them are named.
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does EVERY place carry its own exact file:line AND the name of the routine the hand-off
+
+        sits inside? Every item in scope here is a hand-off line inside a def, so a file:line with no
+
+        routine named around it is not specific, and a routine named without a file:line is not
+
+        specific either. Several places named together on one line as a set that shares a reason is
+
+        the failure this criterion exists to catch: however correct the shared reason is, it is one
+
+        item, not a set of located places, and it should be scored as one. A bare filename does not
+
+        count.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what IT would start getting wrong once the path
+
+        stops guaranteeing what it guarantees today? The consequence must be about that place''s own
+
+        job - what breaks for the log pane that comes back empty rather than unreachable, the push
+
+        that is acknowledged but never deploys, the deploy answered as queued before anything ran, the
+
+        restart control that latches after a remote failure, the backup row deleted while the file
+
+        stays, the queue wedged behind a deployment marked in progress, the compose file returned
+
+        without having been read - not a restatement of the dispatch line. Does it distinguish a
+
+        failure that now surfaces as a value from one that raises?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say how it convinced itself the audit is exhaustive, and name where it
+
+        is likely still thin? An unqualified claim of completeness over a codebase this size is
+
+        overconfidence. Naming an area it knows it did not finish, and what it left there, is worth
+
+        more than a confident list that quietly stops. Hand-offs several hops out - a queued job that
+
+        dispatches another job, a helper that queues the next unit of work - are the ones a reading of
+
+        the immediate line misses, and saying which chains it followed and how far is worth more than
+
+        asserting full coverage.
+
+        '

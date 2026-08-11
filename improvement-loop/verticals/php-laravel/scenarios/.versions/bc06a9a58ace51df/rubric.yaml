@@ -1,0 +1,168 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 10 on coolify, TWO-STEP PROBE (plans/cycle-1-craft-the-scenario/01-author.md).
+# TWO steps, names verbatim and in the order of scenarios/coolify.yaml (the judge pairs by
+# name).
+#
+# WHAT CHANGED FROM THE ATTEMPT-9 RUBRIC: the axis. Attempt 9 scored A VALUE WITH A LIFETIME -
+# a piece of a machine's identity kept after the machine was gone. Its baseline reached 11 of
+# 12 with two identifier sweeps and one file read, so the axis is retired. This rubric scores A
+# SELECTION RULE: which machine a piece of work lands on, decided by code that was never handed
+# one. Step 1 keeps its shape - lifecycle half plus the working ground ENUMERATED, the one
+# variable our arm has separated on (0.83-0.92 enumerated, 0.25-0.57 not) - but its first half
+# is re-pointed at how work is ATTACHED to a machine rather than at how identity is normalised.
+#
+# WHY map_quality carries the most weight on the discriminator: the answer to step 2 is not a
+# set of locations, it is a set of RULES. A place that derives its machine from whatever the
+# work belongs to and a place that picks one at random out of a filtered set look almost
+# identical on the line and are entirely different dependencies. Naming the rule is the answer.
+#
+# WHY specificity demands the routine AND the rule: a file:line here is not self-explaining,
+# and the failure this criterion exists to catch is a run of places named together under one
+# shared reason with no location on any of them.
+audience: |
+  An AI coding agent that will use this answer to safely rework how a piece of work in Coolify
+  gets attached to one of the remote machines it deploys onto - so that the machine becomes an
+  explicit part of the work instead of something each place derives, chooses, substitutes,
+  spreads or counts on its own. Score for that agent, not a human reader and not a docs page.
+  A perfect answer leaves the agent able to make that change knowing two things: how the
+  attachment works today - what a deployable thing stores about the machine it runs on and
+  whether every kind of deployable thing stores it the same way, where a machine is resolved
+  back out of that stored attachment when it was never loaded, how a thing ends up attached to
+  more than one machine and where the extra attachment is recorded, and which qualities of a
+  machine are expressed as an eligibility QUERY rather than as a question asked of one machine -
+  each traced through the routines that make it up; and how far the change reaches BEYOND the
+  code that is handed a machine and acts on it.
+  That far layer is what decides the answer. It is the places that DECIDE which machine, while
+  doing some other job entirely: work that arrives at a machine by walking out of whatever it
+  belongs to, and by a different walk for each kind of thing it might belong to; work that has
+  several machines to choose between and applies a rule, including choosing at random and
+  falling back silently when nothing qualifies; work that swaps a different machine in for one
+  part of the job and has to remember afterwards which one it used; work that must cover every
+  machine a thing is spread over rather than the one it started from, or that deliberately
+  declines to answer because it cannot see them all; work that derives a machine twice over,
+  for a source and a target, and branches on whether the two are the same; and code that never
+  touches a machine at all and only counts them, or asks whether any exist, to decide whether
+  an action is allowed. Each must be pinned to an exact file:line, with the routine named and
+  the rule stated - what the machine is derived from, or what set it is picked out of and what
+  happens when that set is empty.
+  A weak answer stops at the near edge however densely it lists it; or collapses a run of
+  places into one line with a shared reason and no location on any of them; or gives file:line
+  without saying what rule that place applies, which leaves the agent knowing where a machine
+  is used and not what decided it would be that machine.
+steps:
+- name: Map the server contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is the attachment between a piece of work and a machine traced as one connected story -
+        stored, resolved, extended, qualified - rather than listed as places a name is
+        mentioned? The step asks for four jobs along that story: what a deployable thing
+        actually stores about the machine it runs on, AND whether every kind of deployable
+        thing stores it the same way (they do not, and noticing that is the part that makes the
+        next step tractable); where a machine is resolved back out of that stored attachment
+        when the machine itself was never loaded; how a thing ends up attached to more than one
+        machine at once and where that extra attachment is recorded; and which qualities of a
+        machine decide eligibility to receive work, and where that eligibility is expressed as
+        a QUERY over machines rather than as a question asked of one machine. The question is
+        COVERAGE OF THE JOBS - all four shown and connected is the full answer.
+        The step then asks for a SECOND job and it is an ENUMERATION: every place in the product
+        that is handed one of these machines and works with it, one line each, each located.
+        Score whether it is genuinely complete rather than a representative sample, whether the
+        grouping follows the code rather than a tidy label, and whether every place inside every
+        group carries its own location - a group summarised instead of listed is a group with
+        nothing in it, and so is a name given without a location. Could the next step act from
+        this ground with small targeted lookups rather than a fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer names carry an exact file:line AND the name of the routine it
+        lives in? A bare filename is not specific. A file:line with no routine named around it is
+        not specific - the maintainer asked whose code it is, not where the character offset
+        falls. A routine named without the file:line where it is defined is not specific either.
+        Where the answer names a stored attachment, a resolve path, an extra attachment or an
+        eligibility query, is the line that actually stores, resolves, records or filters
+        located, and not just asserted from the name of the surrounding class or relation?
+    justification:
+      weight: 0.2
+      question: |
+        Does each place carry one phrase on what it contributes to the attachment - what it
+        stores, what it resolves and from what, what it records as an extra machine, what it
+        filters on - and does the closing statement say what a rework of the attachment would
+        have to preserve for the ground JUST ENUMERATED to keep meaning what it means today,
+        rather than restating relation names?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name or
+        from a familiar framework convention? Relation accessors, morph relations and query
+        scopes invite confident guessing; saying which parts were actually opened is worth more.
+        Is anything the session could not resolve named as such rather than smoothed over, and is
+        the completeness of the enumerated ground stated honestly - the real total, or as far as
+        this session got, and on what basis?
+- name: Audit every dependent of the server contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        THE DISCRIMINATOR, and it is A SELECTION RULE together with BREADTH OF AREA. The working
+        ground - the places that are handed one of these machines and act on them - was
+        enumerated in the previous step, and this step sends the agent past its edge to the
+        places that DECIDED which machine it would be. So a near-edge list earns nothing here,
+        however dense or well located it is, and repeating the previous step's answer is not
+        progress: those places were given the machine. Does the audit reach the deciding layer -
+        work that derives its machine by walking out of whatever it belongs to, and by a
+        different walk per kind of thing; work that picks out of a filtered candidate set,
+        including at random, with a silent fallback when the set is empty; work that substitutes
+        a different machine for one part of the job and must remember which; work that has to
+        cover every machine a thing is spread over rather than the one it started from, or that
+        declines to answer because it cannot see them all; work that derives a source and a
+        target machine and branches on whether they are the same; code that only COUNTS machines
+        or asks whether any exist, to gate an action, and never touches one? The places that
+        decide this step sit as much in the queued and scheduled work, the model-level guards
+        that block a delete, the quota gate and the screen that draws its population from a
+        cached set as in the code that runs commands. An answer that is dense in one tree and
+        silent in the others has enumerated inside one search scope and mistaken that for the
+        codebase. Does the answer state, for each place, the RULE it applies - derived from what,
+        or picked out of what, and what it falls back to - which is the distinction a reading of
+        the line alone does not give? Where the answer ran short, is what it had still not looked
+        at declared rather than quietly closed over?
+    specificity:
+      weight: 0.25
+      question: |
+        Does EVERY place carry its own exact file:line AND the name of the routine the line sits
+        inside AND the rule it applies? All three, because a location alone does not identify
+        this kind of dependency: two lines of nearly identical shape differ entirely depending on
+        whether the machine was derived, chosen, swapped, spread or counted. Several places named
+        together on one line as a set that shares a reason is the failure this criterion exists
+        to catch: however correct the shared reason is, it is one item, not a set of located
+        places, and it should be scored as one. A bare filename does not count.
+    justification:
+      weight: 0.2
+      question: |
+        Does each place carry one phrase on what IT would start getting wrong the first time the
+        machine it decides on is decided differently? The consequence must be about that place's
+        own job - a build that runs on a machine the cancel path then cannot find, a scheduled
+        task that fires against the wrong machine because the thing it hangs off moved, a backup
+        whose two derivations disagree, a status pass that silently skips everything spread over
+        more than one machine, a volume copied locally when it should have been streamed between
+        two machines, a credential or key that can be deleted while machines still use it, a
+        quota that miscounts, a screen whose population came out of a stale cached set - not a
+        restatement of the line. Does it distinguish a decision that fails loudly from one that
+        quietly targets the wrong machine?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer say how it convinced itself the audit is exhaustive, and name where it is
+        likely still thin? An unqualified claim of completeness over a codebase this size is
+        overconfidence. Naming an area it knows it did not finish, and what it left there, is
+        worth more than a confident list that quietly stops. Decisions that never sit beside
+        anything naming a machine - an existence check that gates a delete, a count compared
+        against an allowance, a filter predicate on how many machines a thing is spread over, a
+        set fetched from a cache - are the ones an audit of the obvious surface misses, and
+        saying which of those it went looking for and how is worth more than asserting full
+        coverage.
