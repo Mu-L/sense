@@ -45,6 +45,7 @@ import sys
 import banked
 import mechanism_table
 import run_validity
+import sense_build
 
 THRESHOLD = 0.50
 VERSION_DIR = re.compile(r"^[0-9a-f]{16}$")
@@ -94,23 +95,65 @@ def installed_sense_version():
     return (out.stdout or "").strip().splitlines()[0] if out.stdout.strip() else None
 
 
-def gate(vertical_dir, repo, headline, installed=None):
-    """Refuse a board whose columns would not be the same Sense build."""
+def installed_build_key():
+    """The 12-char content key of the binary in hand, or None if it cannot be read."""
+    try:
+        return sense_build.build_identity()["sense_build_key"]
+    except (SystemExit, OSError, KeyError):
+        return None
+
+
+def gate(vertical_dir, repo, headline, installed=None, installed_key=None):
+    """Refuse a board whose columns would not be the same Sense build.
+
+    THE KEY IS THE BUILD; THE LABEL IS NOT. `sense --version` prints the same
+    `sense 1.13.5 (...)` for every dirty working-tree binary between two releases, so a
+    gate standing on the label alone passes a rebuild that changed the product and calls
+    the resulting board one comparison. lib/sense_build.py has hashed the binary since it
+    landed and the runners stamp `sense_build_key` into every run_meta; this reads it back.
+
+    Rows banked before the key was carried have none, and those fall back to the label -
+    NOT to "ok". A missing key is missing provenance, not proof of sameness, so the
+    fallback says so in `basis` and the caller can see which check actually ran.
+    """
     rows = [r for r in banked_rows(vertical_dir)
             if r["repo"] == repo and r.get("model") == headline
             and r.get("verdict") == "WIN"]
     if not rows:
         return {"ok": False, "reason": f"no banked WIN for {repo} on {headline}"}
     row = rows[-1]
-    want = row.get("sense_version")
+    want, want_key = row.get("sense_version"), row.get("sense_build_key")
     have = installed if installed is not None else installed_sense_version()
     if not have:
         return {"ok": False, "reason": "cannot read `sense --version`", "banked": want}
+
+    if want_key:
+        have_key = installed_key if installed_key is not None else installed_build_key()
+        if not have_key:
+            return {"ok": False, "banked": want_key, "basis": "build key",
+                    "reason": "the banked column names a build key and the installed "
+                              "binary cannot be hashed (set SENSE_BIN)"}
+        if have_key != want_key:
+            return {"ok": False, "banked": want_key, "installed": have_key,
+                    "basis": "build key",
+                    "reason": "installed Sense is a DIFFERENT BUILD from the banked "
+                              "headline column (same version label, different bytes); "
+                              "the board would compare two products"}
+        out = {"ok": True, "sense_version": want, "sense_build_key": want_key,
+               "basis": "build key", "scenario_version": row["scenario_version"]}
+        # A win banked off an uncommitted tree is reproducible only by whoever holds that
+        # tree. It does not refuse the board - the bytes still match - but the board must
+        # say so rather than imply a released product.
+        if row.get("sense_dirty"):
+            out["dirty"] = True
+        return out
+
     if have != want:
-        return {"ok": False, "banked": want, "installed": have,
+        return {"ok": False, "banked": want, "installed": have, "basis": "version label",
                 "reason": "installed Sense differs from the banked headline column; "
                           "the board would compare two products"}
-    return {"ok": True, "sense_version": want,
+    return {"ok": True, "sense_version": want, "basis": "version label (no build key "
+            "banked - provenance is weaker than it looks)",
             "scenario_version": row["scenario_version"]}
 
 

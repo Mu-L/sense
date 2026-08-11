@@ -127,8 +127,17 @@ def verdict_for(row, threshold=THRESHOLD):
 
 
 def _provenance(root, repo):
-    """Model, scenario version and sense build, read off a run's own run_meta."""
-    out = {"model": None, "scenario_version": None, "sense_version": None}
+    """Model, scenario version and sense build, read off a run's own run_meta.
+
+    `sense_build_key` is carried alongside the version LABEL because the label is not the
+    build: every dirty working-tree binary between two releases reports the same
+    `sense 1.13.5 (...)` string, so a board gated on the label alone can compare two
+    different products and say they match. The runners have stamped the key since
+    lib/sense_build.py landed; nothing read it back until the cycle-2 gate did.
+    `sense_dirty` rides along for the same reason - a win banked off an uncommitted tree
+    is reproducible only by the person who has that tree."""
+    out = {"model": None, "scenario_version": None, "sense_version": None,
+           "sense_build_key": None, "sense_dirty": None}
     metas = sorted(glob.glob(os.path.join(root, "*", repo, "run-*", "run_meta.json")))
     for path in metas:
         try:
@@ -139,7 +148,12 @@ def _provenance(root, repo):
         out["model"] = out["model"] or meta.get("model")
         out["scenario_version"] = out["scenario_version"] or meta.get("scenario_version")
         out["sense_version"] = out["sense_version"] or meta.get("tool_version") or meta.get("sense_version")
-        if all(out.values()):
+        out["sense_build_key"] = out["sense_build_key"] or meta.get("sense_build_key")
+        if out["sense_dirty"] is None:
+            out["sense_dirty"] = meta.get("sense_dirty")
+        # `sense_dirty` is legitimately False, so `all()` would keep scanning for it.
+        if all(out[k] is not None for k in
+               ("model", "scenario_version", "sense_version", "sense_build_key")):
             break
     # The directory is authoritative for the version when run_meta predates it.
     tail = os.path.basename(os.path.normpath(root))

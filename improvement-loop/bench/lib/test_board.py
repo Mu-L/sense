@@ -87,6 +87,58 @@ class VersionGate(unittest.TestCase):
             self.assertFalse(board.gate(tmp, "discourse", "claude-opus-5", installed=SENSE)["ok"])
 
 
+class BuildKeyGate(unittest.TestCase):
+    """The label is not the build. Every dirty tree between two releases prints the same
+    `sense 1.13.5 (...)`, so a gate standing on the label passes a rebuild that changed
+    the product - and with cycle 1 now handing a confirmed win straight to cycle 2, no
+    human sees the board start."""
+
+    def _row_with_key(self, key="539b88bfed13", dirty=None):
+        row = _row("discourse")
+        row["sense_build_key"] = key
+        if dirty is not None:
+            row["sense_dirty"] = dirty
+        return row
+
+    def test_the_same_bytes_pass_and_say_which_check_ran(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _vertical(tmp, [self._row_with_key()])
+            res = board.gate(tmp, "discourse", "claude-opus-5",
+                             installed=SENSE, installed_key="539b88bfed13")
+            self.assertTrue(res["ok"])
+            self.assertEqual(res["basis"], "build key")
+
+    def test_a_rebuild_behind_the_same_label_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _vertical(tmp, [self._row_with_key()])
+            res = board.gate(tmp, "discourse", "claude-opus-5",
+                             installed=SENSE, installed_key="ffff00001111")
+            self.assertFalse(res["ok"])
+            self.assertEqual(res["basis"], "build key")
+            self.assertIn("DIFFERENT BUILD", res["reason"])
+
+    def test_an_unhashable_binary_is_refused_not_assumed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _vertical(tmp, [self._row_with_key()])
+            self.assertFalse(board.gate(tmp, "discourse", "claude-opus-5",
+                                        installed=SENSE, installed_key="")["ok"])
+
+    def test_a_dirty_banked_tree_boards_but_is_flagged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _vertical(tmp, [self._row_with_key(dirty=True)])
+            res = board.gate(tmp, "discourse", "claude-opus-5",
+                             installed=SENSE, installed_key="539b88bfed13")
+            self.assertTrue(res["ok"])
+            self.assertTrue(res["dirty"])
+
+    def test_a_row_banked_before_keys_falls_back_to_the_label_and_says_so(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _vertical(tmp, [_row("discourse")])
+            res = board.gate(tmp, "discourse", "claude-opus-5", installed=SENSE)
+            self.assertTrue(res["ok"])
+            self.assertIn("no build key banked", res["basis"])
+
+
 class ArmRoots(unittest.TestCase):
     def test_a_model_id_is_sanitised_the_way_bench_paths_does(self):
         root = board.arm_root("/v", "kimi-for-coding/k3", "sha256:aaaabbbbccccdddd")
