@@ -218,6 +218,16 @@ moves break. Read this file before any verdict, close, swap, kill, or LEDGER ent
 - **WHAT A PER-REPO PHASE DOES NOT OWN.** The slate belongs to bootstrap. Product fixes are
   parked, never made mid-vertical. The agent survey is read in aggregate, never per run.
   Cross-model confirmation is downstream.
+- **A CONFIRMED WIN IS HANDED OFF, NOT HELD.** "Downstream" above bounds what a per-repo phase
+  may JUDGE, never what it may START: on `WIN CONFIRMED` the loop's `board` phase invokes
+  cycle 2 and stops there, and cycle 2 owns its gate, its spend, its two agent verdicts and
+  its publish check from that point on. Two consequences are deliberate. The hand-off runs
+  only behind `bench-win-confirm`'s five mechanical DoD checks - the checklist `harvest` used
+  to print as "confirm by hand" was a gate only while someone was reading, and the loop
+  advanced whether or not anyone ticked it. And it moves the vertical into a regime that CAN
+  record a loss (cycle2-board.sh: "Cycle 1 cannot record a loss; this one can, and must") with
+  no human in between, which is the point: what is measured is published, and the boards a
+  human never got around to starting were never evidence of anything.
 - **NO HUMAN GATE IN THE PER-REPO PHASES.** They author, spend, diagnose and swap on their
   own; what replaced each removed gate is mechanical and named in the plan that runs it.
 - **INSTRUMENTS CARRY, DOCS DO NOT.** A check that must survive the vertical is a script in

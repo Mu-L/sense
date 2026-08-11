@@ -34,7 +34,9 @@
 #   validate   both arms x1 UNSCORED, then AGENT 04-validate.md  [PAY|DO-NOT-PAY]
 #   bench      runs-variance.sh Opus x2 (PAID)                    [auto]
 #   report     pergroup.py verdict; WIN -> harvest, else diagnosis
-#   harvest    loopA-scan.sh harvest (mine the paid transcripts)  [auto] -> done
+#   harvest    loopA-scan.sh harvest + the cost audit, then AGENT bench-win-confirm
+#              runs the five DoD checks mechanically   [WIN CONFIRMED|DoD FAIL] -> board
+#   board      hands the confirmed win to cycle 2 (cycle2-board.sh)  [auto] -> done
 #   handoff    not in the chain - AGENT 05-handoff.md, spawned only when the
 #              authoring cycle hits its ceiling, to hand the human a readable page
 #
@@ -85,7 +87,7 @@ VDIR="$IL_ROOT/verticals/$VERTICAL"
 SCEN_DIR="$VDIR/scenarios"
 PLANS="$IL_ROOT/plans/cycle-1-craft-the-scenario"
 STATE="$VDIR/.loop-state.json"
-PHASES=(index author minibench expand preflight validate bench report harvest done)
+PHASES=(index author minibench expand preflight validate bench report harvest board done)
 
 # ---- args -------------------------------------------------------------------
 REPO=""; SYMBOL=""; FILE_HINT=""; YES=0; FORCE_PHASE=""; STATUS=0; RESET=0
@@ -1038,13 +1040,88 @@ do_harvest() {
   RESULTS_DIR="$rdir" python3 "$LIB/cost_parity.py" "$REPO" 2>&1 | sed 's/^/  /' || true
   RESULTS_DIR="$rdir" python3 "$LIB/context_cost_audit.py" "$REPO" 2>&1 | sed 's/^/  /' || true
   echo ""
-  echo "## $REPO - Definition of Done (manifesto §14), confirm by hand:"
-  echo "   [ ] discriminator >= +0.50 (favored +0.80) on the headline arm x$RUNS"
-  echo "   [ ] Sense adopted its tools (mcp_count>0), no hallucinated cites, baseline floor legit"
-  echo "   [ ] efficiency reported, scenario human-readable + leak-free, article matches the numbers"
-  echo "   [ ] COST PARITY: either PASS above, or a MISS carrying a named trim candidate"
-  echo "       and a Loop 7 pitch. A premium with no lever is an unfinished harvest."
-  NEXT=done
+  # THE DEFINITION OF DONE IS RUN, NOT PRINTED. This block used to print four checkboxes
+  # and the words "confirm by hand", which is a gate only while a human is reading: the
+  # loop advanced to `done` whether or not anyone ticked them. `bench-win-confirm` is the
+  # verifier those checkboxes were always describing - it existed, documented as "spawned
+  # by bash", and nothing spawned it (docs/README.md, docs/loss-anatomy.md carry its two
+  # fixtures). It runs the five checks against on-disk verifier output and returns ONE
+  # line. A win reaches cycle 2 only through that line.
+  win_confirm "$rdir" || exit 1
+  NEXT=board
+}
+
+# win_confirm <results-root> - spawn bench-win-confirm and route on its one line.
+#
+# The agent's contract is text, not a verdict JSON (it predates verdict_check.py and its
+# fixtures pin the text), so this reads claude's `result` field and matches the three
+# documented outputs. Its own frontmatter declares the model it is scoped for; honour it
+# rather than silently running a sonnet-scoped checker on the operator model.
+win_confirm() {
+  local rdir="$1" agent="$IL_ROOT/../.claude/agents/bench-win-confirm.md"
+  local out="$LOOPDIR/win-confirm.agent.json" model line
+  [ -f "$agent" ] || { echo "[harvest] missing agent definition: $agent" >&2; return 1; }
+  model="${PLAN_MODEL:-$(sed -n 's/^model: *//p' "$agent" | head -1)}"
+  echo "## [harvest] spawning bench-win-confirm (the five DoD checks, model=${model:-default})"
+  headless "$IL_ROOT" "$out" "$(cat "$agent"
+cat <<EOF
+
+# CONTEXT (resolved)
+
+    repo          = $REPO
+    results root  = $rdir
+    scenario yaml = $YAML
+    working dir   = $IL_ROOT   (bench/lib/... paths are relative to it)
+
+Run the five checks and output exactly one verdict block. Nothing else.
+EOF
+)" ${model:+--model "$model"}
+  line="$(python3 -c "import json,sys
+try: d=json.load(open(sys.argv[1]))
+except Exception: sys.exit(0)
+print((d.get('result') or '').strip().replace(chr(10),' ')[:400])" "$out")"
+  echo "   -> $line"
+  case "$line" in
+    *"WIN CONFIRMED"*) return 0 ;;
+    *"NOT MY PATH"*)
+      # A contradiction, not a routing: `report` already read VERDICT: WIN off pergroup,
+      # and this arrives only if the two readers disagree about the same numbers. That is
+      # a measurement question, and measurement questions stop the line.
+      gate "WIN CONFIRM says the cell is SUB-FLOOR but report banked it as a WIN." \
+           "Two readers disagree on one set of numbers - this is a STOPPER, not a route." \
+           "Re-run: RESULTS_DIR=$rdir python3 bench/lib/pergroup.py $REPO 0.50" \
+           "The banked row is already written; it must be corrected or confirmed by hand." ;;
+    *)
+      gate "DoD FAIL (or no readable verdict) - the win does NOT go to cycle 2." \
+           "  $line" \
+           "Read $LOOPDIR/win-confirm.agent.json (stderr in win-confirm.agent.log)." \
+           "Fix what the failing check names, then re-run: bash bench/drivers/vertical-loop.sh $REPO" ;;
+  esac
+  return 1
+}
+
+# THE HAND-OFF TO CYCLE 2. Cycle 1 crafts a question until the headline arm wins it; cycle 2
+# puts that same question to the other models and publishes the board. They are separate
+# drivers with separate state, and until now nothing connected them: `harvest` set NEXT=done
+# and the vertical stopped on a banked win nobody had asked to be boarded.
+#
+# This phase HANDS OFF; it never judges. Cycle 2 owns its own gate (same-Sense-build), its own
+# spend, its own two agent verdicts and its own publish check - and unlike cycle 1 it CAN
+# record a loss. See plans/cycle-1-craft-the-scenario/laws.md, "WHAT A PER-REPO PHASE DOES
+# NOT OWN".
+do_board() {
+  echo "## [board] handing the confirmed win to cycle 2 (cycle2-board.sh $REPO)"
+  if VERTICAL="$VERTICAL" RUNS="$RUNS" bash "$BENCH_DIR/drivers/cycle2-board.sh" "$REPO"; then
+    NEXT=done
+    return
+  fi
+  # RESUME WITH THE DRIVER THAT STOPPED, NOT THIS ONE. Cycle 2 keeps its own state in
+  # .cycle2-state.json and resumes at its own next phase; re-entering vertical-loop.sh
+  # would re-run this hand-off from the top and start cycle 2 again at `gate`.
+  gate "CYCLE 2 stopped for $REPO. Cycle 1 is COMPLETE and its win is banked." \
+       "Resume cycle 2 with ITS OWN driver (not this one):" \
+       "  VERTICAL=$VERTICAL bash bench/drivers/cycle2-board.sh $REPO" \
+       "  VERTICAL=$VERTICAL bash bench/drivers/cycle2-board.sh --status"
 }
 
 # ---- driver: run phases from the current one until a gate stops us ----------
@@ -1065,6 +1142,7 @@ while :; do
     bench)     do_bench ;;
     report)    do_report ;;
     harvest)   do_harvest ;;
+    board)     do_board ;;
     done)      echo "[$VERTICAL/$REPO] phase 'done' - nothing to do (use --reset to rerun)"; exit 0 ;;
     *)         echo "unknown phase '$PHASE'" >&2; exit 64 ;;
   esac
