@@ -3,60 +3,29 @@
 # Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
 # / justification 0.20 / uncertainty 0.15.
 #
-# ROUND 4, CYCLE 2 on coolify, SEVEN-STEP WORK SESSION
-# (plans/cycle-1-craft-the-scenario/03-expand.md). SEVEN steps, names verbatim and in the
-# order of scenarios/coolify.yaml - the judge pairs by name and nothing else.
+# ROUND 5 on coolify, SEVEN-STEP WORK SESSION (plans/cycle-1-craft-the-scenario/03-expand.md).
+# SEVEN steps, names verbatim and in the order of scenarios/coolify.yaml - the judge pairs by
+# name and nothing else. No `repo:` key.
 #
-# WHAT THIS FILE IS. The rubric of the superseded seven-step
-# (scenarios/coolify.rubric.yaml.session-baseline-assembled.bak), carried forward with exactly
-# ONE block rewritten: `Orient in the codebase`. Every other block, including the discriminator,
-# is unchanged.
+# WHAT THIS FILE IS. The seven-step rubric at coolify.rubric.yaml.seven-step-baseline-0692.bak,
+# carried forward UNCHANGED - audience and all seven criteria blocks, diffed this session. The
+# expansion restored that file's seven step prompts verbatim around the probe's step 4, so no
+# step's wording moved and no step's rubric moves either.
 #
-# WHY THAT ONE BLOCK MOVED. The superseded scenario asked for the affected population TWICE -
-# its step 1 asked "which parts of that layout is the subject touched from at all? Name each
-# part once, with a single example located at file:line", and its step 3 asked for "the areas
-# it lands in, each named once with a single example located at file:line". Its paid-gate
-# validation returned DO-NOT-PAY: baseline 7 of 13 = 0.538 against sense 8 of 13 = 0.615,
-# delta +0.077, with results/loop/coolify/validate.md reading the route as "given three prior
-# steps of context, the baseline's own earlier greps had already surfaced the periphery, so
-# step 4 became a re-read rather than a discovery". The scenario now spends that sweep once,
-# at the end of step 3. This rubric follows: step 1 scores a map of the PRODUCT, and scoring
-# "which parts the subject is reached from" is now explicitly withheld there, because rewarding
-# it is how a rubric buys back an enumeration the ask just refused.
+# WHY NOTHING MOVED. This cycle's one variable is the `dependents` GOLD - four near-free rows
+# (baseline 3 of 4 runs each) cut, four rows in four unswept areas added - measured by the
+# two-step mini-bench at baseline 2 of 13 = 0.154 against sense 9 of 13 = 0.692, delta +0.538,
+# verdict PROCEED (results/loop/coolify/minibench.md). Gold is not a thing this file scores:
+# the judge layer reads these criteria and the gold groups are scored separately, so a re-gold
+# that leaves every prompt in place leaves every criterion in place too. The discriminator
+# block, `Audit every dependent of the server contract`, is byte-identical to the one the probe
+# ran under.
 #
-# LEFT ALONE, DELIBERATELY: the block for `Audit every dependent of the server contract` is the
-# probe rubric's step-2 block, sliced out verbatim rather than retyped. That step is the
-# discriminator; its prompt and its thirteen scored rows are byte-identical to what this cycle's
-# mini-bench measured (baseline 1 of 13 = 0.077, sense 11 of 13 = 0.846, delta +0.769), and
-# re-writing how it is JUDGED would move the number as surely as re-writing the ask.
-#
-# WHAT CARRIES FORWARD FROM THE PROBE RUBRIC AND MUST KEEP CARRYING.
-#   1. NO STEP BEFORE THE DISCRIMINATOR SCORES AN ENUMERATION. An earlier attempt's step 1
-#      asked for the whole working ground one located line at a time; its baseline wrote a
-#      covering token sweep to satisfy that and re-read the same output in the next step,
-#      closing at 11 of 14 dependents. So `Orient in the codebase` scores a MAP and explicitly
-#      not a roll, and the population part of `Trace the write path and the teardown` scores
-#      the SHAPE - areas, one located example each, and reach - with an exhaustive list earning
-#      nothing extra there.
-#   2. THE DISCRIMINATOR SCORES WHERE THE PLACE LIVES, not only what it keeps: measured across
-#      every run on the headline model, the baseline sits at 0.70 on rows in machine-named paths
-#      against 0.35 on rows outside them, and all thirteen scored paths are outside them.
-#
-# WHY map_quality carries the most weight on the discriminator: the answer there is not a set
-# of locations, it is a set of KEPT PIECES WITH LIFETIMES. Two lines of nearly identical text
-# differ entirely in how long the value they keep outlives the machine - one request, one stored
-# row, one cache entry, or another system altogether - and therefore in what can still be
-# corrected when identity is reworked. Naming that is the answer.
-#
-# WHY specificity demands the routine AND the lifetime AND the failure: a file:line here is not
-# self-explaining, and the failure this criterion exists to catch is a run of places named
-# together under one shared reason with no location on any of them.
-#
-# THE STEPS AFTER THE DISCRIMINATOR ARE JUDGED ON WHAT THEY ADD, NOT ON RESTATEMENT. The guards
-# step is scored on the ABSENCES it names as much as the guards it finds; the blast-radius step
-# on whether the order is driven by consequence and by whether a failure is silent, not by
-# confidence; the plan on whether a teammate could execute it without re-deriving anything, and
-# on whether "needs no change" is kept distinct from "needs re-reading to be sure".
+# The judge still scores: a map of the PRODUCT in step 1 with "which parts the subject is
+# reached from" explicitly withheld there (that sweep is spent once, at the end of step 3);
+# the contract's composition and identity in step 2; creation, teardown and the one-sweep
+# population in step 3; and in step 4 a ruling on every member of that population rather than
+# a short list of the confident ones.
 audience: |
   An AI coding agent that will use this answer to safely rework what identifies a remote machine
   in Coolify - the record, its number, its handle, its display name and its address - given that
