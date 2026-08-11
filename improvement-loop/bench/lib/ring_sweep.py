@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Multi-via retention-ring sweep: the Go win signature, one command per repo.
 
-    ring_sweep.py <clone_dir> [--min-files 5] [--min-vias 5] [--top 30]
+    ring_sweep.py <clone_dir> [--anchor NAME[:path]]... [--min-files 5] [--min-vias 5] [--top 30]
 
 WHY THIS EXISTS (measured, 2026-07-20). Every Go cell in the campaign is
 explained by ONE property of the anchor's laundered retention ring:
@@ -26,6 +26,22 @@ verdict: the seven-bar gate this used to feed was retired after it rejected
 embedding a dozen interfaces fabricated 52 of 100 rows).
 
 Output is a ranked table; exit 0 always (a screen reports, it does not gate).
+
+TWO WAYS THIS STILL READ AS A GATE, both measured on php-laravel 2026-08-11 and both
+fixed here:
+
+  1. THE ANCHOR HAS TO BE IN THE SWEEP TO BE PROFILED. `candidate_anchors` picks its own
+     top-N by dependent-file count. On laravel-framework it returned Model, Collection,
+     Str, Arr, Container, Carbon, Blueprint, Schema, InvalidArgumentException, Request,
+     Command, DatabaseTestCase - and NOT `Illuminate\\Database\\Connection`, the anchor the
+     authoring phase had already chosen, whose ring `sense_blast` reports as 7 complete
+     rows across 3 vias. Pass it with `--anchor` and the sweep answers about YOUR anchor
+     instead of only about its own twelve.
+  2. "0 candidate(s) above the bar" WAS READ AS "NO RINGS EXIST". Two authoring phases
+     quoted it as "the retention kind is off the menu" while a 7-row ring sat one query
+     away. The bar is a Go-derived ORDERING (the go-satisfaction law above is about a
+     language with no `implements`); it is not evidence of absence in a language that has
+     one. The footer now prints the best rows found whatever the bar says.
 """
 
 import argparse
@@ -157,15 +173,24 @@ def main():
     ap.add_argument("--min-files", type=int, default=5)
     ap.add_argument("--min-vias", type=int, default=5)
     ap.add_argument("--top", type=int, default=30)
+    ap.add_argument("--anchor", action="append", default=[], metavar="NAME[:path]",
+                    help="profile this anchor too (repeatable). The authoring phase's own "
+                         "candidate is not necessarily in the sweep's top-N.")
     a = ap.parse_args()
 
     cands = candidate_anchors(a.clone, a.top)
+    # Named anchors first: they are what the caller actually asked about.
+    named = []
+    for spec in a.anchor:
+        name, _, path = spec.partition(":")
+        named.append((name, "asked", path, 0))
+    cands = named + [c for c in cands if c[0] not in {n[0] for n in named}]
     names = [qualify(a.clone, c[0], c[2]) for c in cands]
     probes = list(zip(names, [c[2] for c in cands]))
     print(f"# ring sweep: {a.clone}  ({len(names)} anchors, "
           f"bar: ≥{a.min_files} prod files across ≥{a.min_vias} distinct vias)\n")
     data = blast_many(a.clone, probes)
-    survivors = []
+    survivors, profiled = [], []
     print(f"{'anchor':32s} {'kind':10s} {'rows':>5s} {'files':>6s} {'vias':>5s} "
           f"{'top-via':>8s} {'top-carr':>9s} {'test-cut':>9s}  verdict")
     for (name, kind, path, _dep), qname, d in zip(cands, names, data):
@@ -187,14 +212,26 @@ def main():
             why = "under bar"
         if ok:
             survivors.append((qname, path, p))
+        elif p["rows"]:
+            profiled.append((qname, path, p))
         print(f"{name:32s} {kind:10s} {p['rows']:5d} {p['files']:6d} {p['vias']:5d} "
               f"{p['top_via_share']:8.2f} "
               f"{('%.2f' % p['top_carrier_share']) if p['top_carrier_share'] is not None else '-':>9s} "
               f"{p['test_rows_cut']:9d}  {why}")
 
-    print(f"\n{len(survivors)} candidate(s) above the bar.")
+    # THE BAR ORDERS, IT NEVER KILLS. Printing only the survivors made an empty list read
+    # as "this repo has no retention rings", which is a claim the sweep never tested: the
+    # bar is a Go-derived ranking and absence of a survivor is absence of a HIGH-RANKING
+    # ring, not absence of one. Always show the best rows found.
+    print(f"\n{len(survivors)} anchor(s) above the ranking threshold "
+          f"(the threshold ORDERS candidates; it is not a verdict on the kind).")
     for name, path, p in survivors:
         print(f"  {name}  ({path})")
+    if profiled and not survivors:
+        print("  none - so here are the best rings found, ranked. A ring with rows is a ring:")
+        for name, path, p in sorted(profiled, key=lambda r: (-r[2]["files"], -r[2]["vias"]))[:3]:
+            print(f"  {name}  ({path})  rows={p['rows']} files={p['files']} vias={p['vias']}")
+        print("  Read them before concluding the retention kind cannot be asked here.")
 
 
 if __name__ == "__main__":
