@@ -675,10 +675,18 @@ do_minibench() {
     if [ -z "$(pair_for "$MINIBENCH_DIR" "$scen_ver")" ]; then
       echo "[minibench] the runner exited 0 but wrote NO MEASURING pair for $REPO - treating"
       echo "            as a FAILED run. Nothing advances on an absent artefact."
-      echo "            A VOID arm reads as absent here (parked, or valid:false), and the"
-      echo "            runner has already spent its one retry: this is the second void of"
-      echo "            the same run. It is not a result and nothing is scored from it -"
-      echo "            HUMAN DIRECTION is needed before this phase runs again."
+      echo "            TWO different things read as absent here, and they route differently:"
+      echo "            (a) a VOID arm (parked, or valid:false) - the harness decided the"
+      echo "                outcome, the runner has spent its one retry, and a second void is"
+      echo "                not a result: HUMAN DIRECTION before this phase runs again."
+      echo "            (b) a SKIPPED baseline - the sense arm was watchdogged on both"
+      echo "                attempts, so there was no uncensored wall to derive a budget from"
+      echo "                and the runner never ran it ('SKIP baseline ... its paired sense"
+      echo "                run is missing or not valid'). Nothing is void: CANNOT-FINISH-AT-"
+      echo "                BUDGET is the result, and the scenario is what gives, never the"
+      echo "                watchdog."
+      echo "            Read the sense arm's run_meta before choosing: rc 124 on every attempt"
+      echo "            is (b)."
       exit 1
     fi
   fi
@@ -829,8 +837,14 @@ do_validate() {
     if [ -z "$(pair_for "$VALIDATION_DIR" "$scen_ver")" ]; then
       echo "[validate] the runner exited 0 but wrote NO MEASURING pair for $REPO - treating as a FAILED"
       echo "           validation. Nothing advances to a paid bench on an absent artefact."
-      echo "           A VOID arm reads as absent here (parked, or valid:false). A second void"
-      echo "           of the same run is not a result and needs HUMAN DIRECTION, never a pay call."
+      echo "           TWO different things read as absent here. A VOID arm (parked, or"
+      echo "           valid:false) is the harness deciding the outcome: a second void of the"
+      echo "           same run needs HUMAN DIRECTION, never a pay call. A SKIPPED baseline is"
+      echo "           NOT void - the sense arm was watchdogged on both attempts, so no"
+      echo "           uncensored wall existed to budget it from and it never ran. Measured"
+      echo "           2026-08-11: sense 481/480 twice, baseline skipped, and the first draft of"
+      echo "           this banner called it a void, sending the reader after a harness fault"
+      echo "           that was not there. rc 124 on every sense attempt means it is the scenario."
       # OUT OF CLOCK IS A ROUTED LEVER, NOT A STOP. The runner has already spent its one
       # retry by the time this is asked, so every sense run watchdogged means the scenario
       # cannot be answered inside the ceiling - twice. The ceiling is never raised; the
