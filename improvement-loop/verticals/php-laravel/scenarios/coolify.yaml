@@ -1,163 +1,117 @@
 # ============================================================================
 # SEVEN-STEP WORK SESSION (plans/cycle-1-craft-the-scenario/03-expand.md)
-# EXPANDED from the two-step probe that measured INSIDE the window. Anchor unchanged: Server.
+# EXPANSION of the two-step probe that passed the mini-bench. ATTEMPT 24 on coolify.
+# Anchor unchanged: Server. Gold unchanged in `dependents`, byte for byte, all thirteen rows.
 #
-# WHAT THIS EXPANSION MOVED, AND WHAT IT DID NOT
-#   The probe's step 2 is now step 4 and is BYTE-IDENTICAL, prompt and checks alike, and the
-#   thirteen `dependents` rows below are byte-identical too. Verified by extracting both blocks
-#   out of scenarios/coolify.yaml.probe-13row-preexpand.bak (copied before editing) and
-#   splicing them in unmodified rather than retyping them; the diff of this file against that
-#   backup touches the header, the description, the steps around index 4, and the non-scoring
-#   gold groups, and nothing inside step 4 or inside the DEPENDENTS block.
-#   The probe's step 1 is now step 2, also verbatim in its prompt - it carries the clause step
-#   4 back-references ("Establish that whole affected population ONCE, in a single sweep"), so
-#   moving it would leave step 4 pointing at nothing. One `no_grep` adoption check was added
-#   beside its existing adoption checks; adoption checks are `required: false` and score
-#   nothing.
-#   ADDED: step 1 (orient), step 3 (creation and teardown, inline against deferred), step 5
-#   (the guards), step 6 (the risk ranking), step 7 (the change and the verification map).
-#   ADDED GOLD, all of it in NON-SCORING groups: `write-path` (5 rows) and `specs` (4 rows).
-#   Nothing was added to `dependents` and nothing was removed from it.
+# WHAT THIS FILE IS, AND WHAT IT IS NOT ALLOWED TO MOVE
+#   The probe measured a passing window and this file expands it into the session that gets
+#   benched. Step 4 IS the probe's step 2, spliced out of the probe yaml unmodified - prompt,
+#   `checks` block and all thirteen scored rows. Step 2 is the probe's step 1, spliced the
+#   same way, with one `no_grep` adoption check added back (03-expand requires every step to
+#   carry one; it scores nothing). Steps 1, 3, 5, 6 and 7 are spliced unmodified out of
+#   scenarios/coolify.yaml.session-sweep-4rows.bak, the seven-step session of attempt 23 -
+#   the same skeleton every banked win in this bench uses. The description is that file's
+#   seven-step description, also unmodified.
+#   Nothing in the discriminator is retyped. The probe yaml is kept at
+#   scenarios/coolify.yaml.probe-13row-window-pass.bak, and step 4 diffs clean against it.
 #
-# THE MINI-BENCH FIGURES THIS EXPANSION IS BUILT ON
-#   Quoted from results/loop/coolify/minibench.md, `scored.json` ->
-#   gold_recall.groups.dependents, both arms x1 at a real wall, unscored:
-#     baseline  13 rows, 0 cited, cited_recall 0.0000
-#     sense     13 rows, 11 cited, cited_recall 0.8462
-#     delta +0.8462
-#   Baseline at or below 0.50: yes, by the full 0.50. Delta at or above +0.50: yes, by +0.3462.
-#   Arm health, same report: sense wall 298 of 480, exit 0, no watchdog; baseline wall 359 of
-#   358, exit 124, hard_cap_timeout, classified `truncated_at_ceiling` and VALID by
-#   run_validity.classify_run. The baseline ran out of clock, which is the win condition and
-#   not a malfunction; it is not re-run and no watchdog is raised.
-#   The baseline route that failed, quoted from baseline_route.py in the same report:
-#   "tool calls: 63  {'Bash': 63}  search commands: 51 of 63" - a widening hand-search over
-#   token guesses, re-issuing the same grep with a wider `head`, and paying `grep -n "function "`
-#   one file at a time for line numbers at the end until the clock ran out.
-#   n=1 per arm and unscored. It settles nothing about a win; it decided that this question
-#   earns a full session, which is what this file is.
+# THE MINI-BENCH FIGURES THIS EXPANSION MUST NOT MOVE
+#   Quoted from results/loop/coolify/minibench.md, both arms x1 at a real wall, unscored:
+#     baseline  `dependents`  6 of 13 = 0.4615    (gate: at or below 0.50)     PASS
+#     sense     `dependents` 13 of 13 = 1.0000
+#     delta                            +0.5385    (gate: at or above +0.50)    PASS
+#   Arm health, quoted from the same page: sense wall 329 of 480, exit 0, no watchdog,
+#   `valid: true`; baseline wall 395 of its paired 395 (`paired sense run 329s x 1.2`),
+#   exit 124, `hard_cap_timeout` - out of clock, which for the baseline is the win condition
+#   and not a void arm. Citation grounding 1.00 on both arms (117/117 and 179/179).
+#   Baseline route: 46 tool calls, all Bash, 35 of them searches, no covering grep; calls 10
+#   and 11 (`server_id`, `server_uuid`) were `| head -60` truncated, so even the broad sweeps
+#   never showed their tail. It was still opening new ground at call 46 when the cap fired.
 #
-# THE SUPERSEDED QUESTION AND THE NUMBER THAT KILLED IT
-#   scenarios/coolify.yaml.two-fates-baseline-0538.bak - the two-fates step 2, identical to the
-#   step 4 below except that a kept place owed THREE located parts rather than four (no other
-#   end of the hand-off). baseline 7 of 13 = 0.538, sense 11 of 13 = 0.846, delta +0.308,
-#   verdict REQUESTION: the baseline sat 0.038 over its bar. Adding the fourth part - the
-#   file:line, in a different routine, where the piece was lifted off an actual machine - took
-#   the baseline from 0.538 to 0.000 and held sense at 0.846.
+#   THE ONE NUMBER TO CARRY FORWARD, STATED AS THE RISK IT IS: the delta consumed 100% of the
+#   available headroom (1.00 - 0.4615 = 0.5385, and 0.5385 was taken). Sense has to hold all
+#   thirteen. One dropped row puts the delta at +0.4615, under the floor. That is a property
+#   of the cell, not something this expansion can fix, and it is n=1 per arm - the paid cell
+#   runs x2 and the mini-bench number does not forecast it.
 #
-# THE TWO ROWS NEITHER ARM REACHED, AND WHAT WAS CHECKED ABOUT THEM
-#   minibench.md names them: d:deployment-cancel-queue-id and d:tunnel-event-id. The report
-#   asked that the shown payload be checked before calling them hard. Checked this session
-#   against the payload from
-#   `mcp_probe.py $CLONE '[{"name":"sense_blast","arguments":{"symbol":"Server"}}]'`:
-#   app/Livewire/Project/Application/DeploymentNavbar.php and
-#   app/Listeners/CloudflareTunnelChangedNotification.php are BOTH present in it. So they are
-#   not unreachable through the instrument, and they are not cut - cutting a row the sense arm
-#   missed is re-golding toward the arm, and the ranking law asks for ~5 runs per arm on one id
-#   set before a re-gold. There is 1.
+# WHAT THE EXPANSION ADDS, AND WHERE IT IS ALLOWED TO ADD IT
+#   Six new steps of session around the discriminator, and NINE new gold rows, all of them in
+#   NON-SCORING groups: five in `write-path` (the answer to step 3 and the located half of
+#   step 7) and four in `specs` (the existing automated checks, which is the only half of
+#   step 7's verification that has a line to cite at all). Not one row was added to
+#   `dependents`: a row added here would be untested gold that never faced a baseline.
+#   Every one of the nine was opened in the clone and read THIS session, and three line
+#   numbers carried in the a23 file were WRONG and are corrected here:
+#     w:server-create              duplicate-address gate is :143, not :142  (:142 is the
+#                                  authorize call; ByIp.php:143 `$foundServer = Server::whereIp(`)
+#     w:seeded-copy-shared-var     the copied values are Server.php:192 and :200, not :191
+#                                  and :199 (those two lines are the `'key' =>` above each)
+#   Corrected against the file, quoted in the RUN log of this phase. Credit is per PATH so no
+#   score moves; the relation text is what would have misled a reader.
 #
-# THE SEVEN STEPS ACCUMULATE, AND THAT IS THE MEASUREMENT
-#   They are worked in order in one session, so by step 4 both arms have already spent context
-#   and wall on steps 1 to 3. That is deliberate: the banked mastodon cell puts its
-#   occurrence-list ask at step 4 of 7, and the five failures that asked the same shape cold at
-#   step 2 of 2 handed the plain arm 0.81, 0.16, 0.09, 1.00, 1.00. Budget pressure as the cause
-#   is a candidate under test, not an established effect.
-#   The probe-versus-session split on THIS repo, read off the reports on disk: a18, a20 and a21
-#   ran as probes at baselines 0.308, 0.077, 0.154, and their seven-step expansions with step 2
-#   unchanged at index 4 ran at 0.538, 0.692, 0.286. n=3 pairs; two rose, one fell. The
-#   expansion is not free and the header says so rather than assuming the probe number carries.
-#
-# SEAM PROFILE (quoted, `python3 bench/lib/seam_hunt.py $CLONE Server --propose`)
-#     app caller files : 45   (total incl test/non-app: 53)
-#     SCATTER (dirs)   : 23   -> {'app/Livewire/Server': 5, 'app/Actions/Server': 5,
-#                                 'app/Jobs': 4, 'app/Actions/Proxy': 3, 'app/Models': 3,
-#                                 'bootstrap/helpers': 2, 'app/Livewire/Project/Shared': 2,
-#                                 'app/Livewire/Server/Proxy': 2}
-#     GREP-NOISE       : 'Server' in 295 app files   PRECISION=0.15  (lower=grep-hostile)
-#     VERDICT          : SCATTERED + GREP-NOISY
-#   Calibration on the record: 0.078 preceded a +1.00 cell, 0.78 was a deliberate control tie,
-#   ~0.94 handed a baseline 17 of 18 rows in one grep. PRECISION RANKS, IT NEVER KILLS.
-#   `anchor_rank.py $CLONE --top 20` puts Server first at dep_files 183, Team second at 75.
-#   Retention ring: `ring_sweep.py $CLONE --top 12` prints all twelve anchors at rows=0 files=0
-#   vias=0. "What HOLDS X" is off the menu on this repo. This is an occurrence-shaped ask and
-#   that is said plainly.
-#
-# THE AXIS SENTENCE
-#   One identifying piece is lifted off a machine and left somewhere the machine itself
-#   could never be carried to, and it has one of two fates: it comes back - parked in a
-#   screen's own state and re-sent by the browser, standing as a helper's whole contract
-#   with its callers, read off a queued row long after the deploy was enqueued - and is
-#   turned into a machine again by a lookup that now may resolve to a different one or to
-#   none; or it never comes back - a column of a join's own declaration, a field published
-#   in a schema other people build clients against, a handle copied into an outbound webhook
-#   body, an address slugged into a directory name on disk - and from the rework onward it
-#   simply says something untrue about which machine this is, with no lookup anywhere to
-#   fail and nothing in this product able to reach it.
+# WHY THE STEPS ACCUMULATE, WHICH IS THE POINT AND NOT DECORATION
+#   The probe asked the discriminator at step 2 of 2. Here it is step 4 of 7, so both arms
+#   arrive at it with wall and context already spent on orientation, the contract map and the
+#   write path. That is the banked mastodon shape (the +0.53 cell asks its occurrence-list
+#   question at step 4 of 7) and it is the standing difference between that cell and the five
+#   cold-ask failures. Budget pressure as the cause is a candidate under test, not established
+#   - what is established is that the probe's window was measured at TWO steps and this file
+#   runs at seven, so the mini-bench figures bound the question, not this session.
 #
 # WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS
-#   A set of PAIRED locations. Each kept place is one end of a hand-off, and the answer is
-#   the pair: the line where the piece is lifted off a real machine, and the line elsewhere
-#   where it is kept, written out or read back with no machine present - plus, for that pair,
-#   which fate the piece has, how far it outlives the machine (one request, one stored row,
-#   or outside this product past correcting), and what starts being wrong the first time it
-#   stops meaning the same machine. An occurrence carries neither end of a pair: it gives one
-#   line and says nothing about where the value came from or how long it lives.
+#   A ruling on every member of one already-established set: which of two fates its kept
+#   piece has - it is read back and turned into a machine again, or it was written into
+#   something else and there is no lookup at all to break - how long the piece outlives the
+#   machine, and what silently starts being untrue at that line. Half the answer is the
+#   places ruled OUT. The set is not the answer; the verdict per member is.
+#   Honest caveat, stated rather than dressed up: the retention ring is EMPTY on this repo
+#   (ring_sweep.py, top 12 anchors, every one `0 rows / 0 files / 0 vias`), so the
+#   "what holds X" kind is off the menu and this is kind one - an occurrence list underneath
+#   the ruling.
 #
-# THE INVENTORY READ-BACK, RUN ON THE FINISHED PROMPT, AND WHAT IT CAUGHT
-#   `scenario.py --prompt` was rendered and read end to end looking for any phrase that
-#   identifies a single gold row's file or names a functional category one lives in. The
-#   neutrality scan is clean and always was - the whole 19 KB prompt renders no repo path, no
-#   class name, no count and no tool name; the only proper noun is the product's own name in
-#   the scenario title, and the only tool-ish word is "Explore", which is a harness instruction
-#   the plan mandates and which names nothing in this repo.
-#   The hand read-back caught what that scan cannot, and it was a real hit. Step 1's first
-#   draft asked for the areas of the tree in MY words, and quoted verbatim it read: "where the
-#   long-lived records are declared, where the screens live, where work that runs outside a
-#   request lives, where the shared helpers sit, where the outward-facing surface is defined,
-#   and where the automated checks are". That is the law's inventory, not a mechanism: four of
-#   those six categories name the job of a scored `dependents` row - the shared helper is
-#   bootstrap/helpers/docker.php, the work outside a request is app/Jobs/DatabaseBackupJob.php,
-#   the outward-facing surface is the schema on app/Models/Service.php, the screens are the
-#   Livewire state rows - and step 1 runs BEFORE the discriminator. It was rewritten to ask for
-#   the areas "in whatever terms this codebase's own structure suggests rather than in ones I
-#   have supplied", which asks the same orientation question and hands over nothing.
-#   The rest of the prompt names MECHANISMS and was left as it stands: a piece parked in a
-#   screen's state and re-sent by the browser, a piece stamped on a queued row and read back
-#   later, a piece written in as a column of a join, a piece handed outside this product, a
-#   helper whose whole contract is a bare value.
-#   Two clauses were checked and KEPT, with the reason. Step 3's "every further record the
-#   product seeds off the new one" is a mechanism of the WRITE path, and the write-path rows
-#   are non-scoring by construction; it points at no `dependents` row. Step 5's "one
-#   establishes that the caller is allowed near it" is adjacent to d:logs-ownership-check, but
-#   it asks for "the place that decides, not the place that calls it", which points away from
-#   that row - and step 5 runs AFTER the discriminator, as do steps 6 and 7, so nothing they
-#   say can reach step 4's score. Only steps 1, 2 and 3 can, and 2 is the measured probe step.
+# THE AXIS
+#   A piece of a machine's identity - its number, its handle, its name, its address - is
+#   lifted off a machine by one routine and left somewhere the machine itself was never
+#   carried to: a component's own state between requests, a column of a join table, a
+#   schema published to API clients, a queued notification's constructed string, a cache or
+#   socket key, an outbound webhook payload, an inbound broadcast compared by hand. The
+#   machine is not in scope at the line that matters, and the name of the type is not what
+#   leads you there.
 #
-# GOLD RAILS
-#   One item per FILE across all three groups; no file appears twice. Thirteen `dependents`
-#   rows across twelve areas - SCORED, and untouched. Five `write-path` rows and four `specs`
-#   rows - NON-SCORING, both arms reach them, and they exist so steps 3 and 7 have something to
-#   be judged against rather than to move the discriminator. Every added row was opened in the
-#   clone at its pinned line this session and the quoted expression matched; per-dependency
-#   credits are hand read, never taken from a script tally.
-#   Blast-payload provenance, stated rather than glossed: all thirteen `dependents` rows are
-#   present in the shown payload (13 IN, 0 OUT, re-checked this session). Of the five
-#   `write-path` rows, three are in the payload (app/Livewire/Server/ValidateAndInstall.php,
-#   app/Models/StandaloneDocker.php, app/Models/SharedEnvironmentVariable.php) and TWO ARE NOT
-#   (app/Livewire/Server/New/ByIp.php, app/Actions/Server/DeleteServer.php). They are kept
-#   anyway because they are not blast-sourced - they are the two ends of the write path, which
-#   step 3 asks to be traced rather than blasted - and because the group is non-scoring, so no
-#   measured number moves on them. The `specs` rows are test files and are not in the payload
-#   either, for the same reason.
+# SEAM PROFILE  (bench/lib/seam_hunt.py, quoted from the probe file)
+#   Server        app caller files 45 (53 incl test)  SCATTER 23 dirs
+#                 'Server' in 295 app files   PRECISION=0.15   SCATTERED + GREP-NOISY
+#   Application   app caller files 35  SCATTER 18 dirs  142 app files  PRECISION=0.25
+#   Team          app caller files 26  SCATTER 14 dirs  104 app files  PRECISION=0.25
+#   Server is the lowest-precision of the three profiled and is kept, as the law requires -
+#   precision ranks, it never kills, and the anchor is not re-scouted on a routed lever.
+#   sense_blast risk_factors: "174 direct callers".
 #
-# MEMORIZATION
-#   `memorization_probe.py $CLONE Server --json` returns ok:false, "closed-book recall 0.579
-#   (62 members named) >= 0.3". What is recited is the MEMBER LIST OF THE Server MODEL ITSELF.
-#   A famous repo is not disqualified; a memorized gold ROW is. Not one of the thirteen
-#   `dependents` rows is a member of Server; every one is a line in another file, pinned by
-#   number, in a routine whose own job is something else.
+# THE SUPERSEDED QUESTION AND THE NUMBER THAT KILLED IT
+#   Superseded: nothing in the wording of step 2 or step 4. The superseded ARTEFACT is the
+#   seven-step session of attempt 23, built on sha256:7e71ec7ad6b1c084 and killed at
+#   `dependents` baseline 0.3077 / sense 0.6923, delta +0.3846 against the +0.50 floor
+#   (results/loop/coolify/validate.md, DO-NOT-PAY). It fell on the SENSE side: the baseline
+#   was already inside the bar and sense was two rows short. The probe that this file expands
+#   moved six of those thirteen rows and nothing else, and measured the window open.
+#
+# GOLD RAILS, checked this session
+#   One item per FILE, in every group. 13 scored files in 11 areas, no file twice, and no
+#   `dependents` file appears in `contract`, `write-path` or `specs`.
+#   BLAST PAYLOAD, checked per file against mcp_probe.py `sense_blast Server` this session:
+#   all 13 scored files appear in the shown payload; so do 3 of the 5 `write-path` rows
+#   (SharedEnvironmentVariable, StandaloneDocker, ValidateAndInstall) and both `contract`
+#   companions. NOT in the payload: Server/New/ByIp.php, Actions/Server/DeleteServer.php and
+#   all four `specs` rows (no `tests/` path appears in the payload at all). Stated rather
+#   than glossed: those six are NON-SCORING and are reached by both arms through the creation
+#   screen and the test tree in steps 3 and 7, not through the blast. The rail binds
+#   blast-sourced SCORED rows, and every one of the thirteen holds it.
+#   Every credit below was produced by OPENING the file and reading the line this session -
+#   no script tally was copied. Memorization: memorization_probe.py Server reports closed-book
+#   recall 0.542 over the MODEL'S OWN 107 members (`applications`, `isFunctional`, `getIp`,
+#   ...). Not one gold row is a member of Server; every scored row is a line-level fact in
+#   another file, which is the form the law admits on a famous repo.
 # ============================================================================
-
 name: Coolify work session - audit the server contract before a rework
 repo: coolify
 contract_symbol: Server
@@ -519,10 +473,13 @@ steps:
         layer: adoption
 
 
+
+
 scoring:
   weights:
     correctness: 0.7
     efficiency: 0.3
+
 
 gold:
   # ---- ANCHORS: the contract centre, its identity map, and its removal path. The answer to
@@ -541,6 +498,8 @@ gold:
     match: [Server/Delete.php]
     relation: "app/Livewire/Server/Delete.php:34 `public function delete($password, $selectedActions = [])` ending at :60 `$this->server->delete();` - the removal path, the moment after which every piece kept elsewhere resolves to nothing"
 
+
+
   # ---- WRITE PATH: the creation and teardown trace, and the deferred work hanging off both.
   # ---- The answer to step 3, and the located half of step 7's verification map. NON-SCORING;
   # ---- both arms reach these. Every line below was opened in the clone and read this session.
@@ -548,11 +507,11 @@ gold:
   - id: w:server-create
     group: write-path
     match: [Server/New/ByIp.php]
-    relation: "app/Livewire/Server/New/ByIp.php:170 `$server = Server::create($payload);` inside `submit()` at :138 - the write itself, gated just above it by :142 `$foundServer = Server::whereIp($this->ip)->first();` which refuses a duplicate on the network ADDRESS, so the address is treated as a unique key at the moment the record is written; the seeding of every companion record fires off this one line"
+    relation: "app/Livewire/Server/New/ByIp.php:170 `$server = Server::create($payload);` inside `submit()` at :138 - the write itself, gated just above it by :143 `$foundServer = Server::whereIp($this->ip)->first();` which refuses a duplicate on the network ADDRESS, so the address is treated as a unique key at the moment the record is written; the seeding of every companion record fires off this one line"
   - id: w:seeded-copy-shared-var
     group: write-path
     match: [SharedEnvironmentVariable.php]
-    relation: "app/Models/SharedEnvironmentVariable.php:22 `'server_id',` in the fillable list opened at :11, with the back-link at :66 `return $this->belongsTo(Server::class);` inside `server()` at :64 - the seeded record that holds BOTH a link and a copy: app/Models/Server.php:191 `'value' => $server->uuid,` and :199 `'value' => $server->name,` write the machine's handle and its display name into this record's own `value` column as plain strings at creation time, and nothing re-writes them when the machine is renamed"
+    relation: "app/Models/SharedEnvironmentVariable.php:22 `'server_id',` in the fillable list opened at :11, with the back-link at :66 `return $this->belongsTo(Server::class);` inside `server()` at :64 - the seeded record that holds BOTH a link and a copy: app/Models/Server.php:192 `'value' => $server->uuid,` and :200 `'value' => $server->name,` write the machine's handle and its display name into this record's own `value` column as plain strings at creation time, and nothing re-writes them when the machine is renamed"
   - id: w:seeded-destination-resolve
     group: write-path
     match: [Models/StandaloneDocker.php]
@@ -587,85 +546,88 @@ gold:
     match: [VultrDeleteServerTest.php]
     relation: "tests/Unit/VultrDeleteServerTest.php:72 `DeleteServer::run(` taking :73 `serverId: $server->id,` after :70 `$server->delete();`, asserting at :83 `expect(Server::withTrashed()->find($server->id))->toBeNull();` - the only test on record that exercises the deferred teardown through the NUMBER rather than the object, which is exactly the hand-off step 3 asks to be located"
 
-  # ---- DEPENDENTS: the scored group. THIRTEEN FILES, TWELVE AREAS, one row per file, none
+
+  # ---- DEPENDENTS: the scored group. THIRTEEN FILES, ELEVEN AREAS, one row per file, none
   # ---- of them in the `contract` group, every one present in the shown blast payload.
-  # ---- NINE are carried over from sha256:ef2de675520f658c and FOUR are new; the four
-  # ---- near-free rows the pooled ranking named (baseline 3/4 each) are cut. At every
-  # ---- scored line there is no machine in hand: only a piece taken off one earlier and
-  # ---- kept somewhere the machine itself cannot be carried to.
+  # ---- SEVEN carried over from sha256:7e71ec7ad6b1c084, SIX new; the five rows the pooled
+  # ---- ranking and the a23 baseline transcript agree are bought by one property sweep, or
+  # ---- are dead on both arms, are cut. At every scored line there is no machine in hand:
+  # ---- only a piece taken off one earlier and kept somewhere the machine cannot follow.
 
   # -- area: shared project screens
   - id: d:logs-ownership-check
     group: dependents
     match: [Project/Shared/GetLogs.php]
-    relation: "app/Livewire/Project/Shared/GetLogs.php:127 `if (! Server::ownedByCurrentTeam()->where('id', $this->server->id)->exists()) {` inside `getLogs($refresh = false)` at :125 - a component that already holds a machine throws it away and re-checks by its number on every poll, so the authorisation decision rides on the number rather than on the object it came from; the one row no baseline run on record has ever cited (0 of 4) and the sense arm has cited in 4 of 5"
+    relation: "app/Livewire/Project/Shared/GetLogs.php:127 `if (! Server::ownedByCurrentTeam()->where('id', $this->server->id)->exists()) {` opening `getLogs($refresh = false)` at :125 - a screen that holds a machine across requests throws it away and re-authorises by its number on every poll, so the permission decision rides on the number and not on the object it came from"
+
+  # -- area: shared destination screens
   - id: d:additional-network-pivot
     group: dependents
     match: [Project/Shared/Destination.php]
-    relation: "app/Livewire/Project/Shared/Destination.php:130 `$this->resource->additional_networks()->attach($mainDestination->id, ['server_id' => $mainDestination->server->id]);` inside `promote(int $network_id, int $server_id)` at :115 - the number written into a pivot row as a column of the join itself, read back later to decide which machines a resource additionally runs on"
+    relation: "app/Livewire/Project/Shared/Destination.php:130 `$this->resource->additional_networks()->attach($mainDestination->id, ['server_id' => $mainDestination->server->id]);` with the paired `->wherePivot('server_id', $server->id)` at :128 - the number written into a join row as a column of the join itself, read back later to decide which extra machines a resource runs on"
 
   # -- area: resource creation wizard
   - id: d:new-resource-state-id
     group: dependents
     match: [Project/New/Select.php]
-    relation: "app/Livewire/Project/New/Select.php:409 `$this->server_id = $server->id;` inside `setServer(Server $server)` at :407 - the number kept in wizard state across every subsequent request of the flow and written into the created records later, while the machine object itself is dropped at the end of the request"
+    relation: "app/Livewire/Project/New/Select.php:409 `$this->server_id = $server->id;` inside `setServer(Server $server)` at :407 - the number kept in the wizard's own state and rehydrated on every subsequent request, long after the machine object at :410 is gone"
 
   # -- area: destination creation wizard
   - id: d:new-destination-state-id
     group: dependents
     match: [Destination/New/Docker.php]
-    relation: "app/Livewire/Destination/New/Docker.php:47 `$this->serverId = (string) $this->selectedServer->id;` inside `mount(?string $server_id = null): void` at :35 - the number stringified into component state and resolved back on a later request, so the machine is gone from its hands between the two halves of the form"
+    relation: "app/Livewire/Destination/New/Docker.php:47 `$this->serverId = (string) $this->selectedServer->id;` inside `mount(?string $server_id = null): void` at :35 - the number cast to a STRING and parked in component state, so what survives the request is a string that only looks like a machine"
 
   # -- area: global helper functions
   - id: d:compose-validate-id
     group: dependents
     match: [helpers/docker.php]
-    relation: "bootstrap/helpers/docker.php:1252 `function validateComposeFile(string $compose, int $server_id): string|Throwable` resolving at :1255 `$server = Server::ownedByCurrentTeam()->find($server_id);` - the helper's whole contract with its callers is a bare int, so the machine is gone from every call site's hands before this function starts and `find()` yields null rather than an error when the number stops resolving"
+    relation: "bootstrap/helpers/docker.php:1252 `function validateComposeFile(string $compose, int $server_id): string|Throwable` resolving it back at :1255 `$server = Server::ownedByCurrentTeam()->find($server_id);` - a free function the machine never travels to: it is handed a bare integer and turns it into a machine itself, throwing 'Server not found' at :1258 when it no longer resolves"
 
-  # -- area: certificate management
-  - id: d:ca-cert-job-id
-    group: dependents
-    match: [CaCertificate/Show.php]
-    relation: "app/Livewire/Server/CaCertificate/Show.php:82 `server_id: $this->server->id,` inside `dispatch(new RegenerateSslCertJob(` opened at :81 - the number is peeled off the machine and handed to a QUEUED job by name, so the piece outlives the request that dispatched it by however far the queue is behind, and the job regenerates a certificate against whatever machine that number resolves to when it finally runs"
-
-  # -- area: proxy configuration screens
-  - id: d:proxy-config-state-id
-    group: dependents
-    match: [Proxy/NewDynamicConfiguration.php]
-    relation: "app/Livewire/Server/Proxy/NewDynamicConfiguration.php:30 `$this->server = Server::ownedByCurrentTeam()->whereId($this->server_id)->first();` inside `mount()` at :28, resolving the public property declared at :24 `public $server_id;` - the number arrives as component state set by the parent and re-sent by the browser, so every later request of this component starts from the number and not from a machine, and `first()` returns null rather than failing when it stops resolving"
-
-  # -- area: outbound notification payloads
-  - id: d:container-webhook-handle
-    group: dependents
-    match: [Container/ContainerStopped.php]
-    relation: "app/Notifications/Container/ContainerStopped.php:114 `'server_uuid' => $this->server->uuid,` inside `toWebhook(): array` at :106 - the machine's handle copied into the body of an outbound webhook that leaves this product entirely, so the piece lives in someone else's system and can never be corrected from here"
-
-  # -- area: broadcast event listeners
-  - id: d:tunnel-event-id
-    group: dependents
-    match: [CloudflareTunnelChangedNotification.php]
-    relation: "app/Listeners/CloudflareTunnelChangedNotification.php:18 `$server_id = data_get($event, 'data.server_id');` inside `handle(CloudflareTunnelChanged $event): void` at :16 - a bare number arriving on a broadcast event raised by another process, resolved at :21 `Server::where('id', $server_id)->firstOrFail()`, so a number that no longer means the same machine takes the listener down rather than skipping"
-
-  # -- area: deployment screens  (NEW this cycle)
-  - id: d:deployment-cancel-queue-id
-    group: dependents
-    match: [Application/DeploymentNavbar.php]
-    relation: "app/Livewire/Project/Application/DeploymentNavbar.php:101 `$server_id = $this->application_deployment_queue->server_id ?? $this->application->destination->server_id;` inside `cancel()` at :91, resolved at :112 `$server = Server::ownedByCurrentTeam()->find($server_id);` - the number was stamped onto the deployment-queue row when the deploy was enqueued and is read back off that stored row when a human cancels, so the piece outlives the machine by the life of the queue entry and `find()` returns null rather than raising; :100 does the same for the build machine"
-
-  # -- area: published API schema  (NEW this cycle)
+  # -- area: published API schema
   - id: d:api-schema-server-id
     group: dependents
     match: [Models/Service.php]
-    relation: "app/Models/Service.php:28 `'server_id' => ['type' => 'integer', 'description' => 'The unique identifier of the server where the service is running.'],` inside the `#[OA\\Schema(` attribute opened at :20 - the machine's number declared as a documented property of the public API, so the piece has left this product into a schema other people generate clients against; the field is also fillable at :62, and nothing here can repoint a number a third party has already stored"
+    relation: "app/Models/Service.php:28 `'server_id' => ['type' => 'integer', 'description' => 'The unique identifier of the server where the service is running.'],` inside the `#[OA\\Schema(` attribute opened at :20 - the machine's number promised to API clients as a documented field, handed outside this product where nothing here can correct it"
 
-  # -- area: model relation declarations  (NEW this cycle)
+  # -- area: model relation declarations
   - id: d:additional-destination-pivot-column
     group: dependents
     match: [Models/Application.php]
-    relation: "app/Models/Application.php:541 `->withPivot('server_id', 'status');` inside `additional_networks()` at :538 - the join table `additional_destinations` carries the machine's number as a column of its own, declared here rather than anywhere a machine is present; every read through this relation trusts that stored number, and the sibling relation `additional_servers()` at :532 pivots the same table without it"
+    relation: "app/Models/Application.php:541 `->withPivot('server_id', 'status');` completing `belongsToMany(StandaloneDocker::class, 'additional_destinations')` at :540 inside `additional_networks()` at :538 - the schema half of the join: the machine's number is declared a column of the pivot table, so it is stored per row and never linked back"
 
-  # -- area: database backup storage  (NEW this cycle)
-  - id: d:backup-path-address
+  # -- area: search index
+  - id: d:global-search
     group: dependents
-    match: [DatabaseBackupJob.php]
-    relation: "app/Jobs/DatabaseBackupJob.php:313 `$ip = Str::slug($this->server->ip);` inside `handle(): void` at :93, spent at :314 `$this->backup_dir = backup_dir().'/coolify'.\"/coolify-db-$ip\";` - the machine's network ADDRESS baked into a directory name that persists on disk long after the job ends, and interpolated again raw at :765 `'/var/lib/docker/volumes/coolify_dev_backups_data/_data/coolify/coolify-db-'.$this->server->ip.$this->backup_file` to build the source path a container mounts; a re-addressed machine writes its next backup to a different directory and stops finding the old ones"
+    match: [Livewire/GlobalSearch.php]
+    relation: "app/Livewire/GlobalSearch.php:521 `'id' => $server->id,` opening the entry built by the `->map(function ($server)` closure at :519, beside `'uuid' => $server->uuid,` at :524 and the flattened `'search_text' => strtolower($server->name.' '.$server->ip.' '...)` at :529 - a machine dissolved into a flat searchable record; three separate pieces of its identity are copied into a structure the machine itself is not part of"
+
+  # -- area: outbound notification links
+  - id: d:patch-check-link
+    group: dependents
+    match: [Server/ServerPatchCheck.php]
+    relation: "app/Notifications/Server/ServerPatchCheck.php:19 `$this->serverUrl = base_url().'/server/'.$this->server->uuid.'/security/patches';` inside `__construct(public Server $server, public array $patchData)` at :16, queued at :18 - the handle baked into a string at construction time and delivered later, so the link that goes out is fixed at the moment the notification was made and nothing re-derives it"
+
+  # -- area: inbound broadcast handlers
+  - id: d:sentinel-event
+    group: dependents
+    match: [Server/Sentinel.php]
+    relation: "app/Livewire/Server/Sentinel.php:86 `if ($event['serverUuid'] === $this->server->uuid) {` inside `handleSentinelRestarted($event)` at :84 - a handle that left this process in a broadcast and comes back in a payload, compared by string equality to decide whether this screen is the one being told"
+
+  # -- area: outbound webhook payloads
+  - id: d:container-stopped
+    group: dependents
+    match: [Container/ContainerStopped.php]
+    relation: "app/Notifications/Container/ContainerStopped.php:113 `'server_name' => $this->server->name,` with `'server_uuid' => $this->server->uuid,` at :114 inside `toWebhook(): array` at :106 - display name and handle copied into a payload posted to a third party; there is no lookup anywhere for a rework to break, the record simply says something untrue about which machine stopped"
+
+  # -- area: ssh transport
+  - id: d:mux-socket-path
+    group: dependents
+    match: [SshMultiplexingHelper.php]
+    relation: "app/Helpers/SshMultiplexingHelper.php:280 `return '/var/www/html/storage/app/ssh/mux/mux_'.$server->uuid;` inside `muxSocket(Server $server): string` at :278 - the handle spent as a FILESYSTEM PATH: the socket file outlives every process that made it, and the identity of the connection it multiplexes is the filename"
+
+  # -- area: background status jobs
+  - id: d:storage-cache-key
+    group: dependents
+    match: [Jobs/PushServerUpdateJob.php]
+    relation: "app/Jobs/PushServerUpdateJob.php:180 `$storageCacheKey = 'storage-check:'.$this->server->id;` read back at :181 `$lastPercentage = Cache::get($storageCacheKey);`, written at :185 and forgotten at :188 - the number concatenated into a cache key, so the previous reading a machine is compared against is addressed by a string that no longer means anything once the number does not"

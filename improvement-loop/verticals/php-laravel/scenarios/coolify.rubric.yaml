@@ -7,24 +7,31 @@
 # SEVEN steps, names verbatim and in the order of scenarios/coolify.yaml (the judge pairs by
 # name). No `repo:` key.
 #
-# EXPANDED from the two-step probe rubric. The probe's step 2 block - "Audit every dependent of
-# the server contract", the DISCRIMINATOR - is carried at index 4 unchanged, all four criteria
-# verbatim, including the PAIR clause that took the baseline from 0.538 to 0.000 on the mini
-# bench. The probe's step 1 block, "Map the server contract", is carried at index 2 unchanged.
-# Neither was retyped: both were sliced out of coolify.rubric.yaml.probe-13row-preexpand.bak
-# and spliced back in.
+# EXPANDED from the two-step probe rubric that just passed the mini-bench. The probe's step 2
+# block - "Audit every dependent of the server contract", the DISCRIMINATOR - is carried at
+# index 4 unchanged, all four criteria verbatim, including the PAIR clause. The probe's step 1
+# block, "Map the server contract", is carried at index 2 unchanged. Neither was retyped: both
+# were checked byte-for-byte against coolify.rubric.yaml.probe-13row-window-pass.bak (the probe
+# rubric this file expands) and against the a23 seven-step rubric this skeleton comes from -
+# all four criteria of both steps are IDENTICAL in the two files, so the splice moves nothing.
+# The audience block is unchanged and is identical in both as well.
 #
-# ADDED: "Orient in the codebase" (groundwork, scored AS groundwork - going deep there is scored
-# down, because the budget it burns is the budget the audit needs), "Trace the write path" (the
-# link-or-copy call and the inline-against-deferred split are what its map_quality turns on),
-# "Trace the guards" (input, failure mode, coverage - and a located entrance that SKIPS a check
-# is the highest-value thing it can produce), "Assess the blast radius" (an ORDERING of the set
-# already established, with the two ranking inversions to catch named explicitly), and "The
-# change and verification map" (whose verification criterion scores the split between existing
-# checks, which are located, and checks that would have to be written, which are described and
-# must NOT be given a fabricated line).
-# The audience block is unchanged.
-
+# The mini-bench those two blocks were measured under (results/loop/coolify/minibench.md,
+# both arms x1, unscored): baseline `dependents` 6/13 = 0.4615, sense 13/13 = 1.0000,
+# delta +0.5385. The judge layer does not produce those figures - `dependents` is cited recall
+# at path:line - but this rubric scores the same two asks, so moving either block would put
+# the judge on a question the probe did not measure.
+#
+# CARRIED (unchanged from the a23 seven-step rubric): "Orient in the codebase" (groundwork,
+# scored AS groundwork - going deep there is scored down, because the budget it burns is the
+# budget the audit needs), "Trace the write path" (the link-or-copy call and the
+# inline-against-deferred split are what its map_quality turns on), "Trace the guards" (input,
+# failure mode, coverage - and a located entrance that SKIPS a check is the highest-value thing
+# it can produce), "Assess the blast radius" (an ORDERING of the set already established, with
+# the two ranking inversions to catch named explicitly), and "The change and verification map"
+# (whose verification criterion scores the split between existing checks, which are located,
+# and checks that would have to be written, which are described and must NOT be given a
+# fabricated line).
 audience: |
   An AI coding agent that will use this answer to safely rework what identifies a remote machine
   in Coolify - the record, its number, its handle, its display name and its address - given that
