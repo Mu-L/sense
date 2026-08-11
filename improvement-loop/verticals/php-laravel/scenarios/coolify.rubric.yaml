@@ -3,29 +3,28 @@
 # Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
 # / justification 0.20 / uncertainty 0.15.
 #
-# ROUND 5 on coolify, SEVEN-STEP WORK SESSION (plans/cycle-1-craft-the-scenario/03-expand.md).
-# SEVEN steps, names verbatim and in the order of scenarios/coolify.yaml - the judge pairs by
-# name and nothing else. No `repo:` key.
+# SEVEN-STEP WORK SESSION (plans/cycle-1-craft-the-scenario/03-expand.md).
+# SEVEN steps, names verbatim and in the order of scenarios/coolify.yaml (the judge pairs by
+# name). No `repo:` key.
 #
-# WHAT THIS FILE IS. The seven-step rubric at coolify.rubric.yaml.seven-step-baseline-0692.bak,
-# carried forward UNCHANGED - audience and all seven criteria blocks, diffed this session. The
-# expansion restored that file's seven step prompts verbatim around the probe's step 4, so no
-# step's wording moved and no step's rubric moves either.
+# EXPANDED from the two-step probe rubric. The probe's step 2 block - "Audit every dependent of
+# the server contract", the DISCRIMINATOR - is carried at index 4 unchanged, all four criteria
+# verbatim, including the PAIR clause that took the baseline from 0.538 to 0.000 on the mini
+# bench. The probe's step 1 block, "Map the server contract", is carried at index 2 unchanged.
+# Neither was retyped: both were sliced out of coolify.rubric.yaml.probe-13row-preexpand.bak
+# and spliced back in.
 #
-# WHY NOTHING MOVED. This cycle's one variable is the `dependents` GOLD - four near-free rows
-# (baseline 3 of 4 runs each) cut, four rows in four unswept areas added - measured by the
-# two-step mini-bench at baseline 2 of 13 = 0.154 against sense 9 of 13 = 0.692, delta +0.538,
-# verdict PROCEED (results/loop/coolify/minibench.md). Gold is not a thing this file scores:
-# the judge layer reads these criteria and the gold groups are scored separately, so a re-gold
-# that leaves every prompt in place leaves every criterion in place too. The discriminator
-# block, `Audit every dependent of the server contract`, is byte-identical to the one the probe
-# ran under.
-#
-# The judge still scores: a map of the PRODUCT in step 1 with "which parts the subject is
-# reached from" explicitly withheld there (that sweep is spent once, at the end of step 3);
-# the contract's composition and identity in step 2; creation, teardown and the one-sweep
-# population in step 3; and in step 4 a ruling on every member of that population rather than
-# a short list of the confident ones.
+# ADDED: "Orient in the codebase" (groundwork, scored AS groundwork - going deep there is scored
+# down, because the budget it burns is the budget the audit needs), "Trace the write path" (the
+# link-or-copy call and the inline-against-deferred split are what its map_quality turns on),
+# "Trace the guards" (input, failure mode, coverage - and a located entrance that SKIPS a check
+# is the highest-value thing it can produce), "Assess the blast radius" (an ORDERING of the set
+# already established, with the two ranking inversions to catch named explicitly), and "The
+# change and verification map" (whose verification criterion scores the split between existing
+# checks, which are located, and checks that would have to be written, which are described and
+# must NOT be given a fabricated line).
+# The audience block is unchanged.
+
 audience: |
   An AI coding agent that will use this answer to safely rework what identifies a remote machine
   in Coolify - the record, its number, its handle, its display name and its address - given that
@@ -66,140 +65,138 @@ steps:
     map_quality:
       weight: 0.4
       question: |
-        Two things, and the first is a gate on the rest of the session: is the ONE type that
-        stands for one of these machines named, and located at the file:line where it is
-        defined, and treated from there on as a single subject rather than as a word to search
-        for? An answer that leaves the subject as a token, or that names several types as
-        candidates without settling on one, has failed the part everything later is built on.
-        Then the layout, and score it as a map of the PRODUCT: does the answer describe how this
-        codebase is organised in the tree's own terms rather than in handed-down categories, and
-        does each part it names carry a phrase on the kind of work that part does? Score whether
-        the parts are genuinely distinct and correctly characterised.
-        Withhold credit for two things here, both of them deliberate. An enumeration of any
-        part's contents: it was not asked for, and a long located list is a worse answer than a
-        short accurate map, because the budget it spends is taken from the later parts. And a
-        roll of where the subject is reached from: the step forbids it in as many words, that
-        question is asked once later and in a particular form, and an answer that supplies it
-        here has done the session's central sweep twice out of one budget. Neither absence is a
-        gap - do not mark the answer down for either.
+        This step is groundwork and is scored as groundwork: cheap, correct and short beats
+        thorough. The step deliberately does NOT supply the areas - it asks for them in the
+        codebase's own terms - so score whether the division the answer chose is a real one for
+        this tree and whether each area carries ONE located example inside it. A directory
+        listing read back is not an orientation; the question is whether each area is
+        characterised by what it is FOR, in the answer's own words. Is the one type that stands
+        for a remote machine
+        correctly identified and placed in one of those areas? Penalise going deep here: a long
+        enumeration of what touches that type is the next steps' work done early and badly, and
+        it costs the session the budget the audit needs. Penalise equally an orientation so
+        vague that the next step starts from nothing.
     specificity:
       weight: 0.25
       question: |
-        Is the subject's definition given as an exact file:line, not a filename and not a class
-        name alone? Does every part of the layout carry one concrete example located at
-        file:line, rather than a directory named in the abstract? A part asserted with no
-        located example is not specific.
+        Does each named area carry an exact file:line inside it, and does the type carry the
+        file:line where it is DEFINED rather than a file where it is used? A bare directory name
+        is not specific. A file named without a line is not specific.
     justification:
       weight: 0.2
       question: |
-        Does each part of the layout come with a phrase on the kind of work it does - what that
-        part is FOR - rather than a restatement of the path? Is the claim that this is the only
-        type standing for one of these machines actually justified, or merely asserted?
+        Does each area carry one phrase on what it is for, rather than its name restated? Does
+        the closing paragraph name conventions this codebase is actually written to - the ones a
+        change to a core record would have to be made in keeping with - rather than generic
+        framework facts that would be true of any project in this language?
     uncertainty:
       weight: 0.15
       question: |
-        Does the answer separate what it opened and read from what it is taking on the strength
-        of a name or a familiar framework convention, and name what it could not settle? At this
-        point in the session almost nothing has been read, so an orientation offered as
-        established fact is worth less than one that says which parts are still assumptions.
+        The step asks explicitly which conventions were confirmed by opening something and which
+        are assumed from the shape of the tree. Is that split actually made, or is everything
+        asserted flat? An orientation is the easiest place in this session to guess from a
+        familiar framework layout and be believed; saying which parts were guessed is worth more
+        than a confident sweep. Was the instruction to work directly, without delegating the
+        exploration, followed?
 - name: Map the server contract
   criteria:
     map_quality:
       weight: 0.4
       question: |
-        Two halves, and they are NOT weighted alike, because the step bounds the first and
-        leans on the second.
-        The composition: is what the type is BUILT OUT OF laid out - the shared behaviour it
-        mixes in and the other records it declares a relationship to - and, crucially, are the
-        things it pulls in for its own use separated from the things that hang off it and exist
-        only because it does? That direction is what makes the later steps tractable and
-        getting it backwards is a real error, not a presentation choice. It is asked for as a
-        located list and NOT as an essay: a phrase on each declaration earns nothing here, and
-        an extended commentary on the composition is a worse answer than a correct list,
-        because the budget it spends is taken from the discriminator.
-        The identity, which is the half that carries: are the identifying fields named and
-        located, and is the per-request cache that serves lookups by identity found, together
-        with what empties it and when? The question is coverage of those two jobs and whether
-        they are connected into one story about how identity is established and resolved,
-        rather than listed as places a name is mentioned. Could the next steps act from this
-        map with targeted lookups rather than a fresh exploration?
+        Is a machine's identity traced as one connected story - established, cached, copied,
+        destroyed - rather than listed as places a name is mentioned? The step asks for four jobs
+        along that story: where the identifying fields are set as the record is written; where a
+        lookup by identity is served out of a per-request cache rather than the store, what
+        empties that cache and when; where a freshly created machine causes further records to be
+        seeded from it, including any that take a COPY of an identifying field rather than a link
+        back to it (noticing that difference is the part that makes the next step tractable); and
+        what the removal path does, in order, and what it does not clean up behind it. The
+        question is COVERAGE OF THE JOBS - all four shown and connected is the full answer.
+        The step then asks for a second and deliberately SMALL thing: the SHAPE of the working
+        ground, not the roll of it. By what routes does a machine end up in the hands of code
+        that works with it, and who does the handing - each route named once with a single
+        located example. Score whether the routes are genuinely distinct and correctly
+        characterised. Do NOT reward an exhaustive enumeration of the places themselves: it was
+        not asked for, and a long located list of code handed a machine is not a better answer
+        here than three accurate routes. Could the next step act from this orientation with
+        targeted lookups rather than a fresh exploration?
     specificity:
       weight: 0.25
       question: |
-        Does every declaration, field and routine carry an exact file:line AND, where it is a
-        routine, the name it is defined under? A bare filename is not specific. A relationship
-        or a mixed-in behaviour asserted from the shape of the class, without the line where it
-        is declared, is not specific. Where the answer claims a lookup is served from a
-        per-request cache, is the line that does the caching located, and the line that empties
-        it, rather than inferred from a name?
+        Does every place the answer names carry an exact file:line AND the name of the routine it
+        lives in? A bare filename is not specific. A file:line with no routine named around it is
+        not specific - the maintainer asked whose code it is, not where the character offset
+        falls. A routine named without the file:line where it is defined is not specific either.
+        Where the answer names a write path, a cached lookup, a seeded companion record or a
+        removal, is the line that actually writes, caches, seeds or deletes located, and not just
+        asserted from the name of the surrounding class or relation?
     justification:
       weight: 0.2
       question: |
-        Does the identity half carry a phrase on what each part contributes - what it sets,
-        what it caches and on what key, what empties it? Does the closing sentence say what a
-        rework of identity would have to PRESERVE for this contract to keep meaning what it
-        means today, rather than restating the names of the parts? Do NOT penalise a
-        composition list offered without commentary: the step asks for a phrase there only
-        where the direction is not obvious from the declaration.
+        Does each part of the lifecycle carry one phrase on what it contributes to identity -
+        what it sets, what it caches and on what key, what it copies rather than links, what the
+        removal takes with it - and does the closing statement say what a rework of identity
+        would have to preserve for that lifecycle to keep meaning what it means today, rather
+        than restating relation names?
     uncertainty:
       weight: 0.15
       question: |
-        Relation accessors, model event hooks and cached lookups invite confident guessing from
-        framework convention alone. Does the answer say which parts it actually opened, and name
-        what it could not resolve rather than smoothing it over? Is the composition offered as
-        what it established rather than as a complete taxonomy it did not check?
-- name: Trace the write path and the teardown
+        Does the answer separate what it verified by reading from what it inferred from a name or
+        from a familiar framework convention? Relation accessors, model event hooks and cached
+        lookups invite confident guessing; saying which parts were actually opened is worth more.
+        Is anything the session could not resolve named as such rather than smoothed over, and
+        are the routes offered as the ones it established rather than as a complete taxonomy it
+        did not check?
+- name: Trace the write path
   criteria:
     map_quality:
       weight: 0.4
       question: |
-        Three things, and the third is the one the rest of the session runs on.
-        CREATION: is what runs when one of these machines is first written traced IN ORDER, with
-        everything seeded from it named - and is each seeded thing ruled explicitly as holding a
-        LINK back to the machine or a COPY of one of the identifying fields? That ruling is the
-        step's centre of gravity: an answer that lists the seeded records without making the
-        call on each one has described the path and missed the point of tracing it.
-        TEARDOWN: is the removal path traced, with what it takes with it, what it hands to
-        something else, and - specifically - what it LEAVES BEHIND? "The path looked complete"
-        is the failure this part exists to catch.
-        THE HAND-OFFS: for the parts of either path that run later and out of process, is it
-        said - in one line each, which is all the step asks for - whether the machine record
-        itself travels or only something taken off it? That single distinction is the whole of
-        this part; an expanded treatment of the queueing machinery is not a better answer, it
-        is budget taken from the discriminator.
-        Finally the population: is the whole affected set established in ONE sweep to its full
-        depth and reported as its SHAPE - the areas it lands in, one located example each, how
-        far out from the type it reaches - with the near edge distinguished from the far side
-        that is reached only through it? An enumeration of the places themselves earns nothing
-        here; what is scored is whether the set was established as one thing, in a form the next
-        step can be worked straight down, and whether the far side is present in it at all. An
-        answer whose population stops at the near edge has failed this part however well located
-        it is.
+        Are BOTH paths traced end to end as connected stories - the path that brings a machine
+        into being and the path that takes it away - rather than as two lists of places
+        something is written or deleted? On the creation side the step asks for what gates the
+        write and refuses it, the write itself, and every further record seeded off the new one
+        in the same breath. On the removal side: what goes in the same breath, in what order,
+        what is only MARKED rather than really removed, and what is left standing afterwards.
+        Two things decide this criterion above the rest.
+        THE LINK-OR-COPY CALL. For every seeded record, does the answer say plainly whether it
+        holds a LINK back to the machine or a COPY of one of the machine's identifying pieces?
+        That distinction is what makes the later audit tractable, and a seeded record listed
+        without the call is not answered however well it is located. An answer that treats every
+        companion record as "related to the server" has missed the entire point of this step.
+        INLINE AGAINST DEFERRED. Is every step of both paths marked as running inside the
+        request that asked for it, or as handed off to run later and elsewhere? For each
+        deferred one, does the answer say what is actually handed over - the machine, or a piece
+        taken off it - and locate BOTH ends of the hand-off, where it is handed out and where it
+        is picked up? A deferred step whose hand-off is described but not located on both ends
+        is half-answered, and an answer that does not separate inline from deferred at all has
+        traced a call graph rather than a lifecycle.
     specificity:
       weight: 0.25
       question: |
-        Does every step of the creation path, every seeded thing, every part of the removal path
-        and every hand-off carry an exact file:line and the routine it sits in? Is the line that
-        actually writes, seeds, copies, deletes or dispatches located, rather than asserted from
-        the name of a relation or a class? Does each area of the population carry one concrete
-        located example rather than a directory named in the abstract?
+        Does every step of both paths carry an exact file:line AND the routine the line sits in?
+        Where the answer names a gate, a write, a seeding, a soft delete or a hard delete, is the
+        line that actually gates, writes, seeds or deletes located - not asserted from the name of
+        the surrounding class, the relation, or a framework hook that "would" fire? Are both ends
+        of each deferred hand-off separately located, in their own files, with their own
+        routines?
     justification:
       weight: 0.2
       question: |
-        Does each seeded thing carry the reason for its link-or-copy ruling, each hand-off a
-        phrase on why it runs out of process and what that means for what travels with it, and
-        each thing left behind by the removal path a phrase on what it becomes once the machine
-        is gone? Is the reach claim on the population argued - why the far side is further out
-        than one step - rather than asserted?
+        Does each step carry one phrase on what it contributes - what the gate refuses and on
+        what key, what the write establishes, what the seeded record ends up holding, what the
+        removal takes and what it leaves orphaned? Does the closing paragraph actually divide
+        these two paths into the parts that survive a machine being renamed, re-addressed,
+        retired and stood in for and the parts that do not, rather than restating that identity
+        is used here?
     uncertainty:
       weight: 0.15
       question: |
-        Model event hooks, queued dispatches and cascading deletes are exactly where framework
-        convention invites assertion without reading. Does the answer say which of these it
-        opened? Where it cannot tell whether something is cleaned up, or whether a hand-off
-        carries the record or a piece of it, does it say so and say what would settle it? Is the
-        population offered as the sweep it ran, with its depth stated, rather than as a claim of
-        completeness it did not check?
+        Model lifecycle hooks, queued handlers and soft deletes are the three things in this
+        stack most often asserted from convention rather than read. Does the answer separate what
+        it opened from what it inferred? Where a deferred step's far end could not be found, is
+        that stated as a gap with which end is missing, rather than filled in with the obvious
+        candidate?
 - name: Audit every dependent of the server contract
   criteria:
     map_quality:
@@ -229,16 +226,37 @@ steps:
         machine-named tree and thin everywhere else has enumerated inside one search scope and
         mistaken that for the codebase; score it as the partial answer it is, however well
         located each line.
-        Above all: does the answer state, for each place, HOW LONG THE PIECE OUTLIVES THE MACHINE
-        - one request, one stored record, or outside this product - which is the distinction a
-        reading of the line alone does not give, and the distinction that decides what can still
-        be corrected? Where the answer ran short, is what it had still not looked at declared
-        rather than quietly closed over?
+        BOTH FATES ARE SCORED, and an answer carrying only the first is a partial answer. The
+        first fate is the piece that COMES BACK: parked in something that outlasts the moment and
+        later turned into a machine again by a lookup, which after the rework may resolve to a
+        different machine or to none. The second fate is the piece that NEVER COMES BACK: written
+        in as a value of something else, or handed outside this product, with no lookup anywhere
+        for the rework to break - what breaks is that the piece now says something untrue about
+        which machine this is, and nothing here can reach it to correct that. The second fate is
+        quieter and is the half an audit of this shape usually loses; an answer that is all
+        lookups and no exports has found one fate and stopped. Score the coverage of both.
+        THE PAIR IS SCORED. A kept place is one end of a hand-off, and the step asks for both
+        ends: the line where the piece is kept, written out or read back, AND the line in a
+        different routine where that same piece was lifted off an actual machine before it
+        arrived. Does the answer establish the second end, in its own file:line and its own
+        routine, or does it give one line and leave the value's origin implied? The two ends sit
+        in different areas by construction - the value travels by being handed on rather than by
+        being named - so a second end asserted from the shape of the first, or from a framework
+        convention, is not established. Where an answer says no other end could be found, is that
+        stated as the gap it is, with which end is missing and why? An answer whose places are
+        all single lines has found half of each dependency; score it as the partial answer it is.
+        Above all: does the answer state, for each place, WHICH FATE its piece has and HOW LONG
+        THE PIECE OUTLIVES THE MACHINE - one request, one stored record, or outside this product
+        past correcting from here - which is the distinction a reading of the line alone does not
+        give, and the distinction that decides what can still be corrected? Where the answer ran
+        short, is what it had still not looked at declared rather than quietly closed over?
     specificity:
       weight: 0.25
       question: |
         Does EVERY place carry its own exact file:line AND the name of the routine the line sits
-        inside AND the lifetime of the piece it keeps? All three, because a location alone does
+        inside AND the file:line and routine of the OTHER END of its hand-off AND which fate its
+        piece has AND the lifetime of that piece? All of them, because
+        a location alone does
         not identify this kind of dependency: two lines of nearly identical shape differ entirely
         depending on whether the value dies with the request, sits in a stored row, or has
         already left this product. Several places named together on one line as a set that shares
@@ -269,134 +287,140 @@ steps:
     map_quality:
       weight: 0.4
       question: |
-        The step asks how the product satisfies itself that it is acting on a real, CURRENT
-        machine before it acts, and it asks for three shapes plus one absence - explicitly as
-        worked examples and NOT as a census.
-        Does the answer distinguish lookups that RAISE on failure from lookups that quietly hand
-        back nothing - and, in the quiet case, say what the calling code then does having been
-        handed nothing, which is the part that decides whether the failure is loud or silent?
-        Does it find where a lookup is narrowed to what the caller is entitled to see and where
-        it is not narrowed at all? Does it find where two identifying pieces are compared as
-        plain values, with no machine present on either side, to decide that two things are the
-        same machine?
-        Above all: is at least one same-shaped line that carries NO guard named? The absence is
-        the finding in this step, and an answer listing only the guarded cases has inverted it -
-        score it as the partial answer it is however well located each guard is. Restating the
-        earlier steps' lines with the word "guard" attached is not progress.
-        Score COVERAGE OF THE SHAPES, not the count of instances: one correct located example
-        of each shape is a complete answer here, and an exhaustive sweep of every guard in the
-        product earns nothing extra, because the budget it spends was taken from elsewhere in
-        the session.
+        Are the guarding mechanisms separated as MECHANISMS - existence, entitlement,
+        reachability and fit state, and the memoised repeat lookup with whatever empties it -
+        rather than collapsed into one "validation" heading with a run of call sites under it?
+        Each is a different question asked before acting and they fail differently; an answer
+        that does not tell them apart cannot say which one this rework breaks.
+        Three things are asked of every mechanism and all three are scored.
+        ITS INPUT: does the check receive a machine already in hand, or a piece of one that has
+        to be turned back into a machine first? The second kind is the kind this rework reaches
+        into, so the call has to be made explicitly and the turning-back located.
+        ITS FAILURE MODE: does it raise, return nothing, or carry on regardless - and does the
+        answer say which of those is a SILENT pass that a downstream caller would never notice?
+        A guard that returns nothing where the caller expects a machine is the dangerous shape
+        here and an answer that does not distinguish it from one that raises has not answered.
+        ITS COVERAGE: is the check applied at every way into the behaviour it protects, or only
+        at some? A located entrance that SKIPS the check is the single highest-value thing this
+        step can produce; score it accordingly. Score down an assertion that a check is applied
+        uniformly with no evidence of having looked - and score UP an answer that names which
+        entrances it actually examined and declines to generalise beyond them.
     specificity:
       weight: 0.25
       question: |
-        Does every guard, and every named absence, carry its own exact file:line AND the routine
-        the line sits inside? Is the line that performs the check located, rather than the method
-        that contains it named in general terms? Several guards collapsed onto one line as a set
-        sharing a reason is one item, not a set, however correct the shared reason is.
+        Is each mechanism pinned to the exact file:line where the decision is MADE, with the
+        routine named - not the file:line of a caller that invokes it, and not the name of a
+        scope, policy or trait asserted without a line? Where the answer says a check is skipped
+        somewhere, is that skipping entrance located at file:line too, or only described?
     justification:
       weight: 0.2
       question: |
-        Does each guard carry one phrase on what it ACTUALLY protects against - a machine that is
-        gone, a machine that is someone else's, a machine that was replaced, a state that has
-        moved on - specific to that line rather than a generic statement that the code checks
-        something? Where a guard is deliberately not narrowed, is the reason given rather than
-        the omission reported as a defect?
+        Does each mechanism carry one phrase on what it actually establishes and what would get
+        through if it were absent, specific to that mechanism rather than a shared sentence about
+        safety? Is the consequence of the silent-pass ones stated in terms of what the caller
+        downstream then does with nothing in hand?
     uncertainty:
       weight: 0.15
       question: |
-        Does the answer separate the guards it read from the ones it is asserting from the shape
-        of a call, and say what it could not settle? Is the sweep offered as what this session
-        reached, with the parts it did not reach named, rather than as the complete set of guards
-        in the product?
+        Guards are the part of a framework codebase most often reported from convention. Does the
+        answer say which checks it read and which it assumed, and does it bound its coverage
+        claim to the entrances it actually examined? A shorter answer that names the entrances it
+        did not reach is worth more than a complete-sounding one that examined the same number.
 - name: Assess the blast radius
   criteria:
     map_quality:
       weight: 0.4
       question: |
-        Is there an actual ORDER, driven by consequence, that a maintainer could work straight
-        down - or a re-listing of the places with severity words attached? The step is explicit
-        that the rank is by what happens when the piece stops resolving and NOT by how likely
-        the answer thinks that is, so a ranking driven by the answer's own confidence has
-        answered a different question.
-        Is each place AT THE TOP OF THE ORDER classified by how the failure would SURFACE - a
-        lookup that raises and takes something down, a silent nothing the code carries on with,
-        a different machine acted on with no complaint at all, or a wrong value that has already
-        left this product and cannot be corrected from here - and does the order reflect that
-        the silent ones outrank the loud ones, with the reason given once?
-        The step asks for the top of the order in full and for the tail in a line, so a
-        re-listing of every place the audit already gave is NOT a better answer here: it is a
-        restatement, and the step says so. What is scored is whether the top was chosen by
-        consequence and whether the tail is accounted for rather than silently dropped.
-        Then: is what must be re-verified after the rework named for those top places, and is
-        each re-verification placed somewhere concrete rather than left as an instruction to
-        test carefully? A missed high-risk dependent is the one that pages someone, so an order
-        whose top is wrong is worse than one whose tail is short.
+        This step is an ORDERING of the set already established, not a second pass over the
+        codebase. Score two things: whether the ordering covers that set, and whether it is
+        ordered on the right thing.
+        COVERAGE: does the ranking carry the places established in the audit, or has it quietly
+        shrunk to the handful the session was most comfortable with? A ranking that drops
+        established places without saying so is worse than a longer one with doubts written
+        beside entries, and the step says explicitly that an undecidable place goes at the
+        dangerous end rather than out of the list.
+        THE RANKING BASIS: the step names four things that decide danger - how QUIETLY it fails
+        (whether anything raises at all, or whether the wrong answer is simply returned), how FAR
+        the wrong answer travels before anyone could notice, whether the damage can still be
+        corrected from inside this product or has already left it, and how OFTEN the path runs.
+        Is the ordering actually argued from those, or is it a plausible-looking list with the
+        criteria named once at the top and never applied? The specific inversion to catch: a
+        place that fails loudly on the first request ranked ABOVE one that keeps working while
+        being quietly wrong, or a place whose piece has already left this product ranked low
+        because nothing here raises on it. Either inversion means the ordering was made on how
+        legible the code was rather than on what it costs.
+        Finally, for the dangerous end, is the thing to re-verify an actual CONDITION that must
+        be shown to still hold, located where it would be shown - not "add a test" or "check this
+        works"?
     specificity:
       weight: 0.25
       question: |
-        Does every place in the top of the order carry its own exact file:line, its rank, and
-        its surfacing class? Is each re-verification located at a file:line where it would
-        actually be done? Places grouped into a band with one shared justification and no
-        location on any of them is the failure this criterion exists to catch - it is one item,
-        not a band of ranked places. The single line accounting for the tail is exempt: it is
-        what the step asked for there.
+        Does every entry in the ordering carry its own exact file:line, and is it the same
+        location the audit established rather than a re-derived or vaguer one? Are the entries
+        ranked individually, or are several collapsed onto one line as a tier sharing a reason -
+        which is one item, not a set of ranked places, and should be scored as one? Are the
+        re-verification conditions located?
     justification:
       weight: 0.2
       question: |
-        Does each rank carry one sentence saying what goes wrong, to whom or to what, and whether
-        anything catches it - specific to that place rather than the same sentence copied down
-        the order? Is the claim that the silent failures outrank the loud ones argued rather than
-        stated?
+        Does each entry say why it sits where it does, in terms of the four ranking criteria and
+        specific to that place - what fails silently there, how long it stays wrong, who outside
+        this product is holding the stale piece - rather than a severity label attached with no
+        argument? Is the reasoning different down the list, or the same sentence with the rank
+        changed?
     uncertainty:
       weight: 0.15
       question: |
-        Where the answer is ranking something it did not open, does it say so rather than
-        smoothing it into the order? Is the order offered as a judgement with its basis stated,
-        with the places it could not rank named, rather than as a settled severity table?
-- name: Plan the change and the verification map
+        Where the risk could not be decided, is the place ranked high with the doubt written
+        beside it, as the step asks, rather than dropped or silently placed low? Is the ordering
+        offered as this session's judgement over what it established, rather than as an objective
+        severity? Are the parts of the ranking that rest on how often a path runs marked as the
+        estimates they are, if the frequency was not actually established?
+- name: The change and verification map
   criteria:
     map_quality:
       weight: 0.4
       question: |
-        Could a teammate execute this plan without re-deriving anything? Three parts.
-        THE EDIT: are the lines the answer would change in the contract, its write path and its
-        removal path given, in the order they would be changed, with what each change is?
-        DOWNSTREAM: is what has to move with it grouped by area, with one line per area saying
-        what changes there and one located example - and are the places whose change is NOT the
-        same as the rest of their area's then named SEPARATELY at file:line? That second part is
-        what makes the plan executable, because those are the only ones a teammate cannot infer
-        from the area line. Is "needs no change" kept distinct from "needs no change but must be
-        re-read to be sure"? Those are two different claims and collapsing them is the failure
-        this part names. A full re-listing of the audit is NOT a stronger answer here - the step
-        rules it out, and it is budget taken from the tests below.
-        THE TESTS: are the tests that already assert something about how a machine is identified,
-        resolved, seeded or torn down named, each at the assertion or setup line that would have
-        to change, with what changes about it - and where nothing existing covers a place the
-        previous step ranked high, is that gap stated plainly and the missing test described,
-        rather than a plausible-looking test file named as though it existed? Naming a file that
-        does not exist is worse than declaring the gap.
-        Finally, is there an order of operations that keeps the product working while the rework
-        lands, and is what cannot be split from what identified?
+        Three parts are asked for and all three are scored.
+        THE EDIT: is it a set of concrete edits at places already established, each with what it
+        becomes - or a restatement of the plan in the ticket? Where one edit repeats across many
+        places, is it stated once AND every landing place still located? An edit described once
+        and located nowhere is not a change anyone can carry out.
+        THE MAP: does it carry the WHOLE ruled-in set, grouped by area, one section per area,
+        every place listed separately, in the risk order just established? This is the criterion
+        where a summarised section fails hardest: "the remaining screens follow the same pattern"
+        is a section with nothing in it, and a place present in the ranking but missing from this
+        map is a place that does not get changed. Compare the map against the audit and the
+        ranking and score the shrinkage, if any.
+        THE VERIFICATION, SPLIT IN TWO: existing automated checks that cover this behaviour
+        today, each LOCATED, with what about them would have to change; and behaviours with NO
+        check covering them at all, DESCRIBED rather than located, because there is no line yet
+        to point at. Is the split actually made and stated per item? Two failures to catch, and
+        they are opposite: inventing a file:line for a check that does not exist yet, and
+        refusing to locate the checks that do exist. Both are scored down. An answer that lists
+        only "tests to add" has not looked at what is already covered.
     specificity:
       weight: 0.25
       question: |
-        Does every edit, every separately-named downstream place and every existing test carry
-        its own exact file:line - for the tests, the line of the assertion or the setup that
-        changes, not the test file alone? Does each downstream AREA carry at least its one
-        located example? A bare filename does not count anywhere in this step, and a described
-        future test is scored on the description, not on a location it cannot have.
+        Does every edit and every mapped place carry its own exact file:line? Is every EXISTING
+        check named at file:line, and is every proposed new check described by what it would
+        assert rather than given a fabricated location? Several places named together on one line
+        as a group sharing an edit is one item, not a set, and should be scored as one. A bare
+        filename does not count anywhere in this step.
     justification:
       weight: 0.2
       question: |
-        Does each change carry a phrase on why it is needed and what it makes safe? Does each
-        "must be re-read" carry the doubt that makes it worth re-reading? Does the order of
-        operations argue why that order keeps the product working, rather than presenting a list?
+        Does each edit carry one line on what it becomes and why that place needs it, specific to
+        that place? Does each existing check carry what about it would have to change, and each
+        missing one what it would have to assert - rather than a generic "update the tests"? Does
+        the closing paragraph name a real residual uncertainty from this session and something
+        concrete that would settle it, rather than a ritual disclaimer?
     uncertainty:
       weight: 0.15
       question: |
-        Is the plan honest about its own coverage - which areas it walked, which it did not
-        reach, and whether the downstream list is offered as complete or as what this session
-        got to? Are the gaps in test coverage named as gaps rather than filled with a
-        confident-sounding file? A shorter plan that names what it did not settle is worth more
-        than a complete-looking one with an unexamined area behind it.
+        Is the map offered as what this session established, with any area it did not reach named
+        as unreached, rather than as a complete inventory? Where an edit depends on something the
+        session did not confirm - a deferred hand-off whose far end was never located, a guard
+        whose coverage was never checked - is that dependency stated? The closing "least sure"
+        answer is scored here: is it a genuine weak point of the work, or the safest-sounding
+        thing to admit?
