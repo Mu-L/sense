@@ -20,6 +20,64 @@
 # machine (one request, one queued job, one stored row, one cache entry, or another company's
 # system), and WHAT that place starts getting wrong once the piece stops resolving.
 #
+# SECOND EXPANSION PASS - SHORTENED FOR THE WALL, ON THE LOOP'S WRITTEN BRIEF.
+# The brief (results/loop/coolify/expand.brief.md, quoted): "CANNOT FINISH AT BUDGET - the sense
+# arm ran out of clock on every attempt, the retry included. The watchdog is NOT raised: the
+# scenario is shortened and re-run instead. The anchor, the question and the gold all stay ...
+# fewer places to visit per step, not fewer steps."
+#
+# WHAT THE FAILED RUNS MEASURED, QUOTED, BEFORE ANYTHING WAS CUT.
+#   Both sense attempts hard-capped. From
+#   results/claude-opus-5/validation/e733f4d2fda1787b/sense/coolify/run-1/run_meta.json:
+#     "wall_time_seconds": 481, "session_timeout_seconds": 480, "claude_exit_code": 124,
+#     "watchdog_kind": "hard_cap_timeout"
+#   and failed-run-1/run_meta.json carries the same "watchdog_kind": "hard_cap_timeout".
+#   The transcripts say WHERE the clock went. run-1: 51 tool calls, the LAST at 280 s of 480,
+#   then the entire seven-step answer written in one block, whose last emitted heading is
+#   "Step 5 - The guards" - it was cut off inside step 5 of 7. failed-run-1: 48 tool calls, last
+#   at 331 s, cut off inside "Step 4 - Audit: every dependent, ruled". So the arm reached the
+#   work and reached the discriminator; what it could not fit was WRITING seven steps of the
+#   answer this file demanded. The cut therefore comes out of demanded OUTPUT, and out of the
+#   steps on either side of the discriminator, never out of the discriminator.
+#
+# WHAT WAS CUT, STEP BY STEP. Seven steps still, same names, same order; each of these is a
+# demand for less to produce, not a step removed:
+#   step 1  a stated bound ("keep it short, what you spend here comes out of the middle") and
+#           the read-vs-assumed close reduced to a line.
+#   step 2  the per-declaration commentary on the composition dropped; "the pieces it is
+#           composed of" folded into the relationship list; and the write-time normalisation
+#           and the previous-value-on-change questions dropped outright - those were a separate
+#           hunt of their own and no gold row in any group depends on them.
+#   step 3  the removal path no longer has to be ordered, and the inline-against-out-of-process
+#           cut goes from a second pass over both paths to one line per hand-off. The five
+#           `write-path` gold rows all still sit inside what remains.
+#   step 5  the "stored judgement about state read back as current" shape dropped; the absence
+#           census reduced to at least one unguarded same-shaped line; one worked example per
+#           shape is now explicitly enough. Both `guards` rows still sit inside what remains.
+#   step 6  from ranking every place with three fields each plus a re-verification each, to the
+#           top of the order in full, the tail in one line, and re-verification for the top only.
+#   step 7  from every downstream place listed separately, to one line per area with one located
+#           example plus separately only the places whose change differs from their area's. The
+#           tests part is untouched and all three `specs` rows still sit inside it.
+#   And the description now carries one paragraph saying the parts are bounded on purpose and
+#   that the middle of the ticket is what the sitting is for.
+# THE FLOORS MOVED WITH THE DEMANDS: `response_richness` 8/10/12/[6]/12/14/16 -> 6/8/10/[6]/10/
+#   12/14, step 4's untouched at 6.
+# WHAT DID NOT MOVE: step 4 in every respect, the thirteen `dependents` rows, the one-sweep
+#   population paragraph at the end of step 3 (step 4's own text leans on it), the anchor, the
+#   description's first three paragraphs, and every gold row in every group - not one row was
+#   added, removed or re-pinned in this pass.
+# NOT RUN IN THIS PASS, AND WHY: `mcp_probe.py` on the anchor, because 03-expand asks for it
+#   "for the anchors and specs you are ADDING" and this pass adds none; the gold is byte-for-byte
+#   the set the mini-bench measured, and `gold_audit.py verify` re-checks every pinned line.
+#   Neither arm was re-run: this phase measures nothing.
+# THE RISK, STATED BEFORE THE RUN. Shortening the steps around the discriminator gives BOTH arms
+#   back clock, and the baseline was already finishing (357 of 394 with exit 0 on the two-step
+#   probe). If the next run's baseline rises on `dependents` because it now has budget left over
+#   from steps 1 to 3, that is a real move and not an artefact, and it is this pass that caused
+#   it. The alternative - cutting only the sense arm's work - does not exist; the arms get the
+#   same prompt. Only the run answers it.
+#
 # WHAT THIS EXPANSION MOVED, AND WHAT IT DID NOT
 #   NOT MOVED. Step 4 is the probe's step 2: same name, same prompt, the same three checks,
 #   and the same thirteen `dependents` rows. Both blocks were SLICED out of the probe file by
@@ -298,28 +356,34 @@ description: |
   jump straight to, plus one phrase on why it matters. A bare filename does not count, a set
   of names offered together with one shared reason and no location on any of them does not
   count, and a missed dependent is a regression shipped.
+  One thing about how to spend the sitting, because it is one sitting and the clock is real.
+  Every part below is bounded on purpose: give it what it asks for and stop there. The early
+  parts are groundwork and are meant to be cheap - the audit in the middle is what this ticket
+  exists for, and reaching it with the clock already gone is how this comes out wrong. Short
+  and complete beats long and cut off, everywhere here.
 
 steps:
   - name: Orient in the codebase
     prompt: >
       Task: orient, and be exact - the rest of the ticket is built on this and nothing later
-      will send you back for it.
+      will send you back for it. Keep it short: what you spend here comes out of the middle of
+      the ticket, and this part is groundwork.
       Start by fixing the subject. Exactly one type in this product stands for one of these
       machines, and the whole ticket is about that one type and nothing else. Name it and give
       the file:line where it is defined, before anything else, and treat it from here on as a
       single subject rather than as a word to look for.
-      Then orient around it, and keep this part short. How is this product laid out - in
-      whatever terms the tree itself uses, not in categories I have handed you - and which
-      parts of that layout is the subject touched from at all? Name each part once, with a
-      single example located at file:line, and say in a phrase what kind of work that part
-      does. Do not roll out the contents of any part: this is the map and not the inventory,
-      and a long list here earns nothing.
-      Finish by separating what you opened and read from what you are taking on the strength
-      of a name or a familiar convention, and name anything you could not settle.
+      Then, briefly, orient around it. How is this product laid out - in whatever terms the
+      tree itself uses, not in categories I have handed you - and which parts of that layout
+      is the subject touched from at all? Name each part once, with a single example located
+      at file:line and a few words on the kind of work that part does. That is the whole of
+      it: this is the map and not the inventory, a long list here earns nothing, and a short
+      accurate map is a better answer than a complete one.
+      Close in a line: what you opened and read, against what you are taking on the strength
+      of a name or a familiar convention, and anything you could not settle.
       Work the codebase yourself, in this session. No Explore agents.
     checks:
       - type: response_richness
-        value: "8"
+        value: "6"
         required: true
         description: The one type that stands for a machine named at the file:line where it is defined, plus the shape of the product around it - each part of the layout named once with one located example and a phrase on the work it does, and read separated from assumed
       - type: mcp_tool_used
@@ -338,26 +402,27 @@ steps:
   - name: Map the server contract
     prompt: >
       Task: the contract itself. What this type is made of, and what identity means on it.
-      Everything later in the ticket is read off this part, so it is worth being slow here.
-      First, what the type is built out of. The shared behaviour it mixes in, the pieces it is
-      composed of, and the other records it declares a relationship to - each with the
-      file:line where the declaration sits and one phrase on what it brings in. Separate the
-      things it pulls in for its own use from the things that hang off it and exist only
-      because it does; that direction matters later and it is cheap to get right now.
-      Then identity, precisely. Name each field that identifies one of these machines and give
-      the file:line where it is declared or cast. Where those fields are normalised, trimmed or
-      derived as the record is written, and what the write does with the previous value of one
-      of them when it changes. Where a lookup by identity is served out of a per-request cache
-      rather than the store, what empties that cache, and when it is emptied. Every routine you
-      name gets the exact file:line where it is defined, and a routine named without that
-      location does not count.
-      Close in a few sentences: what would a rework of identity have to preserve for this
-      contract to keep meaning what it means today?
+      Later parts read off this one, so it has to be right - but it does not have to be long,
+      and both halves below are bounded.
+      First, what the type is built out of, as a located list and not an essay. The shared
+      behaviour it mixes in and the other records it declares a relationship to, each with the
+      file:line where the declaration sits. Separate the things it pulls in for its own use
+      from the things that hang off it and exist only because it does; that direction matters
+      later and it is cheap to get right now. Beyond that separation no commentary is wanted -
+      add a phrase only where the direction is not obvious from the declaration.
+      Then identity, precisely, and this is the half everything later depends on. Name each
+      field that identifies one of these machines and give the file:line where it is declared
+      or cast. Then: where a lookup by identity is served out of a per-request cache rather
+      than the store, what empties that cache, and when it is emptied. Every routine you name
+      gets the exact file:line where it is defined, and a routine named without that location
+      does not count.
+      Close in one sentence: what a rework of identity would have to preserve for this
+      contract to keep meaning what it means today.
     checks:
       - type: response_richness
-        value: "10"
+        value: "8"
         required: true
-        description: The type's composition - mixed-in behaviour, composed pieces, declared relationships, each located and characterised, and the ones it depends on separated from the ones that depend on it - plus every identifying field located, the write-time normalisation of those fields, and the per-request identity cache with what empties it and when
+        description: The type's composition as a located list - mixed-in behaviour and declared relationships, with the ones it depends on separated from the ones that depend on it - plus every identifying field located and the per-request identity cache with what empties it and when
       - type: mcp_tool_used
         value: sense_graph
         required: false
@@ -374,20 +439,21 @@ steps:
   - name: Trace the write path and the teardown
     prompt: >
       Task: how one of these machines comes into existence, and how it goes away. In order,
-      with file:line throughout.
+      with file:line throughout. The first parts of this step are bounded to exactly what is
+      asked; the last part is the one the rest of the ticket runs on.
       Creation first. What runs when a record for one of these machines is written for the
       first time, in the order it runs, and what gets seeded from it - and for each seeded
       thing say which of two kinds it is: does it hold a link back to the machine, or does it
-      hold a COPY of one of the identifying fields? That difference is the most important thing
-      in this step, so make the call explicitly on every one of them rather than describing
-      them all the same way.
-      Then the going away. The removal path, in order: what it takes with it, what it hands to
-      something else to remove, and what it leaves behind. Say what is NOT cleaned up and name
-      it, rather than reporting that the path looked complete.
-      Then cut both paths a second way, by when they run: which parts happen inside the request
-      that triggered them, and which are handed off to run later and out of process. For each
-      thing handed off, say what travels with it - the machine record itself, or only something
-      taken off the machine - because those two are not the same thing to this ticket.
+      hold a COPY of one of the identifying fields? That call is the whole reason this path is
+      being traced: make it explicitly on every seeded thing, and say nothing else about them.
+      Then the going away. The removal path: what it takes with it, what it hands to something
+      else to remove, and what it leaves behind. Say what is NOT cleaned up and name it,
+      rather than reporting that the path looked complete.
+      Then one line each, no more, for the parts of either path that do not finish inside the
+      request that triggered them - the announcements it makes and the work it hands off to run
+      later and out of process. For each of those say only what travels with it: the machine
+      record itself, or something taken off the machine. Those two are not the same thing to
+      this ticket, and that single distinction is all this part wants.
       Now, and briefly, the last part of this step: what a change to that one type would land
       on, as a shape and not as a roll. Assume the type itself changes under the product. I am
       not asking what it uses - the store it is read from, the connection helper it drives, the
@@ -410,9 +476,9 @@ steps:
       ticket is a pass over it and you will not be given the budget to go looking twice.
     checks:
       - type: response_richness
-        value: "12"
+        value: "10"
         required: true
-        description: The creation path in order with every seeded record located and ruled a link or a COPY of an identifying field, the removal path in order with what it leaves behind named, both paths split into what runs inline and what is handed off out of process with what travels along, and the affected population established in one sweep and reported as its shape - areas, one located example each, and how far out it reaches
+        description: The creation path in order with every seeded record located and ruled a link or a COPY of an identifying field, the removal path with what it leaves behind named, one line per hand-off saying whether the record itself travels or only a piece of it, and the affected population established in one sweep and reported as its shape - areas, one located example each, and how far out it reaches
       - type: mcp_tool_used
         value: sense_blast
         required: false
@@ -495,26 +561,28 @@ steps:
   - name: Trace the guards
     prompt: >
       Task: how this product satisfies itself that it is acting on a real, current machine
-      before it acts. file:line throughout, and the routine each line sits in.
-      Take the places where a machine is looked up, or where a piece kept somewhere is turned
-      back into a machine, and work out what confirms the result before anything is done with
-      it. Where does a failed lookup raise, and where does it quietly hand back nothing - and
-      in the quiet case, what does the calling code then do, having been handed nothing? Where
-      is a lookup narrowed to what the caller is entitled to see, and where is it not narrowed
-      at all? Where are two identifying pieces compared as plain values to decide that two
-      things are the same machine, with no machine present on either side of the comparison?
-      And where is a stored judgement about a machine's state read back and acted on as though
-      it were current?
+      before it acts. file:line throughout, and the routine each line sits in. I want the
+      shapes this takes, not a census of every occurrence of them - one worked example of each
+      is enough, and you already met most of them in the part before.
+      Take the places where a piece kept somewhere is turned back into a machine, and work out
+      what confirms the result before anything is done with it. Where does a failed lookup
+      raise, and where does it quietly hand back nothing - and in the quiet case, what does the
+      calling code then do, having been handed nothing? Where is a lookup narrowed to what the
+      caller is entitled to see, and where is it not narrowed at all? And where are two
+      identifying pieces compared as plain values to decide that two things are the same
+      machine, with no machine present on either side of the comparison?
       For each: the file:line, the routine it sits in, and one phrase on what that guard
-      actually protects against. Where a line of the same shape carries NO guard, say so - the
-      absence is the finding in this step, and a list of only the guarded cases hides it.
-      Rank nothing yet, that is the next part. Close by separating the guards you read from the
-      ones you are asserting from the shape of a call, and name anything you could not settle.
+      actually protects against. Then, beside them, at least one line of the same shape that
+      carries NO guard - the absence is the finding in this step, and a list of only the
+      guarded cases hides it.
+      Rank nothing yet, that is the next part. Close in a line by separating the guards you
+      read from the ones you are asserting from the shape of a call, and naming anything you
+      could not settle.
     checks:
       - type: response_richness
-        value: "12"
+        value: "10"
         required: true
-        description: Each guard located at file:line with its routine and what it protects against - raising against silently-empty lookups and what the caller does with nothing, entitlement-narrowed against unnarrowed lookups, value-to-value comparisons standing in for identity, stored state read back as current - and the same-shaped lines that carry no guard named as such
+        description: One worked example of each guard shape located at file:line with its routine and what it protects against - raising against silently-empty lookups and what the caller does with nothing, entitlement-narrowed against unnarrowed lookups, value-to-value comparisons standing in for identity - and at least one same-shaped line carrying no guard named as such
       - type: mcp_tool_used
         value: sense_graph
         required: false
@@ -527,26 +595,29 @@ steps:
   - name: Assess the blast radius
     prompt: >
       Task: turn what you now hold - the population, the ruling you gave each member of it, and
-      the guards - into a risk order a maintainer can work straight down.
-      Rank every place that keeps a piece of a machine, by what happens when that piece stops
-      resolving to the machine it came from, and not by how likely you think that is. For each:
-      the file:line, its rank, and one sentence justifying that rank - what goes wrong, who or
-      what notices, and whether anything at all catches it.
-      Then say, for each, how the failure would show up: a lookup that raises and takes
-      something down, a silent nothing that the code carries on with, a different machine acted
-      on with no complaint at all, or a wrong value that has already left this product and
-      cannot be corrected from here. The silent ones outrank the loud ones and you should say
-      why in a phrase.
-      Then: what has to be re-verified after the rework, and where each re-verification would
-      actually be done, at file:line. A missed high-risk dependent is the one that pages
-      someone.
+      the guards - into a risk order a maintainer can work straight down. This is an ordering
+      of what you already found and not a new pass, so it should read as a short table rather
+      than as prose, and nothing already said needs saying again.
+      Rank the places that keep a piece of a machine, by what happens when that piece stops
+      resolving to the machine it came from, and not by how likely you think that is. Then take
+      the top of that order - the ones a maintainer would have to handle first - and give each
+      of those one line: the file:line, its rank, how the failure surfaces, and a clause on
+      what goes wrong and whether anything at all catches it. For how it surfaces, say which of
+      these it is: a lookup that raises and takes something down, a silent nothing that the
+      code carries on with, a different machine acted on with no complaint at all, or a wrong
+      value that has already left this product and cannot be corrected from here. The silent
+      ones outrank the loud ones - say why once, not once per line. Below the top of the order,
+      one line saying where the rest of it sits is enough; do not re-list it.
+      Then, for the top of the order only: what has to be re-verified after the rework, and
+      where each re-verification would actually be done, at file:line. A missed high-risk
+      dependent is the one that pages someone.
       Where you are ranking something you did not open, say so rather than smoothing it into
       the order.
     checks:
       - type: response_richness
-        value: "14"
+        value: "12"
         required: true
-        description: Every keeping place ranked by consequence with its file:line and a one-sentence justification, each classified by how the failure surfaces - raising, silently empty, wrong machine acted on quietly, or already outside this product - and the re-verification for each located at file:line
+        description: The top of a consequence-driven order, each place at its file:line with its rank, how the failure surfaces - raising, silently empty, wrong machine acted on quietly, or already outside this product - and a clause of justification, plus the re-verification for each of those located at file:line
       - type: mcp_tool_used
         value: sense_blast
         required: false
@@ -558,16 +629,20 @@ steps:
 
   - name: Plan the change and the verification map
     prompt: >
-      Task: write the plan. What you will edit, everything that has to move with it, and what
-      proves it moved correctly. This is the artifact a teammate picks up, so nothing in it may
-      need re-derivation.
+      Task: write the plan. What you will edit, what has to move with it, and what proves it
+      moved correctly. This is the artifact a teammate picks up, so nothing in it may need
+      re-derivation - but it may not re-run the audit you already gave me either, and
+      re-listing that is exactly how this part gets too long.
       First the edit itself: every file:line you would change in the contract, in its write
       path and in its removal path, in the order you would change them, and what each change
       is.
-      Then everything downstream, grouped by area, one section per area, every place listed
-      separately with its own file:line and the change it needs. Where a place needs no change
-      but has to be re-read to be sure of that, say so and say why - that is a different claim
-      from "unaffected" and I want to see which one you are making.
+      Then downstream, and briefly. Group what has to move by area, one line per area saying
+      what changes there, with a single example located at file:line. Then, and only then,
+      name separately at file:line the places whose change is NOT the same as the rest of their
+      area's - those are the ones a teammate cannot infer from the line above, and they are the
+      only ones worth the space here. Where a place needs no change but has to be re-read to be
+      sure of that, say so and say why - that is a different claim from "unaffected" and I want
+      to see which one you are making.
       Then the tests. Name the tests that already assert something about how a machine is
       identified, resolved, seeded or torn down, each at the file:line of the assertion or the
       setup that would have to change, and say what about it changes. Where nothing existing
@@ -577,9 +652,9 @@ steps:
       rework lands, and what cannot be split from what.
     checks:
       - type: response_richness
-        value: "16"
+        value: "14"
         required: true
-        description: The edit itself located line by line and ordered, every downstream place listed separately at its own file:line with the change it needs and needs-no-change distinguished from needs-re-reading, the existing tests that must change each pinned at the assertion or setup line, the uncovered high-risk places named as gaps, and an order of operations
+        description: The edit itself located line by line and ordered, the downstream areas each given one line and one located example with only the places whose change differs named separately at file:line, needs-no-change distinguished from needs-re-reading, the existing tests that must change each pinned at the assertion or setup line, the uncovered high-risk places named as gaps, and an order of operations
       - type: mcp_tool_used
         value: sense_blast
         required: false

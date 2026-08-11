@@ -7,6 +7,29 @@
 # (plans/cycle-1-craft-the-scenario/03-expand.md). SEVEN steps, names verbatim and in the
 # order of scenarios/coolify.yaml - the judge pairs by name and nothing else.
 #
+# SHORTENED FOR THE WALL (second expansion pass, on the loop's written brief: CANNOT FINISH AT
+# BUDGET - the sense arm hard-capped at 480 s on run-1 AND on the retry, so the watchdog is not
+# raised and the session is made answerable instead). What the run measured: 51 tool calls and
+# the last one at 280 s, then the whole seven-step answer written in one block from 280 s, and
+# the clock stopped inside step 5 of 7 - "Step 5 - The guards" was the last heading emitted, and
+# the retry stopped inside step 4. So the arm was not lost, it was writing an answer the wall
+# does not fit.
+# WHAT WAS CUT, AND FROM WHERE (every cut is a demand for less OUTPUT, not a step removed -
+# seven steps, same names, same order):
+#   step 2  the per-declaration commentary on the composition, and the write-time normalisation
+#           and previous-value questions, which were a separate hunt of their own.
+#   step 3  the removal path's ordering, and the inline/handed-off cut reduced from a second
+#           pass over both paths to one line per hand-off.
+#   step 5  the "stored judgement read back as current" shape dropped, and the absence census
+#           reduced to at least one unguarded line. Scored on coverage of the SHAPES now.
+#   step 6  from ranking every place with three fields each to the top of the order in full and
+#           the tail in a line; re-verification for the top only.
+#   step 7  from re-listing every downstream place to one line per area with one located
+#           example, plus separately only the places whose change differs from their area's.
+# NOT CUT: step 4, in any respect - see below - and the one-sweep population paragraph at the
+# end of step 3, which step 4's own text leans on. Each shortened step's `response_richness`
+# floor moved down with its demand (8/10/12/12/14/16 -> 6/8/10/10/12/14); step 4's stayed at 6.
+#
 # WHAT THE EXPANSION DID TO THIS FILE, AND WHAT IT LEFT ALONE.
 #   LEFT ALONE: the block for `Audit every dependent of the server contract` is the probe
 #   rubric's step-2 block, SLICED out verbatim by the assembling script rather than retyped.
@@ -127,36 +150,40 @@ steps:
     map_quality:
       weight: 0.4
       question: |
-        Two halves. The composition: is what the type is BUILT OUT OF laid out - the shared
-        behaviour it mixes in, the pieces it is composed of, the other records it declares a
-        relationship to - and, crucially, are the things it pulls in for its own use separated
-        from the things that hang off it and exist only because it does? That direction is what
-        makes the later steps tractable and getting it backwards is a real error, not a
-        presentation choice.
-        The identity: are the identifying fields named and located; is the write-time
-        normalisation of those fields shown, including what the write does with the PREVIOUS
-        value of one of them when it changes; and is the per-request cache that serves lookups
-        by identity found, together with what empties it and when? The question is coverage of
-        those jobs and whether they are connected into one story about how identity is
-        established and resolved, rather than listed as places a name is mentioned. Could the
-        next steps act from this map with targeted lookups rather than a fresh exploration?
+        Two halves, and they are NOT weighted alike, because the step bounds the first and
+        leans on the second.
+        The composition: is what the type is BUILT OUT OF laid out - the shared behaviour it
+        mixes in and the other records it declares a relationship to - and, crucially, are the
+        things it pulls in for its own use separated from the things that hang off it and exist
+        only because it does? That direction is what makes the later steps tractable and
+        getting it backwards is a real error, not a presentation choice. It is asked for as a
+        located list and NOT as an essay: a phrase on each declaration earns nothing here, and
+        an extended commentary on the composition is a worse answer than a correct list,
+        because the budget it spends is taken from the discriminator.
+        The identity, which is the half that carries: are the identifying fields named and
+        located, and is the per-request cache that serves lookups by identity found, together
+        with what empties it and when? The question is coverage of those two jobs and whether
+        they are connected into one story about how identity is established and resolved,
+        rather than listed as places a name is mentioned. Could the next steps act from this
+        map with targeted lookups rather than a fresh exploration?
     specificity:
       weight: 0.25
       question: |
         Does every declaration, field and routine carry an exact file:line AND, where it is a
         routine, the name it is defined under? A bare filename is not specific. A relationship
         or a mixed-in behaviour asserted from the shape of the class, without the line where it
-        is declared, is not specific. Where the answer claims a field is normalised or a lookup
-        is cached, is the line that does the normalising or the caching located, rather than
-        inferred from a name?
+        is declared, is not specific. Where the answer claims a lookup is served from a
+        per-request cache, is the line that does the caching located, and the line that empties
+        it, rather than inferred from a name?
     justification:
       weight: 0.2
       question: |
-        Does each piece of the composition carry a phrase on what it brings in, and each part of
-        the identity story a phrase on what it contributes - what it sets, what it caches and on
-        what key, what it does with a replaced value? Does the closing statement say what a
+        Does the identity half carry a phrase on what each part contributes - what it sets,
+        what it caches and on what key, what empties it? Does the closing sentence say what a
         rework of identity would have to PRESERVE for this contract to keep meaning what it
-        means today, rather than restating the names of the parts?
+        means today, rather than restating the names of the parts? Do NOT penalise a
+        composition list offered without commentary: the step asks for a phrase there only
+        where the direction is not obvious from the declaration.
     uncertainty:
       weight: 0.15
       question: |
@@ -175,12 +202,14 @@ steps:
         LINK back to the machine or a COPY of one of the identifying fields? That ruling is the
         step's centre of gravity: an answer that lists the seeded records without making the
         call on each one has described the path and missed the point of tracing it.
-        TEARDOWN: is the removal path traced in order, with what it takes with it, what it hands
-        to something else, and - specifically - what it LEAVES BEHIND? "The path looked
-        complete" is the failure this part exists to catch.
-        THE SECOND CUT: are both paths also split by WHEN they run - inside the triggering
-        request against handed off to run later and out of process - and for each hand-off, is
-        it said whether the machine record itself travels or only something taken off it?
+        TEARDOWN: is the removal path traced, with what it takes with it, what it hands to
+        something else, and - specifically - what it LEAVES BEHIND? "The path looked complete"
+        is the failure this part exists to catch.
+        THE HAND-OFFS: for the parts of either path that run later and out of process, is it
+        said - in one line each, which is all the step asks for - whether the machine record
+        itself travels or only something taken off it? That single distinction is the whole of
+        this part; an expanded treatment of the queueing machinery is not a better answer, it
+        is budget taken from the discriminator.
         Finally the population: is the whole affected set established in ONE sweep to its full
         depth and reported as its SHAPE - the areas it lands in, one located example each, how
         far out from the type it reaches - with the near edge distinguished from the far side
@@ -284,19 +313,23 @@ steps:
       weight: 0.4
       question: |
         The step asks how the product satisfies itself that it is acting on a real, CURRENT
-        machine before it acts, and it has four shapes plus one absence.
+        machine before it acts, and it asks for three shapes plus one absence - explicitly as
+        worked examples and NOT as a census.
         Does the answer distinguish lookups that RAISE on failure from lookups that quietly hand
         back nothing - and, in the quiet case, say what the calling code then does having been
         handed nothing, which is the part that decides whether the failure is loud or silent?
         Does it find where a lookup is narrowed to what the caller is entitled to see and where
         it is not narrowed at all? Does it find where two identifying pieces are compared as
         plain values, with no machine present on either side, to decide that two things are the
-        same machine? Does it find where a stored judgement about a machine's state is read back
-        and acted on as though it were current?
-        Above all: are the same-shaped lines that carry NO guard named? The absence is the
-        finding in this step, and an answer listing only the guarded cases has inverted it -
+        same machine?
+        Above all: is at least one same-shaped line that carries NO guard named? The absence is
+        the finding in this step, and an answer listing only the guarded cases has inverted it -
         score it as the partial answer it is however well located each guard is. Restating the
         earlier steps' lines with the word "guard" attached is not progress.
+        Score COVERAGE OF THE SHAPES, not the count of instances: one correct located example
+        of each shape is a complete answer here, and an exhaustive sweep of every guard in the
+        product earns nothing extra, because the budget it spends was taken from elsewhere in
+        the session.
     specificity:
       weight: 0.25
       question: |
@@ -329,23 +362,28 @@ steps:
         that the rank is by what happens when the piece stops resolving and NOT by how likely
         the answer thinks that is, so a ranking driven by the answer's own confidence has
         answered a different question.
-        Is each place classified by how the failure would SURFACE - a lookup that raises and
-        takes something down, a silent nothing the code carries on with, a different machine
-        acted on with no complaint at all, or a wrong value that has already left this product
-        and cannot be corrected from here - and does the order reflect that the silent ones
-        outrank the loud ones, with the reason given? Does the coverage span the places the
-        earlier steps found, rather than re-ranking a favoured handful?
-        Then: is what must be re-verified after the rework named, and is each re-verification
-        placed somewhere concrete rather than left as an instruction to test carefully? A missed
-        high-risk dependent is the one that pages someone, so a short confident order with
-        ranked places missing from it is worth less than a longer one that admits its tail.
+        Is each place AT THE TOP OF THE ORDER classified by how the failure would SURFACE - a
+        lookup that raises and takes something down, a silent nothing the code carries on with,
+        a different machine acted on with no complaint at all, or a wrong value that has already
+        left this product and cannot be corrected from here - and does the order reflect that
+        the silent ones outrank the loud ones, with the reason given once?
+        The step asks for the top of the order in full and for the tail in a line, so a
+        re-listing of every place the audit already gave is NOT a better answer here: it is a
+        restatement, and the step says so. What is scored is whether the top was chosen by
+        consequence and whether the tail is accounted for rather than silently dropped.
+        Then: is what must be re-verified after the rework named for those top places, and is
+        each re-verification placed somewhere concrete rather than left as an instruction to
+        test carefully? A missed high-risk dependent is the one that pages someone, so an order
+        whose top is wrong is worse than one whose tail is short.
     specificity:
       weight: 0.25
       question: |
-        Does every ranked place carry its own exact file:line, its rank, and its surfacing class?
-        Is each re-verification located at a file:line where it would actually be done? Places
-        grouped into a band with one shared justification and no location on any of them is the
-        failure this criterion exists to catch - it is one item, not a band of ranked places.
+        Does every place in the top of the order carry its own exact file:line, its rank, and
+        its surfacing class? Is each re-verification located at a file:line where it would
+        actually be done? Places grouped into a band with one shared justification and no
+        location on any of them is the failure this criterion exists to catch - it is one item,
+        not a band of ranked places. The single line accounting for the tail is exempt: it is
+        what the step asked for there.
     justification:
       weight: 0.2
       question: |
@@ -367,11 +405,14 @@ steps:
         Could a teammate execute this plan without re-deriving anything? Three parts.
         THE EDIT: are the lines the answer would change in the contract, its write path and its
         removal path given, in the order they would be changed, with what each change is?
-        DOWNSTREAM: is everything that has to move with it grouped by area, one section per area,
-        with every place listed SEPARATELY - and is "needs no change" kept distinct from "needs
-        no change but must be re-read to be sure"? Those are two different claims and collapsing
-        them is the failure this part names. A group summarised instead of listed reads as a
-        group with nothing in it.
+        DOWNSTREAM: is what has to move with it grouped by area, with one line per area saying
+        what changes there and one located example - and are the places whose change is NOT the
+        same as the rest of their area's then named SEPARATELY at file:line? That second part is
+        what makes the plan executable, because those are the only ones a teammate cannot infer
+        from the area line. Is "needs no change" kept distinct from "needs no change but must be
+        re-read to be sure"? Those are two different claims and collapsing them is the failure
+        this part names. A full re-listing of the audit is NOT a stronger answer here - the step
+        rules it out, and it is budget taken from the tests below.
         THE TESTS: are the tests that already assert something about how a machine is identified,
         resolved, seeded or torn down named, each at the assertion or setup line that would have
         to change, with what changes about it - and where nothing existing covers a place the
@@ -383,10 +424,10 @@ steps:
     specificity:
       weight: 0.25
       question: |
-        Does every edit, every downstream place and every existing test carry its own exact
-        file:line - for the tests, the line of the assertion or the setup that changes, not the
-        test file alone? Is each downstream place given its own line and its own change rather
-        than sharing one? A bare filename does not count anywhere in this step, and a described
+        Does every edit, every separately-named downstream place and every existing test carry
+        its own exact file:line - for the tests, the line of the assertion or the setup that
+        changes, not the test file alone? Does each downstream AREA carry at least its one
+        located example? A bare filename does not count anywhere in this step, and a described
         future test is scored on the description, not on a location it cannot have.
     justification:
       weight: 0.2
