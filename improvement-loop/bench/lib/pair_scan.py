@@ -60,7 +60,7 @@ def measuring_run(root, repo, want_version, arm=""):
         if arm and meta.get("tool") != arm:
             continue
         scored = _load(os.path.join(dirpath, "scored.json")) or {}
-        if not run_validity.classify_run(meta, scored).get("valid"):
+        if not run_validity.classify_run(meta, scored, run_dir=dirpath).get("valid"):
             continue
         return os.path.join(dirpath, "transcript.json")
     return ""

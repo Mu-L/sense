@@ -14,13 +14,14 @@ the exit code:
   completed              rc 0, a real answer                    -> VALID
   truncated_at_ceiling   watchdog cut a real answer short       -> VALID (failed exam)
   never_reached_synthesis tokens+tool calls burned, no answer   -> VALID (real 0.0)
+  starved_session        watchdog, but the arm never got its wall -> invalid
   empty_final_answer     clean exit, degenerate/empty stream    -> invalid
   no_output_hang         watchdog cut it before any output      -> invalid
   provider_cap_error     metered sub refused mid-delivery       -> invalid
   answer_offloaded       answer written to a file, stub returned-> invalid
   harness_crash          non-watchdog failure                   -> invalid
 
-The four invalid classes are measurement ARTIFACTS: the harness, not the arm,
+The five invalid classes are measurement ARTIFACTS: the harness, not the arm,
 decided the outcome, so they are re-run rather than scored.
 """
 import glob
@@ -38,7 +39,23 @@ WATCHDOG_CODES = {
 # Final assistant text shorter than this is mid-work narration, not an answer.
 MIN_ANSWER_CHARS = 200
 
+# A watchdogged run that spent less than this fraction of its wall INSIDE the
+# provider is starved, not slow: the arm was queued or retried, never given the
+# budget the cell derives from. Measured 2026-08-11 across the 26 runs of
+# php-laravel/coolify, api-seconds over wall-seconds:
+#
+#   0.07  baseline, 9 turns, 71-char answer, scored 0.0 on every group  <- starved
+#   0.46  0.60  0.65  0.89  0.96  baselines that greped locally, scored 0.27-0.92
+#   0.98-1.00  every sense run (MCP calls return in milliseconds)
+#
+# So the floor separates the one starved run from the honest lows with a wide
+# margin either side. It is NOT a slowness gate: the two 0.0 baselines that DID
+# get their wall sit at 0.89 and 0.96 and stay valid, which is the point - a real
+# failure to answer is the result the bench exists to record.
+STARVED_API_RATIO = 0.15
+
 _ARTIFACTS = {
+    "starved_session",
     "empty_final_answer",
     "no_output_hang",
     "provider_cap_error",
@@ -49,12 +66,19 @@ _ARTIFACTS = {
 
 def classify(rc, answer_chars, output_tokens,
              provider_error=False, offloaded=False,
-             min_answer_chars=MIN_ANSWER_CHARS):
+             min_answer_chars=MIN_ANSWER_CHARS,
+             api_seconds=None, wall_seconds=None):
     """Return {"valid", "outcome", "void_reason", "watchdog_kind"} for one run.
 
     answer_chars is the FINAL assistant text length; output_tokens is what the
     session generated. Their ratio is the classification -- see the module
     docstring. rc alone is never the verdict.
+
+    api_seconds/wall_seconds are optional and only ever RESCUE a run from being
+    counted: they split the one class that reads a silent arm as a real 0.0
+    (never_reached_synthesis) from the run that was never given its wall. When
+    either is missing the split is not made and nothing changes, so a runner or
+    a transcript that cannot report API time classifies exactly as before.
     """
     rc = int(rc)
     answer_chars = int(answer_chars or 0)
@@ -63,7 +87,8 @@ def classify(rc, answer_chars, output_tokens,
 
     outcome = _outcome(rc, answer_chars, output_tokens,
                        provider_error, offloaded, min_answer_chars,
-                       watchdog_kind is not None)
+                       watchdog_kind is not None,
+                       _starved(api_seconds, wall_seconds))
     valid = outcome not in _ARTIFACTS
     return {
         "valid": valid,
@@ -73,9 +98,24 @@ def classify(rc, answer_chars, output_tokens,
     }
 
 
+def _starved(api_seconds, wall_seconds):
+    """True when this run spent almost none of its wall inside the provider.
+
+    Unknown is not starved: both numbers must be present and the wall positive,
+    or the question was not asked and the run keeps whatever class it had.
+    """
+    try:
+        api = float(api_seconds)
+        wall = float(wall_seconds)
+    except (TypeError, ValueError):
+        return False
+    return wall > 0 and (api / wall) < STARVED_API_RATIO
+
+
 def _outcome(rc, answer_chars, output_tokens,
-             provider_error, offloaded, min_answer_chars, is_watchdog):
-    """Which of the eight classes this run landed in."""
+             provider_error, offloaded, min_answer_chars, is_watchdog,
+             starved=False):
+    """Which of the nine classes this run landed in."""
     # Provider cap first: its error blob is short enough to also trip the
     # answer-length gate, but the cap is the actionable diagnosis.
     if provider_error:
@@ -88,21 +128,32 @@ def _outcome(rc, answer_chars, output_tokens,
         # Tokens were spent. A long answer means the clock cut a real delivery;
         # a short one means the arm never got to the answer at all. Both are the
         # arm's result, not the instrument's failure.
-        return ("truncated_at_ceiling" if answer_chars >= min_answer_chars
-                else "never_reached_synthesis")
+        if answer_chars >= min_answer_chars:
+            return "truncated_at_ceiling"
+        # ...unless the arm never got the wall it was silent through. A silent
+        # arm that HELD the provider for its budget failed the exam honestly; one
+        # that was queued or retried outside it sat out the exam, and scoring that
+        # as a 0.0 manufactures the delta for whatever it is paired against.
+        return "starved_session" if starved else "never_reached_synthesis"
     if rc != 0:
         return "harness_crash"
     return ("completed" if answer_chars >= min_answer_chars
             else "empty_final_answer")
 
 
-def classify_run(meta, scored=None, min_answer_chars=MIN_ANSWER_CHARS):
+def classify_run(meta, scored=None, min_answer_chars=MIN_ANSWER_CHARS,
+                 run_dir=None):
     """Classify from a run's on-disk records, newest evidence first.
 
     Reads the exit code and answer evidence out of run_meta.json (`meta`) and,
     when the runner did not record them there, out of the sibling scored.json
     (`scored`). This derives the class from what the run LEFT BEHIND, so a run
     stamped by an older driver reclassifies correctly with no rewrite.
+
+    `run_dir` lets the API time be recovered from transcript.json for runs no
+    driver stamped it into - which is every run on disk today. Same reason as
+    above: the evidence is already written down, so the class follows the
+    artifacts rather than needing the campaign re-run.
     """
     scored = scored or {}
     metrics = scored.get("metrics") or {}
@@ -120,13 +171,47 @@ def classify_run(meta, scored=None, min_answer_chars=MIN_ANSWER_CHARS):
     # runner stamped rather than inventing a verdict from silence.
     if answer_chars is None:
         return _from_stored_flag(meta)
+    api_ms = _first(meta, ("api_duration_ms",))
+    if api_ms is None and run_dir:
+        api_ms = _api_ms_from_transcript(run_dir)
+    wall = _first(meta, ("wall_time_seconds",))
+    if wall is None:
+        wall = metrics.get("wall_time_seconds")
     return classify(
         rc if rc is not None else 0,
         answer_chars, output_tokens,
         provider_error=(error == "provider_cap_error"),
         offloaded=(error == "answer_offloaded_to_file"),
         min_answer_chars=min_answer_chars,
+        api_seconds=(None if api_ms is None else float(api_ms) / 1000.0),
+        wall_seconds=wall,
     )
+
+
+def _api_ms_from_transcript(run_dir):
+    """Provider time in ms out of the session's own result record, or None.
+
+    Only the tail is read: the result event is the last line of a stream-json
+    transcript, and these files run to megabytes. A transcript that carries no
+    such record (codex, opencode) returns None, which reads as "not asked".
+    """
+    path = os.path.join(run_dir, "transcript.json")
+    try:
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            f.seek(max(0, f.tell() - 65536))
+            tail = f.read().decode("utf-8", "replace")
+    except OSError:
+        return None
+    for line in reversed(tail.splitlines()):
+        line = line.strip()
+        if not line.startswith("{") or '"duration_api_ms"' not in line:
+            continue
+        try:
+            return json.loads(line).get("duration_api_ms")
+        except ValueError:
+            return None
+    return None
 
 
 # Directory-name conventions for runs that are ON DISK but NOT part of the
@@ -173,7 +258,7 @@ def measured(scored_path):
             scored = json.load(f)
     except (OSError, ValueError):
         return True
-    return classify_run(meta, scored)["valid"]
+    return classify_run(meta, scored, run_dir=run_dir)["valid"]
 
 
 def _from_stored_flag(meta):

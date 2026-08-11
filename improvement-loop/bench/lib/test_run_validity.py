@@ -1,4 +1,6 @@
 """Behavior tests for run_validity: a timed-out run is a RESULT, not a void."""
+import json
+
 import run_validity as rv
 
 
@@ -26,6 +28,43 @@ def test_never_reaching_synthesis_is_a_real_failure_not_an_artifact():
     r = _c(124, 83, 21886)
     assert r["valid"] is True
     assert r["outcome"] == "never_reached_synthesis"
+
+
+def test_a_silent_arm_that_never_got_its_wall_is_starved_not_a_zero():
+    """php-laravel/coolify, 2026-08-11: a baseline held 486s of wall with 34s of
+    provider time, 9 turns and a 71-char answer, and scored 0.0 on every group.
+    Read as never_reached_synthesis it is a real 0.0 and manufactures the delta
+    for whatever sense run it is paired against."""
+    r = _c(124, 71, 1842, api_seconds=34.3, wall_seconds=486)
+    assert r["valid"] is False
+    assert r["void_reason"] == "starved_session"
+
+
+def test_a_silent_arm_that_held_its_wall_stays_a_real_zero():
+    """The two other 0.0 baselines in the same campaign, at 0.89 and 0.96 of wall:
+    they ground through their budget and failed. That failure IS the measurement."""
+    assert _c(124, 83, 21886, api_seconds=470, wall_seconds=526)["outcome"] \
+        == "never_reached_synthesis"
+    assert _c(124, 83, 21886, api_seconds=425.7, wall_seconds=443)["outcome"] \
+        == "never_reached_synthesis"
+
+
+def test_starvation_never_touches_a_delivered_answer():
+    """truncated_at_ceiling is a delivery the clock cut: the arm answered, so how
+    it spent the wall does not change that it did."""
+    r = _c(124, 38649, 18994, api_seconds=10, wall_seconds=500)
+    assert r["valid"] is True
+    assert r["outcome"] == "truncated_at_ceiling"
+
+
+def test_unknown_api_time_classifies_exactly_as_before():
+    """Every run on disk predates the stamp, and a missing number must not void
+    them wholesale: no api time means the question was not asked."""
+    assert _c(124, 71, 1842)["outcome"] == "never_reached_synthesis"
+    assert _c(124, 71, 1842, wall_seconds=486)["outcome"] == "never_reached_synthesis"
+    assert _c(124, 71, 1842, api_seconds=34.3)["outcome"] == "never_reached_synthesis"
+    assert _c(124, 71, 1842, api_seconds=34.3, wall_seconds=0)["outcome"] \
+        == "never_reached_synthesis"
 
 
 def test_watchdog_before_any_output_measures_nothing():
@@ -94,6 +133,56 @@ def test_classify_run_defaults_a_missing_exit_code_to_clean():
     """session-run.sh records no exit code; judge it on the answer alone."""
     r = rv.classify_run({}, {"metrics": {"answer_chars": 9000, "token_output": 4000}})
     assert r["outcome"] == "completed"
+
+
+def _starved_cell(tmp_path, api_ms, wall):
+    """One run directory shaped like the coolify baseline that started this."""
+    run = tmp_path / "baseline" / "coolify" / "run-1"
+    run.mkdir(parents=True)
+    (run / "run_meta.json").write_text(json.dumps(
+        {"claude_exit_code": 124, "wall_time_seconds": wall}))
+    (run / "scored.json").write_text(json.dumps(
+        {"metrics": {"answer_chars": 71, "token_output": 1842}}))
+    (run / "transcript.json").write_text("\n".join([
+        json.dumps({"type": "assistant", "message": {"role": "assistant"}}),
+        json.dumps({"type": "result", "duration_api_ms": api_ms, "num_turns": 9}),
+    ]))
+    return run
+
+
+def test_api_time_is_recovered_from_the_transcript_when_no_driver_stamped_it(tmp_path):
+    """No runner records api_duration_ms today, so the class has to follow the
+    artifact the session already wrote."""
+    run = _starved_cell(tmp_path, 34290, 486)
+    meta = json.loads((run / "run_meta.json").read_text())
+    scored = json.loads((run / "scored.json").read_text())
+    assert rv.classify_run(meta, scored)["outcome"] == "never_reached_synthesis"
+    assert rv.classify_run(meta, scored, run_dir=str(run))["outcome"] == "starved_session"
+
+
+def test_a_stamped_api_time_wins_over_the_transcript(tmp_path):
+    run = _starved_cell(tmp_path, 34290, 486)
+    meta = json.loads((run / "run_meta.json").read_text())
+    meta["api_duration_ms"] = 470000
+    scored = json.loads((run / "scored.json").read_text())
+    assert rv.classify_run(meta, scored, run_dir=str(run))["outcome"] \
+        == "never_reached_synthesis"
+
+
+def test_a_starved_run_leaves_the_scored_set(tmp_path):
+    run = _starved_cell(tmp_path, 34290, 486)
+    assert rv.measured_runs(str(run.parent)) == []
+    _starved_cell(tmp_path / "held", 460000, 486)
+    assert len(rv.measured_runs(str(tmp_path / "held" / "baseline" / "coolify"))) == 1
+
+
+def test_a_transcript_without_a_result_record_asks_nothing(tmp_path):
+    """codex and opencode transcripts carry no duration_api_ms."""
+    run = tmp_path / "run-1"
+    run.mkdir()
+    (run / "transcript.json").write_text(json.dumps({"type": "message"}))
+    assert rv._api_ms_from_transcript(str(run)) is None
+    assert rv._api_ms_from_transcript(str(tmp_path / "absent")) is None
 
 
 def test_parked_and_probe_dirs_are_off_board():
