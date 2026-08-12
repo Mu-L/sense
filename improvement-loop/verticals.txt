@@ -1,19 +1,19 @@
 # The vertical QUEUE, in order. One `key|lang|framework|title` per line.
 
 ruby-rails|ruby|rails|Ruby on Rails
-php-laravel|php|laravel|PHP / Laravel
-python-django|python|django|Python / Django
-java-spring|java|spring|Java / Spring
 csharp-aspnet|csharp|aspnetcore|C# / ASP.NET Core
-typescript-nestjs|tsjs|nestjs|TypeScript / NestJS
 go-cloudnative|golang|cloudnative|Go / Cloud-Native
+java-spring|java|spring|Java / Spring
+python-django|python|django|Python / Django
 rust-axum|rust|axum|Rust / Axum
+kotlin-spring|kotlin|spring|Kotlin / Spring
+swift-vapor|swift|vapor|Swift / Vapor
+elixir-phoenix|elixir|phoenix|Elixir / Phoenix
+dart-flutter|dart|flutter|Dart / Flutter
+clojure-ring|clojure|ring|Clojure / Ring
+php-laravel|php|laravel|PHP / Laravel
+typescript-nestjs|tsjs|nestjs|TypeScript / NestJS
 python-fastapi|python|fastapi|Python / FastAPI
 php-symfony|php|symfony|PHP / Symfony
-kotlin-spring|kotlin|spring|Kotlin / Spring
-elixir-phoenix|elixir|phoenix|Elixir / Phoenix
-swift-vapor|swift|vapor|Swift / Vapor
-dart-flutter|dart|flutter|Dart / Flutter
 haskell-servant|haskell|servant|Haskell / Servant
-clojure-ring|clojure|ring|Clojure / Ring
 zig-systems|zig|systems|Zig / Systems
