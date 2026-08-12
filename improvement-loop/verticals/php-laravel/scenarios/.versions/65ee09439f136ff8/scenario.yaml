@@ -1,0 +1,424 @@
+# ============================================================================
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md)
+# CYCLE 1, ATTEMPT 4 on laravel-framework - a RE-QUESTION routed back from a measured
+# mini-bench for the third time. SAME ANCHOR as attempt 3 (ITERATE ON THE QUESTION, KEEP
+# THE ANCHOR: attempt 3 was the FIRST question asked on this contract, and the precedent
+# that licenses a move - written into attempt 1's own read - is TWO questions on one anchor).
+#
+# TRAJECTORY - EVERY PREVIOUS CYCLE, AND WHICH SIDE OF THE WINDOW IT FELL ON
+#   The window is BOTH conditions at once: plain arm at or below 0.50 of `dependents`
+#   AND ours at least +0.50 above. All three previous reads were read end to end
+#   (results/loop/laravel-framework/cycles.jsonl, results/dryrun/.../minibench.1.md and
+#   minibench.2.md, results/loop/.../minibench.md).
+#     cycle 1, attempt 1 - Connection, "every point of contact and the facet it reaches for".
+#       baseline 0.9375 (15/16), sense 0.8125, delta -0.125.  SIDE: baseline-got-everything.
+#       ROUTE: read the anchor file, harvest its public method names, `grep -rn '->name('`.
+#     cycle 2, attempt 2 - Connection, "what keeps one alive" (a keeper audit).
+#       baseline 0.8333 (10/12), sense 1.0, delta +0.1667.  SIDE: baseline-got-everything.
+#       ROUTE: six commands of `protected (Connection|ConnectionInterface) \$` /
+#       `\$this->(connection|conn|db)\s*=\s*\$`.
+#     cycle 3, attempt 3 - Filesystem, "what reaches it THROUGH an intermediary".
+#       baseline 0.6667 (8/12), sense 1.0, delta +0.333.  SIDE: baseline-got-everything.
+#       ROUTE: 33 tool calls, 31 searches, ZERO reads; calls 4-6 were
+#       `grep -rn "Filesystem \$files|\$this->files = "`, then a `for f in ...` loop pinning
+#       lines in files that sweep had already named.
+#   Three cycles, one side, monotone: 0.9375 -> 0.8333 -> 0.6667. Never once the far side
+#   (both arms low). So this draft corrects from the SAME side for the third time, and the
+#   distance it must cover is the remaining 0.17 to bring the plain arm to 0.50 or under.
+#
+# WHAT THE PREVIOUS DRAFT GOT WRONG, FROM ITS OWN MEASURED ROWS - AND IT IS NOT THE MECHANISM
+#   Attempt 3 asked for dependents reached through an intermediary, and the plain arm took
+#   8 of those 12 while missing 4. Both bands are the SAME mechanism, so the mechanism is not
+#   what separated them. What separated them, row for row:
+#     TAKEN  (8): Cache/Repository (holds a Store), Translation/Translator (holds a Loader),
+#       View/Factory (holds a ViewFinder), View/Compilers/BladeCompiler (extends Compiler),
+#       View/Engines/CompilerEngine (extends PhpEngine), Cache/CacheManager,
+#       Database/Console/Migrations/MigrateMakeCommand, .../StatusCommand.
+#       Every one of these is a piece of core Laravel wiring a frontier model can recite
+#       closed-book. `memorization_probe.py $CLONE Filesystem` returns recall 0.852, 46 of
+#       54 members named with the repo unread; the architecture around them is at least as
+#       well known as the member list.
+#     MISSED (4): Cache/TagSet, Database/Console/Factories/FactoryMakeCommand,
+#       Database/Console/Seeds/SeederMakeCommand, Database/MigrationServiceProvider.
+#       Peripheral files nobody recites.
+#   Cross-checked against the whole repo's history, all three questions merged:
+#     python3 bench/lib/inverse_frequency.py laravel-framework \
+#       verticals/php-laravel/results/claude-opus-5/minibench --by-path .../scenarios/.versions
+#   Over 3 baseline runs the plain arm cited 34 of 40 dependent rows. Its complete miss list
+#   is those 4 plus Foundation/Cloud/Queue and Queue/InteractsWithQueue - six peripheral
+#   files, every one of them reached by inheritance, by a decorator, by a satisfier of an
+#   interface-typed field, or by a wiring line.
+#   KILLER RUN, and it killed the obvious story: "the plain arm misses what its own file does
+#   not name". FALSE here - attempt 3's own header records 10 of its 12 scored files as
+#   carrying no occurrence of the anchor's name, and the plain arm took 8 of them.
+#   Token-darkness did not separate these rows and is not this draft's selector.
+#   THE SELECTOR IS THE ACQUISITION ROUTE, and gold is scoped to the periphery.
+#
+# THE ANCHOR AND ITS SEAM PROFILE (re-run this session)
+#   python3 bench/lib/seam_hunt.py $CLONE Filesystem --propose \
+#     --file src/Illuminate/Filesystem/Filesystem.php
+#     app caller files : 31   (total incl test/non-app: 39)
+#     SCATTER (dirs)   : 18
+#     GREP-NOISE       : 'Filesystem' in 78 app files   PRECISION=0.40  (lower=grep-hostile)
+#     VERDICT          : SCATTERED + GREP-NOISY
+#   Two other candidates profiled this session and NOT chosen; precision RANKS, it never
+#   kills, and neither of these was rejected for what a grep prints:
+#     GeneratorCommand (src/Illuminate/Console/GeneratorCommand.php)
+#       31 caller files, SCATTER 11, 'GeneratorCommand' in 32 app files, PRECISION=0.84.
+#       Worse on the one figure that has separated wins from ties across three verticals,
+#       and its dependent set is 36 subclasses sitting behind a single `extends` line.
+#     Facade (src/Illuminate/Support/Facades/Facade.php)
+#       17 caller files, SCATTER 7, 'Facade' in 50 app files, PRECISION=0.34.
+#       Better precision, half the scatter, and its dependents are the facades themselves.
+#   anchor_rank.py --top 20 lists Filesystem at 44 dependent files, the largest non-trait,
+#   non-container concrete class in the ranking.
+#   ring_sweep.py $CLONE --top 12: every swept anchor UNDER BAR (best ring Container, 23
+#   rows / 3 vias). So the retention kind - the strongest measured kind in this bench - is
+#   off the menu in this stack, exactly as it was for attempts 2 and 3.
+#
+# THE KIND OF QUESTION
+#   Not "everything that uses X" (0.9375 here), not "what holds X" (0.8333 here, and it needs
+#   a ring this stack does not have), not "what reaches X through an intermediary" (0.6667
+#   here, and the intermediaries turned out to be recitable). The kind is:
+#   WHAT WILL THE SWAP NOT REACH - which code is going to keep doing this work through an
+#   instance the container never handed it, and by what route did it get one.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS
+#   Per place, the answer is its ACQUISITION ROUTE and the consequence that follows from it:
+#   whether re-binding the one shared instance reaches this code at all, and if not, what has
+#   to happen to it instead. Two places one search prints side by side differ on exactly this
+#   - one is re-bound for free, the next is not reached by the binding at all and has to be
+#   rewritten - and no list of occurrences carries that distinction.
+#   SAID PLAINLY, AND ALSO IN `notes`: eight of the twelve scored files DO write the
+#   contract's name at their acquisition line. This draft is not curated for darkness and
+#   does not claim to be; darkness was measured above and it did not separate the arms.
+#
+# THE MECHANISM (this sentence is the scenario's whole thesis)
+#   A dependent here is never handed the object. It obtains one at the moment it needs it -
+#   by constructing its own inside a routine whose file is about something else entirely; by
+#   inheriting the field from a base class it extends, so its own file declares nothing; by
+#   declaring only a narrow promise on its field, which one holder happens to satisfy; or by
+#   a wiring line that pulls the shared one out by short name and hands it on. Re-binding the
+#   shared instance reaches none of them.
+#
+# EVERY SCORED ROW IS IN THE SHOWN BLAST PAYLOAD (RUN THIS SESSION, NOT ASSUMED)
+#   python3 bench/lib/mcp_probe.py $CLONE \
+#     '[{"name":"sense_blast","arguments":{"symbol":"Illuminate\\Filesystem\\Filesystem"}}]'
+#   No `min_confidence` passed. It prints 50 distinct `src/Illuminate/...php` paths across
+#   60 direct-caller rows, 20 `indirect_callers` carrying `hops` and `via`, 2
+#   `affected_subclasses`, 24 `affected_via_composition` and 4 `retained_via_interfaces`
+#   carrying `via`/`carrier`/`chain` - e.g. `Cache/TagSet.php:7 via Store carrier FileStore
+#   chain FileStore > Filesystem`. All twelve scored files are among those 50; checked one by
+#   one, not assumed. The four measured-miss rows are served as: TagSet in
+#   `retained_via_interfaces`; FactoryMakeCommand `via GeneratorCommand\buildClass hops 2`;
+#   SeederMakeCommand `via GeneratorCommand\handle hops 2`; MigrationServiceProvider
+#   `register via registerCreator hops 3`.
+#
+# MEMORIZATION (bench/lib/memorization_probe.py $CLONE Filesystem --json /tmp/memo_fs4.json)
+#   truth_n 54, said_n 52, samples 0.852 / 0.833 / 0.852. GOLD-TIME CONSTRAINT, NOT AN
+#   ADMISSION VERDICT - and this cycle it is the constraint that did the work: every row the
+#   plain arm has taken on this anchor is recitable core wiring, and all eight of those files
+#   are now non-scoring anchors. No scored row is a member of the contract, and none is a
+#   piece of architecture a maintainer would name from memory. Two limits carried forward,
+#   still true, still untested: the probe has no per-row mode, so plan step 5's per-candidate
+#   run cannot be executed as written; and churn-dating cannot discriminate rows on a single
+#   pinned snapshot.
+#
+# ARITHMETIC, THE FALSIFIER, STATED BEFORE THE RUN: 12 scored rows, recall caps at 1.00, so
+# +0.50 is reachable ONLY if the plain arm cites 6 files or fewer. If it cites 7, the cell is
+# dead before it is scored, and that is the result.
+#   THE KNOWN FLOOR UNDER IT: of the twelve, four have been in front of a plain arm once and
+#   it missed all four; the other eight have never been scored on this repo in either arm.
+#   So the measured floor is 0 of 4, and there is no measured evidence about the remaining
+#   eight in EITHER direction - the mini-bench is what settles them.
+#
+# NEGATIVE SPACE - WHAT I DID NOT CHECK, AND WHAT I CHECKED THAT DECIDES NOTHING
+#   Recorded because the law says record what a grep prints and never let it decide.
+#     `grep -rlE 'Filesystem \$(files|filesystem|file)|\$this->(files|filesystem) = '` over
+#     src/Illuminate prints 31 files and covers 26 of the payload's 50; the twelve scored
+#     files are not among the 26. A search for the inline construction expression prints
+#     eight of the twelve. NO GREP SCREEN IS A GATE, IN ANY FORM - this is a header record of
+#     what a search prints, it did not select these rows and it may not kill this draft; the
+#     metric is whether an arm runs the search to closure at `path:line` inside its wall, and
+#     only the run answers that. The import screen in its old home rejected four of four
+#     banked wins.
+#   I did NOT run a per-row read-cost census (banned before the two-arm bench). I did not
+#   estimate what the plain arm would reach; a hand estimate of a baseline is not evidence
+#   about a baseline, and each cheaper substitute this bench has built was measured wrong.
+#   One false caller edge re-confirmed and kept out: the payload lists
+#   src/Illuminate/Http/FileHelpers.php as a direct caller via `guessExtension`, but that
+#   trait's `$this->guessExtension()` is Symfony's `File::guessExtension`, not this
+#   contract's at Filesystem.php:441. Same method name, different class. Named in the verdict
+#   notes as a product signal; not acted on here.
+#
+# THE INVENTORY CHECK, RUN BY HAND BECAUSE NO SCRIPT CAN RUN IT
+#   The twelve scored files sit in cache tagging, the artisan generators, migration wiring,
+#   schema dumping, environment-file editing, the exception page, the installer and publisher
+#   commands, inline component rendering and the testing helper. None of those words, nor any
+#   synonym for them, appears in either step's prompt: what the ask carries is the four
+#   acquisition routes and nothing else. The rendered prompt was then read end to end - no
+#   path, no class or symbol name, no count of the answer, no tool name. The plain words
+#   "local file" appear in the step titles, the same latitude the three previous attempts
+#   took with "database connection" and "local file access".
+# ============================================================================
+name: Laravel framework work session - audit what the local file access swap will not reach
+repo: laravel-framework
+contract_symbol: Illuminate\Filesystem\Filesystem
+contract_file: src/Illuminate/Filesystem/Filesystem.php
+
+description: |
+  You are a maintainer of this framework, about to replace the object every part of it is
+  handed in order to read and write files on the local disk. Today that object is a plain
+  synchronous wrapper: one instance is made at boot, registered under a short name, and
+  handed out to whatever asks for it; every routine on it blocks until the disk answers, and
+  a failure comes back as an exception thrown from wherever the call happened to be.
+  That is what changes. The replacement does its work off the calling thread and reports a
+  failure at the point the work is awaited rather than at the point it was requested. The
+  plan is to swap what the short name resolves to, and then fix up whatever that swap does
+  not reach.
+  So the code that is handed one and keeps it is the easy half: change what the name
+  resolves to and that code changes with it. The hard half is the code that never asked for
+  one and is going to keep doing this work anyway, because it got hold of an instance some
+  other way at the moment it needed it. Re-binding the shared instance does nothing for that
+  code, and nothing in the file it sits in says so.
+  Before you touch it you have to know two things: what the object is, how the single shared
+  instance is made and handed out, and which collaborators are handed one and keep it; and
+  then every place the swap will not reach, with the way that place got hold of an instance
+  named.
+  Throughout, an answer that points at a place must give an exact file:line a teammate could
+  jump straight to, plus one phrase on why it matters. A bare filename does not count, a set
+  of names offered together with one shared reason and no location on any of them does not
+  count, and a missed place is a regression shipped.
+
+steps:
+  - name: Map the local file access contract
+    prompt: >
+      Task: orient, and be exact - the rest of the ticket is built on this and nothing later
+      will send you back for it. Two things, and the first is the larger.
+      First, the object itself. What does it actually do, grouped by job rather than listed
+      routine by routine; where is the single shared instance made, and under what short name
+      is it registered so that code holding only that name can get one; how does a caller that
+      never names the type end up holding the instance anyway; and what does it do today when
+      the disk refuses - where does that failure surface. Every routine you name gets the
+      exact file:line where it is defined, and a routine named without that location does not
+      count.
+      Second, the collaborators that are handed one and keep it. There is a set of objects in
+      this framework that receive the instance and hold it in a field of their own, and
+      between them they do most of the disk work the framework does. Name them, each at the
+      file:line of the field or the constructor that fills it, and for each one say in a
+      phrase what it does with the handle it keeps. These are the half of the picture that the
+      swap fixes for free, and I want them pinned so that the next part of the ticket can be
+      about everything else.
+      Then say, briefly, by what kinds of route code that is NOT on that list can still end up
+      with an instance in its hands - by making one of its own where it stands, by inheriting
+      the field from something it extends, by declaring only a promise on its field that one
+      of these happens to keep, or by a wiring line that pulls the shared one out by short
+      name and passes it along. Name each kind once with a single example located at
+      file:line. Do not enumerate the places themselves; I am not asking for that list here
+      and it earns nothing.
+    checks:
+      - type: response_richness
+        value: "10"
+        required: true
+        description: The object's own surface grouped by job, the single shared instance's construction and the short name it is registered under, how a caller that never names the type gets one, and where a disk failure surfaces today - each located at file:line, plus the collaborators that are handed one and keep it, each pinned to the field or constructor that fills it, plus the kinds of route by which other code obtains one, named once each with one located example
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the local file access contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the first
+      part already cost you. Take it as settled that the object is being replaced as
+      described and that the short name will be re-bound to the replacement. Answer the only
+      question that matters after that: which code in this framework is going to keep doing
+      local file work that the re-binding does not reach, and how did that code get hold of
+      an instance in the first place.
+      The unit of the answer is a place that the swap misses. A place that is handed the
+      object and keeps it is NOT what I am asking for: the swap fixes those by itself, you
+      pinned them in the first part, and naming one again here earns nothing.
+      What you are after is a routine that obtains one for itself, at the moment it needs it,
+      in a file whose subject is something else. It happens in a few different ways and each
+      one hides it differently. It builds its own where it stands, inside a routine that is
+      mostly about something unrelated, so nothing was ever registered or injected for it. It
+      inherits the field from a class it extends, so the declaration lives in a file it never
+      opens and its own file has nothing to find. It writes only a promise on its field, and
+      the thing that keeps that promise is itself one of the holders, so the file names an
+      idea rather than a type that leads anywhere. Or a wiring line pulls the shared one out
+      by its short name and passes it into something else, so no type is written on either
+      side of the link. Reading the file in front of you will not tell you it is there.
+      Expect these in parts of this framework whose own subject has nothing to do with disks
+      or files. The part of the tree obviously about file access holds the object itself and
+      the collaborators built out of it, so it is the least interesting place to look.
+      For each place the answer has four parts and only four: the exact file:line of the
+      routine and that routine's name; how it got hold of an instance, with the intermediate
+      named at its own file:line where there is one; whether re-binding the shared name
+      reaches it, yes or no; and one phrase on what goes wrong for that routine once the work
+      no longer blocks and the failure no longer surfaces where it was requested. Keep it
+      short: I want the coverage, the routes and the failure, not the prose.
+      Organise by area, one section per area, and treat an area as finished only when every
+      place inside it is listed separately with its own location. If you run short, say what
+      you had still not looked at rather than closing on what you have. A file:line with no
+      route named is half an answer, and a group summarised instead of listed reads as a
+      group with nothing in it.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every place located at the file:line of the routine with that routine named, how it obtained an instance with any intermediate pinned at its own file:line, whether re-binding the shared name reaches it, and what breaks for that routine once the work no longer blocks and the failure no longer surfaces where it was requested
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ---- ANCHORS: the contract centre, the boot binding, and every collaborator that is
+  # ---- HANDED an instance and keeps it. Step 1's answer, and deliberately non-scoring.
+  # ---- Eight of these were scored `dependents` rows in attempt 3 and the plain arm cited
+  # ---- all eight; A FREE ROW IS A GIFT TO THE BASELINE, so they are anchors now and the
+  # ---- floor they put under the plain arm is removed rather than argued with. Every line
+  # ---- below was opened and read this session. None of these files appears in `dependents`.
+  - id: contract-filesystem
+    group: contract
+    match: [src/Illuminate/Filesystem/Filesystem.php]
+    relation: "src/Illuminate/Filesystem/Filesystem.php - the contract itself; :441 `public function guessExtension($path)` is the one whose name collides with a Symfony method of the same name elsewhere in the tree, which is why one payload row is kept out of gold by hand"
+  - id: c:filesystem-provider
+    group: contract
+    match: [src/Illuminate/Filesystem/FilesystemServiceProvider.php]
+    relation: "src/Illuminate/Filesystem/FilesystemServiceProvider.php:41 `$this->app->singleton('files', function () {` returning :42 `return new Filesystem;`, inside `protected function registerNativeFilesystem()` at :39 and reached from :30 - the single shared instance, bound under the short string name; this is the line the ticket's swap changes, and the whole scored group is what that line does not reach"
+  - id: c:cache-file-store
+    group: contract
+    match: [src/Illuminate/Cache/FileStore.php]
+    relation: "src/Illuminate/Cache/FileStore.php:24 `protected $files;` filled at :64 `$this->files = $files;`, spent at :89 `put`, :151 `ensureCacheDirectoryExists` and :394 `getPayload` - handed one and keeps it"
+  - id: c:cache-repository
+    group: contract
+    match: [src/Illuminate/Cache/Repository.php]
+    relation: "src/Illuminate/Cache/Repository.php:62 `protected $store;` filled at :97 `$this->store = $store;` - reaches the contract through the store it is given; a scored row in attempt 3, cited by the plain arm, so it is an anchor here"
+  - id: c:cache-manager
+    group: contract
+    match: [src/Illuminate/Cache/CacheManager.php]
+    relation: "src/Illuminate/Cache/CacheManager.php:295 `$this->app['files'],` inside `protected function createFileDriver(array $config)` at :291 - pulls the shared instance out by short name; a scored row in attempt 3, cited by the plain arm, so it is an anchor here"
+  - id: c:generator-command
+    group: contract
+    match: [src/Illuminate/Console/GeneratorCommand.php]
+    relation: "src/Illuminate/Console/GeneratorCommand.php:337 `$stub = $this->files->get($this->getStub());` inside `protected function buildClass($name)` at :335, plus :154 `handle` and :318 `makeDirectory` - the abstract base that holds the handle on behalf of everything that extends it"
+  - id: c:migration-creator
+    group: contract
+    match: [src/Illuminate/Database/Migrations/MigrationCreator.php]
+    relation: "src/Illuminate/Database/Migrations/MigrationCreator.php:18 `protected $files;` filled at :49 `$this->files = $files;`, spent at :64 `public function create(...)` and :120 `getStub` - handed one and keeps it"
+  - id: c:migrator
+    group: contract
+    match: [src/Illuminate/Database/Migrations/Migrator.php]
+    relation: "src/Illuminate/Database/Migrations/Migrator.php:46 `protected $files;` filled at :111 `$this->files = $files;`, spent at :578 `getMigrationFiles` and :595 `requireFiles` - handed one and keeps it"
+  - id: c:migrate-make
+    group: contract
+    match: [src/Illuminate/Database/Console/Migrations/MigrateMakeCommand.php]
+    relation: "src/Illuminate/Database/Console/Migrations/MigrateMakeCommand.php:111 `$file = $this->creator->create(` inside `writeMigration` at :109 - holds the creator, which holds the handle; a scored row in attempt 3, cited by the plain arm, so it is an anchor here"
+  - id: c:migrate-status
+    group: contract
+    match: [src/Illuminate/Database/Console/Migrations/StatusCommand.php]
+    relation: "src/Illuminate/Database/Console/Migrations/StatusCommand.php:125 `return $this->migrator->getMigrationFiles($this->getMigrationPaths());` inside `getAllMigrationFiles` at :123 - holds the migrator, which holds the handle; a scored row in attempt 3, cited by the plain arm, so it is an anchor here"
+  - id: c:translation-file-loader
+    group: contract
+    match: [src/Illuminate/Translation/FileLoader.php]
+    relation: "src/Illuminate/Translation/FileLoader.php:17 `protected $files;` filled at :48 `$this->files = $files;`, spent at :124 `loadPaths`; declared at :10 `class FileLoader implements Loader` - handed one and keeps it, and the sole concrete satisfier of the loader promise"
+  - id: c:translator
+    group: contract
+    match: [src/Illuminate/Translation/Translator.php]
+    relation: "src/Illuminate/Translation/Translator.php:26 `protected $loader;` filled at :92 `$this->loader = $loader;` - reaches the contract through the loader it is given; a scored row in attempt 3, cited by the plain arm, so it is an anchor here"
+  - id: c:view-finder
+    group: contract
+    match: [src/Illuminate/View/FileViewFinder.php]
+    relation: "src/Illuminate/View/FileViewFinder.php:15 `protected $files;` filled at :54 `$this->files = $files;`, spent at :126 `findInPaths`; declared at :8 `class FileViewFinder implements ViewFinderInterface` - handed one and keeps it"
+  - id: c:view-factory
+    group: contract
+    match: [src/Illuminate/View/Factory.php]
+    relation: "src/Illuminate/View/Factory.php:37 `protected $finder;` filled at :116 `$this->finder = $finder;` - reaches the contract through the finder it is given; a scored row in attempt 3, cited by the plain arm, so it is an anchor here"
+  - id: c:view-compiler
+    group: contract
+    match: [src/Illuminate/View/Compilers/Compiler.php]
+    relation: "src/Illuminate/View/Compilers/Compiler.php:17 `protected $files;` filled at :78 `$this->files = $files;` in the constructor at :66 - the abstract base that holds the handle on behalf of everything that extends it"
+  - id: c:blade-compiler
+    group: contract
+    match: [src/Illuminate/View/Compilers/BladeCompiler.php]
+    relation: "src/Illuminate/View/Compilers/BladeCompiler.php:18 `class BladeCompiler extends Compiler implements CompilerInterface` - inherits the field from Compiler.php:17; a scored row in attempt 3, cited by the plain arm, so it is an anchor here"
+  - id: c:php-engine
+    group: contract
+    match: [src/Illuminate/View/Engines/PhpEngine.php]
+    relation: "src/Illuminate/View/Engines/PhpEngine.php:16 `protected $files;` filled at :25 `$this->files = $files;` in `__construct(Filesystem $files)` at :23, spent at :57 `$this->files->getRequire($path, $data);` - handed one and keeps it"
+  - id: c:compiler-engine
+    group: contract
+    match: [src/Illuminate/View/Engines/CompilerEngine.php]
+    relation: "src/Illuminate/View/Engines/CompilerEngine.php:15 `class CompilerEngine extends PhpEngine` passing up at :46 `parent::__construct($files ?: new Filesystem);` - a scored row in attempt 3, cited by the plain arm, so it is an anchor here"
+
+  # ---- DEPENDENTS: the scored group. Twelve places the re-binding does not reach, one row
+  # ---- per file, eleven distinct directories. Every one is printed WITH ITS PATH in the
+  # ---- shown `sense_blast` payload for the contract. At every scored line the routine has
+  # ---- obtained an instance for itself rather than been handed one. Every line below was
+  # ---- opened and read this session; no credit here is taken from a script tally.
+  #
+  # -- obtained through a promise on a field, or through a base class, or through wiring:
+  # -- the four rows a plain arm has been in front of once, and missed all four
+  - id: d:cache-tag-set
+    group: dependents
+    match: [Cache/TagSet.php]
+    relation: "src/Illuminate/Cache/TagSet.php:31 `$this->store = $store;` in `__construct(Store $store, array $names = [])` at :29, the field declared at :14 `protected $store;` with the docblock at :12 naming only `\\Illuminate\\Contracts\\Cache\\Store` - the file names a promise, not a type that leads anywhere; when a repository hands it the file store the handle is two links away and the re-binding never touches this object; the payload prints it in `retained_via_interfaces` as via Store, carrier FileStore, chain `FileStore > Filesystem`"
+  - id: d:factory-make-build-class
+    group: dependents
+    match: [Console/Factories/FactoryMakeCommand.php]
+    relation: "src/Illuminate/Database/Console/Factories/FactoryMakeCommand.php:91 `array_keys($replace), array_values($replace), parent::buildClass($name)` inside `protected function buildClass($name)` at :64 - the disk read is the parent's, at GeneratorCommand.php:337; this file declares no field for it and nothing in it says the routine touches a disk; payload row `via GeneratorCommand\\buildClass hops 2`"
+  - id: d:seeder-make-handle
+    group: dependents
+    match: [Console/Seeds/SeederMakeCommand.php]
+    relation: "src/Illuminate/Database/Console/Seeds/SeederMakeCommand.php:40 `parent::handle();` - the entire body of `public function handle()` at :38, and every disk touch happens inside GeneratorCommand.php:154; the shortest file in the group and the furthest from what it depends on; payload row `via GeneratorCommand\\handle hops 2`"
+  - id: d:migration-provider-wiring
+    group: dependents
+    match: [Database/MigrationServiceProvider.php]
+    relation: "src/Illuminate/Database/MigrationServiceProvider.php:97 `return new MigrationCreator($app['files'], $app->basePath('stubs'));` inside `protected function registerCreator()` at :94, reached from `register()` at :43 - the shared instance is pulled out by short string and handed on, so no type is written on either side of the link; payload row `register via registerCreator hops 3`"
+
+  # -- obtained by building its own where it stands, in a file about something else
+  - id: d:env-write-variables
+    group: dependents
+    match: [Support/Env.php]
+    relation: "src/Illuminate/Support/Env.php:133 `$filesystem = new Filesystem;` opening `public static function writeVariables(array $variables, string $pathToFile, bool $overwrite = false): void` at :131, spent at :135 `missing`, :139 `get` and :145 `put` - a static routine on the environment-variable reader, with no container in reach at all, so the re-binding cannot touch it; the same construction repeats in `writeVariable` at :162"
+  - id: d:whoops-directories
+    group: dependents
+    match: [Whoops/WhoopsHandler.php]
+    relation: "src/Illuminate/Foundation/Exceptions/Whoops/WhoopsHandler.php:50 `array_flip((new Filesystem)->directories(base_path())),` inside `protected function directoriesExceptVendor()` at :47 - the debug error page enumerates the project's directories by making its own instance mid-expression; nothing is injected and nothing is kept"
+  - id: d:stub-publish-directory
+    group: dependents
+    match: [Console/StubPublishCommand.php]
+    relation: "src/Illuminate/Foundation/Console/StubPublishCommand.php:37 `(new Filesystem)->makeDirectory($stubsPath);` inside `public function handle()` at :34, guarded by :36 `if (! is_dir($stubsPath = $this->laravel->basePath('stubs')))` - this command holds the container on `$this->laravel` and still does not ask it for the instance; it builds one for the single call"
+  - id: d:broadcast-install-provider
+    group: dependents
+    match: [Console/BroadcastingInstallCommand.php]
+    relation: "src/Illuminate/Foundation/Console/BroadcastingInstallCommand.php:182 `$filesystem = new Filesystem;` opening `protected function enableBroadcastServiceProvider()` at :180, spent at :185 and :186 `exists`, :191 `get` and :194 `replaceInFile` - an installer that reads and rewrites the application's own config file through an instance it made itself; the same file also builds one inline at :151, :159 and :165"
+  - id: d:schema-dump-path
+    group: dependents
+    match: [Database/Console/DumpCommand.php]
+    relation: "src/Illuminate/Database/Console/DumpCommand.php:106 `(new Filesystem)->ensureDirectoryExists(dirname($path));` inside the `tap` callback of `protected function path(Connection $connection)` at :103 - the schema dump makes its own instance to guarantee the destination directory; a second inline construction sits at :63 `(new Filesystem)->deleteDirectory(`"
+  - id: d:component-inline-view
+    group: dependents
+    match: [View/Component.php]
+    relation: "src/Illuminate/View/Component.php:210 `(new Filesystem)->replace($viewFile, $contents);` inside the compiled-view branch that starts at :205, in `createBladeViewFromString` - writes a compiled component view to disk with an instance built on the spot, while the surrounding routine reaches the container at :200 for configuration only"
+  - id: d:component-tag-fallback
+    group: dependents
+    match: [Compilers/ComponentTagCompiler.php]
+    relation: "src/Illuminate/View/Compilers/ComponentTagCompiler.php:63 `$this->blade = $blade ?: new BladeCompiler(new Filesystem, sys_get_temp_dir());` in `__construct(array $aliases = [], array $namespaces = [], ?BladeCompiler $blade = null)` at :58 - when no compiler is passed it constructs one AND the instance that compiler will keep, so the object is two constructions deep and the container is never consulted"
+  - id: d:storage-fake-clean
+    group: dependents
+    match: [Facades/Storage.php]
+    relation: "src/Illuminate/Support/Facades/Storage.php:111 `(new Filesystem)->cleanDirectory($root);` inside `public static function fake($disk = null, array $config = [])` at :103 - the testing helper wipes the fake disk's root through its own instance, on a static routine that reads the container at :105 for configuration but never asks it for the object it then builds"

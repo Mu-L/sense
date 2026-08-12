@@ -3,6 +3,10 @@
     "note": "Repo pins for this vertical. Top-level keys are repo keys; _meta is metadata, not a repo. Fill after the repo-selection gate: {\"url\": ..., \"sha\": ...} per repo.",
     "vertical": "php-laravel"
   },
+  "bagisto": {
+    "sha": "8af5797eec7cbd7d5099649d00e0ac6eb6cdf157",
+    "url": "https://github.com/bagisto/bagisto.git"
+  },
   "coolify": {
     "sha": "940571e16f5a0e6c73cf56b4bb1184bed3d60623",
     "url": "https://github.com/coollabsio/coolify.git"

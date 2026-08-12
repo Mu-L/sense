@@ -1,0 +1,212 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 6 on laravel-framework, TWO-STEP PROBE, RE-QUESTION
+# (plans/cycle-1-craft-the-scenario/01-author.md). TWO steps, names verbatim and in the order
+# of scenarios/laravel-framework.yaml (the judge pairs by name).
+#
+# WHAT CHANGED FROM ATTEMPTS 1 TO 5, AND WHY THE RUBRIC HAD TO CHANGE WITH IT
+# Attempt 1 scored CALLS (plain arm 0.9375), attempt 2 scored HOLDS (0.8333), attempt 3 scored
+# REACHING THROUGH AN INTERMEDIATE (0.6667), attempt 4 scored the ACQUISITION ROUTE (0.6667),
+# attempt 5 scored the CONTACT AND ITS DIRECTION (0.7778). All five landed on the same side of
+# the window - the plain arm assembled the set - and each read named the same cause: one search
+# printed a hit list about as long as the answer, with one candidate line per file.
+# This draft scores the REACH: the line where code holding no handle goes and gets a
+# collaborator by name. Two things follow for the judge. A component that was HANDED the
+# registry and keeps it in a typed field is not an answer in step 2 - that half is pinned in
+# step 1 on purpose, and re-offering it is answering the question that has already failed twice
+# here. And a FILE is not an answer: eleven of the twenty-two scored files print more than one
+# candidate line to the covering search, one of them six, so naming the file without pinning
+# which routine's reach is meant leaves the maintainer exactly where they started.
+#
+# WHY map_quality carries the most weight: coverage and placement are one question. The set is
+# twenty-two reaches over twenty-two areas - log formatting, schema building, pagination,
+# locale, uploads, mail rendering, scheduling, Blade compilation, broadcasting, deferred
+# callbacks, image drivers, batches - and none of them is in the part of the tree the registry
+# lives in. The failure this criterion exists to catch is an answer dense in the container and
+# foundation directories and thin everywhere else: enumerating inside one search scope and
+# mistaking it for the framework.
+#
+# WHY specificity demands the line AND the routine AND the target: the failure it exists to
+# catch is a run of places named together under one shared reason with no location on any of
+# them. There is a second failure specific to this contract, and it is the reason the file is
+# not the unit: a single file reaches for the registry in several unrelated routines, and only
+# some of those are what the ticket reworks. A citation of the file, or of the wrong one of six
+# printed lines, is citing the wrong thing.
+#
+# WHY step 1 asks for the holders explicitly: they are the free half, both arms reach them,
+# they do not score, and pinning them in step 1 puts the discriminator on the far side of them.
+# What step 1 does NOT ask for is the roll of that far side: on the neighbouring repo in this
+# vertical, asking step 1 for the enumerated working ground moved BOTH arms together, because
+# the plain arm wrote its covering sweep in step 1 and re-read the same output in step 2.
+#
+# WHY uncertainty is worth its weight here: this is a famous framework and the registry is its
+# single best-known piece of plumbing. Closed-book, the model names most of its member surface
+# (memorization_probe truth_n 85, said_n 95, samples 0.859 / 0.765 / 0.0). Every one of those
+# members sits in the non-scoring contract group, so recitation buys nothing on the
+# discriminator - but it makes confident assertion cheap, and an asserted reach in a file that
+# does not contain one is worse than an admitted gap.
+audience: |
+  An AI coding agent that will remove the global reach from this framework. Today one instance
+  of the registry is made when the application starts and put somewhere globally reachable, so
+  any code anywhere can ask it for a collaborator by class name or by short string without
+  having been handed anything. After the change there is no global reach: an object gets what
+  it needs only if it was handed it, and code that wants a collaborator has to declare that it
+  wants one. Score for that agent, not a human reader and not a docs page.
+  A perfect answer leaves the agent able to make that change knowing two things. First, what
+  the object is today: what it does grouped by job - registering, fetching, what happens when
+  the name asked for was never registered, how a registration can be made to depend on who is
+  asking - where the single instance is made and how it is made globally reachable, and which
+  components are handed one and keep it in a typed field, each located at file:line. Second,
+  and this is what decides the answer: every place that reaches out for a collaborator at the
+  moment it needs one, with what it fetches named and whether it could be handed that thing
+  instead.
+  The distinction the whole ticket turns on is between BEING HANDED one and REACHING for one.
+  Being handed is written down in a constructor with a type on it; it is fine after the change
+  and it belongs to the first part of the answer, so naming it again in the second earns
+  nothing. A reach is a line somewhere else entirely - in the middle of a routine that is about
+  formatting a log record, building a paginator, storing an upload, picking a driver - and what
+  the line names is the collaborator being fetched, never the thing it is fetched from. There
+  is no field, no constructor parameter and no type in that file to find.
+  What is fetched decides the remedy, and the remedies are not the same. Something fetched by
+  class name in a routine on a normally-constructed object can usually become a constructor
+  argument. Something fetched by short string has no type to declare. Something fetched inside
+  a trait, a static factory method, a closure, or an object reconstructed from a serialised
+  queue payload has no wiring point at all, and something whose name is only known at runtime
+  cannot be handed anything in advance. Two lines one search prints one after the other can
+  need completely different answers.
+  Most of this layer sits in parts of the framework whose own subject has nothing to do with
+  wiring or construction. The part of the tree obviously about this object holds the object
+  itself and the pieces built directly on it; an answer dense there and thin elsewhere has
+  enumerated inside one search scope and mistaken it for the framework.
+  Every reach must be pinned to the exact file:line with the routine it sits in named, with
+  what it fetches, with whether the routine could be handed the thing instead, and with one
+  phrase on what breaks if nothing is done.
+
+steps:
+- name: Map the shared registry contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is the object presented as one connected picture - how something is registered with it,
+        how something is fetched out of it, what happens when the name asked for was never
+        registered, how a registration can be made to depend on who is asking, and how a single
+        instance is made globally reachable - rather than as a list of routines or a roll of
+        places the name appears? Two of those matter most and they are the two the ticket turns
+        on: that a fetch takes a NAME rather than a value, so the caller needs nothing but a
+        string or a class constant; and that one instance is installed somewhere globally
+        reachable, so code holding nothing at all can still get to it. An answer that locates
+        both and says why they matter has understood the ticket.
+        The step then asks for the components that are HANDED one and keep it in a typed field.
+        Are they named, each pinned to the field or the constructor parameter that fills it, and
+        does each carry a phrase on what it fetches? This part is deliberately the easy part and
+        it is asked for on purpose - it is the half whose dependency is written down where
+        anyone can see it, and the next step is about the other kind - so score coverage and
+        location here, not difficulty.
+        The step finally asks for a deliberately SMALL third thing: what it looks like when a
+        piece of code reaches for the registry while holding no handle, and why nothing in that
+        file's shape gives it away. Score whether that is characterised correctly, with one
+        located example. Do NOT reward an exhaustive enumeration of those places: it was not
+        asked for, and a long located list is not a better answer here than one accurate
+        observation. Could the next step act from this orientation with targeted lookups rather
+        than a fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer names carry an exact file:line AND the name of the routine
+        or class it lives in? A bare filename is not specific. A file:line with nothing named
+        around it is not specific - the maintainer asked whose code it is, not where the
+        character offset falls. Where the answer names the construction of the single instance,
+        the line that installs it globally, the routine that performs a fetch, or a component's
+        typed field, is the line that actually constructs, installs, fetches or declares
+        located, and not just asserted from a class name or a familiar convention?
+    justification:
+      weight: 0.2
+      question: |
+        Does each part carry one phrase on what it contributes - what a name-based fetch buys a
+        caller that holds nothing, what each holder actually fetches, what happens when the name
+        was never registered, what making a registration depend on the asker is for - and does
+        the answer connect those facts to why being handed one and reaching for one have
+        completely different fates after the change, rather than restating the list of routines?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name
+        or a familiar framework convention? This matters more than usual here: closed-book, this
+        model can name most of this object's member surface, so it invites confident recitation,
+        and saying which parts were actually opened is worth more here than elsewhere. Is
+        anything the session could not resolve named as such rather than smoothed over, and is
+        the observation about code that holds no handle offered as something it established
+        rather than as a complete taxonomy it did not check?
+- name: Audit every dependent of the shared registry contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        COVERAGE AND PLACEMENT, and the two are one question here. Is every reach listed
+        separately, each pinned to its own routine, with what that line fetches named? A place
+        named with no target is half a row: the remedy depends entirely on what is being fetched
+        and whether it can be handed over, and that is the only decision this ticket makes.
+        Score the DISTINCTION the ticket turns on: being handed one versus reaching for one. A
+        component that receives the registry and keeps it in a typed field is NOT an answer here
+        - it was pinned in the previous step, and an answer built out of those components and
+        their constructors has answered the question that has already failed twice on this repo.
+        Score whether the answer found reaches of more than one kind - fetched by class name,
+        fetched by a short string with no type to declare, fetched for a name known only at
+        runtime, fetched from inside a trait or a static factory or a closure or an object
+        rebuilt from a queue payload. An answer in which every row looks the same has either
+        found only one band or has stopped reading at the call.
+        Score WHERE the answer looked, and also HOW FINELY. These reaches sit in parts of the
+        framework whose own subject has nothing to do with wiring - log formatting, pagination,
+        locale, uploads, mail rendering, scheduling, template compilation, broadcasting, image
+        drivers, batches - and a single file often reaches in several unrelated routines, only
+        some of which this ticket touches. An answer dense in the part of the tree obviously
+        about this object, or one that names files rather than routines, has stopped at the
+        shallow edge; that is the exact failure this criterion names.
+        Is the answer organised by area with each area's reaches listed individually, and is
+        what was not reached said plainly rather than closed over?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every reach carry an exact file:line, AND the name of the routine it sits in, AND
+        what it fetches, AND whether that routine could be handed the thing instead, AND one
+        phrase on what breaks? All five, per row. A bare filename is not specific, and on this
+        contract it is actively wrong: one file can hold several unrelated reaches and only some
+        are in play. A run of places named together under one shared reason with no location on
+        any of them is the failure this criterion exists to catch, and it does not become
+        specific because the reason is correct.
+        Is the located line the REACH rather than the wiring? A constructor parameter, a
+        promoted property, a field declaration or a setter is where a dependency was declared;
+        the reach is the line where code holding nothing goes and gets something. Where a file
+        contains both, or contains several reaches in different routines, citing the wrong one
+        is citing the wrong line, not a rounding error.
+    justification:
+      weight: 0.2
+      question: |
+        Is the phrase per row a consequence of THAT reach, rather than a restatement that the
+        place uses the container? "Breaks if the container changes" is not a justification.
+        "It fetches by a short string, so there is no type to declare and the remedy has to be
+        an explicit parameter", "the class it fetches is a string on its own serialised payload,
+        so nothing can be handed in advance", "it is a trait with no constructor of its own",
+        "the reach is inside a closure returned by a static factory, so no instance exists at
+        that point to hand anything to", "it runs in the terminate phase, after the response has
+        gone, and the fetch is the only thing tying it to the instance the request built" are.
+        Does the answer say, at least in aggregate, which reaches can become ordinary
+        dependencies and which cannot be handed anything at all?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer distinguish reaches it traced by reading from ones it inferred from a
+        name, a familiar convention, or a memory of this framework? That distinction matters
+        more than usual here: this is a famous framework and this object is its best-known piece
+        of plumbing, so asserting that a component fetches something because it usually does is
+        not the same as having read the line that does it. The short name of this contract is
+        also carried by an interface, by a subclass that installs the global instance, and by a
+        two-line helper that wraps the reach, and a reach attributed to the wrong one is worse
+        than an admitted gap - does the answer show it settled that where it mattered? Is
+        coverage claimed honestly - which areas it swept and which it did not reach - and where
+        it was unsure whether a routine could be handed the thing instead, does it say so
+        instead of picking one silently?

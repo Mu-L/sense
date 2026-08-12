@@ -1,0 +1,218 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 5 on laravel-framework, TWO-STEP PROBE, RE-QUESTION
+# (plans/cycle-1-craft-the-scenario/01-author.md). TWO steps, names verbatim and in the order
+# of scenarios/laravel-framework.yaml (the judge pairs by name).
+#
+# WHAT CHANGED FROM ATTEMPTS 1 TO 4, AND WHY THE RUBRIC HAD TO CHANGE WITH IT
+# Attempt 1 scored CALLS (plain arm 0.9375), attempt 2 scored HOLDS (0.8333), attempt 3 scored
+# REACHING THROUGH AN INTERMEDIATE (0.6667), attempt 4 scored the ACQUISITION ROUTE (0.6667).
+# All four landed on the same side of the window, and the last read named why: the ask
+# enumerated four routes in prose and the plain arm turned each clause into one regex.
+# This draft scores the CONTACT and its DIRECTION. The ticket makes four fates out of one
+# surface - announce and walk away, announce and use the answer, register for later,
+# interrogate the listener table - and three of the four break silently. So a place named
+# without the direction of its contact is not a partial answer here, it is an unusable one:
+# the maintainer cannot tell whether that line is untouched or quietly wrong after the swap.
+#
+# WHY map_quality carries the most weight: coverage and direction are one question. The set
+# is eighteen contacts over eighteen areas, none of them in the part of the tree the object
+# lives in, and the failure this criterion exists to catch is an answer dense in that part and
+# thin everywhere else - enumerating inside one search scope and mistaking it for the
+# framework. It also has to catch the inverse of the first four attempts: re-listing the
+# components that HOLD a handle is answering the question that has already failed twice here,
+# and those components are pinned in step 1 precisely so that offering them again earns
+# nothing.
+#
+# WHY specificity demands the line AND the routine AND the direction AND the fate: the failure
+# this criterion exists to catch is a run of places named together under one shared reason
+# with no location on any of them. There is a second failure specific to this contract: the
+# line where a component was GIVEN its handle and the line where it makes contact are hundreds
+# of lines apart, and a citation of the constructor is a citation of the wrong thing. The
+# constructor is where the dependency was made possible; the contact is where it happens, and
+# only the contact has a direction.
+#
+# WHY step 1 asks for the holders explicitly: they are the free half, both arms will reach
+# them, they do not score, and naming them in step 1 puts the discriminator on the far side of
+# them. What step 1 does NOT ask for is the roll of that far side: on the neighbouring repo in
+# this vertical, asking step 1 for the enumerated working ground moved BOTH arms together,
+# because the plain arm wrote its covering sweep in step 1 and re-read the same output in
+# step 2.
+#
+# WHY uncertainty is worth its weight here: this is a famous framework and the object is its
+# best-known piece of plumbing. Closed-book, the model names 43 of its 58 members
+# (memorization_probe samples 0.621 / 0.586 / 0.483). Every one of those members sits in the
+# non-scoring contract group, so recitation buys nothing on the discriminator - but it makes
+# confident assertion cheap, and an asserted contact in a file that does not contain one is
+# worse than an admitted gap.
+audience: |
+  An AI coding agent that will use this answer to replace the single shared object every part
+  of this framework announces things through. Today that object is made once at boot,
+  registered under a short name, and handed to whatever asks. When something announces, the
+  listeners run inside that same call, before the announcing routine reaches its next line;
+  the announcement can hand an answer back, and the announcer can halt the run on it. Anything
+  can register something to be called later, and anything can ask the object what is currently
+  listening. After the change, announcing hands the work off - listeners run after the call has
+  returned, nothing comes back, nothing can be halted - and the listener table is settled
+  before the application serves, so registering later is too late and asking what is listening
+  is a question the object will not answer. Score for that agent, not a human reader and not a
+  docs page.
+  A perfect answer leaves the agent able to make that change knowing two things. First, what
+  the object is today: what it does grouped by job, where the single shared instance is made
+  and under what short name it is registered, what happens in order between an announcement and
+  a listener running, what can come back to the announcer and what can halt the run, what else
+  can be asked of the object, and which components are given one and keep it - each located at
+  file:line. Second, and this is what decides the answer: every place where a contact with that
+  object actually happens, with the direction of that contact named and the fate that follows
+  from it.
+  The distinction the whole ticket turns on is between HOLDING a handle and MAKING CONTACT.
+  Holding is written down in a constructor and is fixed by the swap; it belongs to the first
+  part of the answer and naming it again in the second earns nothing. Contact is a line
+  somewhere else entirely - inside a routine named after the component's own subject, doing
+  that component's own job, often hundreds of lines from the constructor and behind a private
+  helper of the component's own naming. Some code makes contact while holding no handle at all,
+  asking the application for the object at the instant it needs it, so its file contains no
+  field, no constructor parameter and nothing that looks like a dependency.
+  The direction is the answer, not the address. Announce-and-walk-away survives the change
+  untouched. Announce-and-use-the-answer breaks silently, because the return value stops
+  meaning anything. Register-for-later has to move earlier in the boot. Interrogate-the-
+  listener-table cannot be answered at all. Two contacts a single search prints side by side
+  can sit on opposite sides of that split.
+  Most of this layer sits in parts of the framework whose own subject has nothing to do with
+  announcements. The part of the tree obviously about this object holds the object itself and
+  the pieces built directly on it; an answer dense there and thin elsewhere has enumerated
+  inside one search scope and mistaken it for the framework.
+  Every contact must be pinned to the exact file:line with the routine it sits in named, with
+  the direction of the contact, with whether it survives the replacement, and with one phrase
+  on what goes wrong if it does not.
+
+steps:
+- name: Map the event announcement contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is the object presented as one connected picture - what it does grouped by job, where
+        the single shared instance is made, the short name it is registered under, the order of
+        what happens between an announcement and a listener running, what can come back to the
+        announcer, what can halt the run part way, and what else can be asked of the object -
+        rather than as a list of routines or a roll of places the name appears? Three of those
+        matter most and they are the three the ticket turns on: that listeners run inside the
+        announcing call, that an answer can come back and a run can be halted, and that the
+        object can be interrogated about what is listening. An answer that locates all three
+        and says why they matter has understood the ticket. The registration under a short name
+        is the fourth: it is the line the swap changes and it is why so much of this framework
+        can reach the object without naming it.
+        The step then asks for the components that are GIVEN one and keep it. Are they named,
+        each pinned to the field or the constructor that fills it, and does each carry a phrase
+        on what it announces? This part is deliberately the easy part and it is asked for on
+        purpose - it is the half whose dependency is written down where anyone can see it, and
+        the next step is about the contacts rather than the holders - so score coverage and
+        location here, not difficulty.
+        The step finally asks for a deliberately SMALL third thing: how far a contact can sit
+        from the handle that made it possible, and what it looks like when code makes contact
+        holding no handle at all. Score whether that distance is characterised correctly, with
+        one located example. Do NOT reward an exhaustive enumeration of the contacts
+        themselves: it was not asked for, and a long located list is not a better answer here
+        than one accurate observation. Could the next step act from this orientation with
+        targeted lookups rather than a fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer names carry an exact file:line AND the name of the routine
+        or class it lives in? A bare filename is not specific. A file:line with nothing named
+        around it is not specific - the maintainer asked whose code it is, not where the
+        character offset falls. Where the answer names the construction of the shared instance,
+        the short name it is registered under, the routine that runs the listeners, or a
+        component's field, is the line that actually constructs, registers, invokes or declares
+        located, and not just asserted from a class name or a familiar convention?
+    justification:
+      weight: 0.2
+      question: |
+        Does each part carry one phrase on what it contributes - what the registration buys a
+        caller that has only a name, what each holder actually announces, what the announcer
+        can learn from announcing, what halting means for the code that asked for it - and does
+        the answer connect those facts to why the four things a caller can do with this object
+        have four different fates after the change, rather than restating the list of routines?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name
+        or a familiar framework convention? This matters more than usual here: closed-book,
+        this model can name 43 of the object's 58 members, so its surface invites confident
+        recitation, and saying which parts were actually opened is worth more here than
+        elsewhere. Is anything the session could not resolve named as such rather than smoothed
+        over, and is the observation about distance between handle and contact offered as
+        something it established rather than as a complete taxonomy it did not check?
+- name: Audit every dependent of the event announcement contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        COVERAGE AND DIRECTION, and the two are one question here. Is every contact listed
+        separately, each with the direction it runs in - announced and walked away from,
+        announced and the answer used, something registered to be called later, or the object
+        interrogated about what is listening? A place named with no direction is half a row:
+        without it the maintainer cannot tell whether that line is untouched by the change or
+        quietly wrong after it, and that is the only decision this ticket makes.
+        Score the DISTINCTION the ticket turns on: holding versus making contact. A component
+        that receives the object and keeps it in a field is NOT an answer here - it was pinned
+        in the previous step, and an answer built out of holders and their constructors has
+        answered the question that has already failed twice on this repo.
+        Score whether the answer found contacts of more than one direction. The overwhelming
+        majority announce and walk away; a small number do something else, and those are the
+        rows the whole ticket exists for. An answer in which every row has the same direction
+        has either found only the easy band or has stopped reading at the call.
+        Score WHERE the answer looked. These contacts sit in parts of the framework whose own
+        subject has nothing to do with announcements - and they sit far from the constructors
+        that made them possible, inside routines named for the component's own job, sometimes
+        behind a private helper, sometimes in code that holds no handle at all and asks the
+        application for the object where it stands. An answer dense in the part of the tree
+        obviously about this object, or built only out of the files whose constructors name the
+        type, has stopped at the shallow edge; that is the exact failure this criterion names.
+        Is the answer organised by area with each area's contacts listed individually, and is
+        what was not reached said plainly rather than closed over?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every contact carry an exact file:line, AND the name of the routine it sits in,
+        AND the direction of the contact, AND whether it survives the replacement, AND one
+        phrase on the failure? All five, per row. A bare filename is not specific. A run of
+        places named together under one shared reason with no location on any of them is the
+        failure this criterion exists to catch, and it does not become specific because the
+        reason is correct.
+        Is the located line the CONTACT rather than the handle? A constructor parameter, a
+        promoted property, a field declaration or a setter is where the dependency was made
+        possible; the contact is the line where something is said to the object, asked of it,
+        or registered with it, and only the contact has a direction. Those two lines are
+        routinely hundreds of lines apart in the same file, and citing the first for the second
+        is citing the wrong line, not a rounding error.
+    justification:
+      weight: 0.2
+      question: |
+        Is the phrase per row a consequence of THAT direction, rather than a restatement that
+        the place uses the object? "Breaks if the event system changes" is not a justification.
+        "It returns the announcement's own result, so once nothing comes back this routine
+        returns nothing and its caller cannot tell", "it reads the listener table and branches
+        on what it finds, which is a question the replacement will not answer", "it registers
+        listeners during boot, which has to move ahead of the point the table is settled", "it
+        announces at the last moment of the process, so listeners that run after the call
+        returns have nowhere left to run", "it announces from a destructor, so there is no call
+        site anywhere that decides when this happens" are. Does the answer say, at least in
+        aggregate, which contacts survive untouched and which have to be rewritten?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer distinguish contacts it traced by reading from ones it inferred from a
+        name, a familiar convention, or a memory of this framework? That distinction matters
+        more than usual here: this is a famous framework and this object is its best-known
+        piece of plumbing, so asserting that a component announces something because it usually
+        does is not the same as having read the line that does it. The short name of this
+        contract is shared with at least one unrelated dispatcher in this same framework, and a
+        contact attributed to the wrong one is worse than an admitted gap - does the answer show
+        it settled that where it mattered? Is coverage claimed honestly - which areas it swept
+        and which it did not reach - and where a direction was ambiguous, does it say so instead
+        of picking one silently?

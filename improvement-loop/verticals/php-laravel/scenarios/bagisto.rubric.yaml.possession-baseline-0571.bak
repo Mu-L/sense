@@ -1,0 +1,208 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 5 on bagisto, TWO-STEP PROBE
+# (plans/cycle-1-craft-the-scenario/01-author.md). TWO steps, names verbatim and in the order
+# of scenarios/bagisto.yaml (the judge pairs by name). This is a RE-QUESTION: the anchor is
+# unchanged and the question has moved, so this rubric is rewritten to score the new axis.
+#
+# WHAT CHANGED, AND WHY THIS RUBRIC CHANGED WITH IT
+# Attempt 1 scored WHICH PLACES HOLD a record            - baseline 0.6471 / sense 0.7647.
+# Attempt 2 scored WHICH KIND-SPECIFIC SLICE a site owns - baseline 0.8235 / sense 0.8235.
+# Attempt 3 scored PROVENANCE, by what route it arrived  - baseline 0.9444 / sense 0.7222.
+# Attempt 4 scored IDENTITY, which resolution it reached - baseline 0.8889 / sense 1.0000.
+# All four landed on the same side of the window: the plain arm too high. Each time a token
+# sweep printed the enumeration with path:line already attached.
+# This attempt scores POSSESSION: which routines end up holding a WHOLE record under a name of
+# their own choosing - a declared parameter, a local, an entry in a bag of data, a value pulled
+# out of an event by key, an instance built in place and never saved - and what each takes out
+# of the record once it has one. The routines that only ever reach a record through a relation
+# hanging off something else are explicitly OUT of scope, and that exclusion is scored: it is
+# the population all four measured sweeps print.
+# A judge that rewards "this file touches the record" is scoring attempt 1 again. The scored
+# fact per row is that the routine HOLDS one, and what it takes out of it.
+#
+# WHY map_quality carries the most weight: coverage and the in/out decision are one question.
+# Fourteen scored routines across nine areas, every one of them holding a record it was
+# handed. The failure this criterion exists to catch is the sweep answer - a long, correct-
+# looking list of places the record is used, most of which reach it through a relation on
+# something else and are not being narrowed at all.
+#
+# WHY specificity demands the routine's own line AND what it takes out: the rework changes
+# signatures. A row that pins a line but does not say what the routine draws out of the record
+# tells the maintainer nothing about what narrow view would replace it.
+#
+# WHY step 1 asks for the record, the behaviour object and the create-and-change layer: they
+# are the free half, both arms reach them in one lookup, they do not score, and pinning them
+# in step 1 puts the discriminator on the far side of them. Step 1 deliberately does NOT ask
+# for the enumeration: measured on the neighbouring repo in this vertical, asking step 1 for
+# the enumerated working ground moved BOTH arms together, because the plain arm wrote its
+# covering sweep in step 1 and re-read the same output in step 2.
+#
+# WHY uncertainty is worth its weight here: memorization_probe returns ok:false at recall
+# 0.444 on this record's member surface (32 of 72 members named closed-book). Every recited
+# member sits in the non-scoring contract group, so recitation buys nothing on the
+# discriminator - but it makes confident assertion cheap, and on a possession question the
+# cheapest wrong answer is asserting that a familiar relation name means the routine was
+# holding a record when it was holding a line item. The clone is a single squashed commit, so
+# nothing here can be churn-dated; reward an answer that says which lines it opened.
+
+audience: |
+  An AI coding agent about to narrow the catalogue record this store platform hangs off. Today
+  the record is passed around whole: a routine that needs one number off it is handed the
+  entire thing, and once it has it, it can walk any of the record's own sub-collections and ask
+  it anything. After the narrowing, a routine may be told a value, or handed a narrow read-only
+  view, but never the record itself. Score for that agent, not a human reader and not a docs
+  page.
+  A perfect answer leaves the agent able to make that change knowing two things. First, what
+  the record is today - which of the several same-named things in this repo it actually is,
+  what a holder can do with one, how it builds the object that answers for it and where it
+  pushes itself into that object, and the one layer whose declared job is to make and change
+  these records. Second, and this is what decides the answer: every routine downstream that
+  ends up holding a whole record, and what it takes out of it once it has one.
+  The distinction the whole ticket turns on is possession, and it is decided at the routine's
+  own parameter list and at the point it was handed the value - not by anything written on the
+  line that uses it. A routine handed a record names it whatever it likes. It can be a declared
+  parameter. It can be a local it assigned from a fetch. It can be an entry it reads out of a
+  bag of data. It can be a value pulled out of an event by key. It can be an instance the
+  routine built itself and never saved. Nothing on the using line ties any of these back to
+  what is being held; the tie is at the handover, which is usually in another file and often
+  another package.
+  And the reverse is what the ticket does NOT ask for: a routine that only ever reaches a
+  record through a relation hanging off something it was already holding - a line item, an
+  option row, an index row - is not being narrowed, and listing those is the answer a text
+  search produces. An answer padded with them has enumerated the easy population and missed
+  the one under change.
+  Most of the routines under change sit where the record is received rather than where it
+  lives: an invoice-item write path handed the record inside a bag of invoice data, an add-on
+  listener pulling one out of a view event by key, an importer manufacturing an unsaved
+  instance to ask one question of it, a storefront controller walking a record's own related
+  set, a variant helper taking one as a parameter, an index refresher, a request object that
+  assigned one onto itself, an admin resource constructed with one, and the write repositories
+  that take a record and reconcile one of its own sub-collections against submitted data. An answer dense in the
+  record's own file and thin everywhere else has enumerated inside one search scope and
+  mistaken it for the codebase.
+  Every routine must be pinned to the exact file:line with the routine it sits in named, with
+  what it takes out of the record said in a phrase, with how the record came into its hands
+  accounted for, and with one phrase on what breaks under the narrowing if nothing is done.
+
+steps:
+- name: Map the catalogue record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is the record presented as one connected picture - which of the several same-named
+        things in this repo it actually is, what a holder can do with one, and how it produces
+        the object that answers for it - rather than as a list of routines or a roll of places
+        the name appears? Three things matter most and they are what the next step is built on:
+        that the record is passed around WHOLE, so holding one grants the whole surface; that
+        the record pushes ITSELF into the object it builds, so that object is itself a holder;
+        and that the base class keeps the record in a field, which is where a handed-over
+        record ends up living. An answer that locates the line where the object is built, the
+        line where the record hands itself over, the base class, the field inside it that
+        holds the record, and the failure path when the object cannot be built, has understood
+        why the next step is a question about possession at all.
+        The step also asks for the declared create-and-change layer at file:line with a phrase
+        on what it is responsible for. This is deliberately the easy part - it is the layer
+        that hands records out, written down openly - so score coverage and location here, not
+        difficulty.
+        The step finally asks for a deliberately SMALL third thing: ONE example line where a
+        routine is handed a record outright rather than reaching it through something else.
+        Score whether that observation is correct and located. Do NOT reward an exhaustive
+        enumeration of such lines: it was not asked for, and a long located list is not a
+        better answer here than one accurate observation. Could the next step act from this
+        orientation with targeted lookups rather than a fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer names carry an exact file:line AND the name of the routine
+        or class it lives in? A bare filename is not specific. A file:line with nothing named
+        around it is not specific. This platform gives the record's short name to an empty
+        marker interface, to a swap-in proxy class and to unrelated classes in other packages:
+        did the answer say WHICH one it settled on and how it told them apart, at file:line
+        each, or did it assert one and move on? Is the line that builds the behaviour object
+        located, is the line that hands the record over located, is the base class located and
+        the field that holds the record named at its own line - or is the mechanism asserted
+        from method names and a familiar framework convention?
+    justification:
+      weight: 0.2
+      question: |
+        Does each part carry one phrase on what it contributes - what holding a whole record
+        grants that being told a value does not, what the self-handoff establishes and who
+        ends up holding a record because of it, what the create-and-change layer is
+        responsible for that the record is not - and does the answer connect those facts to
+        why passing the record whole is what the narrowing removes, rather than restating the
+        list of routines?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name
+        or a familiar framework convention? This matters more than usual here: closed-book
+        this model can already name a third of this record's member surface, so it invites
+        confident recitation, and saying which parts were actually opened is worth more here
+        than elsewhere. Is anything the session could not resolve named as such rather than
+        smoothed over, and is the claim that a routine can be handed a record outright offered
+        as something established at a line rather than as a convention it did not check?
+- name: Audit every dependent of the catalogue record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        COVERAGE AND THE IN/OUT DECISION, and the two are one question here. Is every routine
+        listed separately, pinned to its own line, with what it takes out of the record named?
+        A routine named with nothing said about what it draws out of the record is half a row:
+        the narrowing replaces the record with a narrow view, and a row that does not say what
+        was taken tells the maintainer nothing about which view.
+        Score the DISTINCTION the ticket turns on. A routine is in scope when the record is in
+        its own hands under a name it chose - a declared parameter, a local assigned from a
+        fetch, an entry read out of a bag of data, a value pulled out of an event by key, or an
+        instance built in place and never saved. It is OUT of scope when it only ever reaches a
+        record through a relation hanging off something else it was already holding. An answer
+        that lists every place the record is mentioned, in-scope and out together, is the
+        answer a text search produces and has not made the decision the step asked for.
+        The record, the object that answers for it, its base class and the create-and-change
+        layer are NOT answers here - they were pinned in the previous step, and an answer built
+        out of them has answered the easy half.
+        Score whether the answer found the routines where the handover is invisible at the
+        point of use: a record arriving as an entry in a bag of data, a record pulled out of an
+        event by key, a record manufactured in place to be asked one question, a record taken
+        as a plain parameter and walked for one of its own sub-collections.
+        Is the coverage spread across the areas the routines actually live in - a sales write
+        path, an add-on listener, an importer, a storefront controller, option and variant
+        helpers, an index refresher, the catalogue write repositories, an admin request object
+        - or is it dense in one package and thin outside it?
+    specificity:
+      weight: 0.25
+      question: |
+        Three things per row, and all three are required. The routine's exact file:line with
+        the routine it sits in named. What it takes out of the record, said concretely - which
+        sub-collection it walks, which value it reads - and not as a category. And how the
+        record came into its hands: which parameter, which assignment, which key, which
+        construction, located where that handover is written, which is often in a different
+        file from the routine. A row whose line is right and whose possession is asserted from
+        a variable name has not shown its answer. A bare filename is not specific; a group of
+        routines offered together under one shared reason with no location on any of them is
+        not an answer at all. Where several routines live in one file, are they listed
+        separately with their own lines?
+    justification:
+      weight: 0.2
+      question: |
+        Does each row carry one phrase on what depends on holding the whole record - which
+        behaviour, which decision, what a narrow view would have to expose for this routine to
+        keep working - rather than restating that the routine uses the record? The rows where
+        the routine walks a sub-collection deserve the sharpest justification: those are the
+        ones a narrow view cannot serve without deciding what to expose. Does the answer say
+        so?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Where the answer could not establish whether a routine holds a whole record or only
+        reaches one through something else, does it say so and say what it would need to open,
+        rather than counting it in by default? Is the coverage claim honest - if the session
+        ran short, does it name what it had not looked at yet, or does it close on what it has
+        and imply completeness? Confident inclusion of a routine on the strength of a variable
+        name, with no handover established, is the specific overreach this criterion exists to
+        catch.

@@ -3,19 +3,6 @@
     "vertical": "php-laravel",
     "note": "Written by compose.py; verified by slate_check.py."
   },
-  "coolify": {
-    "slot": "medium",
-    "size": "medium",
-    "prod_files": 1433,
-    "stars": 60331,
-    "banner": false,
-    "backup": {
-      "repo": "bagisto",
-      "size": "medium",
-      "prod_files": 2512,
-      "stars": 27957
-    }
-  },
   "laravel-framework": {
     "slot": "framework",
     "size": "medium",
@@ -53,6 +40,17 @@
       "size": "big",
       "prod_files": 7398,
       "stars": 11730
+    }
+  },
+  "bagisto": {
+    "slot": "medium",
+    "size": "medium",
+    "prod_files": 2512,
+    "stars": 27957,
+    "banner": false,
+    "backup": {
+      "repo": null,
+      "note": "coolify's declared backup, taken 2026-08-12; the medium slot has no backup left"
     }
   }
 }

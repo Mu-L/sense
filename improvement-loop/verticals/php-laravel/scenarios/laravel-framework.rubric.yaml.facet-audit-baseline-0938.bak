@@ -1,0 +1,196 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 1 on laravel-framework, TWO-STEP PROBE
+# (plans/cycle-1-craft-the-scenario/01-author.md). TWO steps, names verbatim and in the order of
+# scenarios/laravel-framework.yaml (the judge pairs by name).
+#
+# WHY map_quality carries the most weight on the discriminator: the answer to step 2 is not a
+# set of locations, it is a set of POINTS OF CONTACT WITH A NAMED FACET. Three scored lines in
+# the gold set are `->table($this->table)->insert([` within a character of each other, and they
+# depend on different facets - one needs the inserted id handed back, one needs the write to
+# land on the write half of a read/write pair, one needs a driver-level duplicate-key failure to
+# arrive as a translated exception. An answer that lists the three as one thing has not answered
+# the question the maintainer asked, because the split is decided facet by facet.
+#
+# WHY specificity demands the routine AND the facet AND the failure: a file:line here is not
+# self-explaining, and the failure this criterion exists to catch is a run of places named
+# together under one shared reason with no location on any of them. It also exists to catch the
+# line that carries a TYPE being offered as a point of contact: a constructor signature or a
+# `use` line is where the type is written, not where the contract is reached, and the scenario
+# says so.
+#
+# WHY step 1 asks for the ground only as its SHAPE: on the neighbouring repo in this vertical,
+# asking step 1 for the enumerated working ground moved BOTH arms together - the baseline wrote
+# its covering sweep in step 1 and re-read the same output in step 2. Step 1 here asks for the
+# object's own lifecycle in full and for the routes by which it reaches working code with one
+# located example each, and map_quality below scores COVERAGE OF THE LIFECYCLE JOBS. An
+# exhaustive roll of the ground earns nothing extra here: it was not asked for.
+audience: |
+  An AI coding agent that will use this answer to safely split the object every part of this
+  framework is handed in order to talk to a relational store. After the split, running a
+  statement and taking rows back stays on the thing that is handed around; every other facet it
+  carries today - the collaborator that writes statements, the collaborator that reads results
+  back, the collaborator that inspects and changes the store's structure, the prefix pasted in
+  front of a table name, the quoting of a value, the emitter that fires as queries run, the
+  identity and version of the driver underneath, the object's own configured name - moves behind
+  narrower things that must be asked for rather than reached for. Score for that agent, not a
+  human reader and not a docs page.
+  A perfect answer leaves the agent able to make that change knowing two things. First, what the
+  object is today: what state it holds from construction, where one is actually built and who
+  decides which per-driver variant gets built, how a caller holding only a name ends up holding
+  one and what a repeat lookup for the same name does, what happens when the link underneath
+  drops and one has to be stood up again, and where the nesting depth of an in-flight
+  transaction lives - each traced through the routines that make it up, each located at
+  file:line. Second, and this is what decides the answer: every point of contact the rest of the
+  framework has with it, with the facet each one reaches for named.
+  A point of contact is one line where code holding one of these objects reaches through it for
+  something. The code in question was HANDED the object - in its constructor, as a plain
+  argument for the length of one call, or inside something else passed to it - and stored it
+  under a name of its own choosing, so the name to look for is local to each place and differs
+  between them: one file calls it the connection, the next calls it the database, a third keeps
+  it as a bare parameter. Several of these places never write the concrete type at all: they
+  declare only the narrower interface, or take what they are given untyped. The line that
+  carries a type is not a point of contact.
+  What separates a good answer from a long one is that the facet is named per line and not per
+  file. Nearly identical text lands on different sides of the split: a write that needs the new
+  id handed straight back; a write that must go to the write half of a read/write pair because
+  the same routine reads the row back immediately; a write whose whole design rests on a
+  driver-level duplicate-key failure arriving as a translated exception. And some points of
+  contact never run a statement at all - one lifts the event emitter off the object, works with
+  it detached and puts it back; one asks the object what driver it is; one asks it its own
+  configured name to build a filename; one asks it to suspend its table prefix for the duration
+  of a closure; one reaches for the statement-writing collaborator purely to render a raw
+  expression into a failure message.
+  Most of that layer sits in parts of the framework whose own job has nothing to do with the
+  store: a lock, a work queue, a batch of background work, the assertions a test makes, the
+  routine that empties tables between tests, the commands that print what the store looks like,
+  an event announcing that something was tidied up. The part of the tree obviously about the
+  store holds the object itself and its immediate collaborators, and an answer dense there and
+  silent elsewhere has enumerated inside one search scope and mistaken it for the framework.
+  Every point of contact must be pinned to an exact file:line, with the routine named, with the
+  facet it reaches for, and with one phrase on what it starts getting wrong once that facet is no
+  longer there to reach.
+
+steps:
+- name: Map the database connection contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is the object traced as one connected story - constructed, built for a driver, resolved by
+        name, stood up again after a drop, holding a transaction depth - rather than listed as
+        places a name is mentioned? The step asks for jobs along that story: what state one holds
+        from construction; where one is actually built and who decides which specialised
+        per-driver variant gets built; how a caller holding only a name ends up holding one, and
+        what that lookup does the second time it is asked for the same name (noticing the
+        memoisation is the part that makes the next step tractable); what happens when the link
+        underneath drops and a live one has to be stood up again; and where the nesting of an
+        in-flight transaction lives, with what differs between the innermost and the outermost
+        level. The question is COVERAGE OF THE JOBS - all of them shown and connected is the full
+        answer.
+        The step then asks for a second and deliberately SMALL thing: the SHAPE of the working
+        ground, not the roll of it. By what routes does one of these objects reach code that uses
+        it - handed in at construction, passed in for one call, pulled from something that
+        resolves it by name, or arriving inside something else - and who does the handing. Score
+        whether the routes are genuinely distinct and correctly characterised. Do NOT reward an
+        exhaustive enumeration of the places themselves: it was not asked for, and a long located
+        list of code that uses one of these objects is not a better answer here than four accurate
+        routes. Could the next step act from this orientation with targeted lookups rather than a
+        fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer names carry an exact file:line AND the name of the routine it
+        lives in? A bare filename is not specific. A file:line with no routine named around it is
+        not specific - the maintainer asked whose code it is, not where the character offset
+        falls. A routine named without the file:line where it is defined is not specific either.
+        Where the answer names construction, per-driver selection, resolution by name, reconnection
+        or transaction nesting, is the line that actually constructs, selects, resolves, reconnects
+        or increments located, and not just asserted from a class name or a familiar convention?
+    justification:
+      weight: 0.2
+      question: |
+        Does each part of the lifecycle carry one phrase on what it contributes - what the
+        constructor fixes, what decides the variant, what the repeat lookup returns instead of
+        building again, what reconnection preserves and what it discards, what the innermost
+        transaction level does that the outermost does not - and does the closing statement
+        separate the thing itself from the facets that could be lifted out of it without it
+        ceasing to be what it is, rather than restating the list of routines?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name or
+        from a familiar framework convention? This is a famous framework and its connection
+        surface is the kind of thing a model can recite: manager memoisation, driver factories,
+        savepoint naming and reconnection invite confident guessing, so saying which parts were
+        actually opened is worth more here than elsewhere. Is anything the session could not
+        resolve named as such rather than smoothed over, and are the routes offered as the ones it
+        established rather than as a complete taxonomy it did not check?
+- name: Audit every dependent of the database connection contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        COVERAGE AND DISCRIMINATION, and the two are one question here. Is every point of contact
+        the rest of the framework has with this object listed separately, each with the FACET it
+        reaches for named at the line - running a statement and taking rows back, the collaborator
+        that writes statements, the collaborator that reads results back, the collaborator that
+        inspects the store's structure, the table prefix, the quoting of a value, the emitter that
+        fires as queries run, the driver's identity or version, the object's own configured name?
+        A line named with no facet is half a row.
+        Score DISCRIMINATION at the line, not at the file. Nearly identical text lands on
+        different sides of the split - a write that needs the new id back, a write that must land
+        on the write half of a read/write pair because the same routine reads the row back
+        immediately, a write whose design rests on a driver-level duplicate-key failure arriving
+        as a translated exception. An answer that collapses those into one entry, or that assigns
+        a facet from the name of the surrounding file, has missed the question. Equally, does the
+        answer catch the points of contact that never run a statement at all - the one that lifts
+        the emitter off the object and puts it back, the one that asks which driver it is, the one
+        that asks the object its own name to build a filename, the one that suspends the prefix
+        for a closure, the one that reaches for the statement-writing collaborator only to render
+        a raw expression into a message?
+        Score WHERE the answer looked. Most of this layer is in parts of the framework whose own
+        job is a lock, a work queue, a batch of background work, test assertions, emptying tables
+        between tests, printing what the store looks like, or announcing that something was tidied
+        up. An answer dense in the part of the tree obviously about the store and thin elsewhere
+        has enumerated inside one search scope and mistaken it for the framework; that is the
+        exact failure this criterion names. Does it also avoid offering the lines that merely
+        CARRY THE TYPE - constructor signatures, imports, property declarations - as points of
+        contact, since the scenario says they earn nothing on their own?
+        Is the answer organised by area with each area's points of contact listed individually,
+        and is what was not reached said plainly rather than closed over?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every point of contact carry an exact file:line AND the routine that line sits in AND
+        the facet reached AND one phrase on the failure? All four, per row. A bare filename is not
+        specific. A run of places named together under one shared reason with no location on any
+        of them is the failure this criterion exists to catch, and it does not become specific
+        because the reason is correct. Is the line the one where the reach actually happens,
+        rather than the signature above it or the property declaration at the top of the class?
+        Where the answer names a local name the object was stored under, is that name the one the
+        file actually uses rather than the one the contract itself uses?
+    justification:
+      weight: 0.2
+      question: |
+        Is the failure phrase per row a consequence of THAT facet going away, rather than a
+        restatement that the place uses the store? "Breaks if the connection changes" is not a
+        justification. "Needs the inserted id handed straight back", "must go to the write half
+        because the row is read again in the same routine", "rests on a duplicate-key failure
+        arriving as a translated exception", "asks the object its own name to build a filename",
+        "detaches the emitter and puts it back, so it needs both halves of that facet" are. Does
+        the answer say, at least in aggregate, which facets the split has to keep reachable and
+        from where?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer distinguish points of contact it opened and read from ones it inferred
+        from a name, a familiar convention, or a memory of this framework? That distinction
+        matters more than usual here: this is a famous framework, and naming a plausible file
+        without having read the line is easy and looks the same as knowing. Is coverage claimed
+        honestly - does it say which areas it swept and which it did not reach, rather than
+        implying completeness - and where a line's facet was ambiguous, does it say so instead of
+        picking one silently?

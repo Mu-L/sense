@@ -1,0 +1,199 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 3 on laravel-framework, TWO-STEP PROBE, RE-QUESTION
+# (plans/cycle-1-craft-the-scenario/01-author.md). TWO steps, names verbatim and in the order
+# of scenarios/laravel-framework.yaml (the judge pairs by name).
+#
+# WHAT CHANGED FROM ATTEMPTS 1 AND 2, AND WHY THE RUBRIC HAD TO CHANGE WITH IT
+# Attempt 1 scored CALLS (baseline 0.9375) and attempt 2 scored HOLDS (baseline 0.8333). Both
+# relations are written in PHP as a literal token on the scored line - `->method(` in the
+# first, `protected Type $x` / `$this->x = $x` in the second - so both times the location came
+# free with the search that found the file. This draft scores neither. It scores REACHING
+# THROUGH AN INTERMEDIATE: the routine holds nothing, calls nothing, and the object sits one
+# or two declarations further along in a file the routine never mentions.
+#
+# WHY map_quality carries the most weight: the answer is a set of ROUTES, and a route without
+# its middle is not an answer to this ticket - the middle is the thing that gets re-plumbed.
+# Four of the twelve scored routes are a field declaring a narrow promise whose only concrete
+# satisfier is the holder; four are a call to a held collaborator; two are a container short
+# string resolved at wiring time; two are a bare `extends`, where the routine's own file
+# declares nothing at all. An answer that lists endpoints without middles has restated the
+# question.
+#
+# WHY specificity demands the starting line AND every intermediate AND the count AND the
+# failure: the failure this criterion exists to catch is a run of routes named together under
+# one shared reason with no location on any of them. It also catches the inverse of attempts 1
+# and 2: a line where the object is HELD, or a line where one of its routines is CALLED, is
+# the middle of somebody else's route and was pinned in step 1 - offering it here is answering
+# the two questions that already failed on this repo.
+#
+# WHY step 1 asks for the direct holders explicitly: they are the middles, both arms will
+# reach them, and they do not score. Naming them in step 1 is deliberate - it puts the
+# discriminator on the far side of them rather than on them. What step 1 does NOT ask for is
+# the roll of the far side: on the neighbouring repo in this vertical, asking step 1 for the
+# enumerated working ground moved BOTH arms together, because the plain arm wrote its covering
+# sweep in step 1 and re-read the same output in step 2.
+audience: |
+  An AI coding agent that will use this answer to replace the object every part of this
+  framework is handed in order to read and write files on the local disk. Today that object is
+  a plain synchronous wrapper: one instance is made at boot, registered under a short name,
+  handed to whatever asks, every routine blocks until the disk answers, and a failure comes
+  back as an exception thrown where the call was made. After the change the work happens off
+  the calling thread and a failure surfaces where the work is awaited, not where it was
+  requested. Score for that agent, not a human reader and not a docs page.
+  A perfect answer leaves the agent able to make that change knowing two things. First, what
+  the object is today: what it does grouped by job, where the single shared instance is made
+  and under what short name it is registered, how a caller that never names the type still
+  ends up holding it, where a disk failure surfaces today, and which collaborators hold one
+  directly - each located at file:line. Second, and this is what decides the answer: every
+  route by which code that holds none of them still ends up doing this work, with the thing in
+  the middle named.
+  A route is not a place. It has an end - a routine that will be doing local file work through
+  the new object - and it has a middle, which is what the ticket has to re-plumb. A place that
+  is handed the object and works it directly is NOT an answer here: that place is the middle
+  of somebody else's route, it belongs to the first part, and naming it again earns nothing.
+  What separates a good answer from a long one is the middle, and the middles are of four
+  different kinds. Some routines call a collaborator they hold, and the collaborator is the
+  holder. Some inherit the work from a class they extend, so the field is declared in a file
+  they never open and their own file declares nothing to find. Some write a narrow promise on
+  a field - a store, a loader, a finder - and the only concrete thing in the framework
+  satisfying that promise is itself a holder, so the file names an idea rather than a type
+  that leads anywhere. And some are linked at wiring time out of a short string, so no type is
+  named on either side and no declaration anywhere connects them. Routes run to more than one
+  link, and the count differs by row.
+  Most of this layer sits in parts of the framework whose own subject has nothing to do with
+  disks or files, and in ten of the twelve routes that matter the routine's own file contains
+  no occurrence of the object's name at all. The part of the tree obviously about file access
+  holds the object itself and the collaborators built out of it; an answer dense there and
+  thin elsewhere has enumerated inside one search scope and mistaken it for the framework.
+  Every route must be pinned to the exact file:line of the routine that starts it with that
+  routine named, with every intermediate between there and the object named at its own
+  file:line, with how many links that is, and with one phrase on what goes wrong for that
+  routine once the work no longer blocks and the failure no longer surfaces where it was
+  requested.
+
+steps:
+- name: Map the local file access contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is the object presented as one connected picture - what it does grouped by job, where
+        the single shared instance is made, the short name it is registered under, how a
+        caller that never names the type still ends up holding it, and where a disk failure
+        surfaces today - rather than as a list of routines or a roll of places the name
+        appears? The registration under a short name and the failure path are the two that
+        matter most, because between them they are why so much of this framework can depend on
+        the object without ever naming it, and why the change is dangerous. An answer that
+        locates both and says so has understood the ticket.
+        The step then asks for the DIRECT HOLDERS: the small set of objects handed the
+        instance that keep it in a field of their own. Are they named, each pinned to the
+        field or the constructor that fills it, and does each carry a phrase on what it does
+        with the handle? This part is deliberately the easy part and it is asked for on
+        purpose - it is the middle of the picture and the next step is about the far side of
+        it - so score coverage and location here, not difficulty.
+        The step finally asks for a deliberately SMALL third thing: the KINDS of indirect
+        route, one example each. Score whether the kinds are genuinely distinct and correctly
+        characterised. Do NOT reward an exhaustive enumeration of the indirect places
+        themselves: it was not asked for, and a long located list is not a better answer here
+        than four accurate kinds. Could the next step act from this orientation with targeted
+        lookups rather than a fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer names carry an exact file:line AND the name of the routine
+        or class it lives in? A bare filename is not specific. A file:line with nothing named
+        around it is not specific - the maintainer asked whose code it is, not where the
+        character offset falls. Where the answer names the construction of the shared
+        instance, the short name it is registered under, or a collaborator's field, is the
+        line that actually constructs, registers or declares located, and not just asserted
+        from a class name or a familiar convention?
+    justification:
+      weight: 0.2
+      question: |
+        Does each part carry one phrase on what it contributes - what the registration buys a
+        caller that has only a name, what each direct holder actually does with its handle,
+        where a refusal from the disk lands today - and does the answer connect those facts to
+        why code far away can depend on this object without naming it, rather than restating
+        the list of routines?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name
+        or a familiar framework convention? This matters more than usual here: closed-book,
+        this model can name 46 of the object's 54 members, so its surface invites confident
+        recitation and saying which parts were actually opened is worth more here than
+        elsewhere. Is anything the session could not resolve named as such rather than
+        smoothed over, and are the kinds of route offered as the ones it established rather
+        than as a complete taxonomy it did not check?
+- name: Audit every dependent of the local file access contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        COVERAGE AND MIDDLES, and the two are one question here. Is every routine that will be
+        doing local file work through the new object, without having asked for one, listed
+        separately - each with every intermediate between it and the object named, and with
+        how many links that is? A route named with no middle is half a row, because the middle
+        is the only part of it the ticket can re-plumb.
+        Score the DISTINCTION the ticket turns on: reaching through versus holding. A place
+        that is handed the object and works it directly is NOT an answer here - it is the
+        middle of somebody else's route and it belongs to the previous step. An answer built
+        out of direct holders and their call sites has answered a different question, and it
+        is specifically the question that has already failed twice on this repo.
+        Score the FOUR KINDS of middle, and whether the answer catches all of them rather than
+        the one it found first: a collaborator that is held and called; a class that is
+        extended, where the routine's own file declares nothing at all and the one word
+        `extends` is the entire dependency; a narrow promise written on a field whose only
+        concrete satisfier is a holder, so the file names an idea rather than a type; and a
+        link made at wiring time out of a short string, where no type is named on either side
+        and no declaration anywhere connects them. An answer that finds only the routines
+        whose own file mentions the object has found the shallow edge and stopped - in ten of
+        the twelve routes that matter, the file contains no occurrence of the name.
+        Score WHERE the answer looked. Most of this layer sits in parts of the framework whose
+        own subject has nothing to do with disks or files. An answer dense in the part of the
+        tree obviously about file access and thin elsewhere has enumerated inside one search
+        scope and mistaken it for the framework; that is the exact failure this criterion
+        names.
+        Is the answer organised by area with each area's routes listed individually, and is
+        what was not reached said plainly rather than closed over?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every route carry an exact file:line on the routine that starts it, AND that
+        routine's name, AND every intermediate named at its own file:line, AND the number of
+        links, AND one phrase on the failure? All five, per row. A bare filename is not
+        specific. A run of routes named together under one shared reason with no location on
+        any of them is the failure this criterion exists to catch, and it does not become
+        specific because the reason is correct. Is the located line the line that starts the
+        route - the call to the collaborator, the field declaring the narrow promise, the
+        `extends`, the wiring expression - rather than a line where the object itself is held
+        or one of its routines is called? Are the intermediates located at their own
+        declarations rather than asserted from their names?
+    justification:
+      weight: 0.2
+      question: |
+        Is the failure phrase per row a consequence of THAT route, rather than a restatement
+        that the place touches the disk? "Breaks if the file API changes" is not a
+        justification. "The disk read happens in the parent, so nothing in this file will show
+        the dependency and nothing in it will be updated", "the link is a short string, so no
+        rename or type change anywhere reaches it", "the field promises a store and the store
+        is the holder, so this file sees a failure it has no vocabulary for", "the routine
+        returns before the work is awaited, so the exception arrives after its caller has
+        moved on" are. Does the answer say, at least in aggregate, which middles have to be
+        re-plumbed and which routines can be left alone?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer distinguish routes it traced by reading from ones it inferred from a
+        name, a familiar convention, or a memory of this framework? That distinction matters
+        more than usual here: this is a famous framework, and asserting that one object holds
+        another because it usually does is not the same as having read the declaration that
+        says so. Middles especially invite guessing, and a route asserted with a plausible
+        intermediate that is not the real one is worse than an admitted gap. Is coverage
+        claimed honestly - which areas it swept and which it did not reach - and where the
+        concrete satisfier of a narrow promise was ambiguous, does it say so instead of
+        picking one silently?

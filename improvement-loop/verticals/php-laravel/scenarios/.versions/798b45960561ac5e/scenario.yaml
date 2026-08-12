@@ -1,0 +1,343 @@
+# ============================================================================
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md)
+# CYCLE 1, ATTEMPT 1 on laravel-framework - a FIRST authoring pass, not a re-question.
+#   results/loop/laravel-framework/cycles.jsonl does not exist and there is no
+#   results/dryrun/laravel-framework: `ls` of results/ returns claude-opus-5, dryrun, loop,
+#   minibench, and every cell under claude-opus-5/minibench/*/ is /coolify. So there is no
+#   trajectory to correct from on this repo and no side of the window to name. The window this
+#   draft aims at is the standing one: plain arm at or below 0.50 on `dependents` AND ours at
+#   least 0.50 above it.
+#
+# ANCHOR: `Illuminate\Database\Connection`, precision 0.27 - LOWEST of the nine anchors
+# profiled this session that can yield twelve dependent files across six areas.
+#
+# SEAM PROFILE (bench/lib/seam_hunt.py, quoted verbatim from this session)
+#   Connection   --file src/Illuminate/Database/Connection.php
+#       app caller files 21 | SCATTER 13 dirs | 'Connection' in 79 app files  PRECISION=0.27
+#   Container    --file src/Illuminate/Container/Container.php
+#       app caller files 44 | SCATTER 35 dirs | 'Container' in 144 app files  PRECISION=0.31
+#   Facade       (no --file needed)
+#       app caller files 17 | SCATTER  7 dirs | 'Facade' in 50 app files      PRECISION=0.34
+#   Filesystem   --file src/Illuminate/Filesystem/Filesystem.php
+#       app caller files 31 | SCATTER 18 dirs | 'Filesystem' in 78 app files  PRECISION=0.40
+#   Str          --file src/Illuminate/Support/Str.php
+#       app caller files 78 | SCATTER 65 dirs | 'Str' in 188 app files        PRECISION=0.41
+#   Repository   --file src/Illuminate/Cache/Repository.php
+#       app caller files 38 | SCATTER 28 dirs | 'Repository' in 70 app files  PRECISION=0.54
+#   Macroable    app caller files  3 | SCATTER  2 | in 78 files               PRECISION=0.04
+#   Blueprint    app caller files  1 | SCATTER  1 | in 10 files               PRECISION=0.10
+#   HasAttributes app caller files 44 | SCATTER 29 | in 2 files               PRECISION=22.00
+#   PRECISION RANKS, IT NEVER KILLS. Macroable (0.04) and Blueprint (0.10) profile lower and
+#   cannot yield the group - 3 and 1 caller files. HasAttributes at 22.00 is the "above 1.00
+#   means FALSE CALLER EDGES" case and the law's instruction to check a sample by hand is what
+#   killed it; see the paragraph below. `Connection` is the lowest of the three that can
+#   actually yield twelve files across six areas.
+#
+# WHY NOT HasAttributes, WHICH LOOKED FAR BETTER ON PAPER (44 dependents, token in 2 files)
+#   Checked a sample by hand, per the law, and the caller edges are name collisions on
+#   `getAttributes`/`setAttribute`/`getAttributeValue` - PHP 8 reflection attributes and
+#   unrelated setters, not the Eloquent concern:
+#     src/Illuminate/Support/Number.php:36 `format` -> `$formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, ...)` on a PHP NumberFormatter
+#     src/Illuminate/Console/Command.php:143 `configureFromAttributes` -> `$reflection->getAttributes(Signature::class)`
+#     src/Illuminate/Bus/Dispatcher.php:160 -> `$this->getAttributeValue($job, Connection::class, 'connection')`, which is ReadsClassAttributes, a different trait
+#   And the TRUE dependents do not span six areas. Grepping the concern's own distinctive API
+#   (`->setRawAttributes(`, `->attributesToArray(`, `->syncOriginal(`, `->getRawOriginal(`,
+#   `->getCasts(`, `->hasCast(`, `->mergeCasts(`, `->setAppends(`, `->isDirty(`) outside the
+#   trait and Model returns nine files and every one is inside src/Illuminate/Database/Eloquent.
+#   Rejected on AREA COVERAGE and on false edges, not on what a grep prints about the anchor.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF PLACES A NAME APPEARS
+#   Per place: WHICH FACET of the handle's surface that place reaches through - raw statement
+#   execution, the query grammar, the post-processor, the schema builder underneath it, the
+#   table prefix, the event dispatcher hanging off the handle, the value escaper, or the
+#   driver's own identity - and therefore what that place starts getting wrong when that facet
+#   moves. Those differ completely between lines whose TEXT IS NEARLY IDENTICAL: three of the
+#   scored rows are `->table($this->table)->insert([` within one character of each other, and
+#   they break differently - a lock that must survive a driver-level duplicate-key error, a
+#   queue that needs the inserted id handed back, and a batch record that needs the write to
+#   land on the write half of a read/write pair. Two more scored rows never touch a statement
+#   at all: one lifts the event dispatcher off the handle and puts it back, one asks the handle
+#   what driver it is. A search prints the occurrence; it cannot print which facet is reached
+#   or what fails when that facet changes.
+#   NOT the retention kind, and that is a RUN and not a preference:
+#     python3 bench/lib/ring_sweep.py $CLONE --top 12
+#       -> "0 candidate(s) above the bar"; twelve anchors, every one "rows 0 files 0 vias 0"
+#          except Container (23/23/3, top-via 0.91) and Request (3/3/2), both under the bar.
+#   Zero rings above the bar, so "what HOLDS X" is off the menu on this repo.
+#
+# THE MECHANISM (this sentence is the scenario's whole thesis)
+#   A dependent does not keep the contract by naming it. It is HANDED a handle - in a
+#   constructor, as a plain method argument, or as the payload of an event - stores it under a
+#   name of its own choosing (`$this->connection` in one file, `$this->database` in the next,
+#   a bare `$connection` parameter in a third), and from then on reaches the contract's runtime
+#   surface off that local name. Several dependents declare the NARROW INTERFACE type and never
+#   write the concrete class at all, and one is handed its handle by the manager at call time.
+#   So the unit of the audit is the point of contact, and the point of contact is never the
+#   line that carries the type.
+#
+# EVERY SCORED ROW IS IN THE SHOWN BLAST PAYLOAD (RUN THIS SESSION, NOT ASSUMED)
+#   python3 bench/lib/mcp_probe.py $CLONE \
+#     '[{"name":"sense_blast","arguments":{"symbol":"Illuminate\\Database\\Connection"}}]'
+#   No `min_confidence` passed. 30612 chars; 60 `direct_callers`, 20 `indirect_callers`,
+#   13 `affected_via_composition`, 4 `affected_subclasses`, 5 `references` examples.
+#   All 16 scored paths and all 4 anchor paths were intersected against the union of paths in
+#   that payload, path by path; every one is inside it. `production_affected` 97,
+#   `total_affected` 237, `truncated: true`.
+#
+# MEMORIZATION (bench/lib/memorization_probe.py $CLONE Connection --json /tmp/memo_conn.json)
+#   `"ok": false`, `"recall": 0.758` - 91 of 120 member names recited closed-book, so the model
+#   can list what the contract offers (`select`, `statement`, `table`, `escape`, `getConfig`,
+#   `selectFromWriteConnection`, ... all in the probe's answer). GOLD-TIME CONSTRAINT, NOT AN
+#   ADMISSION VERDICT: not one scored row is a member of the anchor. Every scored row is a
+#   line-level fact in a DIFFERENT file - which local name a subsystem stored its handle under
+#   and which facet it reaches at that line - and none of that is in the probe's answer.
+#   TWO HONEST LIMITS, stated because they are not tested:
+#     - the probe has no per-row mode (`--help`: clone, symbol, --file, --model, --json,
+#       --samples, --answer), so plan step 5's "memorization, per candidate row" could not be
+#       run as written. Named in the verdict notes as a line the plan should carry.
+#     - churn-dating cannot discriminate rows here: the clone is one pinned snapshot at
+#       24a4568a87 (2026-07-17) and the oldest touch on any gold file is 2026-05-06.
+#   Because cited credit is path + any line pin, file-level recall alone could in principle
+#   score a row. That risk is real, it applies to BOTH arms, and it is exactly what the
+#   mini-bench measures. It decides nothing here.
+#
+# ARITHMETIC, THE FALSIFIER: 16 scored rows and recall caps at 1.00, so +0.50 is reachable ONLY
+# if the baseline cites 8 files or fewer. If it cites 9, the cell is dead before it is scored,
+# and that is the result.
+#
+# NEGATIVE SPACE - WHAT I DID NOT CHECK, AND IT DECIDES NOTHING (no grep screen is a gate)
+#   Recorded because the law says record it, never let it decide:
+#     grep -rln 'use Illuminate\\Database\\Connection;' src   -> 18 files
+#   Twelve of the sixteen scored files are inside those 18; FOUR ARE NOT, because they hold the
+#   narrow interface type instead (Console/ShowCommand, Console/DatabaseInspectionCommand,
+#   Foundation/Testing/DatabaseTruncation) or take the handle as an untyped local
+#   (Database/Grammar). One `grep -n` over that import therefore prints path:line for most of
+#   the group, and rejecting this anchor for that reason is the recorded mistake this bench made
+#   four times - the import screen in its old home rejected four of four banked wins, and a
+#   Rails cell banks +0.53 with 16 of 16 gold files carrying the anchor token. What a covering
+#   grep can print is not the question; whether the arm runs one to closure at path:line inside
+#   its wall is, and only the run answers that.
+#   I also did NOT run a per-row read-cost census. It is banned before the two-arm bench.
+#
+# THE INVENTORY CHECK, RUN BY HAND BECAUSE NO SCRIPT CAN RUN IT
+#   The first draft of step 2 ended "...whose own job has nothing to do with the store: a lock, a
+#   work queue, a batch of background work, the assertions a test makes, the routine that empties
+#   tables between tests, the commands that print what the store looks like, an event announcing
+#   that something was tidied up." Seven categories, and between them they name the job of 12 of
+#   the 16 scored rows - the exact failure the law calls THE ASK NAMES THE MECHANISM, NEVER THE
+#   INVENTORY, and `scenario.py --prompt` passes it clean because it reads tokens. Replaced with
+#   the mechanism only: the file's own subject is something else, one line in the middle of that
+#   job holds a handle, nothing around it announces a store is involved. What survives in the ask
+#   is HOW a dependent hides, not WHERE it lives.
+#   The rendered prompt was then read end to end: no path, no class or symbol name, no count of
+#   the answer, no tool name. The plain words "database connection" appear in the two step titles,
+#   which is the same latitude the neighbouring repo's scenario takes with "server".
+# ============================================================================
+name: Laravel framework work session - audit the database connection contract before a rework
+repo: laravel-framework
+contract_symbol: Illuminate\Database\Connection
+contract_file: src/Illuminate/Database/Connection.php
+
+description: |
+  You are a maintainer of this framework, about to rework the object that every part of it is
+  handed in order to talk to a relational store. Today that object is one fat thing: it runs a
+  statement and hands back rows, it owns the driver handle underneath, it keeps the nesting
+  depth of the current transaction, it carries the prefix that gets pasted in front of a table
+  name, it quotes values, it says which driver and which server version it is talking to, it
+  owns an event emitter that fires as queries run, and it hands out three collaborators built
+  from itself - one that writes statements, one that reads results back, and one that inspects
+  and changes the store's own structure.
+  The rework splits it. Running a statement stays; the rest moves behind narrower things that
+  are asked for, not reached for. So a place that is handed one of these objects and only runs
+  a statement through it is fine, and a place that reaches past the statement into one of the
+  other facets is not - it will be asking a thing that no longer has that facet to give.
+  Before you touch it you have to know two things: what the object is and how one comes into
+  existence, is handed out, is reconnected and is specialised per driver; and every place in
+  this framework that reaches into it, with the facet each one reaches for named, because the
+  split is decided facet by facet and not file by file.
+  Throughout, an answer that points at a place must give an exact file:line a teammate could
+  jump straight to, plus one phrase on why it matters. A bare filename does not count, a set of
+  names offered together with one shared reason and no location on any of them does not count,
+  and a missed dependent is a regression shipped.
+
+steps:
+  - name: Map the database connection contract
+    prompt: >
+      Task: orient, and be exact - the rest of the ticket is built on this and nothing later
+      will send you back for it. Two things, and the first is the larger.
+      First, the object itself, traced end to end. What state does one of these hold from the
+      moment it is constructed; where is one actually built, and who decides which specialised
+      variant gets built for which driver; how does a caller that has only a name in hand end up
+      holding one, and what does that lookup do the second time it is asked for the same name;
+      what happens to a live one when the link underneath it drops and it has to be stood up
+      again; and where does the nesting of an in-flight transaction live, with what happens on
+      the innermost level versus the outermost. Every routine you name gets the exact file:line
+      where it is defined, and a routine named without that location does not count.
+      Second, and briefly: the shape of the ground, not the roll of it. By what routes does one
+      of these objects end up in the hands of code that then uses it - handed in when that code
+      is constructed, passed in for the length of one call, pulled from something that resolves
+      it by name, or arriving as part of something else - and who does the handing. Name each
+      route once with a single example located at file:line. Do not enumerate the places
+      themselves; I am not asking for that list here and it earns nothing.
+      Then say, in a few sentences, which parts of what you just traced are the thing itself and
+      which are facets that could be lifted out of it without the thing ceasing to be what it is.
+    checks:
+      - type: response_richness
+        value: "10"
+        required: true
+        description: The object's own lifecycle - state at construction, where one is built, per-driver specialisation, resolution by name and what a repeat lookup does, standing one up again after the link drops, and where transaction nesting lives - each located at file:line, plus the routes by which one reaches working code named once each with one located example
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the database connection contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the first
+      part already cost you. Take it as settled that the object is being split as described, and
+      answer the only question that matters after that: which places have to be looked at, and
+      for what.
+      The unit of the answer is a point of contact, not a file and not a class. A point of
+      contact is one line where code that is holding one of these objects reaches through it for
+      something. What makes each one different is WHICH facet it reaches for - whether it is
+      running a statement and taking rows back, or reaching past that for the thing that writes
+      statements, the thing that reads results back, the thing that inspects the store's
+      structure, the prefix pasted in front of a table name, the quoting of a value, the emitter
+      that fires as queries run, or the identity and version of the driver underneath. Two lines
+      whose text is nearly identical can reach for different facets and land on different sides
+      of this split, so decide each one at the line and not from the name of the file it is in.
+      Do not go looking for the places that name the type. The code you are after was HANDED one
+      of these - when it was constructed, as a plain argument for the length of one call, or
+      inside something else that was passed to it - and then stored it under a name of its own
+      choosing, so the name you would search for is local to each place and differs between
+      them. Some of these places never write the type at all: they declare the narrower thing
+      instead, or they take what they are given untyped. The line that carries a type is not a
+      point of contact and earns nothing on its own.
+      Expect the answer to be spread across parts of this framework whose own job has nothing to
+      do with the store. The file's own subject is something else entirely, one line in the middle
+      of that job holds one of these objects, nothing around it announces that a store is
+      involved, and the place reads as unrelated right up until the facet it reaches for is gone.
+      The part of the tree obviously about the store holds the object itself and its immediate
+      collaborators, so it is the least interesting place to look.
+      For each one the answer has three parts and only three: the exact file:line of the point of
+      contact and the routine that line sits in; which facet is being reached for; and one phrase
+      on what that place starts getting wrong once that facet is no longer there to reach. Keep
+      it short: I want the coverage, the facet and the failure, not the prose.
+      Organise by area, one section per area, and treat an area as finished only when every point
+      of contact inside it is listed separately with its own location. If you run short, say what
+      you had still not looked at rather than closing on what you have. A file:line with no facet
+      and no failure is half an answer, and a group summarised instead of listed reads as a group
+      with nothing in it.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every point of contact located at file:line with the routine it sits in, which facet of the contract it reaches for, and what it starts getting wrong once that facet is gone
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ---- ANCHORS: the contract centre, where one is built, where one is resolved by name, and
+  # ---- its single most obvious collaborator. Step 1's answer. Both arms reach these and they
+  # ---- do NOT score. Every line below was opened and read this session. None of these four
+  # ---- files appears in `dependents`.
+  - id: contract-connection
+    group: contract
+    match: [Illuminate/Database/Connection.php]
+    relation: "src/Illuminate/Database/Connection.php:242 `public function __construct($pdo, $database = '', $tablePrefix = '', array $config = [])` - the contract itself; :424 `public function select(...)` and :588 `public function statement($query, $bindings = [])` are the facet that survives the split, :799 `protected function run($query, $bindings, Closure $callback)` the funnel every statement goes through"
+  - id: c:database-manager
+    group: contract
+    match: [Illuminate/Database/DatabaseManager.php]
+    relation: "src/Illuminate/Database/DatabaseManager.php:94 `public function connection($name = null)` - the resolution-by-name path that memoises into `$this->connections`, with :240 `protected function configure(Connection $connection, $type)` doing the post-build wiring; the obvious first hop and reached by both arms"
+  - id: c:connection-factory
+    group: contract
+    match: [Connectors/ConnectionFactory.php]
+    relation: "src/Illuminate/Database/Connectors/ConnectionFactory.php:302 `protected function createConnection($driver, $connection, $database, $prefix = '', array $config = [])` - where a driver string picks the specialised subclass, reached from :45 `public function make(array $config, $name = null)`"
+  - id: c:query-builder
+    group: contract
+    match: [Illuminate/Database/Query/Builder.php]
+    relation: "src/Illuminate/Database/Query/Builder.php:289 `$this->connection = $connection;` in the constructor at :284, taking the NARROW interface type, then :290 `$this->grammar = $grammar ?: $connection->getQueryGrammar();` - the contract's twin and the single most obvious dependent in the framework, held out of the scored group deliberately: a row every run would cite puts a floor under the baseline"
+
+  # ---- DEPENDENTS: the scored group. Sixteen files across ten areas, one row per file. Every
+  # ---- one appears in the shown `sense_blast` payload for the contract (checked path by path
+  # ---- this session). At every scored line the code is holding a handle it was HANDED, under a
+  # ---- local name of its own, and is reaching through it for one named facet.
+  - id: d:schema-builder-post-processor
+    group: dependents
+    match: [Database/Schema/Builder.php]
+    relation: "src/Illuminate/Database/Schema/Builder.php:217 `return $this->connection->getPostProcessor()->processTables(` inside `getTables($schema = null)` at :215, with :218 `$this->connection->selectFromWriteConnection(...)` nested in the same expression - reaches for the RESULT-READING collaborator and for the write-half read in one statement, so one line depends on two facets that land on different sides of the split"
+  - id: d:blueprint-default-precision
+    group: dependents
+    match: [Database/Schema/Blueprint.php]
+    relation: "src/Illuminate/Database/Schema/Blueprint.php:2004 `return $this->connection->getSchemaBuilder()::$defaultTimePrecision;` inside `defaultTimePrecision(): ?int` at :2002 - reaches through the handle for the STRUCTURE-INSPECTING collaborator and then for a static property on its class, so it depends on which class that collaborator is and not only on its interface"
+  - id: d:schema-state-migration-table
+    group: dependents
+    match: [Schema/SchemaState.php]
+    relation: "src/Illuminate/Database/Schema/SchemaState.php:104 `$this->connection->getSchemaBuilder()->hasTable($this->migrationTable);` - the structure-inspecting facet reached to answer an existence question, and at :114 `$this->connection->getTablePrefix().$this->migrationTable` the PREFIX facet, pasted in front of a name by hand rather than let the collaborator do it"
+  - id: d:blueprint-state-schema
+    group: dependents
+    match: [Schema/BlueprintState.php]
+    relation: "src/Illuminate/Database/Schema/BlueprintState.php:66 `$schema = $connection->getSchemaBuilder();` inside `__construct(Blueprint $blueprint, Connection $connection)` at :61 - the handle is taken in, one facet is lifted off it immediately and kept as a local, and the handle is also retained at :64 `$this->connection = $connection;` into the property declared at :25"
+  - id: d:sqlserver-processor-identity
+    group: dependents
+    match: [Query/Processors/SqlServerProcessor.php]
+    relation: "src/Illuminate/Database/Query/Processors/SqlServerProcessor.php:45 `$result = $connection->selectFromWriteConnection(` inside `processInsertGetIdForOdbc(Connection $connection)` at :43 - a handle passed in for the length of one call, reached for the WRITE-HALF read specifically, because the identity of a row just inserted only exists on the half that inserted it"
+  - id: d:grammar-escape
+    group: dependents
+    match: [Database/Grammar.php]
+    relation: "src/Illuminate/Database/Grammar.php:247 `return $this->connection->escape($value, $binary);` - the VALUE-QUOTING facet, reached by the very collaborator the handle hands out, so the split has to keep this one edge pointing back the other way; the same file also reaches the prefix at :295 and writes it at :308 `$this->connection->setTablePrefix($prefix);`"
+  - id: d:dump-command-name
+    group: dependents
+    match: [Console/DumpCommand.php]
+    relation: "src/Illuminate/Database/Console/DumpCommand.php:105 `return tap($this->option('path') ?: database_path('schema/'.$connection->getName().'-schema.sql'), ...` inside `path(Connection $connection)` at :103 - reaches for the handle's own NAME to build a filename, a facet with nothing to do with running a statement and one that a narrower thing would not carry"
+  - id: d:show-command-without-prefix
+    group: dependents
+    match: [Console/ShowCommand.php]
+    relation: "src/Illuminate/Database/Console/ShowCommand.php:88 `? $connection->withoutTablePrefix(fn ($connection) => $connection->table($table['schema_qualified_name'])->count())` - the PREFIX facet reached as a scope that suspends it for the duration of a closure, the most involved prefix use in the framework; this file declares only the narrow interface type at :80 `tables(ConnectionInterface $connection, Builder $schema)` and never writes the concrete class"
+  - id: d:inspection-command-thread-count
+    group: dependents
+    match: [Console/DatabaseInspectionCommand.php]
+    relation: "src/Illuminate/Database/Console/DatabaseInspectionCommand.php:35 `return $connection->threadCount();` inside `getConnectionCount(ConnectionInterface $connection)` at :33 - reaches through the handle for the DRIVER's own live state, and does it while holding only the narrow interface type, so the type it declares does not tell you the facet it needs"
+  - id: d:migrations-pruned-event
+    group: dependents
+    match: [Events/MigrationsPruned.php]
+    relation: "src/Illuminate/Database/Events/MigrationsPruned.php:39 `$this->connectionName = $connection->getName();` inside `__construct(Connection $connection, string $path)` at :36 - a whole live handle carried as the payload of a broadcast event, with its NAME lifted off it on the way in and kept beside it; the listener side is handed the object rather than a statement runner"
+  - id: d:database-queue-insert-get-id
+    group: dependents
+    match: [Queue/DatabaseQueue.php]
+    relation: "src/Illuminate/Queue/DatabaseQueue.php:344 `return $this->database->table($this->table)->insertGetId($this->buildDatabaseRecord(` inside `pushToDatabase(...)` at :342 - the handle is stored under the local name `$this->database`, and the facet is the statement-writing collaborator reached for a write that must hand the new id back, so it cannot be satisfied by a fire-and-forget statement runner"
+  - id: d:batch-repository-store
+    group: dependents
+    match: [Illuminate/Bus/DatabaseBatchRepository.php]
+    relation: "src/Illuminate/Bus/DatabaseBatchRepository.php:99 `$this->connection->table($this->table)->insert([` inside `store(PendingBatch $batch)` at :95 - text within a character of two other scored rows, and a different dependency: this write has to land on the write half of a read/write pair, because the same routine reads the row back immediately afterwards at :112 `return $this->find($id);`"
+  - id: d:database-lock-acquire
+    group: dependents
+    match: [Cache/DatabaseLock.php]
+    relation: "src/Illuminate/Cache/DatabaseLock.php:73 `$this->connection->table($this->table)->insert([` inside `acquire()` at :70 - the third near-identical line, and the one that depends on a facet none of the others need: the driver-level failure surfacing as the exception caught at :80 `} catch (QueryException) {`, so it needs the handle's error translation and not just its statement runner"
+  - id: d:count-in-database-constraint
+    group: dependents
+    match: [Constraints/CountInDatabase.php]
+    relation: "src/Illuminate/Testing/Constraints/CountInDatabase.php:53 `$this->actualCount = $this->database->table($table)->count();` inside `matches($table): bool` at :51 - a test assertion holding a handle under the local name `$this->database`, reaching for the statement-writing collaborator; a whole area of the framework whose own job is assertions rather than storage"
+  - id: d:has-in-database-grammar
+    group: dependents
+    match: [Constraints/HasInDatabase.php]
+    relation: "src/Illuminate/Testing/Constraints/HasInDatabase.php:117 `$output[$key] = $data instanceof Expression ? $data->getValue($this->database->getQueryGrammar()) : $data;` inside `getAdditionalInfo($table)` at :78 - reaches for the STATEMENT-WRITING collaborator itself, not to run anything but to render a raw expression into a failure message, which is the facet reach a search for a query would never surface"
+  - id: d:database-truncation-dispatcher
+    group: dependents
+    match: [Testing/DatabaseTruncation.php]
+    relation: "src/Illuminate/Foundation/Testing/DatabaseTruncation.php:84 `$dispatcher = $connection->getEventDispatcher();` inside `truncateTablesForConnection(ConnectionInterface $connection, ?string $name)` at :82, with :86 `$connection->unsetEventDispatcher();` - lifts the EVENT EMITTER off the handle, works with it detached and puts it back, and does the whole thing while declaring only the narrow interface type"

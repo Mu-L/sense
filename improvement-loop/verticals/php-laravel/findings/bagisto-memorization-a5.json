@@ -1,0 +1,40 @@
+{
+  "ok": false,
+  "ran": true,
+  "model": null,
+  "reason": "closed-book recall 0.444 (32 members named) >= 0.3 - recited, both arms already know it",
+  "recall": 0.444,
+  "hits_n": 32,
+  "hits": [
+    "attribute_family",
+    "attribute_values",
+    "bundle_options",
+    "catalog_rule_prices",
+    "categories",
+    "channels",
+    "checkInLoadedFamilyAttributes",
+    "cross_sells",
+    "customer_group_prices",
+    "downloadable_links",
+    "downloadable_samples",
+    "getAttribute",
+    "getBaseImageUrlAttribute",
+    "getCustomAttributeValue",
+    "getTypeInstance",
+    "grouped_products",
+    "haveSufficientQuantity",
+    "images",
+    "inventories",
+    "inventory_indices"
+  ],
+  "truth_n": 72,
+  "said_n": 61,
+  "samples": [
+    0.403,
+    0.0,
+    0.444
+  ],
+  "answer_head": "Product\n$table\n$fillable\n$casts\n$with\n$typeInstance\n$loadedAttributeValues\nattribute_family\nattribute_values\nattribute_family_id\nparent\nvariants\nsuper_attributes\ncategories\nchannels\ninventories\nordered_inventories\ncustomer_group_prices\nprice_indices\ninventory_indices\ncatalog_rule_prices\nreviews\nimages\nvideos\ndownloadable_samples\ndownloadable_links\nbundle_options\ngrouped_products\nrelated_products\nu",
+  "symbol": "Product",
+  "repo": "bagisto"
+}

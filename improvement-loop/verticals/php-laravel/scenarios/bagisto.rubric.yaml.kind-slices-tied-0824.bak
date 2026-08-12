@@ -1,0 +1,240 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 2 on bagisto, TWO-STEP PROBE
+# (plans/cycle-1-craft-the-scenario/01-author.md). TWO steps, names verbatim and in the
+# order of scenarios/bagisto.yaml (the judge pairs by name). This is a RE-QUESTION: the
+# anchor is unchanged and the question has moved, so this rubric is rewritten to score the
+# new axis and not the old one.
+#
+# WHAT CHANGED, AND WHY THIS RUBRIC CHANGED WITH IT
+# Attempt 1 scored the ROUTE by which a site came to be holding the catalogue record. It was
+# measured at baseline 0.6471 / sense 0.7647 on `dependents`: the plain arm's accessor sweep
+# printed most of the holding sites with their lines already attached, and ten of seventeen
+# rows were cited by both arms. This attempt scores something the sweep's output cannot
+# state: WHICH kind-specific slice a site owns. Every record here carries a KIND as a plain
+# string in one of its own columns; the class that speaks for that kind is assembled at
+# runtime out of that string, so no site names what it will actually get. The sites that
+# matter are siblings of each other written one per kind, and none of them says which kind it
+# is for. A list of every place the record is touched does not distinguish them.
+#
+# WHY map_quality carries the most weight: coverage and placement are one question. The
+# scored set is seventeen sites over eleven areas, and they are siblings without a shared
+# abstraction - one owner per kind-specific sub-collection, one per-kind answer to a question
+# every kind is asked, one branch per stored-kind value. The failure this criterion exists to
+# catch is an answer that lists the record's consumers instead of its kind-slice owners: the
+# storefront and checkout read path touches these records constantly and owns nothing, and an
+# answer full of it has answered the previous ticket rather than this one.
+#
+# WHY specificity demands the line AND the routine AND the named slice: a file is not an
+# answer. Several scored files hold more than one candidate line, the sibling repositories
+# are near-identical to each other and differ only in WHICH collection they own, and a row
+# that says "handles product data" has not named a slice. There is a second failure specific
+# to this contract: for many rows the kind decision is not taken on the cited line at all -
+# it is taken at the runtime lookup on the record, or in a static helper, or by a branch a
+# few lines up - so a row that pins the site without locating the decision it rests on has
+# given the maintainer half of what the rework needs.
+#
+# WHY step 1 asks for the write path and the per-kind base explicitly: they are the free
+# half, both arms reach them in one lookup, they do not score, and pinning them in step 1
+# puts the discriminator on the far side of them. What step 1 does NOT ask for is the
+# enumeration of the far side: measured on the neighbouring repo in this vertical, asking
+# step 1 for the enumerated working ground moved BOTH arms together, because the plain arm
+# wrote its covering sweep in step 1 and re-read the same output in step 2.
+#
+# WHY uncertainty is worth its weight here: memorization_probe returns ok:false at recall
+# 0.417 on this record's own member surface (30 of 72 members named closed-book, samples
+# 0.0 / 0.444 / 0.431). Every one of those members sits in the non-scoring contract group, so
+# recitation buys nothing on the discriminator - but it makes confident assertion cheap, and
+# asserting that a site owns a slice for a kind it does not is worse than an admitted gap.
+# The clone is a single squashed commit, so nothing here can be churn-dated; the judge should
+# reward an answer that says which lines it actually opened.
+audience: |
+  An AI coding agent about to rework the catalogue record this store platform hangs off.
+  Every one of these records has a KIND, stored as a plain string in one of the record's own
+  columns. At runtime that string is turned into the name of a class that speaks for the kind
+  - what it costs, whether it can be sold, whether stock applies, which extra collections of
+  sub-rows it may carry. After the change, kinds are declared up front, a record can no longer
+  produce a behaviour object out of a stored string, and a sub-collection that only some kinds
+  carry stops being reachable from the record unless the kind declares it. Score for that
+  agent, not a human reader and not a docs page.
+  A perfect answer leaves the agent able to make that change knowing two things. First, what
+  the record is today: what it relates outward to, how it answers for a field that was never
+  declared on it, and - the centre of the ticket - the exact line where a stored kind becomes
+  a class, how that class name is arrived at, where the mapping lives, what happens when
+  nothing matches, and how the object gets a handle back on the record; plus the base every
+  per-kind class extends and the declared layer whose job is to make and change these records.
+  Second, and this is what decides the answer: every place that has taken ownership of a slice
+  only some kinds have.
+  The distinction the whole ticket turns on is between USING a record and OWNING a slice of
+  one. Reading a plain field off a record and passing it on is use: it survives the change
+  untouched and it is not an answer. Ownership is a line somewhere else entirely - in the
+  middle of a routine about saving an option payload, indexing a price, validating a shipment,
+  rendering an admin grid, running an import - where the code either writes and prunes a
+  collection that only certain kinds carry, or takes a branch decided by the stored kind
+  value, or delegates its work to the object that speaks for the kind and would be left
+  holding nothing once that object stops being reachable.
+  These owners are siblings and none of them knows it. Each was written for a single kind,
+  none of them says which, and there is no shared abstraction listing them - so the set can
+  only be assembled by working out, per site, which slice it is the owner of. The class a site
+  will actually get is never named at the site: it is assembled at runtime from the stored
+  value, so no line of source connects the two.
+  Most of this layer sits in parts of the codebase whose own subject has nothing to do with
+  the catalogue, and the parts that do sit near the record are its peripheral write and index
+  helpers rather than the record's own file. An answer dense in the record's own file and its
+  obvious consumers, and thin everywhere else, has enumerated inside one search scope and
+  mistaken it for the codebase.
+  Every site must be pinned to the exact file:line with the routine it sits in named, with the
+  kind-specific slice it owns named concretely, with where the kind decision it rests on is
+  taken, and with one phrase on what breaks if nothing is done.
+
+steps:
+- name: Map the catalogue record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is the record presented as one connected picture - what it relates outward to, how it
+        answers for a field that was never declared on it, and how it turns its stored kind
+        into the object that speaks for that kind - rather than as a list of routines or a
+        roll of places the name appears? Two of those matter most and they are the two the
+        ticket turns on: that asking the record for an undeclared field SUCCEEDS, because a
+        lookup is done behind the scenes rather than a property being read; and that the class
+        which speaks for a kind is arrived at by building a configuration key out of a value
+        stored on the record, so nothing in source names which class comes back. An answer
+        that locates the lookup line, says how the class name is derived from the stored
+        value, says where the mapping from value to class is written down, says what happens
+        when nothing matches, and says how the object gets a handle back on the record, has
+        understood the ticket.
+        The step then asks for the base that every per-kind class extends and for the declared
+        write path, at file:line, with a phrase on what each is responsible for and how the
+        write path itself goes through the per-kind object. This part is deliberately the easy
+        part and it is asked for on purpose - it is the half whose relationship to the record
+        is written down where anyone can see it, and the next step is about the other kind -
+        so score coverage and location here, not difficulty.
+        The step finally asks for a deliberately SMALL third thing: what it looks like when
+        some unrelated piece of code has taken ownership of a slice only some kinds have, and
+        why nothing in that file's shape gives it away. Score whether that is characterised
+        correctly, with one located example. Do NOT reward an exhaustive enumeration of those
+        places: it was not asked for, and a long located list is not a better answer here than
+        one accurate observation. Could the next step act from this orientation with targeted
+        lookups rather than a fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer names carry an exact file:line AND the name of the routine
+        or class it lives in? A bare filename is not specific. A file:line with nothing named
+        around it is not specific - the maintainer asked whose code it is, not where the
+        character offset falls. Where the answer describes the stored kind becoming a class,
+        is the line that actually performs the lookup located, and is the file holding the
+        mapping from stored value to class located too - or is the mechanism asserted from a
+        method name and a familiar framework convention? Same test for the override that
+        answers for an undeclared field, for the base of the per-kind family, and for the
+        layer that creates and updates records.
+    justification:
+      weight: 0.2
+      question: |
+        Does each part carry one phrase on what it contributes - what asking for an undeclared
+        field actually does, what decides which per-kind object comes back and what happens
+        when nothing matches, what the write path is responsible for that the record is not -
+        and does the answer connect those facts to why merely using a record and owning a
+        kind-specific slice of one have completely different fates after the change, rather
+        than restating the list of routines?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name
+        or a familiar framework convention? This matters more than usual here: closed-book
+        this model can already name a third of this record's member surface, so it invites
+        confident recitation, and saying which parts were actually opened is worth more here
+        than elsewhere. This platform also gives the record's short name to an empty marker
+        interface, to a swap-in proxy class and to several unrelated classes in other
+        packages - does the answer show it settled which one it was looking at where that
+        mattered? Is anything the session could not resolve named as such rather than smoothed
+        over, and is the observation about code owning a kind-specific slice offered as
+        something it established rather than as a complete taxonomy it did not check?
+- name: Audit every dependent of the catalogue record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        COVERAGE AND PLACEMENT, and the two are one question here. Is every site listed
+        separately, each pinned to its own routine, with the kind-specific slice it owns named
+        concretely? A place named with no slice is half a row: the remedy depends entirely on
+        WHAT that site owns and whether the kind can declare it, and that is the only decision
+        this ticket makes.
+        Score the DISTINCTION the ticket turns on: using a record versus owning a slice of
+        one. The record itself, the layer whose job is to create and update these records, and
+        the base of the per-kind family are NOT answers here - they were pinned in the
+        previous step, and an answer built out of them has answered the easy half. Nor is a
+        place that reads a plain field off a record and passes it on: the storefront and
+        checkout read path does that constantly and owns nothing, and an answer made of it has
+        listed consumers rather than owners.
+        Score whether the answer found ownership of more than one shape - a routine that
+        writes and prunes a sub-collection only certain kinds carry, a per-kind class giving
+        its own answer to a question every kind is asked, a branch taken directly on the
+        stored kind value, a site that delegates its whole result to the object that speaks
+        for the kind, a helper that hard-codes which collections a kind may have. An answer in
+        which every row looks the same has either found only one band or has stopped reading
+        at the first hit. Does it notice, at least once, that several of these sites are
+        SIBLINGS of each other - the same job written once per kind with nothing linking them?
+        Score WHERE the answer looked, and also HOW FINELY. These sites sit in parts of the
+        codebase whose own subject has nothing to do with the record's own file - the
+        peripheral repositories that own one sub-collection each, the price and flat index
+        builders, the admin edit endpoints and grid payloads, form validation, a view-render
+        listener in an add-on package, a data importer - and a single file can hold more than
+        one. An answer dense in the record's own file and its obvious consumers, or one that
+        names files rather than routines, has stopped at the shallow edge; that is the exact
+        failure this criterion names.
+        Is the answer organised by area with each area's sites listed individually, and is
+        what was not reached said plainly rather than closed over?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every site carry an exact file:line, AND the name of the routine it sits in, AND
+        the kind-specific slice it owns named concretely, AND where the kind decision it rests
+        on is taken? All four, per row. A bare filename is not specific, and on this contract
+        it is actively wrong: one file can hold several sites and only some are in play. "It
+        handles product data" is not a named slice - which collection, or which kind's branch,
+        or which delegated behaviour. A run of places named together under one shared reason
+        with no location on any of them is the failure this criterion exists to catch, and it
+        does not become specific because the reason is correct.
+        Is the located line the OWNERSHIP rather than the declaration? A relation method on
+        the record, a repository's model() declaration, a docblock type or a constructor
+        parameter is where a relationship was declared; the site is the line where code whose
+        job is something else writes, branches on, or delegates a kind-specific slice. Where a
+        file contains both, or contains several sites in different routines, citing the wrong
+        one is citing the wrong line, not a rounding error.
+        Where the kind decision is NOT taken on the cited line - because it happens at the
+        runtime lookup on the record, in a static helper, or in a branch elsewhere - does the
+        answer locate it, or does it leave the row pointing at a consequence with no cause?
+    justification:
+      weight: 0.2
+      question: |
+        Is the phrase per row a consequence of THAT site, rather than a restatement that the
+        place uses the record? "Breaks if the record changes" is not a justification. "It owns
+        the whole lifecycle of a collection only one kind carries, so after the change that
+        collection has to be declared by the kind or this routine has nothing to prune", "it
+        branches on the stored value directly rather than through the object, so it keeps
+        working and silently disagrees with the kind", "it delegates its entire result to the
+        object that speaks for the kind, so it is left holding nothing once that object stops
+        being reachable", "it hard-codes which collections a kind may have inside a private
+        resolver, so the allowed set is stated in two places that can drift" are. Does the
+        answer say, at least in aggregate, which sites can be re-expressed as a declared kind
+        capability and which cannot?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer distinguish sites it traced by reading from ones it inferred from a
+        name, a familiar convention, or a memory of this platform? That distinction matters
+        more than usual here: a routine named after a kind is not evidence that it owns that
+        kind's slice, a local variable named after the record is not evidence the record is
+        what is in it, and several unrelated classes in this codebase carry the same short
+        name as the record, as do an empty marker interface and a swap-in proxy. Attributing a
+        slice to the wrong kind, or to the wrong one of those classes, is worse than an
+        admitted gap - does the answer show it settled that where it mattered? Is coverage
+        claimed honestly - which areas it swept and which it did not reach - and where it
+        could not tell which slice a routine owns, does it say so instead of picking one
+        silently?

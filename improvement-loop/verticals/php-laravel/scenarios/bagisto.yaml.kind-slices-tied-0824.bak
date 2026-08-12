@@ -1,0 +1,404 @@
+# ============================================================================
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md)
+# CYCLE 1, ATTEMPT 2 on bagisto. THIS IS A RE-QUESTION, routed back from a measured
+# two-arm mini-bench. The anchor is UNCHANGED (Webkul\Product\Models\Product); only the
+# question and the gold group move, per ITERATE ON THE QUESTION, KEEP THE ANCHOR.
+#
+# TRAJECTORY - every previous cycle on this repo, and which side of the window it fell on.
+# The window is: plain arm <= 0.50 AND ours >= plain + 0.50. Both at once.
+#   $ cat verticals/php-laravel/results/loop/bagisto/cycles.jsonl
+#   {"cycle": 1, "attempt": 1, "phase": "minibench", "verdict": "REQUESTION",
+#    "baseline_dependents": 0.6471, "sense_dependents": 0.7647,
+#    "title": "Bagisto work session - audit what holds a product it never names", ...}
+#   (no results/dryrun/bagisto/ exists - checked this session, the directory is empty, so
+#    cycles.jsonl above is the COMPLETE history: one measured cycle, not a latest-only read.)
+#
+#   cycle 1  baseline 0.6471  sense 0.7647  delta +0.1176
+#            side of the window: BASELINE-TOO-HIGH. It failed the <=0.50 condition on its
+#            own, and the arithmetic killer settles it before the delta is even read - recall
+#            caps at 1.00, so a baseline at 0.6471 caps the achievable delta at +0.3529 and
+#            +0.50 was unreachable before the pair ran.
+#
+# WHICH SIDE THIS DRAFT CORRECTS FROM, AND HOW FAR IT INTENDS TO MOVE.
+# Correcting from BASELINE-TOO-HIGH. The move is bounded on purpose: the gold group is
+# re-scoped, the ask is narrowed, and NOTHING is done to make the rows harder for both arms.
+# Ten of cycle 1's seventeen dependents rows were cited by BOTH arms and every one of them
+# sat in the storefront/checkout/sales read path the plain arm's sweep enumerates first;
+# those ten are what put the 0.6471 floor there. This draft removes that read path from the
+# question. It does NOT chase token-darkness (banned: TOKEN-DARKNESS IS NOT THE MECHANISM)
+# and it does not make the group smaller - 17 rows before, 17 rows now. Intended landing:
+# baseline in the 0.2-0.4 band, sense at or above 0.75. If it lands at "neither arm gets
+# anything" that is the far side of the window and the same cycle mirrored; the guard
+# against it is that 13 of the 17 rows below are in the SHOWN blast payload with their
+# routine names spelled out, and sense already cited 13 of 17 on cycle 1's harder-to-reach
+# set while finishing in 242 s of a 480 s wall.
+#
+# WHAT THE MEASURED ROUTE SAID, AND WHAT IT DID NOT.
+#   $ python3 bench/lib/baseline_route.py .../minibench/d5cc59c3833a3733/baseline/bagisto/run-1/transcript.json
+#   tool calls: 26   {'Bash': 26}    search commands: 25 of 26
+#   11. grep -rn "\->product\b" --include="*.php" packages/Webkul | grep -v "/tests/" ...
+#   12. (same, widened to blade)   14. $product parameters   16. $product-> in blades
+#   18. grep -rn "getTypeInstance()" ...
+#   calls 21-26: reads of files that sweep had already surfaced.
+# The route is one accessor sweep, widened four times, then confirmation reads. The plain arm
+# was cut off by its hard cap (292 s of 291 s, exit 124) with 11 of 17 already cited, so
+# 0.6471 is a FLOOR and not a ceiling. Where it got to before the cap is the only per-area
+# signal on disk, and it is clean: every row it cited is in Sales, Checkout, Shop or the
+# Product package's read helpers; every row it missed is in Admin or BookingProduct.
+#   $ python3 bench/lib/inverse_frequency.py bagisto verticals/php-laravel/results/claude-opus-5/minibench
+#   never cited by any arm : 5   cited by every run : 13  <- free rows, they dilute the group
+# n IS 1 PER ARM AND THAT IS STATED AS A LIMIT, NOT WAVED PAST. The plan's own rule is not to
+# re-gold below ~5 runs per arm because the ordering is noise there. So no row below was cut
+# on that ranking alone: the cut is made by the QUESTION changing, and the ranking is quoted
+# as corroboration only. `d:flat-indexer-refresh` is a measured free row (baseline 1/1) and is
+# KEPT for exactly this reason - dropping it on n=1 is the move the rule forbids, and one free
+# row in seventeen is a floor of 0.06.
+# CONFOUND, named and run: "Admin/BookingProduct" co-varies with "reached late in the sweep"
+# and with "cut off at the cap" - the same eleven-of-seventeen split is consistent with area,
+# with sweep order, and with budget exhaustion, and one transcript cannot separate them. This
+# draft does not need them separated: all three point the same way, and all three are what the
+# next two-arm run measures. It is a routing signal, not a finding.
+#
+# THE AXIS - AND THE ONE SENTENCE THE PLAN ASKS FOR
+# The mechanism: this record has a KIND, stored as a plain string in one of its own columns.
+# A dependent is coupled to the record not because it holds one, but because it owns a slice
+# of one that only exists for some kinds - it persists a sub-collection only certain kinds
+# have, or it branches on the stored kind value, or it hands the work to the object that
+# speaks for that kind. The class that speaks for a kind is never named at any of these
+# sites: it is looked up at runtime through a configuration key built by string concatenation
+# from the stored value (Product.php:353 `app(config('product_types.'.$this->type.'.class'))`,
+# mapped in packages/Webkul/Product/src/Config/product_types.php), so no call site names it
+# and no source line links the site to the class it will actually get.
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS: it is, per site, WHICH
+# kind-specific slice that site owns and where the kind decision it depends on is taken - a
+# fact about which of several sibling behaviours the site is one of, which the occurrence of
+# any name cannot state. The sweep that answered cycle 1 returns every site that touches one
+# of these records; it cannot say which of them owns a slice, and the sites that do are not
+# the sites it enumerates first.
+#
+# THE KIND (DECIDE, "the kind of question")
+# The possession kind, not the occurrence kind, and it is on the menu because step 0b's ring
+# is NON-EMPTY, measured this session:
+#   $ python3 bench/lib/ring_sweep.py $CLONE --top 12
+#   Order    class 31 rows 31 files 15 vias  CANDIDATE -> scenario material (Loop 3)
+#   Product  class 31 rows 31 files 15 vias  CANDIDATE -> scenario material (Loop 3)
+# NOTE, recorded not used: the ring itself is NOT served to the arm. The shown payload carries
+# `retained_via_interfaces_count: 31` and `retained_trimmed: true` with no rows, so no gold row
+# below is taken from the ring. Every row comes from `direct_callers`, which IS shown.
+#
+# SEAM PROFILE - three candidates profiled (step 2), lowest precision first.
+# PRECISION = structural dependent files / grep-hit files; LOWER IS BETTER.
+#   $ python3 bench/lib/seam_hunt.py $CLONE Order --file packages/Webkul/Sales/src/Models/Order.php
+#     app caller files : 13     SCATTER (dirs) : 10
+#     GREP-NOISE : 'Order' in 131 app files     PRECISION=0.10   VERDICT: SCATTERED + GREP-NOISY
+#   $ python3 bench/lib/seam_hunt.py $CLONE Product --file packages/Webkul/Product/src/Models/Product.php
+#     app caller files : 35     SCATTER (dirs) : 17
+#     GREP-NOISE : 'Product' in 308 app files   PRECISION=0.11   VERDICT: SCATTERED + GREP-NOISY
+#   $ python3 bench/lib/seam_hunt.py $CLONE AbstractType --file packages/Webkul/Product/src/Type/AbstractType.php
+#     app caller files : 30     SCATTER (dirs) : 13
+#     GREP-NOISE : 'AbstractType' in 24 app files  PRECISION=1.25  VERDICT: SCATTERED + grep-clean
+# Product is KEPT (the re-question rule keeps the anchor) and the profile agrees with keeping
+# it: 0.11 against Order's 0.10 is inside noise, and Order yields 13 dependent files where
+# Product yields 35, so Order cannot fill seventeen rows across eleven areas. AbstractType is
+# rejected on the profile - precision ABOVE 1.00 means false caller edges, the plan's own
+# warning. Precision RANKS; it never kills, and no grep census was run against any row below.
+#
+# WHAT THE ARM IS SHOWN (step 3), at MCP defaults, no min_confidence passed:
+#   $ python3 bench/lib/mcp_probe.py $CLONE \
+#       '[{"name":"sense_blast","arguments":{"symbol":"Product","file":"packages/Webkul/Product/src/Models/Product.php"}}]'
+#   risk high, risk_factors ["93 direct callers"], direct_callers 55 rows over 35 files,
+#   affected_symbols 310, production_affected 130, truncated true,
+#   retained_via_interfaces_count 31 with retained_trimmed true (no rows served).
+# EVERY ONE of the 17 `dependents` rows below is inside a `direct_callers` row of that shown
+# payload - the enclosing def is quoted in brackets on each row and was checked against the
+# pinned line. `affected_subclasses` is unreliable here (it lists WishlistProxy, CartItemProxy
+# and CategoryProxy as "inherits Product" when they inherit Konekt\Concord\Proxies\ModelProxy);
+# it is named rather than silently used, no row comes from it, and fixing it is out of scope
+# for this phase.
+#
+# MEMORIZATION (step 5) - reported, not waved through:
+#   $ python3 bench/lib/memorization_probe.py $CLONE Product --json /tmp/bagisto-mem2.json
+#   {"ok": false, "recall": 0.417, "hits_n": 30, "truth_n": 72, "said_n": 42,
+#    "reason": "closed-book recall 0.417 (30 members named) >= 0.3 - recited, both arms
+#               already know it", "samples": [0.0, 0.444, 0.431]}
+#   hits: attribute_family, attribute_values, bundle_options, catalog_rule_prices,
+#         getAttribute, getBaseImageUrlAttribute, getEditableAttributes, getTypeInstance,
+#         grouped_products, images, inventories, inventory_indices, inventory_sources, ...
+# What is recited is the MEMBER SURFACE OF THE MODEL ITSELF, and every one of those names is
+# in the non-scoring `contract` group where recitation buys nothing. No `dependents` row is a
+# member of Product; each is a file:line pin in another class, and the probe measured nothing
+# about those. LIMITATION, labelled an assumption rather than a finding: the churn-date half
+# of the memorization law CANNOT be run on this clone -
+#   $ git log --oneline | wc -l   ->   1
+# a single squashed commit, so no target can be churn-dated after the model snapshot. The rows
+# rest on the line-level-structural-fact half of the law only.
+#
+# GOLD RAILS. One item per FILE (17 files, 17 rows, 11 areas). Every `match` fragment was
+# verified unique with `git ls-files | grep -c <fragment>` this session - all 17 returned 1.
+# Every blast-sourced row appears in the shown MCP output. Every credit below was produced by
+# opening the file and reading the line this session; no relation came from a script tally.
+# The contract centre, its marker interface, its proxy, its declared write path and the
+# abstract base of the per-kind family are non-scoring anchors. No `dependents` file appears
+# in `contract`.
+#
+# WHAT WAS SUPERSEDED, AND THE NUMBER THAT KILLED IT.
+#   question: "Bagisto work session - audit what holds a product it never names" - every place
+#             that ENDS UP HOLDING one of these records, with the route it came by.
+#   killed by: baseline cited_recall 0.6471 on `dependents` (11 of 17), above the 0.50 bar on
+#             its own and capping the achievable delta at +0.3529.
+#   previous yaml kept at verticals/php-laravel/scenarios/bagisto.yaml.holds-a-product-it-never-names.bak
+# ============================================================================
+
+name: Bagisto work session - audit the kind-specific slices of the catalogue record
+repo: bagisto
+contract_symbol: Webkul\Product\Models\Product
+contract_file: packages/Webkul/Product/src/Models/Product.php
+
+description: |
+  You are a maintainer of this store platform, about to rework the record that the whole
+  catalogue hangs off - the single most-reached-for thing in the codebase.
+  Every one of these records has a KIND. The kind is a plain string sitting in one of the
+  record's own columns, and at runtime that string is turned into the name of a class that
+  speaks for that kind - what it costs, whether it can be sold, whether stock applies to it,
+  which extra collections of sub-rows it is allowed to carry. The rework replaces that
+  arrangement: kinds will be declared up front, a record will no longer be able to produce a
+  behaviour object out of a stored string, and the extra collections a kind carries will stop
+  being reachable from the record unless the kind says so.
+  So the thing that has to be found first is not everything that touches one of these records.
+  It is every place that has quietly taken ownership of a slice that only some kinds have -
+  the code that persists a sub-collection only certain kinds carry, the code that branches on
+  the stored kind value, the code that hands its work to the object that speaks for the kind
+  and would be left holding nothing if that object stopped being reachable. Those places are
+  siblings of each other and none of them knows it; each one was written for a single kind and
+  none of them says which.
+  The difficulty is that nothing at those places names what they will actually get. The class
+  that speaks for a kind is assembled at runtime from the stored value, so no line of source
+  connects a site to the behaviour it depends on, and the sub-collections are reached through
+  ordinary relation names that look exactly like every other relation on the record.
+  Before you touch it you have to know two things: what the record is, how it turns its stored
+  kind into the object that speaks for that kind, and what the declared write path is; and then
+  every place that owns one of these kind-specific slices, with the slice named and the kind
+  decision it rests on located.
+  Throughout, an answer that points at a place must give an exact file:line a teammate could
+  jump straight to, plus one phrase on why it matters. A bare filename does not count, a set
+  of names offered together with one shared reason and no location on any of them does not
+  count, and a missed place is a broken storefront shipped.
+
+steps:
+  - name: Map the catalogue record contract
+    prompt: >
+      Task: orient, and be exact - the rest of the ticket is built on this and nothing later
+      will send you back for it. Three things, and the first is the largest.
+      First, the record itself. What is it, and what can code that holds one actually do with
+      it, grouped by job rather than listed routine by routine - what it relates outward to,
+      and how it answers for a field that was never declared on it. Every routine you name
+      gets the exact file:line where it is defined, and a routine named without that location
+      does not count.
+      Second, and this is the centre of the ticket: how a record turns its stored kind into
+      the object that speaks for that kind. Give me the exact line where the lookup happens,
+      say precisely how the name of the class is arrived at from the stored value, where the
+      mapping from stored value to class is written down, what happens when the stored value
+      matches nothing, and how the object it produces gets a handle back on the record. Then
+      name the base that every one of those per-kind classes extends, at file:line, and say
+      what part of its state is the record.
+      Third, the declared write path: the layer whose stated job is to make, change and delete
+      these records. Name it at file:line and say in a phrase what it is responsible for,
+      including how it, too, goes through the per-kind object.
+      These are the parts whose relationship to the record is written down where anyone can
+      see it, and I want them pinned so that the next part of the ticket can be about the
+      other kind. Then say, briefly and once, what the other kind looks like - what it looks
+      like when some unrelated piece of code has taken ownership of a slice that only some
+      kinds have, and why nothing in that file's shape gives it away. One example, located at
+      file:line. Do not enumerate those places here; I am not asking for that list yet and it
+      earns nothing.
+    checks:
+      - type: response_richness
+        value: "10"
+        required: true
+        description: The record's own surface grouped by job with each routine located at file:line, the exact line where the stored kind is turned into the object that speaks for it with how the class name is derived, where the mapping lives, what happens on no match and how the object gets a handle back on the record, the base class of the per-kind family pinned at file:line with the part of its state that is the record, the declared write path pinned at file:line including how it goes through the per-kind object, and one located example of code owning a kind-specific slice
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the catalogue record contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the first
+      part already cost you. Take it as settled that the rework is happening: kinds will be
+      declared up front, a record will no longer produce a behaviour object out of a stored
+      string, and a sub-collection that only some kinds carry will stop being reachable from
+      the record unless the kind declares it. Answer the only question that matters after
+      that: which places in this codebase have taken ownership of a slice that only some kinds
+      of this record have, and what does each of them own.
+      The unit of the answer is a site, not a package and not a file. The record itself, its
+      write path and the base of the per-kind family are not answers here: you pinned those in
+      the first part and naming them again earns nothing. Nor is a place that merely reads a
+      plain field off one of these records and passes it on. What I want is the line where
+      some other piece of code - whose own job is something else entirely - is the owner of
+      kind-specific behaviour: it writes and prunes a sub-collection that only certain kinds
+      carry, or it takes a branch decided by the stored kind value, or it delegates the work
+      to the object that speaks for the kind and would be left holding nothing once that
+      object stops being reachable.
+      Those lines will not look like what you are searching for. None of these sites names the
+      class it will actually get - that class is assembled at runtime out of the stored value,
+      so no line of source connects the site to it. Several of the sites receive the record as
+      an argument with no declared type on it at all. One of them IS the record and refers to
+      itself. One pulls it out of a bag of values by string key. One knows it under a
+      different name entirely. And the sub-collections are reached through ordinary relation
+      names that read like every other relation on the record.
+      For each site the answer has three parts and only three: the exact file:line and the
+      name of the routine it sits in; WHICH kind-specific slice that site owns, named
+      concretely; and where the kind decision it rests on is taken - on that line, or
+      somewhere else you should locate. Keep it short: I want the coverage, the slice and the
+      decision point, not the prose.
+      Organise by area, one section per area, and treat an area as finished only when every
+      site inside it is listed separately with its own location. If you run short, say what
+      you had still not looked at rather than closing on what you have. A file:line with no
+      slice named is half an answer, and a group summarised instead of listed reads as a group
+      with nothing in it.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every site located at the exact file:line with the routine it sits in named, the kind-specific slice that site owns named concretely, and where the kind decision it rests on is taken
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ---- ANCHORS: the record itself, its empty marker interface, the swap-in proxy, the
+  # ---- declared write path and the base of the per-kind family. Step 1's answer,
+  # ---- deliberately NON-SCORING. A FREE ROW IS A GIFT TO THE BASELINE, and these are
+  # ---- exactly the rows both arms reach in one lookup - and the ones memorization_probe
+  # ---- shows this model already recites closed-book (recall 0.417 over Product's member
+  # ---- list). Putting them here removes the floor they would otherwise put under the plain
+  # ---- arm. Every line below was opened and read this session. None appears in `dependents`.
+  - id: contract-product
+    group: contract
+    match: [Product/src/Models/Product.php]
+    relation: "packages/Webkul/Product/src/Models/Product.php:25 `class Product extends Model implements ProductContract` - the contract itself; :347 `public function getTypeInstance(): AbstractType` builds the class name from the stored kind at :353 `$this->typeInstance = app(config('product_types.'.$this->type.'.class'));`, throws at :356 when the stored value matches nothing, and hands the record back to the object at :359 `$this->typeInstance->setProduct($this);`; :382 `public function getAttribute($key)` is the override that answers for a field never declared on the model, resolving the key against the loaded attribute family at :393"
+  - id: c:product-contract
+    group: contract
+    match: [Product/src/Contracts/Product.php]
+    relation: "packages/Webkul/Product/src/Contracts/Product.php:5 `interface Product {}` - an EMPTY marker interface, implemented by the model at Product.php:25 and carrying no members at all, so nothing can be learned about the contract by reading it; it exists so the concrete class can be swapped, and it is the anchor a teardown audit finds first and learns nothing from"
+  - id: c:product-proxy
+    group: contract
+    match: [Product/src/Models/ProductProxy.php]
+    relation: "packages/Webkul/Product/src/Models/ProductProxy.php:7 `class ProductProxy extends ModelProxy {}` - the swap-in indirection every relation declaration writes instead of the model class (`ProductProxy::modelClass()`), the write path's counterpart on the read side, and the single token a plain search reaches for first"
+  - id: c:product-repository
+    group: contract
+    match: [Product/src/Repositories/ProductRepository.php]
+    relation: "packages/Webkul/Product/src/Repositories/ProductRepository.php:44 `public function model(): string` returning :46 `return Product::class;` and creating THROUGH the per-kind object at :56 `$typeInstance = app(config('product_types.'.$data['type'].'.class'));` then :58 `$product = $typeInstance->create($data);` - the declared write path named in step 1, non-scoring"
+  - id: c:abstract-type
+    group: contract
+    match: [Product/src/Type/AbstractType.php]
+    relation: "packages/Webkul/Product/src/Type/AbstractType.php:32 `abstract class AbstractType` holding :39 `protected $product;` (typed only in the docblock above it, `@var Product` at :37) - the base every per-kind class extends and the one holder whose grip on the record IS written down; pinned in step 1 so that step 2 is about the other kind"
+
+  # ---- DEPENDENTS: 17 files across 11 areas. Each row is a site that OWNS a kind-specific
+  # ---- slice of the record - it persists a sub-collection only some kinds carry, it branches
+  # ---- on the stored kind value, or it delegates to the object that speaks for the kind.
+  # ---- Every one is inside a `direct_callers` row of the shown blast payload (enclosing def
+  # ---- in brackets), and every pinned line below was opened and read this session; the
+  # ---- credit is what the line does, not a script tally.
+  # ---- Cycle 1's ten both-arms-cited rows (Checkout/Cart, Checkout/Models/Cart, three Sales
+  # ---- repositories, Sales/Models/Order, both Shop resources, Shop API controller,
+  # ---- Product/Helpers/ConfigurableOption) are GONE from the group: they are the read path
+  # ---- the plain arm's accessor sweep enumerates first, and the question no longer asks for
+  # ---- them.
+
+  # -- area: the sub-collection write path, one repository per kind-specific collection.
+  # -- Each takes the record as an UNTYPED parameter and prunes-then-rewrites one collection.
+  - id: d:repo-bundle-options
+    group: dependents
+    match: [Product/src/Repositories/ProductBundleOptionRepository.php]
+    relation: "packages/Webkul/Product/src/Repositories/ProductBundleOptionRepository.php:42 `$previousBundleOptionIds = $product->bundle_options()->pluck('id');` inside `public function saveBundleOptions($data, $product)` at :40 [shown def 40-67] - owns the bundle-option collection, which only the bundle kind carries; the record arrives as an untyped `$product` parameter with no docblock type either, and the routine diffs the existing ids against the submitted ones and deletes the remainder at :64-:66, so it is the sole owner of that collection's lifecycle"
+  - id: d:repo-customizable-options
+    group: dependents
+    match: [Product/src/Repositories/ProductCustomizableOptionRepository.php]
+    relation: "packages/Webkul/Product/src/Repositories/ProductCustomizableOptionRepository.php:42 `$previousCustomizableOptionIds = $product->customizable_options()->pluck('id');` inside `public function saveCustomizableOptions($data, $product)` at :40 [shown def 40-67] - the sibling owner for the customizable-option collection, carried by the simple and virtual kinds only; same untyped parameter, same prune-and-rewrite, and it cascades into the option-price repository at :60"
+  - id: d:repo-downloadable-links
+    group: dependents
+    match: [Product/src/Repositories/ProductDownloadableLinkRepository.php]
+    relation: "packages/Webkul/Product/src/Repositories/ProductDownloadableLinkRepository.php:52 `$previousLinkIds = $product->downloadable_links()->pluck('id');` inside `public function saveLinks(array $data, $product)` at :50 [shown def 50-73] - owns the downloadable-link collection, which only the downloadable kind carries; `$data` is typed and the record is not, and every write stamps `'product_id' => $product->id` at :58 rather than going through the relation"
+  - id: d:repo-media-filetype
+    group: dependents
+    match: [Product/src/Repositories/ProductMediaRepository.php]
+    relation: "packages/Webkul/Product/src/Repositories/ProductMediaRepository.php:107 `return $product->images();` inside `private function resolveFileTypeQueryBuilder($product, string $uploadFileType)` at :104 [shown def 104-113] - a different shape from its siblings: it branches on a string to pick WHICH relation on the record to write through (:107 images, :109 videos) and throws at :112 for anything else, so the set of media collections a kind may carry is hard-coded here in a private resolver on an untyped parameter"
+
+  # -- area: the concrete per-kind classes. The abstract base is an anchor; these are not.
+  - id: d:type-bundle-children
+    group: dependents
+    match: [Product/src/Type/Bundle.php]
+    relation: "packages/Webkul/Product/src/Type/Bundle.php:150 `return array_unique($this->product->bundle_options()->pluck('product_id')->toArray());` inside `public function getChildrenIds()` at :148 [shown def 148-151] - the bundle kind's answer to a question every kind is asked; it owns the rule that a bundle's children are reached by walking the bundle-option collection to a foreign key, and `$this->product` was set from outside by the record itself at Product.php:359, so nothing in this file establishes the handle"
+  - id: d:type-configurable-children
+    group: dependents
+    match: [Product/src/Type/Configurable.php]
+    relation: "packages/Webkul/Product/src/Type/Configurable.php:296 `return $this->product->variants()->pluck('id')->toArray();` inside `public function getChildrenIds()` at :294 [shown def 294-297] - the configurable kind's answer to the same question, and a DIFFERENT collection: variants rather than bundle options; the two are siblings that never reference each other, and only the runtime lookup at Product.php:353 decides which one a caller reaches"
+
+  # -- area: the kind-aware read helpers that assemble option payloads.
+  - id: d:helper-bundle-option-products
+    group: dependents
+    match: [Product/src/Helpers/BundleOption.php]
+    relation: "packages/Webkul/Product/src/Helpers/BundleOption.php:97 `if (! $bundleOptionProduct->product->getTypeInstance()->isSaleable()) {` inside `private function getOptionProducts($option)` at :92 [shown def 92-123] - it never holds the outer record; it steps across from each bundle-option row to a SECOND record and delegates saleability and pricing to that record's per-kind object at :97 and :104, then leans on an inventory relation at :109 and :110, so the whole option payload is decided by a kind this file never names"
+
+  # -- area: the price index, one builder per kind, each recursing into the kind below it.
+  - id: d:price-indexer-configurable
+    group: dependents
+    match: [Helpers/Indexers/Price/Configurable.php]
+    relation: "packages/Webkul/Product/src/Helpers/Indexers/Price/Configurable.php:34 `foreach ($this->product->variants as $variant) {` inside `public function getMinimalPrice($qty = null)` at :30 [shown def 30-53] - owns the rule that a configurable record has no price of its own; it walks the variant collection and then asks EACH variant for its own per-kind price indexer at :39-:43 `$variant->getTypeInstance()->getPriceIndexer()->...->setProduct($variant)`, so this site's output depends on a second kind decision taken per row at runtime"
+  - id: d:price-indexer-bundle
+    group: dependents
+    match: [Helpers/Indexers/Price/Bundle.php]
+    relation: "packages/Webkul/Product/src/Helpers/Indexers/Price/Bundle.php:215 `$variant = $bundleOptionProduct->product;` inside `public function getOptionProductsPrices($option, $minPrice = true)` at :210 [shown def 210-235] - the sibling rule for the bundle kind, reached through the bundle-option rows rather than the variant collection; the record is bound to a local named `$variant` and its per-kind price indexer is nested in at :221-:225; the parameter this routine takes is untyped and its docblock at :206 names a DIFFERENT class (`@param ProductBundleOption $option`), so nothing in the signature or the docblock says a record is reached here at all"
+  - id: d:flat-indexer-refresh
+    group: dependents
+    match: [Product/src/Helpers/Indexers/Flat.php]
+    relation: "packages/Webkul/Product/src/Helpers/Indexers/Flat.php:124 `if (ProductType::hasVariants($product->type)) {` inside `public function refresh($product)` at :118 [shown def 118-133] - it branches directly on the STORED KIND VALUE through a static facade rather than through the per-kind object, and only then walks variants at :125; the parameter is untyped with the type only in the docblock at :115, and the flat table every storefront listing reads is rebuilt from here. MEASURED FREE ROW (baseline cited 1/1 in cycle 1) and kept deliberately - cutting it on n=1 is the move the re-gold rule forbids"
+
+  # -- area: the admin edit surface, one controller per kind-specific option payload.
+  - id: d:admin-grouped-options
+    group: dependents
+    match: [Catalog/Product/GroupedController.php]
+    relation: "packages/Webkul/Admin/src/Http/Controllers/Catalog/Product/GroupedController.php:28 `if (! $option->associated_product->getTypeInstance()->isSaleable()) {` inside `public function options(int $id): JsonResponse` at :19 [shown def 19-44] - owns the grouped kind's option payload; it walks the grouped-product collection at :23 and holds a SECOND record it never names, reached under the alias `associated_product`, delegating saleability at :28 and final price at :36 to that record's per-kind object"
+  - id: d:admin-simple-customizable
+    group: dependents
+    match: [Catalog/Product/SimpleController.php]
+    relation: "packages/Webkul/Admin/src/Http/Controllers/Catalog/Product/SimpleController.php:32 `'initial_price' => $product->getTypeInstance()->getMinimalPrice(),` inside `public function customizableOptions(int $id): JsonResponse` at :21 [shown def 21-35] - the sibling controller for the customizable-option payload: it serves the collection at :26 `$product->customizable_options()` and takes the starting price from the per-kind object, so the same endpoint shape exists once per kind with no shared abstraction between them"
+  - id: d:admin-shipment-inventory
+    group: dependents
+    match: [Controllers/Sales/ShipmentController.php]
+    relation: "packages/Webkul/Admin/src/Http/Controllers/Sales/ShipmentController.php:121 `if ($orderItem->getTypeInstance()->isComposite()) {` inside `public function isInventoryValidate(&$data)` at :101 [shown def 101-160] - the whole shipment-validation branch is selected by the kind: composite lines are validated child by child at :122-:131 through `$child->product->inventories()`, and the record is reached three steps in from an id in a by-reference request array at :111, so nothing on the signature ties this controller to the record"
+  - id: d:admin-product-form
+    group: dependents
+    match: [Admin/src/Http/Requests/ProductForm.php]
+    relation: "packages/Webkul/Admin/src/Http/Requests/ProductForm.php:80 `$this->rules = array_merge($this->product->getTypeInstance()->getTypeValidationRules(), [` inside `public function rules()` at :74 [shown def 74-173] - it owns nothing of the kind itself and DELEGATES half its validation rule set to the object that speaks for the kind; the record is fetched at :76 and stashed on the request object, and the rest of the class never names it again, so the form's shape changes per kind with no branch anywhere in this file"
+  - id: d:admin-product-resource
+    group: dependents
+    match: [Admin/src/Http/Resources/ProductResource.php]
+    relation: "packages/Webkul/Admin/src/Http/Resources/ProductResource.php:42 `if ($this->type === 'booking') {` inside `protected function resolveAvailableQuantity(): ?int` at :40 [shown def 40-61] - the wrapper IS the record: `$this` proxies to the wrapped model, so the cited line carries no name of any kind; it branches on the stored kind value directly, walks a kind-only collection at :43 and :50, and falls back to the per-kind object at :56 `$this->getTypeInstance()->isStockable()`, so the admin grid's quantity column is three kind decisions deep"
+
+  # -- area: the view-render listener, wired by string and handed the record in a bag.
+  - id: d:booking-price-note
+    group: dependents
+    match: [BookingProduct/src/Listeners/PriceNote.php]
+    relation: "packages/Webkul/BookingProduct/src/Listeners/PriceNote.php:16 `$product = $eventManager->getParam('product');` inside `public function addNote(ViewRenderEventManager $eventManager): void` at :14 [shown def 14-39] - it PULLS the record out of a parameter bag by string key; the only declared type in the entire file is the event manager, the record arrives untyped, and the listener then gates itself on the stored kind at :18 `$product->type !== 'booking'` and on a sub-kind at :24, so it owns a slice of exactly one kind and says so nowhere in its signature"
+
+  # -- area: the importer, which fabricates a record purely to ask what the kind allows.
+  - id: d:importer-type-family
+    group: dependents
+    match: [Importers/Product/Importer.php]
+    relation: "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php:2621 `$product = ProductModel::make([` inside `public function getProductTypeFamilyAttributes(string $type, string $attributeFamilyCode): mixed` at :2613 [shown def 2613-2627] - it knows the record UNDER A DIFFERENT NAME, aliased at :35 `use Webkul\\Product\\Models\\Product as ProductModel;`, so the model's own name is absent from the cited line; it builds an UNSAVED instance out of a kind string and a family id for the sole purpose of asking :2626 `$product->getEditableAttributes()` which attributes that kind allows, and memoises the answer per kind at :2615"

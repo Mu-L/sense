@@ -1,0 +1,340 @@
+# ============================================================================
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md)
+# ROUND 4, ATTEMPT 19 on coolify - a RE-QUESTION routed back from measured runs.
+#
+# SEAM PROFILE (quoted, `python3 bench/lib/seam_hunt.py $CLONE Server --propose`)
+#     app caller files : 45   (total incl test/non-app: 53)
+#     SCATTER (dirs)   : 23
+#     GREP-NOISE       : 'Server' in 295 app files   PRECISION=0.15  (lower=grep-hostile)
+#     VERDICT          : SCATTERED + GREP-NOISY
+#   Calibration on the record: 0.078 preceded a +1.00 cell, 0.78 was a deliberate control
+#   tie, ~0.94 handed a baseline 17 of 18 rows in one grep. 0.15 orders this anchor near the
+#   top of the pool. It ORDERS; the two-arm run decides.
+#
+#   Recorded, never a gate (NO GREP SCREEN IS A GATE): `grep -rln
+#   'server_id\|serverId\|server_uuid\|serverUuid' app bootstrap` returns 129 files. Eleven
+#   of the fourteen `dependents` rows below are inside that print. That fact is written down
+#   here and decides nothing.
+#
+#   Retention ring: `ring_sweep.py $CLONE --top 12` reports "0 candidate(s) above the bar",
+#   every one of the twelve anchors at rows=0 files=0 vias=0. So "what HOLDS X" is OFF the
+#   menu on this repo and this scenario is kind one, an occurrence-shaped ask. See notes.
+#
+# THE AXIS SENTENCE
+#   An identifying piece of a machine is taken off it and written somewhere the machine
+#   itself cannot be carried - a column on a record about something else, a pivot row, a
+#   component's own saved state, an argument to work that runs later or out of process, a
+#   path or a name a system outside this product then owns, or a bare literal standing for
+#   one particular machine - and from that line on the code trusts the piece to still
+#   resolve to the same machine when it comes back to it.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS
+#   A per-place ruling on LIFETIME and CONSEQUENCE: for each site, how far the kept piece
+#   outlives the machine it came from - one request, one stored row, or outside this
+#   product entirely - and what specifically starts being wrong there the first time it no
+#   longer resolves. Neither half is carried by the occurrence; both require the line to be
+#   opened and read in its routine. The SET, honestly, is still occurrence-shaped; that is
+#   said plainly in the verdict notes rather than dressed up.
+#
+# ============================================================================
+# TRAJECTORY - every previous cycle on this repo, and which side of the window each fell on
+#   The window is: plain arm at or below 0.50 of `dependents` AND ours at least +0.50 above.
+#   Sources: results/dryrun/coolify/cycles.{1,2,3}.jsonl, results/loop/coolify/minibench.md,
+#   results/loop/coolify/validate.md. Quoted, base -> sense.
+#
+#   ROUND 1 (cycles.1.jsonl)
+#     1  "find EVERY place ... as a single subject"        0.0    -> 1.0     FLOOR, but see r1c1
+#     2  anchor `instant_remote_process`, one hop back     0.8462 -> 0.8462  CEILING, delta 0
+#     3  "every place that keeps a SCRAP of identity"      0.3571 -> 0.5714  FLOOR, delta short
+#     4  "assume the whole of it changes ... ONE set"      0.9286 -> 0.5714  CEILING, losing
+#     5  "the map is not the answer"                       0.0    -> 0.3333  FLOOR, our arm dead
+#     6  "two passes, ground then kept"                    0.75   -> 0.9167  CEILING
+#   ROUND 2 (cycles.2.jsonl)
+#     1  "KEPT something after the machine was gone"       0.0    -> 0.75    FLOOR, delta short
+#     2  same, without the written-down ground             0.0    -> 0.25    FLOOR, our arm dead
+#     3  "at the far side of nearly every place"           0.9167 -> 0.8333  CEILING, losing
+#     4  "something decided WHICH machine it would be"     0.8    -> 0.9333  CEILING
+#     5  "never given a machine, never holds a stand-in"   0.9286 -> 1.0     CEILING
+#     6  "what breaks - not the working ground"            0.7857 -> 0.7857  CEILING, delta 0
+#   ROUND 3 (cycles.3.jsonl)
+#     1  "what breaks" without the set framing             null   -> 0.0     void, our arm dead
+#     2  "a pass down the set, not a second search"        0.3333 -> 0.2     FLOOR, losing
+#     3  same, tightened                                   0.2    -> 0.4667  FLOOR, delta short
+#     4  "the set is fixed and has an edge"                0.5333 -> 0.8667  edge, delta +0.333
+#     5  seven-step expansion, sense-only validation       null   -> 0.8462  SCENARIO
+#     6  seven-step paid-gate validation                   0.5385 -> 0.6154  CEILING, DO-NOT-PAY
+#
+#   AND THE ONE THAT MATTERS MOST, the mini-bench on round 3's cycle-4 question, re-golded
+#   to 13 dependents (results/loop/coolify/minibench.md, quoted):
+#     "Baseline `dependents` recall: 4 / 13 = 0.308" / "Sense ... 13 / 13 = 1.000"
+#     "Delta = 1.000 - 0.308 = +0.692 ... above it, by 0.192"      INSIDE THE WINDOW.
+#
+# WHICH SIDE I AM CORRECTING FROM, AND HOW FAR I INTEND TO MOVE
+#   From the CEILING side, and only a short way. This is NOT a swing to the opposite of the
+#   last complaint. The two-step form of this question already landed INSIDE the window at
+#   +0.692; what failed is the seven-step session, where the same gold gave
+#   "baseline 7 of 13 = 0.538" (validate.md) - up +0.230 from the isolated step, across the
+#   admission bar, capping the delta at 0.462 before the pair ran. So the question and the
+#   anchor are KEPT nearly verbatim and TWO measured things change:
+#
+#   (a) THE FREE ROWS GO. validate.md names the route: two calls,
+#       `grep -rn "server_uuid\|serverUuid\|server_ip\|serverIp\|server_name\|serverName"`,
+#       print `path:line` for the state-key and event rows outright, so the occurrence IS
+#       the dependency and the citation is free. Every row the baseline has EVER cited on
+#       this gold, across the mini and the validation, is deleted from `dependents`:
+#         d:cloud-provider-external-id (2/2 baseline runs), d:cloud-status-lock-key (2/2),
+#         d:sentinel-event-uuid (2/2), d:tunnel-event-id, d:compose-validate-id,
+#         d:global-search-state-id, d:proxy-config-state-id, d:container-webhook-handle.
+#       Kept: the five `dependents` rows the baseline has cited in ZERO runs -
+#         d:additional-network-pivot, d:logs-ownership-check, d:new-destination-state-id,
+#         d:new-resource-state-id, d:ca-cert-job-id.
+#       Nine new rows are added by the same structural rule the five keepers share: the
+#       dependent FILE's own subject is something other than a machine, so the line has to
+#       be opened in a file the ask never points at. This is not curating for darkness -
+#       eleven of fourteen rows are inside the identity-token grep print (see above), and
+#       TOKEN-DARKNESS IS NOT THE MECHANISM. It is the sanctioned cut of rows MEASURED free
+#       (01-author DECIDE 6b), at n=2 per arm, which is why only measured-free rows go and
+#       no row is cut on an estimate.
+#
+#   (b) THE ORIENTATION STOPS AT THE CONTRACT. validate.md's mechanism read: "given three
+#       prior steps of context, the baseline's own earlier greps had already surfaced the
+#       periphery, so step 4 became a re-read rather than a discovery." The seven-step
+#       step 3 asked, in the ask itself, for the affected population's "areas ... each named
+#       once with a single example located at file:line" - that is the baseline's plan,
+#       handed over one step early. Step 1 here asks for the TYPE and nothing else, and says
+#       so: "this is the contract, not its reach". THE ASK NAMES THE MECHANISM, NEVER THE
+#       INVENTORY - step 2 names only the FORMS a kept piece takes, never a product area.
+#
+# MEMORIZATION (`memorization_probe.py $CLONE Server --json`)
+#   "closed-book recall 0.551 (59 members named)" - the model can recite the contract type's
+#   own member names. That is a fact about the ANCHOR, which is a non-scoring group here,
+#   and MEMORIZATION IS A GOLD-TIME CONSTRAINT, NEVER AN ADMISSION VERDICT. The clone is a
+#   single squashed commit (`git rev-list --count HEAD` = 1, dated 2026-07-30), so churn
+#   dating is uninformative on this repo and every gold row rests on the other leg of the
+#   law: each is a line-level structural fact in a peripheral file - a fillable entry at
+#   :22, a pivot column at :541, a socket path at :280 - not a recitable API name.
+#
+# EVERY `dependents` ROW APPEARS IN THE SHOWN BLAST SET
+#   `mcp_probe.py $CLONE '[{"name":"sense_blast","arguments":{"symbol":"Server"}}]'` at MCP
+#   defaults, no min_confidence: 46 direct_callers + 89 affected_via_composition over 101
+#   distinct files. All fourteen dependent files and all four contract files are in it.
+#   Every credit below was read out of the open file, never off a script tally.
+# ============================================================================
+
+name: Coolify work session - audit the server contract before a rework
+repo: coolify
+contract_symbol: Server
+contract_file: app/Models/Server.php
+
+description: |
+  You are a maintainer about to rework what identifies one of the remote machines this
+  product deploys onto. Today a machine is a row carrying a number, a short handle, a
+  display name and a network address, and code all over the product treats any one of
+  those as a durable way of getting back to that machine later. After the rework none of
+  them is durable: a machine can be renamed, re-addressed, re-numbered, and replaced by a
+  different record standing for the same physical box. Nothing ships until the reach of
+  that change is written down.
+
+steps:
+  - name: Map the server contract
+    prompt: |
+      Task: orient, and keep it to the type itself. This part is groundwork, and what you
+      spend here comes out of the middle of the ticket. Exactly one type in this product
+      stands for one of these machines; name it and give the file:line where it is defined,
+      before anything else. Then, on that type and nothing else, the following. The fields
+      that identify a machine, each with the file:line where it is declared, cast or
+      normalised. The shared behaviour the type mixes in and the other records it declares
+      a relationship to, each with the file:line of the declaration, separated into what it
+      pulls in for its own use and what hangs off it and exists only because it does - that
+      direction matters later and it is cheap to get right now. Where a lookup by identity
+      is served out of a per-request cache rather than the store, what empties that cache,
+      and when it is emptied. And what the removal path takes with it, what it hands to
+      something else to remove, and what it leaves behind - name what is NOT cleaned up
+      rather than reporting that the path looked complete. Close in one sentence: what a
+      rework of identity would have to preserve for this type to keep meaning what it means
+      today. This is the contract and not its reach: do not go looking for the places that
+      use it, and a long list here earns nothing. A routine named without the file:line
+      where it is defined does not count. Work the codebase yourself, in this session. No
+      Explore agents.
+    checks:
+      - type: response_richness
+        value: '8'
+        required: true
+        description: >-
+          The contract located - identifying fields, what it mixes in and what hangs off it,
+          the per-request cache and its flush, and what the removal path leaves behind
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the server contract
+    prompt: |
+      Task: this is the core of the ticket, and you are working it with the budget the first
+      part already cost you. Take it as settled that identity is being reworked, and answer
+      the only question that matters after that: what breaks.
+
+      Not the code that is handed one of these machines and works with it while it has it in
+      front of it. Whatever share of the product that runs, it will be handed the new record
+      and it will be fine, and it is not what I am asking for.
+
+      What breaks is every place where a piece of a machine's identity was taken off the
+      machine and put somewhere the machine itself cannot be carried to: written into a
+      column on a record about something else, stamped into a row that only joins two things
+      together, saved as a screen's own state and read back after a round trip, handed to
+      work that runs later or out of this process, built into a path or a name that
+      something outside this product then owns, or simply written down as a bare literal
+      because one particular machine is always meant. From that line on the code there has
+      no machine. It has the piece, and it trusts the piece to still mean the same machine
+      when it comes back to it. That trust is exactly what this rework withdraws, and not
+      one of those places changes by a single line when it does.
+
+      One thing about how they hide, because it decides how you work: almost none of them
+      writes the name of that type anywhere near the line that matters. The piece was taken
+      off a machine somewhere else, handed on, and by the time it reaches the line it is a
+      plain value sitting in the middle of work about something else entirely - so the name
+      you fixed in the first part will not lead you to them, and looking for it harder will
+      not either.
+
+      Test each candidate at the line itself, and only there: is a piece being lifted off a
+      machine here and put somewhere the machine cannot follow, or read back out of
+      somewhere after the machine was gone from its hands? If instead a machine came in and
+      the code acted on it while it had it, that is the ground, and the ground is out.
+
+      For each place the answer has three parts and only three: the exact file:line where
+      the piece is taken, kept or read back, and the routine that line sits in; how long
+      that piece outlives the machine it came from - inside one request, inside one stored
+      record, or outside this product entirely; and one phrase on what starts going wrong
+      there the first time it no longer resolves to the machine it came from. Keep it short:
+      I want the coverage, the lifetime and the failure, not the prose.
+
+      Organise by area, in whatever terms the tree itself uses rather than categories I have
+      handed you, and treat an area as finished only when every place inside it is listed
+      separately with its own location. Do not filter by how sure you are: a place you are
+      uncertain about is listed with the doubt written beside it, never dropped. A file:line
+      with no lifetime and no failure is half an answer, and a group summarised instead of
+      listed reads as a group with nothing in it. If you genuinely run out of time, say
+      where you stopped and what was still ahead of you rather than closing on what you
+      have.
+    checks:
+      - type: response_richness
+        value: '6'
+        required: true
+        description: >-
+          Every identity-keeping place located at file:line with what it kept, its lifetime
+          and its own consequence
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ==========================================================================
+  # ANCHORS - the contract itself and its obvious write/removal path. Both arms
+  # reach these; they are NOT the discriminator and they do not decide the cell.
+  # ==========================================================================
+  - id: contract-model
+    group: contract
+    match: [Models/Server.php]
+    relation: "app/Models/Server.php:230 `public static function findCached($id): ?static` - identity resolved out of a per-request identity map keyed on the machine's number rather than out of the store, with the map flushed from the `static::updated` hook at :221-:222; this is what a rework of identity has to keep coherent"
+  - id: c:server-setting
+    group: contract
+    match: [Models/ServerSetting.php]
+    relation: "app/Models/ServerSetting.php:59 `'server_id',` heading the fillable list opened at :58, with the link back declared at :249 `return $this->belongsTo(Server::class);` in `server()` (def at :247) - the companion record seeded for every machine, the one dependent no arm can miss"
+  - id: c:server-delete
+    group: contract
+    match: [Server/Delete.php]
+    relation: "app/Livewire/Server/Delete.php:34 `public function delete($password, $selectedActions = [])` reaching :60 `$this->server->delete();` - the removal path as the operator triggers it, and the obvious half of the teardown"
+  - id: c:validate-server
+    group: contract
+    match: [Server/ValidateServer.php]
+    relation: "app/Actions/Server/ValidateServer.php:26 `public function handle(Server $server)` - the machine handed in and worked on with it in hand: the canonical shape of THE GROUND, which step 2 rules out"
+
+  # ==========================================================================
+  # dependents - THE DISCRIMINATOR. Fourteen files, eleven areas, one row per file.
+  # Selection rule, applied uniformly: (i) the row appears in the shown blast set;
+  # (ii) the baseline has cited it in ZERO runs on this repo, or the file is new to
+  # gold and its own subject is something other than a machine; (iii) the credit was
+  # read out of the open file.
+  # ==========================================================================
+
+  # -- the piece stamped into a row that exists only to join two other things.
+  - id: d:additional-network-pivot
+    group: dependents
+    match: [Shared/Destination.php]
+    relation: "app/Livewire/Project/Shared/Destination.php:130 `$this->resource->additional_networks()->attach($mainDestination->id, ['server_id' => $mainDestination->server->id]);` inside the transaction closure opened at :121 in `promote(int $network_id, int $server_id)` (def at :115), with the matching detach keyed on the same number at :128 `->wherePivot('server_id', $server->id)` - the number is written into the PIVOT row itself, so a resource's extra networks record their machine nowhere but in a join table, and the id also arrives at :115 as a bare int parameter"
+  - id: d:network-pivot-column
+    group: dependents
+    match: [Models/Application.php]
+    relation: "app/Models/Application.php:541 `->withPivot('server_id', 'status');` completing `belongsToMany(StandaloneDocker::class, 'additional_destinations')` at :540 in `additional_networks()` (def at :538) - the schema half of the same join: the pivot table carries a machine's number as a column of its own, so the link survives independently of both records it joins and nothing on either side declares it"
+
+  # -- the piece kept as a screen's own state and read back after a round trip.
+  - id: d:new-destination-state-id
+    group: dependents
+    match: [Destination/New/Docker.php]
+    relation: "app/Livewire/Destination/New/Docker.php:47 `$this->serverId = (string) $this->selectedServer->id;` inside `mount(?string $server_id = null): void` (def at :35) - the chosen machine is reduced to a STRINGIFIED number held as component state, and from here the machine is never consulted again in this component's lifetime; the cast is the tell that the value is about to travel through the wire format"
+  - id: d:new-resource-state-id
+    group: dependents
+    match: [New/Select.php]
+    relation: "app/Livewire/Project/New/Select.php:409 `$this->server_id = $server->id;` opening `setServer(Server $server)` (def at :407), one line before :410 `$this->server = $server;` - the wizard is handed the machine and immediately keeps the number beside it; the number is what survives the browser round trip between wizard steps and the object is not"
+
+  # -- the piece read back out of a record written by something else, a request later.
+  - id: d:deployment-cancel-id
+    group: dependents
+    match: [Application/DeploymentNavbar.php]
+    relation: "app/Livewire/Project/Application/DeploymentNavbar.php:100 `$build_server_id = $this->application_deployment_queue->build_server_id ?? $this->application->destination->server_id;` in `cancel()` (def at :91), with the sibling at :101 and the resolution at :110 `$server = Server::ownedByCurrentTeam()->find($build_server_id);` - the number was written into the queue row when the deployment was enqueued and is trusted here, an arbitrary time later, to still name the machine the container is actually running on"
+  - id: d:destination-server-lookup
+    group: dependents
+    match: [Models/StandaloneDocker.php]
+    relation: "app/Models/StandaloneDocker.php:135 `$server = Server::findCached($this->server_id);` inside `getServerAttribute(): ?Server` (def at :127), after the eager-load short circuit at :131 - a destination row holds only the number and re-resolves the machine on demand through the identity map; every deployed resource reaches its machine through this accessor, so the number stored on the destination is the real link and the object is a cache of it"
+
+  # -- the piece copied into a brand-new record, from a third record, with no machine present.
+  - id: d:clone-service-server-id
+    group: dependents
+    match: [Project/CloneMe.php]
+    relation: "app/Livewire/Project/CloneMe.php:274 `'server_id' => $selectedDestination->server_id,` inside the `])->fill([` at :269 completing the `$service->replicate([` at :265, in the services loop opened at :263 within `clone(string $type)` (def at :93) - the clone copies a machine's number out of a destination row into a freshly created record without ever loading a machine; if the number no longer resolves to what it did, the clone is born pointing at the wrong box and nothing in this path would notice"
+  - id: d:shared-env-scope
+    group: dependents
+    match: [SharedEnvironmentVariable.php]
+    relation: "app/Models/SharedEnvironmentVariable.php:22 `'server_id',` in the fillable list opened at :11, sitting under the `// Type and relationships` comment at :17 beside `team_id`, `project_id` and `environment_id` as one of a set of mutually exclusive scopes - a shared variable is scoped to a machine by storing its NUMBER on its own row, and the accessor at :64 `public function server()` / :66 `return $this->belongsTo(Server::class);` resolves that number back on demand; the variable's whole meaning is the scope, so it is the number and not the machine that decides which deployments the value is injected into"
+
+  # -- the piece handed to work that runs later, or out of this process entirely.
+  - id: d:ca-cert-job-id
+    group: dependents
+    match: [CaCertificate/Show.php]
+    relation: "app/Livewire/Server/CaCertificate/Show.php:82 `server_id: $this->server->id,` as a named argument to `dispatch(new RegenerateSslCertJob(` opened at :81 in `saveCaCertificate()` (def at :55), immediately after `writeCertificateToServer()` at :79 - the machine is reduced to a number the moment work is queued, so the certificate is regenerated against whatever that number resolves to when the queue reaches it, not against the machine the operator was looking at"
+  - id: d:cleanup-execution-owner
+    group: dependents
+    match: [Jobs/DockerCleanupJob.php]
+    relation: "app/Jobs/DockerCleanupJob.php:50 `'server_id' => $this->server->id,` inside `DockerCleanupExecution::create([` at :49 in `handle(): void` (def at :46) - the job holds a real machine and still writes only its number into the permanent execution record it creates; the audit history of every cleanup is keyed on a number that outlives the job, the machine and the record it names"
+
+  # -- the piece built into a path or a name a system outside this product then owns.
+  - id: d:mux-socket-path
+    group: dependents
+    match: [SshMultiplexingHelper.php]
+    relation: "app/Helpers/SshMultiplexingHelper.php:280 `return '/var/www/html/storage/app/ssh/mux/mux_'.$server->uuid;` in `muxSocket(Server $server): string` (def at :278), consumed at :274 as the `ControlPath` inside `multiplexingOptions(Server $server): string` (def at :271) - the handle is concatenated into a filesystem path that ssh itself owns and that persists between processes; if two records ever resolve to the same handle they share one multiplexed connection, and if a handle changes the live socket is orphaned on disk"
+
+  # -- the piece written down as a bare literal, because one particular machine is meant.
+  - id: d:instance-backup-literal
+    group: dependents
+    match: [Livewire/SettingsBackup.php]
+    relation: "app/Livewire/SettingsBackup.php:55 `$this->server = Server::findOrFail(0);` in `mount()` (def at :49), repeated at :84 inside `addCoolifyDatabase()` - the machine this product itself runs on is addressed by a hard-coded primary key; nothing on the line says which machine is meant, the literal IS the identity, and it is the first thing a re-numbering breaks"
+  - id: d:coolify-update-literal
+    group: dependents
+    match: [Server/UpdateCoolify.php]
+    relation: "app/Actions/Server/UpdateCoolify.php:29 `$this->server = Server::find(0);` in `handle($manual_update = false)` (def at :21), guarded by the bare null check at :30 - the self-update action reaches its own host by the same hard-coded key and silently returns when the row is absent, so a re-numbering turns the product's upgrade path into a no-op rather than an error"
+
+  # -- the piece used as the thing an authorisation decision is keyed on.
+  - id: d:logs-ownership-check
+    group: dependents
+    match: [Shared/GetLogs.php]
+    relation: "app/Livewire/Project/Shared/GetLogs.php:127 `if (! Server::ownedByCurrentTeam()->where('id', $this->server->id)->exists()) {` opening `getLogs($refresh = false)` (def at :125) - the component already holds the machine and still re-derives the authorisation from its number against a team-scoped query on every poll; the gate that returns 'Unauthorized.' at :128 depends entirely on that number still resolving inside the current team"

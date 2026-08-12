@@ -1,0 +1,338 @@
+# ============================================================================
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md)
+# CYCLE 1, ATTEMPT 6 on bagisto. THIS IS A RE-QUESTION, routed back from FIVE measured
+# two-arm mini-benches. The anchor is UNCHANGED (Webkul\Product\Models\Product); only the
+# question and the gold group move, per ITERATE ON THE QUESTION, KEEP THE ANCHOR.
+#
+# TRAJECTORY - EVERY previous cycle, and which side of the window each fell on.
+# The window is: plain arm <= 0.50 AND ours >= plain + 0.50. Both at once.
+#   $ cat verticals/php-laravel/results/loop/bagisto/cycles.jsonl
+#   {"cycle":1,"attempt":1,"baseline_dependents":0.6471,"sense_dependents":0.7647,
+#    "title":"... audit what holds a product it never names"}
+#   {"cycle":2,"attempt":2,"baseline_dependents":0.8235,"sense_dependents":0.8235,
+#    "title":"... audit the kind-specific slices of the catalogue record"}
+#   {"cycle":3,"attempt":3,"baseline_dependents":0.9444,"sense_dependents":0.7222,
+#    "title":"... audit how the catalogue record arrives where it is used"}
+#   {"cycle":4,"attempt":4,"baseline_dependents":0.8889,"sense_dependents":1.0,
+#    "title":"... audit which resolution of the catalogue record's kind each site talks to"}
+#   {"cycle":5,"attempt":5,"baseline_dependents":0.5714,"sense_dependents":1.0,
+#    "title":"... audit every routine handed the catalogue record itself"}
+#   (results/dryrun/bagisto/ holds minibench.1.md .2.md .3.md .4.md; results/loop/bagisto/
+#    holds minibench.md. All five were read in full this session, not only the latest.)
+#
+#   cycle 1  baseline 0.6471  sense 0.7647  delta +0.1176
+#            side: BASELINE-TOO-HIGH. Ceiling 1.00-0.6471 = +0.3529.
+#            Route: `grep -rn "\->product\b"`, widened four times.
+#   cycle 2  baseline 0.8235  sense 0.8235  delta +0.0000
+#            side: BASELINE-TOO-HIGH. Ceiling +0.1765.
+#            Route: ONE disjunctive grep over seven per-kind collection names the ASK handed
+#            over (downloadable_links|bundle_options|grouped_products|...).
+#   cycle 3  baseline 0.9444  sense 0.7222  delta -0.2222
+#            side: BASELINE-TOO-HIGH, worst of the six, and sense BELOW baseline. Ceiling
+#            +0.0556. Route: `function product(` -> `->product` -> `$this->product` ->
+#            `$x->product->` -> `getTypeInstance()`. report.json: read_count 0 - the winning
+#            arm never opened a file.
+#   cycle 4  baseline 0.8889  sense 1.0000  delta +0.1111
+#            side: BASELINE-TOO-HIGH. Ceiling +0.1111 and sense took all of it: a PERFECT
+#            sense arm still could not clear the bar. Route: `getTypeInstance` / `->type`
+#            comparisons / `ProductType::` / one grep over five forwarder names.
+#   cycle 5  baseline 0.5714  sense 1.0000  delta +0.4286
+#            side: BASELINE-TOO-HIGH, closest of the six, and STILL both conditions failed.
+#            Route: `grep -rn '\$product\b'` at calls 12 and 32 - a variable-name sweep, then
+#            20 calls paying the read cost, 369 seconds, inside the wall.
+#            minibench.md also records that six of the fourteen rows were mis-scored by
+#            bench/lib/gold.py's elided-path handling; corrected, the plain arm held 14 of 14
+#            = 1.00 and the delta was 0.00. That reading is WORSE for the cell, so the verdict
+#            does not turn on the defect being ruled. It is carried in `notes`, not fixed here.
+#
+#   ALL FIVE fell on the SAME side: BASELINE TOO HIGH. Not one landed at or under 0.50, and
+#   four of the five were arithmetically dead before they ran. This draft corrects from the
+#   BASELINE-TOO-HIGH side and intends to move the plain arm down by at least 0.08 from the
+#   best previous cycle (0.5714) and by 0.28 from the five-cycle mean (0.784). Nothing here
+#   aims at raising the sense arm: cycles 4 and 5 already measured it at 1.000.
+#
+# WHAT CHANGES, AND WHY THIS IS NOT THE MIRROR OF ANY PREVIOUS CYCLE.
+# Five measured routes, five token sweeps. Between them they are two families:
+#   family A - the record is named on the line: `$product`, `->product`, `$this->product`.
+#   family B - the kind is named on the line: `getTypeInstance()`, `->type`, `ProductType::`.
+# Every previous gold set lived inside one or both. This draft golds ONLY sites that are in
+# NEITHER family A nor - for six of the sixteen rows - either family, because the routine
+# never fetched a catalogue record at all: it is holding an order line, a cart line, a bundle
+# option row, a variant of some other record, a resource wrapper whose subject is implicit, or
+# a bag of data, and the catalogue record's kind decides its outcome two hops away.
+#   Token census over the sixteen gold files, run this session (an authoring PREFERENCE,
+#   recorded as the law says to record it - it killed nothing and admitted nothing):
+#     zero occurrences of `$product` in THIRTEEN of the sixteen files. The three exceptions,
+#     quoted with their counts, are Checkout/src/Cart.php (3), BookingProduct/src/Listeners/
+#     PriceNote.php (4) and DataTransfer/.../Product/Importer.php (55) - kept because the
+#     first two are the two rows the plain arm has actually MISSED on this repo and the third
+#     manufactures its record in place. They are the weakest three rows in the group and are
+#     recorded as such.
+#     zero occurrences of `$product`, `->product` AND the bare word `Product` in six of them:
+#       Sales/src/Repositories/InvoiceItemRepository.php   (0 / 0 / 0)
+#       Sales/src/Repositories/RefundRepository.php        (0 / 0 / 0)
+#       Sales/src/Repositories/OrderRepository.php         (0 / 0 / 1)
+#       Admin/src/Http/Resources/ProductResource.php       (0 / 0 / 0)
+#       Shop/src/Http/Resources/ProductCardResource.php    (0 / 0 / 1)
+#       Shop/src/Http/Resources/ProductResource.php        (0 / 0 / 1)
+#   Measured corroboration, not a prediction: `d:booking-note-subtype` (PriceNote.php) is the
+#   row the plain arm has missed most often across every run on disk - 2 of 5 - and
+#   `d:cart-tax-category` (Checkout/src/Cart.php:1032) was 0 of 1 in cycle 5.
+# NO GREP SCREEN IS A GATE: nothing above killed or admitted a row. The two-arm run decides.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS:
+#   it is, for each site, WHICH catalogue record's kind decides that site's outcome, when the
+#   thing the site is actually holding is something else - a line item, a child line, a bundle
+#   option row, a variant of a different record, a wrapper, an entry in a bag of data. The
+#   answer is a chain identification: what the site holds, how the verdict travels from the
+#   catalogue record to it, and which verdict is taken. An occurrence list names none of those
+#   three, because on these lines the record is not written down.
+# Honest label, per the plan: the SHAPE is an occurrence list at the top level (a set of
+# sites). What makes this the first sort (the banked +0.53 mastodon cell) and not the second
+# is that membership is a TWO-HOP fact - the site holds X, X forwards to the catalogue
+# record's kind object - so no single token prints the set, and the six rows above are outside
+# both measured families entirely.
+#
+# SEAM PROFILE (bench/lib/seam_hunt.py, quoted output, 2026-08-12):
+#   $ python3 bench/lib/seam_hunt.py $CLONE Product --propose \
+#       --file packages/Webkul/Product/src/Models/Product.php
+#   === Product  (lang=php, token='Product', hops=mcp-default, conf=mcp-default) ===
+#     app caller files : 35   (total incl test/non-app: 35)
+#     SCATTER (dirs)   : 17
+#     GREP-NOISE       : 'Product' in 308 app files   PRECISION=0.11  (lower=grep-hostile)
+#     VERDICT          : SCATTERED + GREP-NOISY
+#   Three candidates profiled, per step 2 (precision RANKS, it never kills):
+#     Product           (Product/src/Models/Product.php)      35 files, scatter 17, PREC 0.11
+#     Product           (Product/src/Contracts/Product.php)    0 files, scatter  0, PREC 0.00
+#                       - the interface resolves to zero app callers; unusable.
+#     ProductRepository (Product/src/Repositories/ProductRepository.php)
+#                                                            15 files, scatter  8, PREC 0.31
+#   Product at 0.11 ranks first and keeps the anchor: five cycles of measurement are attached
+#   to it and re-scouting discards them (ITERATE ON THE QUESTION, KEEP THE ANCHOR).
+#
+# RING (bench/lib/ring_sweep.py --top 12, quoted): Product is one of only two anchors above
+# the ranking threshold - `Product  class  rows 31  files 31  vias 15  CANDIDATE`. The
+# retention kind is still NOT usable here, for the same reason as last cycle: at MCP defaults
+# the blast payload returns `retained_via_interfaces_count: 31` with `retained_trimmed: true`
+# and NO row list. The arm is shown a count, not the holders, so a retention gold row could
+# never appear in the output the agent sees and would violate the GOLD RAILS.
+#
+# MEMORIZATION (bench/lib/memorization_probe.py Product, quoted, 2026-08-12):
+#   'recall': 0.417, 'hits_n': 30, 'truth_n': 72, 'said_n': 41, samples [0.0, 0.347, 0.417]
+#   'reason': "closed-book recall 0.417 (30 members named) >= 0.3 - recited, both arms already
+#              know it"
+# The RECORD'S OWN MEMBER LIST is recited (attribute_values, bundle_options, getTypeInstance,
+# isSaleable, isStockable, ...). That is a gold-time constraint, never an admission verdict:
+# every recited member sits in the non-scoring `contract` group below. Not one `dependents`
+# row is a member of the record - they are call sites in nine other directories, pinned at
+# line level, which no model recites.
+#
+# GOLD RAILS held: one row per FILE; every `dependents` row's file appears in the shown blast
+# payload (mcp_probe, sense_blast, symbol Product, file
+# packages/Webkul/Product/src/Models/Product.php, no min_confidence - 55 direct_callers
+# shown); every line below was OPENED and read this session and the credit copied off the
+# line, never off a script tally.
+# ============================================================================
+
+name: Bagisto work session - audit what the catalogue record's kind still decides elsewhere
+repo: bagisto
+contract_symbol: Webkul\Product\Models\Product
+contract_file: packages/Webkul/Product/src/Models/Product.php
+
+description: |
+  You are a maintainer of this store platform, about to take a capability away from the record
+  the whole catalogue hangs off. Today that record will, on request, produce an object that
+  answers behavioural questions on its behalf - is this sellable, is it something you hold
+  stock of, is it made of parts, does it carry a discount, what does it cost - and anything
+  that can reach the record can ask that object anything.
+  The rework removes that. After it, a behavioural verdict must be asked for explicitly, by
+  something that says which record it is asking about.
+  What makes this dangerous is where those verdicts are being consumed. Most of them are not
+  consumed by code that fetched a catalogue record. They are consumed by code holding
+  something else entirely - a line on an order, a line in a basket, a row inside an option
+  group, a stand-in that wraps a record without ever naming it, a bundle of data assembled by
+  a caller - and that thing quietly forwards the question on. The site that breaks writes down
+  neither the record nor the object that answered for it; it writes down whatever it happens
+  to be holding. So the tie back to the catalogue record is made in a different file, one or
+  two steps away, and nothing on the failing line says so.
+  Before you touch it you have to know two things: what the record is, how it produces the
+  object that answers for it and what that object can be asked; and then, separately, every
+  site downstream whose own outcome is decided by one of those answers, with the line pinned,
+  what it is actually holding, and how the question travelled from that thing to the record.
+  Throughout, an answer that points at a place must give an exact file:line a teammate could
+  jump straight to, plus one phrase on why it matters. A bare filename does not count, a set
+  of names offered together with one shared reason and no location on any of them does not
+  count, and a missed place is a broken storefront shipped.
+
+steps:
+  - name: Map the catalogue record contract
+    prompt: >
+      Task: orient, and be exact - the rest of the ticket is built on this and nothing later
+      will send you back for it. Three things.
+      First, the record itself. Name it precisely - the fully qualified name of the class and
+      the exact file:line it is declared at - and say what code holding one can do with it,
+      grouped by job rather than listed routine by routine, with the exact file:line where
+      each named routine is defined. This platform gives the same short name to more than one
+      thing, so say which one you settled on and how you told them apart, at file:line each.
+      Second, the object that answers on the record's behalf. Give the exact line where the
+      record builds it, the exact line where the record hands ITSELF to it, the base class
+      every such object extends at file:line, and the exact line inside that base where the
+      record ends up being kept. Say what happens when the record cannot build one, at
+      file:line. Then list the behavioural questions that object can be asked - the ones whose
+      answer differs by kind - each at the file:line where the base declares it.
+      Third, and deliberately small: say once, briefly, that something other than a catalogue
+      record can forward one of these behavioural questions onward on its own, and give ONE
+      example line where that happens. Do not enumerate the rest here; I am not asking for
+      that list yet and it earns nothing.
+    checks:
+      - type: response_richness
+        value: "10"
+        required: true
+        description: The record named precisely with its declaring file:line and disambiguated from the same-named siblings, its own surface grouped by job with each routine located at file:line, the line where the answering object is built, the line where the record hands itself to it, the base class at file:line, the line inside that base where the record is kept, the failure line, and the behavioural questions the base declares each at file:line
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the catalogue record contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the first
+      part already cost you. Take it as settled that the rework is happening: nothing will be
+      able to obtain a behavioural verdict about one of these records implicitly any more.
+      Answer the only question that matters after that: which sites in this codebase have
+      their own outcome decided by one of those verdicts, and for each, what is the thing that
+      site is actually holding and how does the question get from it to the record.
+      A site counts when the value that steers its branch, its arithmetic or the payload it
+      returns is a behavioural answer that only the record's kind can give. It counts whether
+      the site asked the record directly or asked something that forwarded on its behalf - and
+      the forwarding cases are the ones this rework is about, so they are the ones to work
+      hardest for. It does NOT count when the site merely stores, fetches, passes along or
+      displays a record and nothing about its own result turns on a kind-specific answer.
+      The unit of the answer is a site - the routine and the line inside it - not a package
+      and not a file, and one file can hold more than one. The record itself, the object that
+      answers for it and that object's base class are not answers here: you pinned those in
+      the first part and naming them again earns nothing.
+      For each site the answer has three parts and only three: the exact file:line and the
+      routine it sits in; what the site is holding when it asks, named concretely; and which
+      verdict it takes and what its own outcome does with it.
+      Keep it short - the coverage, the holder, the verdict, not the prose.
+      Organise by area, one section per area, and treat an area as finished only when every
+      site inside it is listed separately with its own location. If you run short, say what
+      you had still not looked at rather than closing on what you have. A file:line with no
+      statement of what is held and which verdict is taken is half an answer, and a group
+      summarised instead of listed reads as a group with nothing in it.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every site located at the exact file:line with the routine it sits in named, what the site is holding stated concretely, and which kind-specific verdict it takes accounted for
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ---- ANCHORS: the record, the base of the answering family and the declared write layer.
+  # ---- Step 1's answer, deliberately NON-SCORING. A FREE ROW IS A GIFT TO THE BASELINE, and
+  # ---- these are exactly the rows both arms reach in one lookup - and the ones
+  # ---- memorization_probe shows this model recites closed-book (recall 0.417 over the
+  # ---- record's member list). Putting them here removes the floor they would otherwise put
+  # ---- under the plain arm. Every line was opened and read this session. None appears in
+  # ---- `dependents`.
+  - id: contract-product
+    group: contract
+    match: [Product/src/Models/Product.php]
+    relation: "packages/Webkul/Product/src/Models/Product.php:25 `class Product extends Model implements ProductContract` - the record itself; :347 `public function getTypeInstance(): AbstractType` builds the object that answers for it, :359 `$this->typeInstance->setProduct($this);` is where the record hands ITSELF over, and :299/:311/:323/:335 declare isSaleable/isStockable/totalQuantity/haveSufficientQuantity"
+  - id: c:abstract-type
+    group: contract
+    match: [Product/src/Type/AbstractType.php]
+    relation: "packages/Webkul/Product/src/Type/AbstractType.php:32 `abstract class AbstractType` - the base every answering object extends; :39 `protected $product;` is where a whole record is kept once handed over, and :394 `public function setProduct($product)` / :396 `$this->product = $product;` is the handover point itself"
+  - id: c:product-repository
+    group: contract
+    match: [Product/src/Repositories/ProductRepository.php]
+    relation: "packages/Webkul/Product/src/Repositories/ProductRepository.php:18 `class ProductRepository extends Repository` - the declared create-and-change layer, :44 `public function model(): string` names the record it stands for; it hands records out and scores nothing"
+
+  # ---- DEPENDENTS: 16 rows, 16 files, 9 areas. Every one is a site whose own outcome turns
+  # ---- on a kind-specific verdict about a catalogue record it did NOT fetch. Each row's
+  # ---- `relation` quotes the line as it is in the file, read this session. Each row's file
+  # ---- appears in the shown blast payload (55 direct_callers at MCP defaults).
+  # ---- ZERO-$PRODUCT is on every row (census quoted in the header); OUTSIDE-BOTH marks the
+  # ---- six files that write neither `$product`/`->product` nor the bare word `Product`.
+  # ---- Recorded, not used as a gate.
+  - id: d:invoice-item-inventory-flag
+    group: dependents
+    match: [Sales/src/Repositories/InvoiceItemRepository.php]
+    relation: "packages/Webkul/Sales/src/Repositories/InvoiceItemRepository.php:28 `if (! $data['product']->manage_stock) {` inside `updateProductInventory($data)` at :22 - the site is holding a bag of invoice data, not a record; it reaches the catalogue record only as the string key 'product' inside that array, and the stock-management flag it reads there decides whether the whole draw-down at :32 and :44 happens at all. OUTSIDE-BOTH"
+  - id: d:refund-return-qty-branch
+    group: dependents
+    match: [Sales/src/Repositories/RefundRepository.php]
+    relation: "packages/Webkul/Sales/src/Repositories/RefundRepository.php:131 `$childOrderItem->getTypeInstance()->isStockable()` inside `create(array $data)` at :40 - the site is holding a CHILD ORDER LINE, and that line forwards the stockability question to the catalogue record's kind object; the verdict decides whether :134 returns the quantity to inventory. OUTSIDE-BOTH"
+  - id: d:order-completed-stockable
+    group: dependents
+    match: [Sales/src/Repositories/OrderRepository.php]
+    relation: "packages/Webkul/Sales/src/Repositories/OrderRepository.php:220 `if (! $item->isStockable()) {` inside `isInCompletedState($order)` at :212 - the site is holding an ORDER LINE and calls the line's OWN forwarder, which relays to the catalogue record's kind object; the verdict decides whether shipped quantity is counted from invoiced or from shipped, which is what makes an order complete at :247-:255. OUTSIDE-BOTH, and the deepest hop in the set - the line names neither the record nor the answering object"
+  - id: d:invoice-composite-branch
+    group: dependents
+    match: [Sales/src/Repositories/InvoiceRepository.php]
+    relation: "packages/Webkul/Sales/src/Repositories/InvoiceRepository.php:110 `if ($orderItem->getTypeInstance()->isComposite()) {` inside `create(array $data, ...)` at :44 - the site is holding an ORDER LINE; the composite verdict from the catalogue record's kind object decides whether child invoice items are written at :116 or the single-item path at :151 runs, and at :138/:153 the same object is asked for stockability to decide the inventory write"
+  - id: d:orderitem-return-stockable
+    group: dependents
+    match: [Sales/src/Repositories/OrderItemRepository.php]
+    relation: "packages/Webkul/Sales/src/Repositories/OrderItemRepository.php:145 `if ($orderItem->getTypeInstance()->isStockable()) {` inside `returnQtyToProductInventory` at :133 - the site is holding an ORDER LINE and takes the stockability verdict to decide whether reserved quantity is released at all; the same routine's sibling `manageInventory` at :85 branches on the composite verdict from the same object"
+  - id: d:order-reorder-saleable
+    group: dependents
+    match: [Sales/src/Models/Order.php]
+    relation: "packages/Webkul/Sales/src/Models/Order.php:415 `if (! $item->product?->getTypeInstance()->isSaleable()) {` inside `canReorder(): bool` at :402 - the site is holding an ORDER and walks its lines; a single not-saleable verdict from one line's catalogue record kills reordering for the whole order, and at :288 `haveStockableItems` takes the stockability verdict off the same route"
+  - id: d:shipment-composite-available-qty
+    group: dependents
+    match: [Admin/src/Http/Controllers/Sales/ShipmentController.php]
+    relation: "packages/Webkul/Admin/src/Http/Controllers/Sales/ShipmentController.php:121 `if ($orderItem->getTypeInstance()->isComposite()) {` inside `isInventoryValidate(&$data)` at :101 - the site is holding a shipment form payload and an ORDER LINE fetched from it; the composite verdict decides whether available quantity is summed per child at :129 or once at :141, and the result gates whether the shipment may be created"
+  - id: d:cart-quantity-box
+    group: dependents
+    match: [Checkout/src/Models/Cart.php]
+    relation: "packages/Webkul/Checkout/src/Models/Cart.php:175 `if ($item->getTypeInstance()->showQuantityBox()) {` inside `hasProductsWithQuantityBox(): bool` at :172 - the site is holding a CART and walks its lines; the quantity-box verdict comes from the catalogue record's kind object via the line's own forwarder, and at :137/:151 the same cart takes the stockability verdict to decide whether shipping applies"
+  - id: d:cart-tax-address-basis
+    group: dependents
+    match: [Checkout/src/Cart.php]
+    relation: "packages/Webkul/Checkout/src/Cart.php:1058 `if ($item->getTypeInstance()->isStockable()) {` inside `calculateItemsTax(): void` at :1018 - the site is holding a CART LINE and takes the stockability verdict to choose which address the tax rate is looked up against - shipping for stockable, billing otherwise; at :1032 the same routine falls back to the record's own tax category when the line has none. MEASURED: this file was 0 of 1 for the plain arm in cycle 5"
+  - id: d:admin-resource-available-qty
+    group: dependents
+    match: [Admin/src/Http/Resources/ProductResource.php]
+    relation: "packages/Webkul/Admin/src/Http/Resources/ProductResource.php:56 `if ($this->getTypeInstance()->isStockable()) {` inside `resolveAvailableQuantity(): ?int` at :40 - the site is a WRAPPER whose subject is implicit: it declares no parameter and names no record, it forwards every read to whatever it was constructed around; the stockability verdict decides whether the admin grid shows a summed quantity or null, and at :28/:29 the same object answers whether options are required and whether the row is saleable. OUTSIDE-BOTH"
+  - id: d:shop-card-price-html
+    group: dependents
+    match: [Shop/src/Http/Resources/ProductCardResource.php]
+    relation: "packages/Webkul/Shop/src/Http/Resources/ProductCardResource.php:55 `'on_sale' => (bool) $productTypeInstance->haveDiscount(),` inside `toArray($request)` at :43 - the site is a WRAPPER holding the answering object it took at :45 without ever naming the record; the discount, saleability, minimal price and price HTML on the storefront card at :55, :56, :60 and :61 are all kind-specific verdicts. OUTSIDE-BOTH"
+  - id: d:shop-detail-product-prices
+    group: dependents
+    match: [Shop/src/Http/Resources/ProductResource.php]
+    relation: "packages/Webkul/Shop/src/Http/Resources/ProductResource.php:50 `'prices' => $productTypeInstance->getProductPrices(),` inside `toArray($request)` at :30 - the site is a WRAPPER holding the answering object taken at :32; the whole price block of the product detail payload (:44 discount, :45 saleability, :49 minimal price, :50 the price set, :51 the rendered HTML) is kind-specific and none of those lines names a record. OUTSIDE-BOTH"
+  - id: d:price-bundle-option-variant
+    group: dependents
+    match: [Product/src/Helpers/Indexers/Price/Bundle.php]
+    relation: "packages/Webkul/Product/src/Helpers/Indexers/Price/Bundle.php:217 `if (! $variant->getTypeInstance()->isSaleable()) {` inside `getOptionProductsPrices($option, $minPrice = true)` at :210 - the site is holding an OPTION GROUP and walks its rows; each row's own record is asked for saleability, and a false verdict drops that row out of the bundle's indexed price entirely, then :221 asks the same object for the price indexer to use"
+  - id: d:price-configurable-variant
+    group: dependents
+    match: [Product/src/Helpers/Indexers/Price/Configurable.php]
+    relation: "packages/Webkul/Product/src/Helpers/Indexers/Price/Configurable.php:35 `if (! $variant->getTypeInstance()->isSaleable()) {` inside `getMinimalPrice($qty = null)` at :30 - the site is holding a VARIANT of another record, not a record it fetched; the saleability verdict excludes that variant from the parent's indexed minimal price, and :39 takes the price indexer off the same object"
+  - id: d:importer-family-editable-attrs
+    group: dependents
+    match: [DataTransfer/src/Helpers/Importers/Product/Importer.php]
+    relation: "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php:2626 `return $this->typeFamilyAttributes[$type][$attributeFamilyCode] = $product->getEditableAttributes();` inside `getProductTypeFamilyAttributes(string $type, string $attributeFamilyCode)` at :2613 - the site is holding two STRINGS, a kind and a family code; it manufactures an unsaved record at :2621 purely to make the kind-specific editable-attribute set answerable, and caches the verdict per kind-and-family for the whole import"
+  - id: d:booking-note-subtype
+    group: dependents
+    match: [BookingProduct/src/Listeners/PriceNote.php]
+    relation: "packages/Webkul/BookingProduct/src/Listeners/PriceNote.php:22 `$bookingProduct = $product->booking_products()->first();` inside `addNote(ViewRenderEventManager $eventManager): void` at :14 - the site is holding a VIEW-RENDER EVENT and pulls the record out of it by the string key 'product' at :16; the kind check at :18 and the booking sub-type match at :24 decide which customer-facing price note is appended, or none. MEASURED: the row the plain arm has missed most often on this repo - 2 of 5 across every run on disk"

@@ -1,0 +1,615 @@
+# ============================================================================
+# SEVEN-STEP SESSION (plans/cycle-1-craft-the-scenario/03-expand.md)
+# ROUND 5 on coolify. Expanded from the measured two-step probe. Anchor unchanged: Server.
+#
+# WHAT THE MINI-BENCH MEASURED, AND WHAT THIS FILE MAY NOT MOVE
+#   results/loop/coolify/minibench.md, verdict PROCEED:
+#     baseline 2 of 13 dependents = 0.154   (bar: at or below 0.50)
+#     sense    9 of 13 dependents = 0.692
+#     delta    7/13 = +0.538                (bar: at least +0.50, cleared by 0.038)
+#   Both arms valid, neither watchdogged: `sense wall 289 of 480 exit 0 watchdog None valid
+#   True`, `baseline wall 292 of 347 exit 0 watchdog None valid True`. The baseline spent 36
+#   tool calls, 31 of them searches, and closed with two rows - it ground, it did not cover.
+#   Step 4 below and the whole `dependents` group are byte-identical to that probe's step 2
+#   and its gold (diffed against scenarios/coolify.yaml.probe-two-step-regold.bak this
+#   session). Nothing added to `dependents`: those four groups would be untested gold.
+#
+# WHAT THE EXPANSION ADDED, AND WHERE IT PUT IT
+#   Steps 1, 2, 3, 5, 6 and 7 are restored verbatim from the seven-step session at
+#   scenarios/coolify.yaml.seven-step-baseline-0692.bak - the same skeleton every banked win
+#   in this bench runs. The probe compressed that session's steps 1-3 into one step; this
+#   file un-compresses them and changes nothing else. The population sweep - "Establish that
+#   whole affected population ONCE ... the next part of this ticket is a pass over it" - sits
+#   at the END of step 3, immediately before step 4, which is the same adjacency the probe
+#   measured, so step 4's "you already established the reach of that one type as a set" keeps
+#   its antecedent in the step before it.
+#   New gold went into NON-SCORING groups only: `contract` (+1 row, c:validate-server),
+#   `write-path` (5 rows), `guards` (2 rows), `specs` (3 rows). `dependents` is untouched at
+#   thirteen rows.
+#
+# THE SUPERSEDED QUESTION AND THE NUMBER THAT KILLED IT
+#   scenarios/coolify.yaml.seven-step-baseline-0692.bak, the previous expansion of this same
+#   session: baseline 9 of 13 = 0.692, sense 13 of 13 = 1.000, delta +0.308 - on the OLD gold
+#   set, whose four near-free rows (d:global-search-state-id, d:cloud-provider-external-id,
+#   d:cloud-status-lock-key, d:sentinel-event-uuid; baseline 3 of 4 runs each on the pooled
+#   ranking) are cut from this file's gold and replaced by d:deployment-cancel-queue-id,
+#   d:api-schema-server-id, d:additional-destination-pivot-column and d:backup-path-address.
+#   That is the one variable this cycle moved, and the mini-bench above is what measured it.
+#   Its sense arm ran 488 of 488 seconds to `hard_cap_timeout`, so its 0.692 baseline is a
+#   CENSORED-LOW number.
+#
+# WHAT IS NOT KNOWN, SAID PLAINLY
+#   The 0.154 baseline was measured in a TWO-step session. On the old gold, the same words
+#   and the same rows moved the baseline from 0.077/0.308 (two-step) to 0.692/0.538
+#   (seven-step): n = 2 per side, and the session lifted the baseline every time. This file
+#   is the seven-step form of a question measured in its two-step form, and the paid cell is
+#   what settles whether the new gold survives the expansion. No hand estimate is offered
+#   here in place of that run.
+#
+# SEAM PROFILE (quoted, `python3 bench/lib/seam_hunt.py $CLONE Server --propose
+#   --file app/Models/Server.php`)
+#     app caller files : 45   (total incl test/non-app: 53)
+#     SCATTER (dirs)   : 23   -> {'app/Livewire/Server': 5, 'app/Actions/Server': 5,
+#                                 'app/Jobs': 4, 'app/Actions/Proxy': 3, 'app/Models': 3,
+#                                 'bootstrap/helpers': 2, 'app/Livewire/Project/Shared': 2,
+#                                 'app/Livewire/Server/Proxy': 2}
+#     GREP-NOISE       : 'Server' in 295 app files   PRECISION=0.15  (lower=grep-hostile)
+#     VERDICT          : SCATTERED + GREP-NOISY
+#   Calibration on the record: 0.078 preceded a +1.00 cell, 0.78 was a deliberate control
+#   tie, ~0.94 handed a baseline 17 of 18 rows in one grep. PRECISION RANKS, IT NEVER KILLS.
+#   `anchor_rank.py $CLONE --top 20` puts Server first at dep_files 183, Team second at 75.
+#
+#   Retention ring: `ring_sweep.py $CLONE --top 12` prints all twelve anchors at
+#   rows=0 files=0 vias=0, "0 anchor(s) above the ranking threshold". "What HOLDS X" is off
+#   the menu on this repo. This is an occurrence-shaped ask and that is said plainly.
+#
+# THE AXIS SENTENCE
+#   One identifying piece is lifted off a machine and kept somewhere the machine itself
+#   cannot be carried to - a number stringified into a screen's own state and re-sent by the
+#   browser, a bare int that is a helper's whole contract with its callers, a number read
+#   back off a queued row long after the deploy was enqueued, an address slugged into a
+#   directory name on disk, a column named in a join's own declaration, a field published in
+#   an API schema other people build against, a handle copied into an outbound webhook body
+#   - and from that line on the code trusts the piece to still resolve to the same machine
+#   when it comes back to it.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS
+#   A per-member RULING over the population established in step 3: for each member, either
+#   it keeps a piece - and then how far that piece outlives the machine (one request, one
+#   stored row, or outside this product) and what specifically starts being wrong the first
+#   time it stops resolving - or it is the ground and gets one cheap line. Neither the
+#   lifetime nor the failure is carried by an occurrence; both require the line to be read
+#   in its routine. The kind is still occurrence-shaped underneath and the notes say so.
+#
+# MEMORIZATION (`memorization_probe.py $CLONE Server --json /tmp/memo-server.json`)
+#   "closed-book recall 0.542 (58 members named) >= 0.3 - recited, both arms already know
+#   it", truth_n 107, said_n 73, samples [0.542, 0.0, 0.0]. That is a fact about the ANCHOR
+#   type's own member list, which is a non-scoring group, and MEMORIZATION IS A GOLD-TIME
+#   CONSTRAINT, NEVER AN ADMISSION VERDICT. The clone is a single squashed commit so churn
+#   dating is uninformative; every scored row rests on the other leg of the law - each is a
+#   line-level structural fact in a peripheral file (a stringify at :47, a pivot attach at
+#   :130, a slugged address at :313, a schema property at :28), not a recitable API name.
+#
+# EVERY DEPENDENTS ROW APPEARS IN THE SHOWN SET
+#   `mcp_probe.py $CLONE '[{"name":"sense_blast","arguments":{"symbol":"Server"}}]'` at MCP
+#   defaults, no min_confidence: 31,420 chars, 101 distinct paths, re-run this session. All
+#   13 `dependents` files were intersected against that path list and every one is present,
+#   as are the two non-anchor `contract` files, the added `contract` row and all five
+#   `write-path` rows. `contract-model` is app/Models/Server.php, the anchor itself, which a
+#   blast of Server does not list as its own caller. The three `specs` rows are test files,
+#   are not dependents of the contract, and are not expected in the payload - which is why
+#   `gold_confidence_check.py` is scoped to `--group dependents`.
+#
+# EVERY CREDIT WAS READ OUT OF THE OPEN FILE
+#   The fourteen rows this expansion added or restored - four `contract`, five `write-path`,
+#   two `guards`, three `specs` - were printed out of $CLONE at the stated line number and
+#   matched this session. The thirteen `dependents` lines were read the same way in the
+#   cycle that golded them. No credit is taken from a script tally.
+#
+#   Recorded, never a gate (NO GREP SCREEN IS A GATE, IN ANY FORM): a covering grep for the
+#   identity tokens exists on this repo and the baseline has run it in every cycle. That
+#   fact is written down here and decides nothing.
+# ============================================================================
+name: Coolify work session - audit the server contract before a rework
+repo: coolify
+contract_symbol: Server
+contract_file: app/Models/Server.php
+
+
+description: |
+  You are a maintainer about to rework what identifies one of the remote machines this product
+  deploys onto. Today a machine is a row with a number, a short handle, a display name and a
+  network address, and code all over the product treats any one of those as a durable way of
+  getting back to it later. The rework breaks that: the record is replaced wholesale, so a
+  machine can be renamed, re-addressed, retired and stood in for by a different one, and a
+  piece of identity taken today is no longer guaranteed to mean the same machine when it is
+  read back tomorrow.
+  Before you touch it you have to know two things: how a machine's identity is established,
+  changed and torn down today, and every place that kept one of those pieces past the moment
+  it had the machine itself - the places that will silently point at the wrong machine, or at
+  no machine, without a single line of them changing.
+  Throughout, an answer that points at a place must give an exact file:line a teammate could
+  jump straight to, plus one phrase on why it matters. A bare filename does not count, a set
+  of names offered together with one shared reason and no location on any of them does not
+  count, and a missed dependent is a regression shipped.
+  Every part below is bounded on purpose: give it what it asks for and stop there. The early
+  parts are groundwork and are meant to be cheap - the audit in the middle is what this ticket
+  exists for, and reaching it with the clock already gone is how this comes out wrong. Short
+  and complete beats long and cut off, everywhere here.
+
+steps:
+  - name: Orient in the codebase
+    prompt: >
+      Task: orient, and be exact - the rest of the ticket is built on this and nothing later
+      will send you back for it. Keep it short: what you spend here comes out of the middle of
+      the ticket, and this part is groundwork.
+      Start by fixing the subject. Exactly one type in this product stands for one of these
+      machines, and the whole ticket is about that one type and nothing else. Name it and give
+      the file:line where it is defined, before anything else, and treat it from here on as a
+      single subject rather than as a word to look for.
+      Then, briefly, the ground you are standing on: how is this product laid out - in whatever
+      terms the tree itself uses, not in categories I have handed you - and what kind of work
+      does each part of that layout do? Name each part once, with a single example located at
+      file:line chosen to show what that part is FOR. That is the whole of it: this is the map
+      and not the inventory, a long list here earns nothing, and a short accurate map is a
+      better answer than a complete one.
+      What this part is NOT: do not go hunting for the subject inside those parts, and do not
+      tell me which of them the subject is touched from. That question is asked once, later,
+      and it is asked in a particular way for a reason. Answering it here means answering it
+      twice out of the same budget, and the second answer is the one this ticket is paying for.
+      Close in a line: what you opened and read, against what you are taking on the strength
+      of a name or a familiar convention, and anything you could not settle.
+      Work the codebase yourself, in this session. No Explore agents.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: The one type that stands for a machine named at the file:line where it is defined, plus the shape of the product itself - each part of the layout named once with one located example of the work that part does, and read separated from assumed - with no enumeration of where the subject is reached from
+      - type: mcp_tool_used
+        value: sense_status
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_search
+        required: false
+        layer: adoption
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+
+  - name: Map the server contract
+    prompt: >
+      Task: the contract itself. What this type is made of, and what identity means on it.
+      Later parts read off this one, so it has to be right - but it does not have to be long,
+      and both halves below are bounded.
+      First, what the type is built out of, as a located list and not an essay. The shared
+      behaviour it mixes in and the other records it declares a relationship to, each with the
+      file:line where the declaration sits. Separate the things it pulls in for its own use
+      from the things that hang off it and exist only because it does; that direction matters
+      later and it is cheap to get right now. Beyond that separation no commentary is wanted -
+      add a phrase only where the direction is not obvious from the declaration.
+      Then identity, precisely, and this is the half everything later depends on. Name each
+      field that identifies one of these machines and give the file:line where it is declared
+      or cast. Then: where a lookup by identity is served out of a per-request cache rather
+      than the store, what empties that cache, and when it is emptied. Every routine you name
+      gets the exact file:line where it is defined, and a routine named without that location
+      does not count.
+      Close in one sentence: what a rework of identity would have to preserve for this
+      contract to keep meaning what it means today.
+    checks:
+      - type: response_richness
+        value: "8"
+        required: true
+        description: The type's composition as a located list - mixed-in behaviour and declared relationships, with the ones it depends on separated from the ones that depend on it - plus every identifying field located and the per-request identity cache with what empties it and when
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+
+  - name: Trace the write path and the teardown
+    prompt: >
+      Task: how one of these machines comes into existence, and how it goes away. In order,
+      with file:line throughout. The first parts of this step are bounded to exactly what is
+      asked; the last part is the one the rest of the ticket runs on.
+      Creation first. What runs when a record for one of these machines is written for the
+      first time, in the order it runs, and what gets seeded from it - and for each seeded
+      thing say which of two kinds it is: does it hold a link back to the machine, or does it
+      hold a COPY of one of the identifying fields? That call is the whole reason this path is
+      being traced: make it explicitly on every seeded thing, and say nothing else about them.
+      Then the going away. The removal path: what it takes with it, what it hands to something
+      else to remove, and what it leaves behind. Say what is NOT cleaned up and name it,
+      rather than reporting that the path looked complete.
+      Then one line each, no more, for the parts of either path that do not finish inside the
+      request that triggered them - the announcements it makes and the work it hands off to run
+      later and out of process. For each of those say only what travels with it: the machine
+      record itself, or something taken off the machine. Those two are not the same thing to
+      this ticket, and that single distinction is all this part wants.
+      Now the last part of this step, and it is the one you have not been asked for anywhere
+      above: what a change to that one type would land on, as a shape and not as a roll.
+      Assume the type itself changes under the product. I am not asking what it uses - the
+      store it is read from, the connection helper it drives, the settings beside it - none of
+      that is affected by its own change and none of it is what I want. I am asking the other
+      direction: everything in this product that would have to be re-examined BECAUSE that type
+      changed under it. That population has a near edge and a far side, and the far side is the
+      part of it I will be paying for later. The near edge is the code that writes that type's
+      name and is handed one of these machines; it is real, and it is the smaller and easier
+      part. Behind it, and reached only through it, is code that was handed something a
+      near-edge place took off a machine and passed on - that code never writes the type's name
+      anywhere, it is affected all the same, and it is further out than one step from the type.
+      An answer that stops at the near edge is not this answer, and stopping there is the
+      specific way this part gets failed.
+      Establish that whole affected population ONCE, in a single sweep of the entire product
+      and to its full depth, not assembled a search at a time. Then report only its shape: the
+      areas it lands in, each named once with a single example located at file:line, and how
+      far out from the type it reaches. Do not enumerate the places themselves: I am not asking
+      for that list here and it earns nothing. What I do want is the population established as
+      one set, in a form you can work straight down afterwards, because the next part of this
+      ticket is a pass over it and you will not be given the budget to go looking twice.
+    checks:
+      - type: response_richness
+        value: "10"
+        required: true
+        description: The creation path in order with every seeded record located and ruled a link or a COPY of an identifying field, the removal path with what it leaves behind named, one line per hand-off saying whether the record itself travels or only a piece of it, and the affected population established in one sweep and reported as its shape - areas, one located example each, and how far out it reaches
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the server contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the first
+      part already cost you. You already established the reach of that one type as a set, in one
+      go, and that set is a fixed thing with an edge to it - it is not going to grow now. This
+      part is a pass straight down it, in the order you established it, with a judgement at each
+      line inside it. It is not a second search, and starting again with fresh words is how this
+      gets half done. Take it as settled that the whole record is being replaced, and answer the
+      only question that matters after that: what breaks.
+      Not the code that is handed one of these machines and works with it while it has it in
+      front of it. Whatever share of the product that runs, it will be handed the new record and
+      it will be fine, and it is not what I am asking for. What breaks is every place that took
+      one identifying piece off a machine, kept that piece after the machine itself was gone
+      from its hands, and later trusts it to still mean the same machine when it comes back to
+      it - a request later, a restart later, or in another system entirely. That trust is
+      exactly what this rework withdraws, and not one of those places changes by a single line
+      when it does.
+      Test each candidate at the line itself, and only there: is a piece being lifted off a
+      machine here and put somewhere the machine itself cannot be carried to, or read back out
+      of somewhere after the machine was gone? If instead a machine came in and the code acted
+      on it while it had it, that is the ground, and the ground is out.
+      One thing about how these places hide, because it decides how you work: almost none of
+      them writes the name of that type anywhere near the line that matters. The piece was
+      taken off a machine by something else, handed on, and by the time it lands here it is a
+      plain value sitting in the middle of a job about something else entirely - so the name
+      you fixed in the first part will not lead you to them, and looking for it harder will not
+      either. They are inside the reach you already established; they are the part of it where
+      the machine itself did not travel.
+      How this part is judged, because it is not by how good the places you hand me are. It is
+      judged on whether the pass reached the end of the set. Every member of the set you
+      established gets a ruling out of you, and there are exactly two rulings it can get. Either
+      a piece is being kept there, and it gets the three parts below in full; or it is the
+      ground, and it gets its location and the few words that say why it is the ground, and
+      nothing more - that side is meant to be cheap, so spend almost nothing on it. A member you
+      simply passed over in silence is not an omission, it is a wrong answer, because from here
+      it cannot be told apart from one you never reached at all. And do not filter by how sure
+      you are: a member you are uncertain about is ruled with the doubt written beside it, never
+      dropped. Handing me a short list of the ones you were confident about, with the rest of
+      the set unaccounted for, is the specific way this part gets failed - as is closing while a
+      member of it is still unruled and you still have working time in front of you.
+      For each kept place the answer has three parts and only three: the exact file:line where
+      the piece is taken, kept or read back, and the routine that line sits in; how long that
+      piece outlives the machine it came from - inside one request, inside one stored record, or
+      outside this product entirely; and one phrase on what this place starts getting wrong the
+      first time it no longer resolves to the machine it came from. Keep it short: I want the
+      coverage, the lifetime and the failure, not the prose.
+      Present the kept places organised by area, one section per area, and treat an area as
+      finished only when every place inside it is listed separately with its own location; then
+      close with the ruled-out members in set order, one line each. If you genuinely run out of
+      time, say where in the set you stopped and what was still below that point, rather than
+      closing on what you have. A file:line with no lifetime and no failure is half an answer,
+      and a group summarised instead of listed reads as a group with nothing in it.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: A ruling on every member of the population established in the first part - each identity-keeping place located at file:line with the routine it sits in, the lifetime of the piece it keeps and what that place gets wrong once the piece no longer resolves, and each ruled-out member accounted for in one line rather than passed over
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+  - name: Trace the guards
+    prompt: >
+      Task: how this product satisfies itself that it is acting on a real, current machine
+      before it acts. file:line throughout, and the routine each line sits in. I want the
+      shapes this takes, not a census of every occurrence of them - one worked example of each
+      is enough, and you already met most of them in the part before.
+      Take the places where a piece kept somewhere is turned back into a machine, and work out
+      what confirms the result before anything is done with it. Where does a failed lookup
+      raise, and where does it quietly hand back nothing - and in the quiet case, what does the
+      calling code then do, having been handed nothing? Where is a lookup narrowed to what the
+      caller is entitled to see, and where is it not narrowed at all? And where are two
+      identifying pieces compared as plain values to decide that two things are the same
+      machine, with no machine present on either side of the comparison?
+      For each: the file:line, the routine it sits in, and one phrase on what that guard
+      actually protects against. Then, beside them, at least one line of the same shape that
+      carries NO guard - the absence is the finding in this step, and a list of only the
+      guarded cases hides it.
+      Rank nothing yet, that is the next part. Close in a line by separating the guards you
+      read from the ones you are asserting from the shape of a call, and naming anything you
+      could not settle.
+    checks:
+      - type: response_richness
+        value: "10"
+        required: true
+        description: One worked example of each guard shape located at file:line with its routine and what it protects against - raising against silently-empty lookups and what the caller does with nothing, entitlement-narrowed against unnarrowed lookups, value-to-value comparisons standing in for identity - and at least one same-shaped line carrying no guard named as such
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+
+  - name: Assess the blast radius
+    prompt: >
+      Task: turn what you now hold - the population, the ruling you gave each member of it, and
+      the guards - into a risk order a maintainer can work straight down. This is an ordering
+      of what you already found and not a new pass, so it should read as a short table rather
+      than as prose, and nothing already said needs saying again.
+      Rank the places that keep a piece of a machine, by what happens when that piece stops
+      resolving to the machine it came from, and not by how likely you think that is. Then take
+      the top of that order - the ones a maintainer would have to handle first - and give each
+      of those one line: the file:line, its rank, how the failure surfaces, and a clause on
+      what goes wrong and whether anything at all catches it. For how it surfaces, say which of
+      these it is: a lookup that raises and takes something down, a silent nothing that the
+      code carries on with, a different machine acted on with no complaint at all, or a wrong
+      value that has already left this product and cannot be corrected from here. The silent
+      ones outrank the loud ones - say why once, not once per line. Below the top of the order,
+      one line saying where the rest of it sits is enough; do not re-list it.
+      Then, for the top of the order only: what has to be re-verified after the rework, and
+      where each re-verification would actually be done, at file:line. A missed high-risk
+      dependent is the one that pages someone.
+      Where you are ranking something you did not open, say so rather than smoothing it into
+      the order.
+    checks:
+      - type: response_richness
+        value: "12"
+        required: true
+        description: The top of a consequence-driven order, each place at its file:line with its rank, how the failure surfaces - raising, silently empty, wrong machine acted on quietly, or already outside this product - and a clause of justification, plus the re-verification for each of those located at file:line
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+
+  - name: Plan the change and the verification map
+    prompt: >
+      Task: write the plan. What you will edit, what has to move with it, and what proves it
+      moved correctly. This is the artifact a teammate picks up, so nothing in it may need
+      re-derivation - but it may not re-run the audit you already gave me either, and
+      re-listing that is exactly how this part gets too long.
+      First the edit itself: every file:line you would change in the contract, in its write
+      path and in its removal path, in the order you would change them, and what each change
+      is.
+      Then downstream, and briefly. Group what has to move by area, one line per area saying
+      what changes there, with a single example located at file:line. Then, and only then,
+      name separately at file:line the places whose change is NOT the same as the rest of their
+      area's - those are the ones a teammate cannot infer from the line above, and they are the
+      only ones worth the space here. Where a place needs no change but has to be re-read to be
+      sure of that, say so and say why - that is a different claim from "unaffected" and I want
+      to see which one you are making.
+      Then the tests. Name the tests that already assert something about how a machine is
+      identified, resolved, seeded or torn down, each at the file:line of the assertion or the
+      setup that would have to change, and say what about it changes. Where nothing existing
+      covers a place you ranked high, say that plainly - the gap is part of the answer - and
+      describe the test that would close it rather than pointing at a file that does not exist.
+      Close with the order of operations: what goes first to keep the product working while the
+      rework lands, and what cannot be split from what.
+    checks:
+      - type: response_richness
+        value: "14"
+        required: true
+        description: The edit itself located line by line and ordered, the downstream areas each given one line and one located example with only the places whose change differs named separately at file:line, needs-no-change distinguished from needs-re-reading, the existing tests that must change each pinned at the assertion or setup line, the uncovered high-risk places named as gaps, and an order of operations
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+gold:
+  # ---- ANCHORS: the contract centre, its identity map, its obvious write path and its removal
+  # ---- path. The answer to steps 2 and 3. Both arms reach these and they do NOT score. Every
+  # ---- line below was opened and read. None of these four files appears in `dependents`.
+  - id: contract-model
+    group: contract
+    match: [Models/Server.php]
+    relation: "app/Models/Server.php:230 `public static function findCached($id): ?static` - identity resolved out of a per-request identity map keyed on the machine's number, flushed by :222 `static::flushIdentityMap();` inside the `static::updated(...)` closure opened at :221, with the flush itself defined at :251 `public static function flushIdentityMap(): void`; the identity fields themselves are what every scored row keeps a piece of"
+  - id: c:server-setting
+    group: contract
+    match: [Models/ServerSetting.php]
+    relation: "app/Models/ServerSetting.php:59 `'server_id',` in the fillable list and :249 `return $this->belongsTo(Server::class);` inside `public function server()` defined at :247, - the companion record seeded from a freshly created machine, holding the machine's number rather than the machine; the obvious first hop off the contract and reached by both arms in every cycle"
+  - id: c:server-delete
+    group: contract
+    match: [Server/Delete.php]
+    relation: "app/Livewire/Server/Delete.php:34 `public function delete($password, $selectedActions = [])` ending at :60 `$this->server->delete();` - the removal path, the moment after which every piece kept elsewhere resolves to nothing"
+  - id: c:validate-server
+    group: contract
+    match: [Server/ValidateServer.php]
+    relation: "app/Actions/Server/ValidateServer.php:26 `public function handle(Server $server)` - the machine handed in and worked on with it in hand, the canonical shape of the ground that the audit step excludes"
+
+
+  # ---- DEPENDENTS: the scored group. THIRTEEN FILES, TWELVE AREAS, one row per file, none
+  # ---- of them in any other group, every one present in the shown blast payload. This is
+  # ---- the gold the mini-bench measured at baseline 2 of 13 / sense 9 of 13, carried over
+  # ---- BYTE-IDENTICAL from the probe (coolify.yaml.probe-two-step-regold.bak): no row is
+  # ---- added, cut or reworded by this expansion, because a row added here would never have
+  # ---- faced a baseline. At every scored line there is no machine in hand: only a piece
+  # ---- taken off one earlier and kept somewhere the machine itself cannot be carried to.
+
+  # -- area: shared project screens
+  - id: d:logs-ownership-check
+    group: dependents
+    match: [Project/Shared/GetLogs.php]
+    relation: "app/Livewire/Project/Shared/GetLogs.php:127 `if (! Server::ownedByCurrentTeam()->where('id', $this->server->id)->exists()) {` inside `getLogs($refresh = false)` at :125 - a component that already holds a machine throws it away and re-checks by its number on every poll, so the authorisation decision rides on the number rather than on the object it came from; the one row no baseline run on record has ever cited (0 of 4) and the sense arm has cited in 4 of 5"
+  - id: d:additional-network-pivot
+    group: dependents
+    match: [Project/Shared/Destination.php]
+    relation: "app/Livewire/Project/Shared/Destination.php:130 `$this->resource->additional_networks()->attach($mainDestination->id, ['server_id' => $mainDestination->server->id]);` inside `promote(int $network_id, int $server_id)` at :115 - the number written into a pivot row as a column of the join itself, read back later to decide which machines a resource additionally runs on"
+
+  # -- area: resource creation wizard
+  - id: d:new-resource-state-id
+    group: dependents
+    match: [Project/New/Select.php]
+    relation: "app/Livewire/Project/New/Select.php:409 `$this->server_id = $server->id;` inside `setServer(Server $server)` at :407 - the number kept in wizard state across every subsequent request of the flow and written into the created records later, while the machine object itself is dropped at the end of the request"
+
+  # -- area: destination creation wizard
+  - id: d:new-destination-state-id
+    group: dependents
+    match: [Destination/New/Docker.php]
+    relation: "app/Livewire/Destination/New/Docker.php:47 `$this->serverId = (string) $this->selectedServer->id;` inside `mount(?string $server_id = null): void` at :35 - the number stringified into component state and resolved back on a later request, so the machine is gone from its hands between the two halves of the form"
+
+  # -- area: global helper functions
+  - id: d:compose-validate-id
+    group: dependents
+    match: [helpers/docker.php]
+    relation: "bootstrap/helpers/docker.php:1252 `function validateComposeFile(string $compose, int $server_id): string|Throwable` resolving at :1255 `$server = Server::ownedByCurrentTeam()->find($server_id);` - the helper's whole contract with its callers is a bare int, so the machine is gone from every call site's hands before this function starts and `find()` yields null rather than an error when the number stops resolving"
+
+  # -- area: certificate management
+  - id: d:ca-cert-job-id
+    group: dependents
+    match: [CaCertificate/Show.php]
+    relation: "app/Livewire/Server/CaCertificate/Show.php:82 `server_id: $this->server->id,` inside `dispatch(new RegenerateSslCertJob(` opened at :81 - the number is peeled off the machine and handed to a QUEUED job by name, so the piece outlives the request that dispatched it by however far the queue is behind, and the job regenerates a certificate against whatever machine that number resolves to when it finally runs"
+
+  # -- area: proxy configuration screens
+  - id: d:proxy-config-state-id
+    group: dependents
+    match: [Proxy/NewDynamicConfiguration.php]
+    relation: "app/Livewire/Server/Proxy/NewDynamicConfiguration.php:30 `$this->server = Server::ownedByCurrentTeam()->whereId($this->server_id)->first();` inside `mount()` at :28, resolving the public property declared at :24 `public $server_id;` - the number arrives as component state set by the parent and re-sent by the browser, so every later request of this component starts from the number and not from a machine, and `first()` returns null rather than failing when it stops resolving"
+
+  # -- area: outbound notification payloads
+  - id: d:container-webhook-handle
+    group: dependents
+    match: [Container/ContainerStopped.php]
+    relation: "app/Notifications/Container/ContainerStopped.php:114 `'server_uuid' => $this->server->uuid,` inside `toWebhook(): array` at :106 - the machine's handle copied into the body of an outbound webhook that leaves this product entirely, so the piece lives in someone else's system and can never be corrected from here"
+
+  # -- area: broadcast event listeners
+  - id: d:tunnel-event-id
+    group: dependents
+    match: [CloudflareTunnelChangedNotification.php]
+    relation: "app/Listeners/CloudflareTunnelChangedNotification.php:18 `$server_id = data_get($event, 'data.server_id');` inside `handle(CloudflareTunnelChanged $event): void` at :16 - a bare number arriving on a broadcast event raised by another process, resolved at :21 `Server::where('id', $server_id)->firstOrFail()`, so a number that no longer means the same machine takes the listener down rather than skipping"
+
+  # -- area: deployment screens  (NEW this cycle)
+  - id: d:deployment-cancel-queue-id
+    group: dependents
+    match: [Application/DeploymentNavbar.php]
+    relation: "app/Livewire/Project/Application/DeploymentNavbar.php:101 `$server_id = $this->application_deployment_queue->server_id ?? $this->application->destination->server_id;` inside `cancel()` at :91, resolved at :112 `$server = Server::ownedByCurrentTeam()->find($server_id);` - the number was stamped onto the deployment-queue row when the deploy was enqueued and is read back off that stored row when a human cancels, so the piece outlives the machine by the life of the queue entry and `find()` returns null rather than raising; :100 does the same for the build machine"
+
+  # -- area: published API schema  (NEW this cycle)
+  - id: d:api-schema-server-id
+    group: dependents
+    match: [Models/Service.php]
+    relation: "app/Models/Service.php:28 `'server_id' => ['type' => 'integer', 'description' => 'The unique identifier of the server where the service is running.'],` inside the `#[OA\\Schema(` attribute opened at :20 - the machine's number declared as a documented property of the public API, so the piece has left this product into a schema other people generate clients against; the field is also fillable at :62, and nothing here can repoint a number a third party has already stored"
+
+  # -- area: model relation declarations  (NEW this cycle)
+  - id: d:additional-destination-pivot-column
+    group: dependents
+    match: [Models/Application.php]
+    relation: "app/Models/Application.php:541 `->withPivot('server_id', 'status');` inside `additional_networks()` at :538 - the join table `additional_destinations` carries the machine's number as a column of its own, declared here rather than anywhere a machine is present; every read through this relation trusts that stored number, and the sibling relation `additional_servers()` at :532 pivots the same table without it"
+
+  # -- area: database backup storage  (NEW this cycle)
+  - id: d:backup-path-address
+    group: dependents
+    match: [DatabaseBackupJob.php]
+    relation: "app/Jobs/DatabaseBackupJob.php:313 `$ip = Str::slug($this->server->ip);` inside `handle(): void` at :93, spent at :314 `$this->backup_dir = backup_dir().'/coolify'.\"/coolify-db-$ip\";` - the machine's network ADDRESS baked into a directory name that persists on disk long after the job ends, and interpolated again raw at :765 `'/var/lib/docker/volumes/coolify_dev_backups_data/_data/coolify/coolify-db-'.$this->server->ip.$this->backup_file` to build the source path a container mounts; a re-addressed machine writes its next backup to a different directory and stops finding the old ones"
+
+
+  # ---- WRITE PATH: step 3's answer. What a freshly written machine seeds, what the removal
+  # ---- path tears down, and what is handed off to run out of process. NON-SCORING: both arms
+  # ---- reach these, and every row below was opened and its line read in this expansion
+  # ---- session. All five paths are in the shown `sense_blast` payload for the contract.
+  - id: w:seeded-uuid-copy
+    group: write-path
+    match: [Models/SharedEnvironmentVariable.php]
+    relation: "app/Models/SharedEnvironmentVariable.php:22 `'server_id',` in the fillable list, with the row itself created from a freshly written machine at app/Models/Server.php:190 `SharedEnvironmentVariable::create([` with :192 `'value' => $server->uuid,` - the seeded record holds a link back by number AND a literal COPY of the handle in its own `value` column, which is the link-versus-copy distinction the write-path step asks to be made explicitly"
+  - id: w:seeded-destination
+    group: write-path
+    match: [Models/StandaloneDocker.php]
+    relation: "app/Models/StandaloneDocker.php:135 `$server = Server::findCached($this->server_id);` inside `getServerAttribute(): ?Server` at :127 - the default destination seeded at creation (app/Models/Server.php:157 `static::created(function ($server) {`), which resolves its machine back out of the per-request identity map from the number it stored rather than holding the machine"
+  - id: w:teardown-certificates
+    group: write-path
+    match: [Models/SslCertificate.php]
+    relation: "app/Models/SslCertificate.php:16 `'server_id',` in the fillable list, torn down at app/Models/Server.php:218 `$server->sslCertificates()->delete();` inside `static::forceDeleting(function ($server) {` at :213 - one of the things the removal path takes with it, alongside the destinations and the settings row"
+  - id: w:install-dispatch
+    group: write-path
+    match: [Server/ValidateAndInstall.php]
+    relation: "app/Livewire/Server/ValidateAndInstall.php:247 `ServerValidated::dispatch($this->server->team_id, $this->server->uuid);` inside `validateDockerVersion()` at :229 - the provisioning screen announcing a validated machine by handle rather than by machine, the inline half of the split the write-path step asks for"
+  - id: w:install-job
+    group: write-path
+    match: [Jobs/ValidateAndInstallServerJob.php]
+    relation: "app/Jobs/ValidateAndInstallServerJob.php:27 `public Server $server,` in the constructor opened at :26 `public function __construct(` - the out-of-process half of provisioning, and the contrast that step turns on: the whole machine record travels into this queued job, so nothing here is a kept piece"
+
+
+  # ---- GUARDS: step 5's answer - how code confirms it is acting on a real, current machine
+  # ---- before acting. NON-SCORING, both arms reach them, both lines opened this session.
+  - id: g:ip-uniqueness-precheck
+    group: guards
+    match: [Boarding/Index.php]
+    relation: "app/Livewire/Boarding/Index.php:310 `$foundServer = Server::whereIp($this->remoteServerHost)->first();` inside `saveServer()` at :299 - identity-by-address checked globally and NOT narrowed to what the caller is entitled to see, deliberately, so that an address already claimed by another team is still refused; the unnarrowed lookup the guards step asks about"
+  - id: g:show-uuid-firstorfail
+    group: guards
+    match: [Livewire/Server/Show.php]
+    relation: "app/Livewire/Server/Show.php:203 `$this->server = Server::ownedByCurrentTeam()->whereUuid($server_uuid)->firstOrFail();` inside `mount(string $server_uuid)` at :200, wrapped in a `try` at :202 - the fully guarded shape: a handle arriving from the URL, narrowed to what the caller is entitled to see AND raised on rather than quietly yielding nothing, which is the contrast the guards step asks for against the lookups that hand back null"
+
+
+  # ---- SPECS: step 7's answer. Existing tests that assert something about how a machine is
+  # ---- identified, resolved or seeded, each pinned at the assertion or setup line that would
+  # ---- have to change - so each row IS citeable in the form step 7 demands (A GOLD ROW MUST
+  # ---- BE CITEABLE IN THE FORM THE ASK DEMANDS: no row here is for a file to be ADDED).
+  # ---- NON-SCORING, hand-sourced, and NOT expected in a blast payload - test files are not
+  # ---- dependents of the contract, which is why `gold_confidence_check.py` is scoped to
+  # ---- `--group dependents`.
+  - id: s:identity-map-flush
+    group: specs
+    match: [tests/Pest.php]
+    relation: "tests/Pest.php:32 `Server::flushIdentityMap();` inside the global `beforeEach(function () {` at :27 - every test in the suite runs behind a flush of the per-request identity map, so a rework of how identity is resolved changes what this line has to reset and what a test can assume about a second lookup"
+  - id: s:seeded-destination-by-number
+    group: specs
+    match: [ResourceHostingServerTest.php]
+    relation: "tests/Feature/ResourceHostingServerTest.php:47 `$this->destination = StandaloneDocker::where('server_id', $this->server->id)->firstOrFail();` in the `beforeEach(function () {` at :25 - the setup asserts the seeded destination is findable by the machine's number, which is exactly the seeding-by-copy contract the write-path step traces; it breaks the moment a number stops meaning one machine"
+  - id: s:ip-identity-uniqueness
+    group: specs
+    match: [ServerIpUniquenessTest.php]
+    relation: "tests/Feature/Server/ServerIpUniquenessTest.php:102 `$foundServer = Server::whereIp('9.8.7.6')->first();` inside `it('enforces global uniqueness not just team-scoped', function () {` at :93 - the test that pins identity-by-address as globally unique, which is the assumption the rework withdraws when a machine can be re-addressed"

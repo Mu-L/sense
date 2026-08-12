@@ -1,0 +1,220 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 1 / ATTEMPT 6 on bagisto, TWO-STEP PROBE
+# (plans/cycle-1-craft-the-scenario/01-author.md). TWO steps, names verbatim and in the order
+# of scenarios/bagisto.yaml (the judge pairs by name). This is a RE-QUESTION: the anchor is
+# unchanged and the question has moved, so this rubric is rewritten to score the new axis.
+#
+# WHAT CHANGED, AND WHY THIS RUBRIC CHANGED WITH IT
+# Attempt 1 scored WHICH PLACES HOLD a record            - baseline 0.6471 / sense 0.7647.
+# Attempt 2 scored WHICH KIND-SPECIFIC SLICE a site owns - baseline 0.8235 / sense 0.8235.
+# Attempt 3 scored PROVENANCE, by what route it arrived  - baseline 0.9444 / sense 0.7222.
+# Attempt 4 scored IDENTITY, which resolution it reached - baseline 0.8889 / sense 1.0000.
+# Attempt 5 scored POSSESSION, which routines hold one   - baseline 0.5714 / sense 1.0000.
+# All five landed on the same side of the window: the plain arm too high. Each time a token
+# sweep printed the enumeration with path:line already attached.
+# This attempt scores CONSEQUENCE AT A DISTANCE: which sites have their OWN outcome decided by
+# a kind-specific verdict about a catalogue record they never fetched. The scored fact per row
+# is a chain, not a location: what the site is holding when it asks (an order line, a cart
+# line, an option row, a variant of some other record, a wrapper with an implicit subject, a
+# bag of data, an event payload), how the question travels from that thing to the record, and
+# which verdict is taken.
+# A judge that rewards "this file touches the record" is scoring attempt 1 again. A judge that
+# rewards "this site names the kind" is scoring attempt 4 again. Neither is this axis.
+#
+# WHY map_quality carries the most weight: coverage and the in/out decision are one question.
+# Sixteen scored sites across nine areas, none of which fetched a record. The failure this
+# criterion exists to catch is the sweep answer - a long, correct-looking list of places that
+# handle catalogue records, most of which merely store, fetch, pass along or display one and
+# whose own result turns on nothing kind-specific at all.
+#
+# WHY specificity demands the holder AND the verdict: after the rework a verdict must be asked
+# for by something that says which record it is asking about. A row that pins a line but does
+# not say what the site was holding tells the maintainer nothing about which record the
+# explicit ask would have to name, which is the entire migration.
+#
+# WHY step 1 asks for the record, the answering object and the kind-specific question set:
+# they are the free half, both arms reach them in one lookup, they do not score, and pinning
+# them in step 1 puts the discriminator on the far side of them. Step 1 deliberately does NOT
+# ask for the enumeration: measured on the neighbouring repo in this vertical, asking step 1
+# for the enumerated working ground moved BOTH arms together, because the plain arm wrote its
+# covering sweep in step 1 and re-read the same output in step 2.
+#
+# WHY uncertainty is worth its weight here: memorization_probe returns ok:false at recall
+# 0.417 on this record's member surface (30 of 72 members named closed-book, samples 0.0 /
+# 0.347 / 0.417). Every recited member sits in the non-scoring contract group, so recitation
+# buys nothing on the discriminator - but it makes confident assertion cheap, and on a
+# two-hop question the cheapest wrong answer is asserting that a familiar forwarder name
+# reaches the catalogue record without opening the file that declares the forwarder. The clone
+# is a single squashed commit, so nothing here can be churn-dated; reward an answer that says
+# which lines it opened.
+
+audience: |
+  An AI coding agent about to take a capability away from the catalogue record this store
+  platform hangs off. Today the record will, on request, produce an object that answers
+  behavioural questions on its behalf - is this sellable, is it something you hold stock of,
+  is it made of parts, does it carry a discount, what does it cost - and anything that can
+  reach the record can ask that object anything. After the rework a behavioural verdict must
+  be asked for explicitly, by something that says which record it is asking about. Score for
+  that agent, not a human reader and not a docs page.
+  A perfect answer leaves the agent able to make that change knowing two things. First, what
+  the record is today - which of the several same-named things in this repo it actually is,
+  how it produces the object that answers for it, where it pushes itself into that object, and
+  which behavioural questions that object answers differently per kind. Second, and this is
+  what decides the answer: every site downstream whose own outcome is decided by one of those
+  verdicts, what that site is actually holding when it asks, and how the question travels from
+  that thing to the record.
+  The distinction the whole ticket turns on is that the consuming site usually never fetched a
+  catalogue record. It is holding a line on an order, a line in a basket, a child line under
+  another line, a row inside an option group, a variant belonging to a different record, a
+  wrapper whose subject is implicit and never named, an entry in a bag of data assembled by
+  its caller, or a payload pulled out of a view event by key. That thing forwards the question
+  on - sometimes through its own method that names neither the record nor the answering
+  object - and the verdict comes back. Nothing on the failing line says which record it was
+  about. The tie is made one or two files away.
+  And the reverse is what the ticket does NOT ask for: a site that merely stores, fetches,
+  passes along or displays a record, and whose own branch, arithmetic or returned payload does
+  not turn on a kind-specific answer, is not affected. An answer padded with those has
+  enumerated the easy population and missed the one under change.
+  Most of the affected sites sit in the sales and checkout write paths and in the presentation
+  wrappers rather than in the catalogue package: an invoice write path branching on whether a
+  line is made of parts, a refund path deciding whether stock goes back, the routine that
+  decides an order is complete, a shipment validator summing availability per child, a basket
+  choosing which address the tax rate is looked up against, a basket asking whether to show a
+  quantity box, an order deciding whether it can be reordered, two storefront payload wrappers
+  and one admin wrapper reading verdicts off an object they hold without naming a record, two
+  price indexers excluding a variant or an option row, an importer manufacturing an unsaved
+  record to ask one question, and an add-on listener working from a view event. An answer
+  dense in the catalogue package and thin everywhere else has enumerated inside one search
+  scope and mistaken it for the codebase.
+  Every site must be pinned to the exact file:line with the routine it sits in named, with
+  what it is holding said concretely, with the verdict it takes named, and with one phrase on
+  what its own outcome does with that verdict.
+
+steps:
+- name: Map the catalogue record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        Is the record presented as one connected picture - which of the several same-named
+        things in this repo it actually is, what a holder can do with one, and how it produces
+        the object that answers behavioural questions on its behalf - rather than as a list of
+        routines or a roll of places the name appears? Three things matter most and they are
+        what the next step is built on: that the record produces the answering object on
+        demand, so any reach to the record is a reach to every kind-specific verdict; that the
+        record pushes ITSELF into that object; and that the base class keeps the record in a
+        field, which is why a verdict can be asked for without the asker naming a record. An
+        answer that locates the line where the object is built, the line where the record
+        hands itself over, the base class, the field inside it that holds the record, and the
+        failure path when the object cannot be built, has understood why the next step is a
+        question about consequence at a distance at all.
+        The step also asks for the set of behavioural questions that object answers per kind,
+        each at the file:line where the base declares it. This is deliberately the easy part -
+        they are declared openly on one class - so score coverage and location here, not
+        difficulty.
+        The step finally asks for a deliberately SMALL third thing: ONE example line where
+        something other than a catalogue record forwards such a question onward on its own.
+        Score whether that observation is correct and located. Do NOT reward an exhaustive
+        enumeration of such lines: it was not asked for, and a long located list is not a
+        better answer here than one accurate observation. Could the next step act from this
+        orientation with targeted lookups rather than a fresh exploration?
+    specificity:
+      weight: 0.25
+      question: |
+        Does every place the answer names carry an exact file:line AND the name of the routine
+        or class it lives in? A bare filename is not specific. A file:line with nothing named
+        around it is not specific. This platform gives the record's short name to an empty
+        marker interface, to a swap-in proxy class and to unrelated classes in other packages:
+        did the answer say WHICH one it settled on and how it told them apart, at file:line
+        each, or did it assert one and move on? Is the line that builds the answering object
+        located, is the line that hands the record over located, is the base class located and
+        the field that holds the record named at its own line, and is each behavioural
+        question pinned where the base declares it - or is the mechanism asserted from method
+        names and a familiar framework convention?
+    justification:
+      weight: 0.2
+      question: |
+        Does each part carry one phrase on what it contributes - what the answering object
+        grants that reading a stored column does not, what the self-handoff establishes and
+        why it makes the verdict reachable from anything that can reach the record, why a
+        verdict differs by kind at all - and does the answer connect those facts to why an
+        implicit verdict is what the rework removes, rather than restating the list of
+        routines?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Does the answer separate what it verified by reading from what it inferred from a name
+        or a familiar framework convention? This matters more than usual here: closed-book
+        this model can already name a third of this record's member surface, so it invites
+        confident recitation, and saying which parts were actually opened is worth more here
+        than elsewhere. Is anything the session could not resolve named as such rather than
+        smoothed over, and is the claim that something else can forward a verdict offered as
+        something established at a line rather than as a convention it did not check?
+- name: Audit every dependent of the catalogue record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: |
+        COVERAGE AND THE IN/OUT DECISION, and the two are one question here. Is every site
+        listed separately, pinned to its own line, with what it is holding and which verdict
+        it takes both named? A site named with nothing said about what it was holding is half
+        a row: after the rework the verdict must be asked for by something that says which
+        record it means, and a row that does not name the holder tells the maintainer nothing
+        about what would have to name the record.
+        Score the DISTINCTION the ticket turns on. A site is in scope when the value steering
+        its branch, its arithmetic or its returned payload is a behavioural answer only the
+        record's kind can give - whether it asked the record directly or asked something that
+        forwarded on its behalf. It is OUT of scope when it merely stores, fetches, passes
+        along or displays a record and its own result turns on nothing kind-specific. An
+        answer that lists every place a catalogue record is mentioned, in-scope and out
+        together, is the answer a text search produces and has not made the decision the step
+        asked for.
+        The record, the object that answers for it and that object's base class are NOT
+        answers here - they were pinned in the previous step, and an answer built out of them
+        has answered the easy half.
+        Score whether the answer found the sites where the tie to the record is invisible at
+        the point of use: a line item calling its own forwarder that names neither the record
+        nor the answering object, a wrapper whose subject is implicit and never declared, a
+        record reached only as a string key inside a bag of data, a variant belonging to some
+        other record, a payload pulled out of a view event by key, a record manufactured in
+        place purely to make one verdict answerable.
+        Is the coverage spread across the areas the sites actually live in - the sales write
+        paths, the order-state routine, a shipment validator, both basket layers, the
+        storefront and admin payload wrappers, the two price indexers, the importer, the
+        add-on listener - or is it dense in the catalogue package and thin outside it?
+    specificity:
+      weight: 0.25
+      question: |
+        Three things per row, and all three are required. The site's exact file:line with the
+        routine it sits in named. What the site is holding when it asks, said concretely -
+        which line item, which child line, which option row, which variant, which wrapper,
+        which bag of data or event payload - and not as a category. And which verdict is taken
+        and what the site's own outcome does with it: which branch it steers, which figure it
+        changes, which field of a returned payload it fills. A row whose line is right and
+        whose chain is asserted from a familiar method name has not shown its answer. A bare
+        filename is not specific; a group of sites offered together under one shared reason
+        with no location on any of them is not an answer at all. Where several sites live in
+        one file, are they listed separately with their own lines?
+    justification:
+      weight: 0.2
+      question: |
+        Does each row carry one phrase on what its own outcome does with the verdict - which
+        branch, which figure, which field - rather than restating that the site touches a
+        record? The rows where the verdict arrives through a forwarder on something else
+        deserve the sharpest justification: those are the ones where nothing at the site says
+        which record was consulted, so an explicit ask has to be constructed rather than
+        rewritten. Does the answer say so?
+    uncertainty:
+      weight: 0.15
+      question: |
+        Where the answer could not establish that a verdict actually originates with the
+        catalogue record's kind - rather than being a plain stored value on the thing the site
+        was holding - does it say so and say what it would need to open, rather than counting
+        it in by default? Is the coverage claim honest - if the session ran short, does it name
+        what it had not looked at yet, or does it close on what it has and imply completeness?
+        Confident inclusion of a site on the strength of a method name, with no forwarding
+        chain established, is the specific overreach this criterion exists to catch.

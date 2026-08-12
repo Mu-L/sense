@@ -1,0 +1,425 @@
+# ============================================================================
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md)
+# CYCLE 1, ATTEMPT 3 on bagisto. THIS IS A RE-QUESTION, routed back from two measured
+# two-arm mini-benches. The anchor is UNCHANGED (Webkul\Product\Models\Product); only the
+# question and the gold group move, per ITERATE ON THE QUESTION, KEEP THE ANCHOR.
+#
+# TRAJECTORY - EVERY previous cycle on this repo, and which side of the window each fell on.
+# The window is: plain arm <= 0.50 AND ours >= plain + 0.50. Both at once.
+#   $ cat verticals/php-laravel/results/loop/bagisto/cycles.jsonl
+#   {"cycle": 1, "attempt": 1, "phase": "minibench", "verdict": "REQUESTION",
+#    "baseline_dependents": 0.6471, "sense_dependents": 0.7647,
+#    "title": "Bagisto work session - audit what holds a product it never names", ...}
+#   {"cycle": 2, "attempt": 2, "phase": "minibench", "verdict": "REQUESTION",
+#    "baseline_dependents": 0.8235, "sense_dependents": 0.8235,
+#    "title": "Bagisto work session - audit the kind-specific slices of the catalogue record", ...}
+#   (results/dryrun/bagisto/ holds minibench.1.md only - no archived cycles.*.jsonl exists,
+#    checked this session, so the two lines above are the COMPLETE history.)
+#
+#   cycle 1  baseline 0.6471  sense 0.7647  delta +0.1176
+#            side: BASELINE-TOO-HIGH. Failed the <=0.50 condition on its own. Arithmetic
+#            killer: recall caps at 1.00, so a baseline at 0.6471 caps the achievable delta
+#            at +0.3529 - dead before it ran.
+#            Route: one accessor sweep, `grep -rn "\->product\b"`, widened four times, then
+#            confirmation reads. The plain arm was CUT OFF at its hard cap (292 s of 291 s,
+#            exit 124) with 11 of 17 cited, so 0.6471 is a floor.
+#   cycle 2  baseline 0.8235  sense 0.8235  delta +0.0000
+#            side: BASELINE-TOO-HIGH AGAIN, and further out than cycle 1. The correction
+#            over-shot in the same direction rather than crossing to the far side.
+#            Route: `grep -rn` over a seven-term disjunction of the per-kind collection
+#            names, which printed the candidate set WITH path:line already attached.
+#            Second defect, equally fatal: the sense arm made 2 MCP calls all run
+#            (sense_search, sense_status), NO sense_blast and NO sense_graph, then fell back
+#            to grep and ran the baseline's route. The pair measured one route twice.
+#
+# WHICH SIDE THIS DRAFT CORRECTS FROM, AND HOW FAR IT INTENDS TO MOVE.
+# Correcting from BASELINE-TOO-HIGH, for the third time, and this draft moves on the two
+# things both previous cycles got wrong rather than on the last one's complaint alone:
+#   (a) NO GOLD ROW MAY BE THE TERMINUS OF A SINGLE DISJUNCTIVE GREP THE ASK SUPPLIES. Cycle 1
+#       handed over the accessor by asking "which places hold one of these records"; cycle 2
+#       handed over seven collection names by asking which kind-specific slice each site owns.
+#       This draft's ask names no relation, no collection, no branch value and no category of
+#       subsystem: it asks by which ROUTE the record ARRIVED at each site.
+#   (b) THE SENSE ARM MUST HAVE A REASON TO ASK THE STRUCTURAL QUESTION. Step 2 is written as
+#       a change-impact audit on a symbol step 1 forces the arm to name, and step 1 explicitly
+#       forbids enumerating the far side, so the arm arrives at step 2 holding a class name
+#       and nothing else. That is the only entry point this loop can build without naming a
+#       tool (banned by the neutrality gate).
+# Intended landing: baseline in the 0.20-0.40 band, sense at or above 0.75. The guard against
+# over-shooting to the far side ("neither arm gets anything") is that all 18 rows below sit
+# inside a `direct_callers` row of the SHOWN blast payload with the enclosing routine spelled
+# out, and sense reached 13 of 17 in cycle 1 on a harder set while finishing in 242 s of 480.
+#
+# RE-GOLDED FROM WHAT THE PLAIN ARM MISSED CONSISTENTLY, NOT FROM ONE SLOPPY RUN.
+# The two cycles ran DIFFERENT gold sets that overlap in 7 ids. Cross-tabbed by hand from the
+# two inverse_frequency runs (scoped to the headline model's results root):
+#   $ python3 bench/lib/inverse_frequency.py bagisto verticals/php-laravel/results/claude-opus-5/minibench
+#   $ python3 bench/lib/inverse_frequency.py bagisto ... --scenario sha256:d5cc59c3833a3733
+#   taken by the plain arm in BOTH cycles : d:flat-indexer-refresh  (1/1 and 1/1)  -> CUT
+#   taken in cycle 2 only, i.e. only once the seven collection names were in the ask:
+#     d:admin-grouped-options, d:admin-product-form, d:admin-product-resource,
+#     d:admin-shipment-inventory, d:booking-price-note, d:importer-type-family
+#     - all six were 0/1 to the plain arm in cycle 1, whose ask did not name them -> KEPT,
+#       and they are the measured core of this group.
+#   never cited by either arm, either cycle: d:repo-media-filetype, d:type-bundle-children,
+#     d:type-configurable-children -> KEPT. Checked against the payload, not assumed: all
+#     three appear in `direct_callers` (ProductMediaRepository\resolveFileTypeQueryBuilder
+#     104-113, Type\Bundle\getChildrenIds 148-151, Type\Configurable\getChildrenIds 294-297),
+#     so the tool CAN serve them and "hard" is the right reading, not "unreachable".
+#   cited by both arms in cycle 1, the storefront/checkout/sales read path (cart facade, cart
+#     model, order model, both shop resources, the shop API controller, the three sales item
+#     repositories, the configurable-option variant helper) -> all CUT. They are the accessor
+#     sweep's own output and they put the 0.6471 floor there.
+# n IS 1 PER ARM PER CYCLE AND THAT BOUNDS THIS. The rule is not to re-gold below ~5 runs per
+# arm because the ordering is noise there, so no row was cut on the RANKING alone. Every cut
+# above is made by the QUESTION changing; the ranking is quoted as corroboration. The one
+# exception is deliberate and stated: d:flat-indexer-refresh is cut on 2 independent
+# observations under 2 DIFFERENT asks, which is the "missed/taken CONSISTENTLY" test the plan
+# asks for and not a single-run read.
+#
+# CONFOUND, NAMED AND RUN. "The plain arm misses the admin/importer/add-on periphery" co-varies
+# with three other things in cycle 1's single transcript: those rows are reached LATE in the
+# sweep, the run was CUT OFF at its cap, and they sit in packages the sweep filtered. One
+# transcript cannot separate them. Cross-tab against cycle 2 does separate one: in cycle 2 the
+# plain arm reached ALL SIX of those same rows and was NOT cut off - so "area" alone does not
+# predict the miss, and what changed between the two runs is the ASK. That is the finding this
+# draft is built on; wall pressure and sweep order remain live and are what the next run
+# measures.
+#
+# THE AXIS - AND THE ONE SENTENCE THE PLAN ASKS FOR
+# The mechanism: at almost none of these sites is the record a thing anyone declared. It
+# arrives by one of a small number of indirect routes - one hop in from a row of a
+# neighbouring table under a name that is not its own (`$option->associated_product`,
+# `$bundleOptionProduct->product`, `$child->product`); forwarded through a neighbouring row's
+# OWN method, so the line that depends on the record does not mention it at all
+# (`$item->isStockable()` at OrderRepository.php:220, which OrderItem.php:70 forwards to the
+# record's per-kind object); handed back by an object the record itself built and populated
+# (Product.php:359 `$this->typeInstance->setProduct($this)`); pulled out of an untyped bag by
+# string key (PriceNote.php:16); built unsaved purely to be interrogated (Importer.php:2621,
+# under the alias `ProductModel`); or passed as an argument with no declared type anywhere in
+# the signature. The record's own file, its proxy, its contract and its write path are the
+# only places where the relationship is written down, and they are the non-scoring anchors.
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS: it is, per site, the
+# PROVENANCE of the record - by which of those routes it got there and at which line the
+# handle was established, which is a fact about how the site obtained the record and is
+# frequently NOT visible on the line that consumes it. An occurrence list prints the lines
+# that mention a name; it cannot state where a handle came from, and three of the rows below
+# (OrderRepository.php:220, ShipmentController.php:121, ProductResource.php:42) carry no
+# occurrence of the record's name on the cited line at all.
+#
+# THE KIND (DECIDE, "the kind of question")
+# The possession kind - who holds a handle and where it was established - not the occurrence
+# kind. It is on the menu because step 0b's ring is NON-EMPTY, measured this session:
+#   $ python3 bench/lib/ring_sweep.py $CLONE --top 12
+#   Order    class 31 rows 31 files 15 vias  CANDIDATE -> scenario material (Loop 3)
+#   Product  class 31 rows 31 files 15 vias  CANDIDATE -> scenario material (Loop 3)
+# RECORDED, NOT USED: the ring itself is not served to the arm. The shown payload carries
+# `retained_via_interfaces_count: 31` with `retained_trimmed: true` and NO rows, so no gold row
+# below is taken from the ring. Every row comes from `direct_callers`, which IS shown.
+#
+# SEAM PROFILE - three candidates profiled (step 2), lowest precision first.
+# PRECISION = structural dependent files / grep-hit files; LOWER IS BETTER.
+#   $ python3 bench/lib/seam_hunt.py $CLONE Order Order --file packages/Webkul/Sales/src/Models/Order.php
+#     app caller files : 13    SCATTER (dirs) : 10
+#     GREP-NOISE : 'Order' in 131 app files            PRECISION=0.10   SCATTERED + GREP-NOISY
+#   $ python3 bench/lib/seam_hunt.py $CLONE Product Product --file packages/Webkul/Product/src/Models/Product.php
+#     app caller files : 35    SCATTER (dirs) : 17
+#     GREP-NOISE : 'Product' in 308 app files          PRECISION=0.11   SCATTERED + GREP-NOISY
+#   $ python3 bench/lib/seam_hunt.py $CLONE ProductRepository ProductRepository --file .../ProductRepository.php
+#     app caller files : 15    SCATTER (dirs) : 8
+#     GREP-NOISE : 'ProductRepository' in 49 app files PRECISION=0.31   SCATTERED + GREP-NOISY
+# Product is KEPT (the re-question rule keeps the anchor) and the profile agrees: 0.11 against
+# Order's 0.10 is inside noise, and Order yields 13 dependent files where Product yields 35, so
+# Order cannot fill eighteen rows across eleven areas. 0.11 sits in the band the calibration
+# names (a banked +1.00 cell profiled at 0.078). Precision RANKS; it never kills, and no grep
+# census was run against any row below.
+# SCRIPT NOTE (one line, not fixed, per SCOPE): seam_hunt.py defaults its grep token to the
+# resolved LANGUAGE when `--file` is given without a positional token, reporting
+# "token='php' in 2078 app files PRECISION=0.00 RESOLVER-GAP?" for every symbol. Passing the
+# token positionally is the working invocation and is what is quoted above.
+#
+# WHAT THE ARM IS SHOWN (step 3), at MCP defaults, no min_confidence passed:
+#   $ python3 bench/lib/mcp_probe.py $CLONE \
+#       '[{"name":"sense_blast","arguments":{"symbol":"Product","file":"packages/Webkul/Product/src/Models/Product.php"}}]'
+#   risk high, risk_factors ["93 direct callers"], direct_callers 55 rows over 35 FILES,
+#   affected_symbols 310, production_affected 130, affected_via_composition 25,
+#   importers_not_reached 3, truncated true, snippets_truncated true.
+#   ALL 18 dependents rows below sit inside a shown `direct_callers` row; the enclosing
+#   [def start-end] is recorded on each row and was checked against the payload, not assumed.
+#
+# MEMORIZATION (step 5), and what it changes here:
+#   $ python3 bench/lib/memorization_probe.py $CLONE Product --json /tmp/mem.json
+#   ok:false  reason: "closed-book recall 0.458 (33 members named) >= 0.3 - recited"
+#   hits: attribute_family, attribute_values, bundle_options, catalog_rule_prices, categories,
+#         channels, cross_sells, customer_group_prices, downloadable_links,
+#         downloadable_samples, getTypeInstance, grouped_products, images, inventories, ...
+# What is recited is the RECORD'S OWN MEMBER SURFACE, and every one of those members sits in
+# the non-scoring `contract` group. But this is not cosmetic: it means cycle 2's seven-term
+# disjunctive grep was available to the plain arm CLOSED-BOOK, without the ask leaking it. So
+# gold rows whose pinned line is a bare read of a recited member are free whether or not the
+# ask names them. Two such rows are kept ONLY because they are measured 0/2 across both arms
+# and both cycles (d:type-bundle-children, d:type-configurable-children) plus the media
+# resolver; every other candidate of that shape was cut for this reason.
+# ============================================================================
+
+name: Bagisto work session - audit how the catalogue record arrives where it is used
+repo: bagisto
+contract_symbol: Webkul\Product\Models\Product
+contract_file: packages/Webkul/Product/src/Models/Product.php
+
+description: |
+  You are a maintainer of this store platform, about to rework the record that the whole
+  catalogue hangs off - the single most-reached-for thing in the codebase. The change is a
+  narrowing: after it, code will no longer be able to obtain one of these records implicitly.
+  Anything that ends up working on one will have to have been handed it explicitly, and every
+  place that today gets one by some other means has to be found and rewritten first.
+  The difficulty is not that these records are used in many places. It is that in most of them
+  nobody wrote down that a record was obtained at all. A routine is handed a row of some
+  neighbouring table and steps across to a record from it, under a name that belongs to the
+  neighbour rather than to the record. Another asks a neighbouring row a question the
+  neighbour quietly forwards, so the line that depends on the record does not mention it. One
+  is handed a record back by an object the record itself built and populated. One takes it out
+  of an untyped bag by string key. One builds an unsaved one purely to interrogate it, under a
+  different name entirely. Several receive one as an argument with no declared type on it
+  anywhere in the signature, and one IS the record and refers to itself.
+  So the question the rework turns on is provenance: at each place, by what route did a record
+  get here, and at which line was the handle established. That question is not answered by
+  knowing where a name appears - at several of these places the record's name appears nowhere
+  on the line that depends on it, and at several others the name that does appear belongs to
+  something else.
+  Before you touch it you have to know two things: what the record is, where it is declared,
+  what the one layer whose stated job is to make and change these records is, and how the
+  record hands itself to the object that speaks for it; and then, separately, every place
+  downstream that obtains a record by one of the indirect routes and would break under the
+  narrowing, with the route named and the line where the handle is taken.
+  Throughout, an answer that points at a place must give an exact file:line a teammate could
+  jump straight to, plus one phrase on why it matters. A bare filename does not count, a set
+  of names offered together with one shared reason and no location on any of them does not
+  count, and a missed place is a broken storefront shipped.
+
+steps:
+  - name: Map the catalogue record contract
+    prompt: >
+      Task: orient, and be exact - the rest of the ticket is built on this and nothing later
+      will send you back for it. Three things, and the first is the largest.
+      First, the record itself. Name it precisely - the fully qualified name of the class and
+      the exact file:line it is declared at - and say what code that holds one can actually do
+      with it, grouped by job rather than listed routine by routine: what it relates outward
+      to, and how it answers for a field that was never declared on it. Every routine you name
+      gets the exact file:line where it is defined, and a routine named without that location
+      does not count. This platform gives the same short name to more than one thing, so say
+      which one you settled on and how you told them apart, at file:line each.
+      Second, the two places where getting hold of one of these records is written down openly.
+      One is the layer whose stated job is to make, change and delete them: name it at
+      file:line and say in a phrase what it is responsible for. The other is the record handing
+      ITSELF outward - the exact line where it builds the object that speaks for it and gives
+      that object a handle back on itself, plus the base class that object extends, at
+      file:line, and which part of that base's state is the record. Say how the handle gets
+      there, since nothing on the receiving side establishes it.
+      Third, and deliberately small: say once, briefly, what it looks like when a routine
+      somewhere else has obtained one of these records WITHOUT any of that being visible - no
+      declared type, no name of the record on the line, the handle taken from something whose
+      own subject is different. One example, located at file:line, with the line where the
+      handle is actually taken. Do not enumerate those places here; I am not asking for that
+      list yet and it earns nothing.
+    checks:
+      - type: response_richness
+        value: "10"
+        required: true
+        description: The record named precisely with its declaring file:line and disambiguated from the same-named siblings, its own surface grouped by job with each routine located at file:line, the declared write layer pinned at file:line with what it is responsible for, the exact line where the record builds the object that speaks for it and hands that object a handle back on itself, the base class that object extends pinned at file:line with the part of its state that is the record, and one located example of a routine that obtained a record by an indirect route
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the catalogue record contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the first
+      part already cost you. Take it as settled that the narrowing is happening: after it, no
+      routine may end up working on one of these records unless it was handed one explicitly.
+      Answer the only question that matters after that - which routines in this codebase would
+      break, and by what route does each of them get hold of a record today.
+      The unit of the answer is a site, not a package and not a file, and a single file can
+      hold more than one. The record itself, the layer whose job is to create and update these
+      records, and the base class of the object that speaks for a record are not answers here:
+      you pinned those in the first part and naming them again earns nothing.
+      These sites will not look like what you are searching for, and that is the whole
+      difficulty. At several of them the record's own name does not appear on the line that
+      depends on it: the routine holds a row of some neighbouring table and asks that
+      neighbour a question the neighbour quietly forwards onward. At several others a name
+      does appear on the line, but it belongs to the neighbour rather than to the record, so
+      what is written there says nothing about what is actually held. One site IS a record and
+      refers to itself. One takes a record out of an untyped bag by string key. One builds an
+      unsaved one purely to interrogate it, under an alias. And several receive one as an
+      argument carrying no declared type anywhere in the signature, so nothing in the shape of
+      the routine says a record is in play at all.
+      For each site the answer has three parts and only three: the exact file:line and the
+      name of the routine it sits in; the ROUTE by which a record reached that site, said
+      concretely - through which neighbour, forwarded by which method, taken from which
+      argument or which bag; and the line where the handle was actually established, which
+      will often be in a different file from the site itself. Keep it short: I want the
+      coverage, the route and the line the handle comes from, not the prose.
+      Organise by area, one section per area, and treat an area as finished only when every
+      site inside it is listed separately with its own location. If you run short, say what
+      you had still not looked at rather than closing on what you have. A file:line with no
+      route named is half an answer, and a group summarised instead of listed reads as a group
+      with nothing in it.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every site located at the exact file:line with the routine it sits in named, the route by which a record reached that site said concretely, and the line where the handle was established
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ---- ANCHORS: the record itself, its empty marker interface, the swap-in proxy, the
+  # ---- declared write path and the base of the per-kind family. Step 1's answer,
+  # ---- deliberately NON-SCORING. A FREE ROW IS A GIFT TO THE BASELINE, and these are
+  # ---- exactly the rows both arms reach in one lookup - and the ones memorization_probe
+  # ---- shows this model already recites closed-book (recall 0.458 over Product's member
+  # ---- list, 33 of 72 members named). Putting them here removes the floor they would
+  # ---- otherwise put under the plain arm. Every line below was opened and read this
+  # ---- session. None appears in `dependents`.
+  - id: contract-product
+    group: contract
+    match: [Product/src/Models/Product.php]
+    relation: "packages/Webkul/Product/src/Models/Product.php:25 `class Product extends Model implements ProductContract` - the contract itself; :347 `public function getTypeInstance(): AbstractType` builds the class name from the stored kind at :353 `$this->typeInstance = app(config('product_types.'.$this->type.'.class'));`, throws at :356 when the stored value matches nothing, and hands ITSELF outward at :359 `$this->typeInstance->setProduct($this);` - the one line that establishes the handle every per-kind object holds; :382 `public function getAttribute($key)` is the override that answers for a field never declared on the model"
+  - id: c:product-contract
+    group: contract
+    match: [Product/src/Contracts/Product.php]
+    relation: "packages/Webkul/Product/src/Contracts/Product.php:5 `interface Product {}` - an EMPTY marker interface, implemented by the model at Product.php:25 and carrying no members at all, so nothing can be learned about the contract by reading it; it exists so the concrete class can be swapped, and it is one of the three things in this repo answering to the same short name"
+  - id: c:product-proxy
+    group: contract
+    match: [Product/src/Models/ProductProxy.php]
+    relation: "packages/Webkul/Product/src/Models/ProductProxy.php:7 `class ProductProxy extends ModelProxy {}` - the swap-in indirection every relation declaration writes instead of the model class (`ProductProxy::modelClass()`); it is the token a plain search reaches for first and the reason a neighbouring row's relation declaration never names the model"
+  - id: c:product-repository
+    group: contract
+    match: [Product/src/Repositories/ProductRepository.php]
+    relation: "packages/Webkul/Product/src/Repositories/ProductRepository.php:44 `public function model(): string` returning :46 `return Product::class;` and creating THROUGH the per-kind object at :56 `$typeInstance = app(config('product_types.'.$data['type'].'.class'));` then :58 `$product = $typeInstance->create($data);` - the declared write path named in step 1, non-scoring"
+  - id: c:abstract-type
+    group: contract
+    match: [Product/src/Type/AbstractType.php]
+    relation: "packages/Webkul/Product/src/Type/AbstractType.php:32 `abstract class AbstractType` holding :39 `protected $product;` (typed only in the docblock above it, `@var Product` at :37) - the receiving end of the handle established at Product.php:359, and the one holder whose grip on the record IS written down; pinned in step 1 so that step 2 is about the routes that are not"
+
+  # ---- DEPENDENTS: 18 files across 11 areas, one row per file. Each row is a site that
+  # ---- obtains a record by a route nothing at the site declares. Every one is inside a
+  # ---- `direct_callers` row of the SHOWN blast payload (enclosing def in brackets, checked
+  # ---- against the payload), and every pinned line below was opened and read this session;
+  # ---- the credit is what the line does, not a script tally.
+  # ---- CUT from previous cycles and why: the whole storefront/checkout/sales READ path
+  # ---- (cart facade, cart model, order model, both shop resources, the shop API controller,
+  # ---- the three sales item repositories, the configurable-option variant helper) - cited by
+  # ---- BOTH arms in cycle 1, it is the accessor sweep's own output. And
+  # ---- d:flat-indexer-refresh, taken by the plain arm 1/1 in cycle 1 AND 1/1 in cycle 2
+  # ---- under two different asks: two independent observations, which is the consistency
+  # ---- test, not a single-run read.
+
+  # -- area: the concrete per-kind classes. The abstract base is an anchor; these are not.
+  # -- Route: the handle was pushed in from outside, at Product.php:359. Nothing here takes it.
+  - id: d:type-bundle-children
+    group: dependents
+    match: [Product/src/Type/Bundle.php]
+    relation: "packages/Webkul/Product/src/Type/Bundle.php:150 `return array_unique($this->product->bundle_options()->pluck('product_id')->toArray());` inside `public function getChildrenIds()` at :148 [shown def 148-151] - the record is held in an inherited field it never assigns; the handle was established from the OUTSIDE at Product.php:359 `$this->typeInstance->setProduct($this)`, so no line in this file says where `$this->product` came from. MEASURED 0/2, both arms, both cycles - kept because the payload carries it, so it is hard and not unreachable"
+  - id: d:type-configurable-children
+    group: dependents
+    match: [Product/src/Type/Configurable.php]
+    relation: "packages/Webkul/Product/src/Type/Configurable.php:296 `return $this->product->variants()->pluck('id')->toArray();` inside `public function getChildrenIds()` at :294 [shown def 294-297] - the same inherited field, the same externally-pushed handle, and a DIFFERENT sibling answer to the same question; the two files never reference each other and only the runtime lookup at Product.php:353 decides which one a caller reaches. MEASURED 0/2, both arms, both cycles"
+
+  # -- area: the peripheral write repositories. Route: an untyped parameter, in one case with
+  # -- the type named only in a docblock and in one case not named anywhere.
+  - id: d:repo-media-filetype
+    group: dependents
+    match: [Product/src/Repositories/ProductMediaRepository.php]
+    relation: "packages/Webkul/Product/src/Repositories/ProductMediaRepository.php:107 `return $product->images();` inside `private function resolveFileTypeQueryBuilder($product, string $uploadFileType)` at :104 [shown def 104-113] - the record arrives as the ONE untyped parameter in a signature whose other parameter is typed `string`, and there is no docblock type either; the routine then branches on a string to choose WHICH collection on the record to write through (:107 images, :109 videos) and throws at :112 for anything else. MEASURED 0/2, both arms, both cycles"
+  - id: d:repo-bundle-options
+    group: dependents
+    match: [Product/src/Repositories/ProductBundleOptionRepository.php]
+    relation: "packages/Webkul/Product/src/Repositories/ProductBundleOptionRepository.php:42 `$previousBundleOptionIds = $product->bundle_options()->pluck('id');` inside `public function saveBundleOptions($data, $product)` at :40 [shown def 40-67] - the record arrives untyped and undocumented as the SECOND parameter, after the array; the routine diffs existing ids against submitted ones and deletes the remainder at :64-:66, so it holds the record for the whole lifecycle of that collection with nothing in the signature saying so"
+
+  # -- area: the read helpers that assemble option payloads.
+  # -- Route: across from a neighbouring row, and a per-record memo cache.
+  - id: d:helper-bundle-option-products
+    group: dependents
+    match: [Product/src/Helpers/BundleOption.php]
+    relation: "packages/Webkul/Product/src/Helpers/BundleOption.php:97 `if (! $bundleOptionProduct->product->getTypeInstance()->isSaleable()) {` inside `private function getOptionProducts($option)` at :92 [shown def 92-123] - it never holds the outer record at all; it iterates the neighbouring option rows at :96 and steps ACROSS from each one to a second record, so the name on the line (`$bundleOptionProduct`) belongs to the neighbour and the handle is established by that neighbour's own relation declaration, in a different file"
+  - id: d:helper-configurable-memo
+    group: dependents
+    match: [Product/src/Helpers/ConfigurableOption.php]
+    relation: "packages/Webkul/Product/src/Helpers/ConfigurableOption.php:88 `if (isset($this->superAttributes[$product->id])) {` inside `public function getAllowAttributes($product)` at :86 [shown def 86-95] - the record arrives as an untyped parameter (type only in the docblock at :83) and the helper KEEPS a per-record cache keyed by its id, filled at :92, so the helper is stateful across records for the life of the request and the handle it retains is an id rather than the record"
+
+  # -- area: the price index, one builder per kind. Route: a second record reached per row,
+  # -- bound to a local whose name says nothing about what it is.
+  - id: d:price-indexer-bundle
+    group: dependents
+    match: [Helpers/Indexers/Price/Bundle.php]
+    relation: "packages/Webkul/Product/src/Helpers/Indexers/Price/Bundle.php:215 `$variant = $bundleOptionProduct->product;` inside `public function getOptionProductsPrices($option, $minPrice = true)` at :210 [shown def 210-235] - the handle is taken here, one hop across from a neighbouring option row, and immediately bound to a local named `$variant`; the routine's own parameter is untyped and its docblock at :206 names a DIFFERENT class (`@param ProductBundleOption $option`), so neither the signature nor the docblock says a record is reached in this routine at all"
+  - id: d:price-indexer-configurable
+    group: dependents
+    match: [Helpers/Indexers/Price/Configurable.php]
+    relation: "packages/Webkul/Product/src/Helpers/Indexers/Price/Configurable.php:34 `foreach ($this->product->variants as $variant) {` inside `public function getMinimalPrice($qty = null)` at :30 [shown def 30-53] - two routes in one routine: the outer record is in an inherited field pushed in from Product.php:359, and each iteration then obtains a SECOND record off that record's own collection and asks it for its own per-kind object at :39-:43 `$variant->getTypeInstance()->getPriceIndexer()->...->setProduct($variant)` - a handle established at runtime, per row"
+
+  # -- area: the admin edit endpoints. Three sibling controllers, one per kind, with no
+  # -- shared abstraction; route: a repository lookup by id, then a step across in one case.
+  - id: d:admin-grouped-options
+    group: dependents
+    match: [Catalog/Product/GroupedController.php]
+    relation: "packages/Webkul/Admin/src/Http/Controllers/Catalog/Product/GroupedController.php:28 `if (! $option->associated_product->getTypeInstance()->isSaleable()) {` inside `public function options(int $id): JsonResponse` at :19 [shown def 19-44] - the routine's own parameter is an int; it obtains one record from the write layer at :21 and then a SECOND record per iteration under the alias `associated_product` at :28, :33, :34 and :36, a name that belongs to the neighbouring row and not to the record. Plain arm 0/1 in cycle 1"
+  - id: d:admin-simple-customizable
+    group: dependents
+    match: [Catalog/Product/SimpleController.php]
+    relation: "packages/Webkul/Admin/src/Http/Controllers/Catalog/Product/SimpleController.php:32 `'initial_price' => $product->getTypeInstance()->getMinimalPrice(),` inside `public function customizableOptions(int $id): JsonResponse` at :21 [shown def 21-35] - the record is obtained from the write layer at :23 from a bare int id, then handed straight to the object that speaks for it; one of three near-identical sibling controllers that differ only in which kind they are mounted for"
+  - id: d:admin-virtual-customizable
+    group: dependents
+    match: [Catalog/Product/VirtualController.php]
+    relation: "packages/Webkul/Admin/src/Http/Controllers/Catalog/Product/VirtualController.php:32 `'initial_price' => $product->getTypeInstance()->getMinimalPrice(),` inside `public function customizableOptions(int $id): JsonResponse` at :21 [shown def 21-35] - the third sibling, byte-for-byte the same route as the previous row and in a different file; an answer that finds one of these and generalises has not listed this site, which is the point of keeping both"
+  - id: d:admin-shipment-inventory
+    group: dependents
+    match: [Controllers/Sales/ShipmentController.php]
+    relation: "packages/Webkul/Admin/src/Http/Controllers/Sales/ShipmentController.php:121 `if ($orderItem->getTypeInstance()->isComposite()) {` inside `public function isInventoryValidate(&$data)` at :101 [shown def 101-160] - THE RECORD'S NAME IS NOT ON THIS LINE: the routine holds an order-item row fetched from an id in a by-reference request array at :115, and that neighbour FORWARDS the question to the record's per-kind object (OrderItem.php:53). The record itself is only reached two hops further in, at :129 `$child->product->inventories()`. Plain arm 0/1 in cycle 1"
+  - id: d:admin-product-form
+    group: dependents
+    match: [Admin/src/Http/Requests/ProductForm.php]
+    relation: "packages/Webkul/Admin/src/Http/Requests/ProductForm.php:80 `$this->rules = array_merge($this->product->getTypeInstance()->getTypeValidationRules(), [` inside `public function rules()` at :74 [shown def 74-173] - the handle is established at :76 by stashing a write-layer lookup ON THE REQUEST OBJECT ITSELF, an undeclared dynamic property, and half the validation rule set is then delegated to the object that speaks for the record; the rest of the class never names it again. Plain arm 0/1 in cycle 1"
+  - id: d:admin-product-resource
+    group: dependents
+    match: [Admin/src/Http/Resources/ProductResource.php]
+    relation: "packages/Webkul/Admin/src/Http/Resources/ProductResource.php:42 `if ($this->type === 'booking') {` inside `protected function resolveAvailableQuantity(): ?int` at :40 [shown def 40-61] - THE SITE IS THE RECORD: the resource wrapper proxies unknown members straight to the wrapped model, so `$this` here is a record and the cited line carries no name of anything; it walks a collection at :43 and :50 and falls back to the record's per-kind object at :56. Plain arm 0/1 in cycle 1"
+
+  # -- area: the view-render listener in an add-on package. Route: an untyped bag, by string key.
+  - id: d:booking-price-note
+    group: dependents
+    match: [BookingProduct/src/Listeners/PriceNote.php]
+    relation: "packages/Webkul/BookingProduct/src/Listeners/PriceNote.php:16 `$product = $eventManager->getParam('product');` inside `public function addNote(ViewRenderEventManager $eventManager): void` at :14 [shown def 14-39] - the handle is PULLED OUT OF A PARAMETER BAG BY STRING KEY; the only declared type in the whole file is the event manager, the listener is wired by string rather than by reference, and it then gates itself at :18 and :24. Plain arm 0/1 in cycle 1"
+
+  # -- area: the importer. Route: a record fabricated unsaved, under an alias.
+  - id: d:importer-type-family
+    group: dependents
+    match: [Importers/Product/Importer.php]
+    relation: "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php:2621 `$product = ProductModel::make([` inside `public function getProductTypeFamilyAttributes(string $type, string $attributeFamilyCode): mixed` at :2613 [shown def 2613-2627] - the record is not obtained at all, it is FABRICATED: an unsaved instance built from two strings, purely so :2626 `$product->getEditableAttributes()` can be asked what that kind allows, and memoised per kind at :2615. The class is imported UNDER AN ALIAS at :35 `use Webkul\\Product\\Models\\Product as ProductModel;`, so its own name is absent from the cited line. Plain arm 0/1 in cycle 1"
+
+  # -- area: the sales repositories. Route: forwarded through an order-item row, so the
+  # -- record's name is absent from one of the two cited lines entirely.
+  - id: d:sales-order-completed-state
+    group: dependents
+    match: [Sales/src/Repositories/OrderRepository.php]
+    relation: "packages/Webkul/Sales/src/Repositories/OrderRepository.php:220 `if (! $item->isStockable()) {` inside `public function isInCompletedState($order)` at :212 [shown def 212-269] - THE RECORD'S NAME IS NOWHERE ON THIS LINE AND NOWHERE IN THIS ROUTINE: the parameter is an untyped order, the loop at :216 holds order-item rows, and `isStockable()` is OrderItem.php:68-70 `return $this->getTypeInstance()->isStockable();`, which forwards to the record's per-kind object via OrderItem.php:53. Whether an order counts as completed is therefore decided by a record this file never mentions"
+  - id: d:sales-invoice-child-item
+    group: dependents
+    match: [Sales/src/Repositories/InvoiceRepository.php]
+    relation: "packages/Webkul/Sales/src/Repositories/InvoiceRepository.php:137 `$childOrderItem->product` inside `public function create(array $data, $invoiceState = null, $orderState = null)` at :44 [shown def 44-194] - the handle is taken TWO neighbours in: the routine holds an order, iterates its items, iterates each item's children at :113, and only there steps across to a record; the guard at :138-:139 then forwards to the record's per-kind object through the child row rather than through the record, and the record is passed on at :143 as an array entry keyed by string"
