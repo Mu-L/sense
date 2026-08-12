@@ -112,6 +112,18 @@ The KIND of question first, then the contract, then every gold row.
 
 ### The kind of question
 
+**Read `$VDIR/answer-forms.md` FIRST if it exists.** Each stack answers differently and the
+per-vertical page is where that is written down, with the n under every claim. It carries
+three things this shared plan cannot: the forms already MEASURED to fail here (do not re-buy
+them), the forms measured to win here, and the mechanisms killed by a run so they are not
+re-proposed. Measured 2026-08-12: php-laravel spent 36 attempts across 3 repos and the plain
+arm's floor was the binding constraint in every one, because the form being asked for -
+"every place that calls or holds X" - is one regex in PHP, where the same form banks +0.775
+in Ruby. Same plan, same laws, opposite outcome, and nothing in this file said so.
+
+That page ORDERS what to try. It never gates a draft, and a form that is absent from it is
+not forbidden - it is unmeasured, and saying so in the header is the whole obligation.
+
 A search prints occurrences. So a question whose true answer IS a list of occurrences is one
 the plain arm can print, and no wording makes it otherwise. Two kinds have been measured.
 
@@ -235,6 +247,9 @@ grep prints. `NO-ANCHOR` reached from a token grep is a report about grep, not a
 - `gold_confidence_check.py --group dependents` exits 0.
 - `gold_audit.py verify` exits 0: zero TODO rows, gold unchanged under a finished sheet.
 - The seam profile is in the yaml header and the anchor's precision is in `notes`.
+- The yaml header names the ANSWER FORM this draft uses and its line in `$VDIR/answer-forms.md`
+  - measured-to-win, under test, or unmeasured. A form that page records as MEASURED TO FAIL
+  needs the sentence saying what is different this time, or it is the same cycle re-bought.
 - The yaml header carries the one sentence saying what the answer is that is NOT a list of
   the places a name appears. If the honest answer is "it is a list of occurrences", say so in
   `notes` rather than dressing it up.

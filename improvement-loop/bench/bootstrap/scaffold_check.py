@@ -34,7 +34,8 @@ PRODUCT_REPO = os.path.dirname(REPO)
 # Only what is genuinely per-vertical. The stack-agnostic method docs live once in
 # docs/ and are never copied here, so they are not stamp elements.
 DOC_ELEMENTS = ["README.md", "repos.md", "findings"]
-BENCH_ELEMENTS = ["scenarios", "repos.txt", "PINNED_COMMITS.json", "arms.txt"]
+BENCH_ELEMENTS = ["scenarios", "repos.txt", "PINNED_COMMITS.json", "arms.txt",
+                  "answer-forms.md"]
 
 
 def find_doc_dir(key):
