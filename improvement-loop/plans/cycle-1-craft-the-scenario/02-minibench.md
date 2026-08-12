@@ -26,6 +26,20 @@ arm is valid, it is the arm's own result, and for the baseline it is the win con
 `$REPO`, `$VERTICAL`, `$VDIR`, `$YAML`, `$RDIR` (the mini-bench results root) are exported.
 Work from `improvement-loop/`.
 
+0. HOW MANY RUNS ARE YOU READING, AND WHICH ARE VALID. The cell may hold one pair or two:
+   a baseline that landed near the bar is re-run once before you are spawned
+   (`confirm_band.py`, exit 10). Print it first and take the numbers from THIS line:
+
+       RESULTS_DIR="$RDIR" python3 bench/lib/confirm_band.py "$RDIR" "$REPO" "$YAML"
+
+   **The number you rule on is the MEAN over VALID runs of that arm, never run-1 alone.**
+   Within-arm spread on one cell is 0.077 to 0.250 of the group - one to three gold rows -
+   so a single run is a draw, not a reading: `cd6a929f` read +0.538 on one run and +0.423 on
+   two. A run whose `run_meta.json` is not `valid: true` is NOT averaged in and NOT counted:
+   a dead half-pair once averaged a 0.0 with a 0.944 and manufactured a phantom +0.528 cell.
+   If confirm_band printed CONFIRM and only one valid baseline run exists anyway, the second
+   pair failed - say so in the artifact and rule on n=1 with that stated.
+
 1. The credit table, both arms, per gold item - this is your one mechanical input:
 
        RESULTS_DIR="$RDIR" python3 bench/lib/credit_table.py "$REPO"
@@ -85,9 +99,10 @@ the credit table and compare them in writing:
 obstacle. Never propose raising the watchdog.
 
 Every claim in `notes` is quoted output. A number you did not read out of the credit table or a
-`run_meta.json` does not go in the file. This run is x1 and unscored: it may not settle a win,
-a tie or a loss, and its number may never be cited anywhere. It decides one thing, which is
-whether this question gets a full session.
+`run_meta.json` does not go in the file. This cell is x1 or x2 per arm and unscored: it may not
+settle a win, a tie or a loss, and its number may never be cited anywhere. It decides one thing,
+which is whether this question gets a full session. State the n you ruled on, per arm, in
+`# The two numbers` - a delta carries the run count that produced it or it is not a delta.
 
 ## ARTIFACT
 

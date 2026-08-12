@@ -440,6 +440,15 @@ requeue_author() {
       mkdir -p "$DRYRUN"
       mv "$LOOPDIR/cycles.jsonl" "$DRYRUN/cycles.$ln.jsonl"
       echo "## [handoff] closed the round ledger as cycles.$ln.jsonl"; }
+    # PRICE THE PARK. Both branches below - spend another round, or swap the slot - used to
+    # be offered with no numbers, so the human decided blind. The one repo in php-laravel
+    # that ever produced a payable question only got there because a human re-authorised it
+    # three times by hand; that intervention is the loop's success condition and it was being
+    # asked for unpriced. This REPORTS and decides nothing: the cap is unchanged, the park
+    # already happened, and a "flat slope" may never park anything (measured: such a rule
+    # would have killed coolify three attempts before its only PASS).
+    echo ""
+    python3 "$LIB/park_report.py" "$VDIR" "$REPO" 2>&1 | sed 's/^/  /' || true
     gate \
       "We tried $AUTH_CYCLE_MAX attempts on $REPO without a payable question." \
       "Sharing a summary with you so you can take the next step." \
@@ -691,6 +700,32 @@ do_minibench() {
       echo "            is (b)."
       exit 1
     fi
+  fi
+  # NO ROUTING ON A COIN FLIP. Within-arm spread on the same cell is 0.077 to 0.250 of the
+  # `dependents` group (four valid same-arm pairs, php-laravel/coolify) - one to three gold
+  # rows. Against a hard 0.50 bar that makes a baseline near 0.50 unroutable at n=1, in both
+  # directions: `cd6a929f` read +0.538 on one run and +0.423 on two, and attempts at 0.53,
+  # 0.54 and 0.57 were routed as if they were measurements. confirm_band buys ONE more pair,
+  # and only for the cells where a second draw can actually move the verdict - a baseline at
+  # 0.85 is not a coin flip and re-running it learns nothing. Everything else routes as before.
+  # Resume-safe: a cell that already carries a verdict is not re-measured (a park re-enters
+  # this phase, and spending a pair to re-confirm a settled read is pure waste).
+  if [ -z "${SKIP_CONFIRM:-}" ] && [ ! -f "$LOOPDIR/minibench.verdict.json" ]; then
+    RESULTS_DIR="$MINIBENCH_DIR" python3 "$LIB/confirm_band.py" \
+      "$MINIBENCH_DIR" "$REPO" "$YAML" 2>&1 | sed 's/^/   /'
+    case "${PIPESTATUS[0]}" in
+      10)
+        echo "## [minibench] CONFIRM - second pair before routing (SKIP_CONFIRM=1 to bypass)"
+        BENCH_MINIBENCH=1 KEEP_RUNS=1 START_RUN="$(next_run "$MINIBENCH_DIR")" \
+          VERTICAL="$VERTICAL" MODELS="$MODELS" RUNS=1 \
+          bash "$BENCH_DIR/drivers/runs-variance.sh" "$REPO" || {
+            echo "[minibench] the confirm pair FAILED - routing on the runs that ARE valid."; }
+        RESULTS_DIR="$MINIBENCH_DIR" python3 "$LIB/confirm_band.py" \
+          "$MINIBENCH_DIR" "$REPO" "$YAML" 2>&1 | sed 's/^/   /' || true ;;
+      1)
+        echo "[minibench] confirm_band could not read this cell - NOT advancing."
+        echo "            A verdict on an unreadable pair is not a verdict."; exit 1 ;;
+    esac
   fi
   have_verdict minibench "PROCEED,REQUESTION,NO-ANCHOR" ||
     { archive_read minibench; spawn_plan 02-minibench.md; }
