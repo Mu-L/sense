@@ -590,8 +590,44 @@ PY
 
       _log "[$run_num/$total_runs] tool=$tool scenario=$scenario_name repo=$repo timeout=${run_timeout}s"
 
+      # TELL THE ARM ITS WALL. The session is hard-killed by `timeout $run_timeout` below,
+      # and until 2026-08-12 the arm was never told the number, so it could not triage: it
+      # wrote thoroughly and was SIGTERMed mid-sentence. Measured on php-laravel: 41% of
+      # baseline runs hit the wall against 17% of sense runs, and one baseline spent 98.6%
+      # of its wall inside the provider across 45 turns and emitted 42 characters, which
+      # `run_validity` then had to void as `no_output_hang`. That is not "the baseline could
+      # not do it in time"; it is the harness cutting it off, and it silently deletes the
+      # measurement the retry law calls the win condition.
+      #
+      # The CLI has NO wall-clock parameter (claude 2.1.228: no --timeout, --max-duration,
+      # --deadline, --max-time, --max-turns; --max-budget-usd bills API quota, not the
+      # subscription - see the note further down). So the number is passed as a system-prompt
+      # parameter instead. This does NOT enforce anything; `timeout` is still the hard stop.
+      # It only lets the arm spend its clock deliberately.
+      #
+      # IDENTICAL MECHANISM, BOTH ARMS, each with its OWN $run_timeout - the sense arm's flat
+      # ceiling and the baseline's derived `paired sense wall x 1.2`. The scenario yaml, the
+      # gold and the rendered prompt are untouched, so nothing about the QUESTION changes and
+      # every scenario on disk stays valid. Deliberately says nothing about how to spend the
+      # time: a hint about tools or search strategy here would bias an arm.
+      # A CEILING IS NOT A TARGET. The first wording of this note said "budget the work so the
+      # answer is written before then ... if you run short, say where you stopped", and it
+      # induced both arms to QUIT EARLY rather than to spend the clock well: measured
+      # 2026-08-12 on `55ee5f19`, the sense arm used 143s of 480 (30% of its budget, 16 turns)
+      # and wrote "I did not reach the end of the set before the time limit" with 337 seconds
+      # still in hand, while the baseline used 92s of 172 across 7 turns. Both scored 0.0769
+      # against 1.0/0.846 and 0.308 on the same question one regime earlier. The closing
+      # clause was a sanctioned exit and they took it immediately.
+      # It compounds, too: the baseline's ceiling is the sense wall x 1.2, so a sense arm that
+      # quits at 143s cuts the baseline from 394s to 172s. One arm rushing squeezes the other.
+      # This wording states the number, refuses the exit ramp, and says plainly that stopping
+      # early is not rewarded. It does NOT invite padding: what it costs is named as the work
+      # not done, which is what the metric already measures.
+      wall_note="Wall clock: this session is stopped hard after ${run_timeout} seconds of real time, measured from now, and nothing written after that point is kept. This is a CEILING, not a target. There is no credit for finishing early, and no penalty for using all of it. Stopping before the work is done simply costs you the part you did not do. Keep working until the task is complete or the clock forces you to stop."
+
       claude_args=(
         -p "$prompt"
+        --append-system-prompt "$wall_note"
         --verbose
         --output-format stream-json
         --permission-mode bypassPermissions
