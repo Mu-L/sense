@@ -242,40 +242,80 @@ loop_position_section() {
     return
   fi
   python3 -c "
-import json,os,sys
+import glob,json,os,sys
 d=json.load(open(sys.argv[1]))
 loopdir=sys.argv[2]
 root=sys.argv[3]
+results=sys.argv[4]
+key=sys.argv[5]
 # The phases that spawn an agent and store its verdict; the rest are automatic.
 AGENT_PHASES=('author','minibench','expand','validate')
+
+def parked_rounds(repo):
+    # A PARK IS INVISIBLE IN THE STATE FILE, and that cost a session 6 paid cycles.
+    # At AUTH_CYCLE_MAX the driver writes back phase=author and authcycle=0 - byte-identical
+    # to a repo that has never authored - archives the round ledger as cycles.N.jsonl and
+    # writes handoff.md for a human. So the pickup file rendered 'the next run RE-SPAWNS the
+    # author agent' with a resume command under it, over a repo that had already spent 24
+    # attempts and was waiting on a decision. Re-running is what the park exists to prevent,
+    # and nothing on this page said so.
+    # handoff.md has ONE spawn path in the driver (the ceiling), so its presence means a park
+    # happened; authcycle==0 is what distinguishes 'still parked' from 'a human re-ran it'.
+    h=os.path.join(loopdir,repo,'handoff.md')
+    if not os.path.exists(h):
+        return 0
+    if str(d.get(repo+chr(35)+'authcycle','')) != '0':
+        return 0
+    return len(glob.glob(os.path.join(results,'dryrun',repo,'cycles.*.jsonl')))
+
 p={k:v for k,v in d.items() if '#' not in k}
 if not p:
     print('_state file present, no repo phases recorded._')
-else:
-    print('| repo | phase | verdict on disk |'); print('|---|---|---|')
-    for k in sorted(p):
-        ph=p[k]
-        if ph not in AGENT_PHASES:
-            cell='- (no agent at this phase)'
-        else:
-            try:
-                with open(os.path.join(loopdir,k,ph+'.verdict.json')) as fh:
-                    data=json.load(fh)
-                v=data.get('verdict','?')
-                # verdict_check.py refuses a verdict whose artifact is gone, and the driver
-                # then re-spawns. A measuring phase's verdict outlives its read the moment a
-                # later re-entry archives it, so this is the realistic case, not a corner.
-                art=data.get('artifact')
-                if art and os.path.exists(os.path.join(root,art)):
-                    cell='\`%s\` stored - the %s agent will NOT re-run' % (v,ph)
-                else:
-                    cell='\`%s\` stored but its artifact is GONE - the %s agent re-runs' % (v,ph)
-            except (OSError,ValueError):
-                cell='none - the next run RE-SPAWNS the %s agent' % ph
-        print('| %s | %s | %s |' % (k,ph,cell))
+    raise SystemExit(0)
+parked={k:n for k,n in ((k,parked_rounds(k)) for k in p) if n}
+print('| repo | phase | verdict on disk |'); print('|---|---|---|')
+for k in sorted(p):
+    ph=p[k]
+    if k in parked:
+        cell='**PARKED** - awaiting YOUR decision, do not resume'
+    elif ph not in AGENT_PHASES:
+        cell='- (no agent at this phase)'
+    else:
+        try:
+            with open(os.path.join(loopdir,k,ph+'.verdict.json')) as fh:
+                data=json.load(fh)
+            v=data.get('verdict','?')
+            # verdict_check.py refuses a verdict whose artifact is gone, and the driver
+            # then re-spawns. A measuring phase's verdict outlives its read the moment a
+            # later re-entry archives it, so this is the realistic case, not a corner.
+            art=data.get('artifact')
+            if art and os.path.exists(os.path.join(root,art)):
+                cell='\`%s\` stored - the %s agent will NOT re-run' % (v,ph)
+            else:
+                cell='\`%s\` stored but its artifact is GONE - the %s agent re-runs' % (v,ph)
+        except (OSError,ValueError):
+            cell='none - the next run RE-SPAWNS the %s agent' % ph
+    print('| %s | %s | %s |' % (k,ph,cell))
+print()
+for k in sorted(parked):
+    n=parked[k]
+    print('**%s is PARKED** after %d round(s) of authoring - roughly %d attempts - without a'
+          % (k,n,n*6))
+    print('payable question. The loop stopped ON PURPOSE and handed the call up to you.')
     print()
-    print('Resume: \`VERTICAL=$KEY bash bench/drivers/vertical-loop.sh <repo>\`')
-" "$st" "$RESULTS/loop" "$IL_ROOT"
+    print('- READ FIRST: \`%s\`' % os.path.relpath(os.path.join(loopdir,k,'handoff.md'),
+                                                   os.path.join(root,'verticals',key)))
+    print('- the numbers behind it: \`results/dryrun/%s/cycles.*.jsonl\`' % k)
+    print('- re-running spends another 6 cycles and is a DECISION, not a resume. The other')
+    print('  option is swapping the slot for its own declared backup in slate.json.')
+    print()
+live=[k for k in sorted(p) if k not in parked]
+if live:
+    print('Resume (%s): \`VERTICAL=$KEY bash bench/drivers/vertical-loop.sh <repo>\`'
+          % ', '.join(live))
+else:
+    print('_No repo is resumable: every repo above is parked on a human decision._')
+" "$st" "$RESULTS/loop" "$IL_ROOT" "$RESULTS" "$KEY"
 }
 
 {
