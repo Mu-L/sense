@@ -53,8 +53,10 @@ that happen to be there.**
 
        cat "$WDIR/probes/control.txt"
 
-   **TARGET LANGUAGE** is the first corpus repo, counted with the installed binary before
-   the build and with the branch binary after it. The lane is expected to ADD edges; what
+   **TARGET LANGUAGE** is every corpus repo, counted with the installed binary before the
+   build and with the branch binary after it. Check that each row names the same repo on
+   both sides before reading a direction off it: a before and an after taken from different
+   codebases is a driver defect, and it is stated as one rather than read as a result. The lane is expected to ADD edges; what
    this row exists to catch is a lane that adds one shape while silently dropping another,
    which every other check in this window would pass. **A drop in target-language edges is
    a REVERT**, and equal counts on a lane whose whole purpose was new edges is a finding to

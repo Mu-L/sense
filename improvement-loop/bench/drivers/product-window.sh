@@ -44,6 +44,7 @@
 #   bash bench/drivers/product-window.sh <key>              # run from saved phase
 #   bash bench/drivers/product-window.sh <key> --phase build # force one phase
 #   bash bench/drivers/product-window.sh <key> --gates       # re-run the machine gates only
+#   bash bench/drivers/product-window.sh <key> --controls    # re-take the BEFORE counts
 #   bash bench/drivers/product-window.sh <key> --reset       # back to intake
 #   bash bench/drivers/product-window.sh --status            # every window's phase
 #
@@ -62,11 +63,12 @@ STATE="$WROOT/.window-state.json"
 CLONES="${SENSE_CLONES:-$HOME/Developer/luuuc/oss/sense-benchmark/sense}"
 
 # ---- args -------------------------------------------------------------------
-KEY=""; FORCE_PHASE=""; STATUS=0; RESET=0; GATES=0
+KEY=""; FORCE_PHASE=""; STATUS=0; RESET=0; GATES=0; CONTROLS=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --phase) FORCE_PHASE="$2"; shift 2 ;;
     --gates)  GATES=1; shift ;;
+    --controls) CONTROLS=1; shift ;;
     --status) STATUS=1; shift ;;
     --reset)  RESET=1; shift ;;
     -h|--help) sed -n '2,50p' "$0"; exit 0 ;;
@@ -244,13 +246,21 @@ for line in reversed(sys.stdin.read().splitlines()):
 # another reads as a pass on every check above. Measured by hand on the first C# window:
 # 142,742 edges before against 161,424 after, symbols identical - the shape this row exists
 # to make automatic. It runs on the first corpus repo, which is already cloned.
+# It walks EVERY corpus repo, not the first. Taking `head -1` made the before and after
+# rows nameable from different files at different times, and the first window duly printed
+# `ServiceStack` above `bitwarden-server` as if it were one comparison: two codebases, no
+# direction, and only the reading agent noticed. Keying every row by repo name makes the
+# mismatch impossible to write rather than possible to catch.
 record_target() {
-  local label="$1" bin="$2" scan="$3" repo counts
-  repo="$(head -1 "$WDIR/corpus.txt" | cut -d'|' -f1)"
-  [ -n "$repo" ] && [ -d "$CLONES/$repo" ] || { echo "UNRUN no corpus repo" > "$WDIR/target.$label"; return 0; }
-  [ "$scan" = 1 ] && (cd "$CLONES/$repo" && "$bin" scan -dir . -rebuild) >> "$WDIR/control.scan.log" 2>&1
-  counts="$(status_counts "$CLONES/$repo" "$bin")"
-  printf '%s %s\n' "$repo" "${counts:-UNRUN}" > "$WDIR/target.$label"
+  local label="$1" bin="$2" scan="$3" repo url counts
+  : > "$WDIR/target.$label"
+  while IFS='|' read -r repo url; do
+    [ -n "$repo" ] || continue
+    [ -d "$CLONES/$repo" ] || { printf '%s UNRUN not-cloned\n' "$repo" >> "$WDIR/target.$label"; continue; }
+    [ "$scan" = 1 ] && (cd "$CLONES/$repo" && "$bin" scan -dir . -rebuild) >> "$WDIR/control.scan.log" 2>&1
+    counts="$(status_counts "$CLONES/$repo" "$bin")"
+    printf '%s %s\n' "$repo" "${counts:-UNRUN}" >> "$WDIR/target.$label"
+  done < "$WDIR/corpus.txt"
   echo "## [$PHASE] target language ($label, $(basename "$bin")):"; sed 's/^/     /' "$WDIR/target.$label"
 }
 
@@ -452,8 +462,9 @@ PY
   # re-scanned: scanning it a second time would only cost minutes to reproduce itself.
   record_target after "$bin" 0
   {
-    echo "TARGET LANGUAGE - symbols edges, before then after"
-    cat "$WDIR/target.before" "$WDIR/target.after" 2>/dev/null
+    echo "TARGET LANGUAGE - repo  symbols edges (before)  symbols edges (after)"
+    join -a1 -a2 "$WDIR/target.before" "$WDIR/target.after" 2>/dev/null \
+      || { cat "$WDIR/target.before"; echo "--"; cat "$WDIR/target.after"; }
     echo ""
     echo "OTHER LANGUAGES - repo  symbols edges (before)  symbols edges (after)"
     join -a1 -a2 "$WDIR/control.before" "$WDIR/control.after" 2>/dev/null \
@@ -485,6 +496,13 @@ do_handoff() {
 # nothing. It exists because the gates and the agent that writes the code are separable:
 # re-running them should never cost a session, and a branch whose gates were run by hand
 # needs a way to put that record where 06-review and 07-handoff read it.
+if [ "$CONTROLS" = 1 ]; then
+  PHASE=build; mkdir -p "$WDIR"
+  record_control before "${SENSE_BIN:-sense}"
+  record_target before "${SENSE_BIN:-sense}" 1
+  exit 0
+fi
+
 if [ "$GATES" = 1 ]; then
   PHASE=build; mkdir -p "$WDIR"; machine_gates
   echo ""; echo "gates.txt:"; sed 's/^/  /' "$WDIR/gates.txt"; exit 0
