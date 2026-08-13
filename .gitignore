@@ -211,3 +211,4 @@ bench/verticals/**/.loop-state.json
 /bench/results/admission-backtest-*
 /bench/results/loss-anatomy.md
 bench/verticals/go-legacy/
+improvement-loop/verticals/**/continue-prompt.md
