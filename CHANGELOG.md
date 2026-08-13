@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.13.6] - 2026-08-13
+
+### Bug Fixes
+
+- the codex survey turn passed a flag resume does not have
 ## [1.13.5] - 2026-07-30
 
 ### Enhancements
