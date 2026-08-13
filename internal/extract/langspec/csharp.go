@@ -29,6 +29,16 @@ func (e csharpExtractor) Language() string          { return e.generic.Language(
 func (e csharpExtractor) Extensions() []string      { return e.generic.Extensions() }
 func (e csharpExtractor) Tier() extract.Tier        { return e.generic.Tier() }
 
+// HarvestsMentions forwards the generic pass's answer. The scan reaches this through a
+// type assertion (scan.markHarvested), so a wrapper that does not implement it makes the
+// language un-harvestable no matter what the spec says: the day MentionKinds is added
+// below to lift C# out of core_no_harvest, the harvest would run and the language would
+// still never be recorded, and the fix would look applied while doing nothing.
+func (e csharpExtractor) HarvestsMentions() bool {
+	mh, ok := e.generic.(extract.MentionHarvester)
+	return ok && mh.HarvestsMentions()
+}
+
 func (e csharpExtractor) Extract(tree *sitter.Tree, source []byte, path string, emit extract.Emitter) error {
 	if err := e.generic.Extract(tree, source, path, emit); err != nil {
 		return err

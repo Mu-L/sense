@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/luuuc/sense/internal/extract"
+	"github.com/luuuc/sense/internal/grammars"
 	"github.com/luuuc/sense/internal/model"
 )
 
@@ -125,4 +126,36 @@ func hasEdge(edges []extract.EmittedEdge, want extract.EmittedEdge) bool {
 		}
 	}
 	return false
+}
+
+// The scan reaches HarvestsMentions through a type assertion, so the composed C# extractor
+// has to satisfy MentionHarvester itself: a wrapper that merely embeds a generic pass that
+// implements it does not, and the language silently stops being harvestable.
+func TestCSharpExtractorSatisfiesMentionHarvester(t *testing.T) {
+	ex := extract.ForExtension(".cs")
+	if ex == nil {
+		t.Fatal("no extractor registered for .cs")
+	}
+	if _, ok := ex.(extract.MentionHarvester); !ok {
+		t.Fatal("the registered C# extractor is not a MentionHarvester, so scan can never mark it harvested")
+	}
+}
+
+// Forwarding is the point, not the constant: today C# declares no MentionKinds and the
+// honest answer is false, and the moment a spec declares them the wrapper must say true.
+func TestCSharpHarvestsMentionsForwardsTheSpec(t *testing.T) {
+	quiet := csharpExtractor{generic: New(langSpec{
+		Name: "csharp-quiet", Exts: []string{".csq"}, Grammar: grammars.CSharp(),
+	})}
+	if quiet.HarvestsMentions() {
+		t.Error("a spec with no MentionKinds must not report itself as harvesting")
+	}
+
+	loud := csharpExtractor{generic: New(langSpec{
+		Name: "csharp-loud", Exts: []string{".csl"}, Grammar: grammars.CSharp(),
+		MentionKinds: []string{"identifier"},
+	})}
+	if !loud.HarvestsMentions() {
+		t.Error("a spec declaring MentionKinds must report itself as harvesting")
+	}
 }
