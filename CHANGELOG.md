@@ -1,6 +1,15 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.14.0] - 2026-08-13
+
+### Bug Fixes
+
+- forward HarvestsMentions through the composed extractor
+
+### Features
+
+- type member receivers and emit holder edges
 ## [1.13.6] - 2026-08-13
 
 ### Bug Fixes
