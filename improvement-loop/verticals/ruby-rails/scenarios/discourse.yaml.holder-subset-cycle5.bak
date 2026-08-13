@@ -1,0 +1,316 @@
+# ============================================================================
+# TWO-STEP PROBE SCENARIO (plans/01-author.md), CYCLE 5 on discourse.
+# The superseded seven-step session is kept at
+# scenarios/discourse.yaml.session-7step-cycle4.bak (rubric alongside it).
+#
+# THE TRAJECTORY, EVERY CYCLE, AND WHICH SIDE OF THE WINDOW IT FELL ON
+#   The window is BOTH conditions at once: baseline `dependents` <= 0.50 AND
+#   delta >= +0.50.
+#
+#   cycle 1  seven-step briefed session, 15 rows
+#            base 11/15 = 0.733   sense 14/15   delta +0.200
+#            side: BASELINE TOO HIGH (kept at discourse.yaml.briefed-7step.bak)
+#   cycle 2  two-step probe, 22 rows (call sites + declared associations)
+#            base 12/22 = 0.5455  sense 14/22   delta +0.091
+#            side: BASELINE TOO HIGH (discourse.yaml.mixed-22row.bak)
+#   cycle 3  two-step probe, 12 declared links
+#            base  7/12 = 0.583   sense 11/12   delta +0.333
+#            side: BASELINE TOO HIGH; recall caps at 1.00 so 0.583 capped the delta
+#            at +0.417 before the pair ran (discourse.yaml.declared-link-12row.bak)
+#   cycle 4  two-step probe, 14 one-touch call sites in 14 areas across 5 trees
+#            MINI-BENCH: base 6/14 = 0.4286  sense 13/14 = 0.9286  delta +0.5000
+#            side: INSIDE THE WINDOW, on the bar exactly, so it was expanded.
+#            SEVEN-STEP VALIDATION: base 8/14 = 0.5714  sense 0.9524  delta +0.3810
+#            side: BASELINE TOO HIGH. DO-NOT-PAY. The session moved the baseline
+#            +0.1428 UP, not down (validate.md, results/loop/discourse/).
+#
+#   Five cycles, five landings on the SAME side: the baseline over 0.50. Not once has
+#   this repo produced the mirrored failure (baseline floored, delta short because
+#   sense missed). So this draft corrects from the BASELINE-TOO-HIGH side, and it does
+#   not need to move far - cycle 4's mini-bench already sat at 0.4286. It needs to move
+#   in a way that SURVIVES the session, which cycle 4's did not.
+#
+# WHY CYCLE 4 DID NOT SURVIVE, IN ITS OWN NUMBERS
+#   Every one of the eight dependents the seven-step baseline took was a `.rb` file under
+#   app/ or plugins/; every one of the six it missed was outside those roots or outside
+#   that extension (migrations/, script/, *.rake). validate.md calls this a typo-width
+#   moat and it is right: a baseline that types `--include='*.rake' .` takes all six and
+#   the delta goes to zero. That margin must not be paid for and this draft does not
+#   rebuild it - only ONE of the fourteen rows below sits outside app/lib/plugins.
+#
+# THE MEASUREMENT THIS DRAFT IS BUILT ON (killer: per-unit, not aggregate)
+#   Every baseline run on this repo on disk, six valid ones (the aborted validation
+#   run-6, which has no run_meta.json, is excluded), scored per gold FILE:
+#
+#     0/6  d:migrations-optimizer
+#     0/2  d:form-template   0/2  d:tag-group   0/2  d:web-hook
+#     0/2  d:migrations-importer-categories, d:bulk-import-merger, d:search-rake,
+#          d:templates-rake, d:import-scripts-base            <- the path moat, not reused
+#     2/6  d:rss-polling
+#     2/4  d:seed-topics     2/4  d:user-notifications
+#     1/2  d:reindex-search-job
+#     2/3  d:search-indexer
+#     3/3  d:email-receiver, d:topic-view-serializer, d:topics-controller,
+#          d:topic-guardian, d:backup-restorer                <- free, all dropped
+#     2/2  d:post-revision, d:post-revision-serializer, d:house-ad, d:event-finder,
+#          d:ai-translation-candidates                        <- free, all dropped
+#
+#   ARITHMETIC KILLER RUN ON THIS GOLD SET. Nine of the fourteen rows below have a
+#   measured baseline rate; their sum is 0 + 0 + 0 + 0 + 0.33 + 0.50 + 0.50 + 0.50 +
+#   0.67 = 2.50. If the five never-golded rows behaved like the average of the measured
+#   ones (0.28) the baseline lands near 0.28 * 14 = 3.9 of 14 = 0.28, leaving 0.72 of
+#   headroom - the +0.50 bar is not foreclosed before the pair runs. It is NOT a
+#   prediction that it will clear; only the run decides that.
+#
+# WHY THE MATCHER MAKES THE FILE SET THE WHOLE LEVER
+#   `gold.py` credits a row CITED when the file path appears anywhere in the answer with
+#   any line pin attached - the pin does not have to be the gold line. So re-pointing a
+#   row's line at a harder expression inside a file the baseline already names buys
+#   nothing. The only thing that lowers a baseline is golding files it does not NAME.
+#   Every row below was chosen on that measured basis, not on how hard its line looks.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS
+#   The answer is the set of places that are HOLDING a reference to one of these records
+#   right now - a bare identifier kept in a column, a join row, a hand-written SQL
+#   predicate, a queued job's arguments, a cache key, a stored setting - which a merge
+#   that retires one record onto another would have to rewrite. That is a strict and
+#   small subset of the places the class is mentioned: most mentions read a record and
+#   hold nothing, and most holders do not name the class on the line where they hold it.
+#   Nine of the fourteen rows below pin a line that does not contain the constant at all.
+#
+# WHY THAT IS A MECHANISM AND NOT AN INVENTORY
+#   The step-2 ask names the FORMS a held reference takes - a column, a join row, a value
+#   spliced into a query, a number in stored configuration or in a queued job's
+#   arguments, a cache key. Those are ways of holding, not jobs code does. It never says
+#   validation, worker, serializer, importer, task, migration or plugin - the functional
+#   inventory that the neutrality gate passes clean and that hands the answer over.
+#
+# SEAM PROFILE (bench/lib/seam_hunt.py, RANKING ONLY, it never kills)
+#   Category              app/models/category.rb            app callers 89, SCATTER 47,
+#                         grep-noise 109 app files, PRECISION 0.82   <- chosen
+#   CategoryCustomField   app/models/category_custom_field.rb  app callers  9, SCATTER 8,
+#                         grep-noise 3 app files, PRECISION 3.00
+#   CategoryFeaturedTopic app/models/category_featured_topic.rb app callers 6, SCATTER 5,
+#                         grep-noise 4 app files, PRECISION 1.50
+#   0.82 sits in the tie zone (a deliberate control tie profiled 0.78, the +1.00 winner
+#   0.078) and this is the fifth cycle on it. Recorded, not worked around: precision
+#   ranks and never kills, and the two alternatives cannot yield twelve dependent files
+#   across six areas from their shown blast sets (9 and 6 caller files respectively), so
+#   Category is the only anchor in this family that can carry the group at all. The law
+#   is iterate on the question, keep the anchor.
+#
+# RING: ring_sweep.py --top 12 returns "0 candidate(s) above the bar" - all twelve
+#   anchors report rows 0, files 0, vias 0. The "what HOLDS X" kind in its retention
+#   sense is off the menu on this stack, as it was on mastodon. (This draft asks who
+#   holds a REFERENCE, which is a data question the composition edges answer, not a
+#   lifetime question the empty ring would have to answer.)
+#
+# MEMORIZATION: memorization_probe.py Category -> closed-book recall 0.196 (< 0.3),
+#   "not recited". All 45 recited names are Category's own members (find_by_slug_path,
+#   ensure_slug, subcategory_ids, ...). No gold row below is a member of Category.
+#
+# NEGATIVE SPACE, RUN NOT ASSUMED. Over the 84 files in the shown sense_blast payload,
+#   19 contain zero occurrences of the bare constant - and all 19 sit in one directory
+#   (app/models). So there is no scattered token-dark file set on this anchor to curate
+#   for, and this draft does not pretend there is: six of its fourteen rows are in files
+#   that name the constant. Recorded, deciding nothing (token-darkness is not the
+#   mechanism).
+#
+# THE NAMED RISK OF THIS DRAFT
+#   It narrows the answer to a subset, and cited_recall is recall-only - a baseline that
+#   ignores the narrowing and dumps every file it grepped with a line pin scores the
+#   rows it happens to cover for free. The measured per-file rates above are the only
+#   defence, and they were taken under a WIDER ask than this one. If the run comes back
+#   with the baseline over 0.50 again on rows measured at 0/2, the reading is that the
+#   subset framing does not survive a dumping answer, and the lever is the scorer's
+#   recall-only credit, not the wording.
+# ============================================================================
+name: Discourse work session - audit the category contract before a rework
+repo: discourse
+contract_symbol: Category
+contract_file: app/models/category.rb
+
+description: |
+  You are a maintainer about to rework the class that represents one of this forum's
+  top-level containers - the thing topics are filed under, that carries its own
+  permissions, settings and hierarchy, and that half the product reaches for whenever it
+  needs to know where something belongs or who is allowed to see it. The rework makes two
+  of these records mergeable: one of them is retired, and everything still pointing at the
+  retired one has to be made to point at the survivor. Before you touch it you have to
+  know two things: how the system decides which of these records a request is actually
+  talking about, and everywhere in the codebase that is holding on to one of them in a
+  form that merge would have to rewrite. Throughout, an answer that points at a place must
+  give an exact file:line a teammate could jump straight to, plus one phrase on why it
+  matters. A bare filename does not count, a set of names offered together with one shared
+  reason and no location on any of them does not count, and a holder you miss is a
+  dangling pointer shipped.
+
+steps:
+  - name: Map the category contract
+    prompt: >
+      Task: orient, and be thorough - the rest of the ticket is built on this. Start with
+      how the system decides WHICH of these records it is talking about. A request may
+      arrive carrying nothing but the human-readable path a visitor typed, which may name
+      a parent and a child, may be an old path that has since been retired, and may not
+      name one of these at all. Trace that end to end. Show every entry point that turns
+      such a path into one of these records, every place that walks the hierarchy to
+      disambiguate one level from another, every place that keeps the path in step when
+      the record is renamed, and every place that redirects or refuses because the path
+      turned out to point somewhere else. For each one give the file:line, the name of the
+      routine it lives in, and one phrase on what it contributes. Then say, in a few
+      sentences, what a rework would have to preserve for identity to keep working, and
+      what would have to be true for two of these records to be safely collapsed into one.
+      A place named without the routine it lives in does not count, and neither does a
+      routine named without the file:line where it is defined.
+    checks:
+      - type: response_richness
+        value: "8"
+        required: true
+        description: Identity and resolution traced through the routines that make it up, each located
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the category contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the
+      first part already cost you. The merge retires one of these records onto another, so
+      the question now is not who READS this class - most code that mentions it looks
+      something up, uses it and keeps nothing. The question is who is HOLDING a reference
+      to one of these records right now, in a form the merge would have to find and
+      rewrite. That is a much smaller set and it is the one you owe. Most holders do not
+      name the class on the line where they hold it. What a holder keeps is a bare
+      identifier: a column on its own table; a row in a join table that some other model
+      populates on its behalf; a value spliced into a hand-written query string; a number
+      parked in stored configuration, or in the arguments of a job that was queued
+      yesterday and runs tomorrow; a key in a cache. Those lines read like ordinary data
+      and say nothing about what they point at, so the only way to know a place holds one
+      is to work out what it does with what it kept. Find every such holder. For each,
+      give the file:line where the reference is actually held - not where the class is
+      mentioned nearby - the routine or declaration it sits in, and one phrase on what
+      would be left dangling, stale or pointed at the wrong record if the merge skipped
+      it. Organise the answer by area, one section per area, and treat an area as finished
+      only when every holder inside it is listed separately with its own location; if you
+      cannot finish an area, say which one and say what you left in it, because an area
+      you quietly summarised reads as an area with nothing in it. Do not pad the list with
+      places that merely read one of these records and keep nothing - a read is not a
+      holder. A file:line with nothing named around it does not count, a holder you cannot
+      state the consequence for does not count, and a holder you miss is a dangling
+      pointer shipped.
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every holder located at file:line with its own dangling-reference consequence
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ---- ANCHORS: the contract centre and the identity path. Both arms reach these and
+  # ---- they do NOT score. Lines carried unchanged from the cycle-4 audit and re-read
+  # ---- against the clone before this draft was written.
+  - id: contract-model
+    group: contract
+    match: [app/models/category.rb]
+    relation: "app/models/category.rb:1083 `def self.find_by_slug_path(slug_path)` - the contract under rework and the class-level entry point every slug-path lookup bottoms out in; :1103 `find_by_slug_path_with_id` is the trailing-id variant that falls back to it at :1110, :985 `def self.query_category(slug_or_id, parent_category_id)` is the one-level lookup the hierarchy walk is built from, :627 `def ensure_slug` keeps the stored slug in step across a rename, and :16 `SLUG_REF_SEPARATOR = \":\"` is the separator the ref form is built from"
+  - id: c:categories-controller
+    group: contract
+    match: [app/controllers/categories_controller.rb]
+    relation: "app/controllers/categories_controller.rb:394 `category = Category.find_by_slug_path(params[:slug_path].split(\"/\"))` inside `CategoriesController#find` (def at :387) - the HTTP front door onto the slug-path lookup, raising Discourse::NotFound when it comes back blank"
+  - id: c:hierarchical-search
+    group: contract
+    match: [app/services/category/query/hierarchical_search.rb]
+    relation: "app/services/category/query/hierarchical_search.rb:53 `scope = Category.from(\"allowed_categories\").select(:id)` inside `Category::Query::HierarchicalSearch#matched_scope` - walks the parent/child hierarchy to disambiguate one level from another"
+  - id: c:permalink
+    group: contract
+    match: [app/models/permalink.rb]
+    relation: "app/models/permalink.rb:82 `return category.relative_url if category` - the retired-path case: an old URL that no longer resolves is redirected through the permalink record's category association declared at line 6"
+
+  # ---- DEPENDENTS: fourteen REFERENCE HOLDERS, one per file, nine distinct areas.
+  # ---- Every file below is present in the shown sense_blast payload for Category
+  # ---- (direct_callers or affected_via_composition), checked against mcp_probe output
+  # ---- before it was written. Every line below was opened and read against the clone.
+  # ---- Nine of the fourteen pinned lines do not contain the constant at all.
+
+  # -- area: app/models - references held in the holder's own data
+  - id: d:web-hook
+    group: dependents
+    match: [app/models/web_hook.rb]
+    relation: "app/models/web_hook.rb:111 `category_id: topic.category_id,` inside `WebHook.enqueue_topic_hooks` (def at :99) - the bare id is copied into the arguments of an outbound hook job that runs later and is delivered to an external system, so nothing re-reads the record; the habtm declaration at :6 is the second holder, a join row per subscribed container. A merge that missed this leaves queued and delivered payloads naming a container that no longer exists, and leaves subscription rows pointed at the retired id"
+  - id: d:tag-group
+    group: dependents
+    match: [app/models/tag_group.rb]
+    relation: "app/models/tag_group.rb:125 `id IN (SELECT tag_group_id FROM category_tag_groups WHERE category_id IN (?))` inside `TagGroup.visible` (def at :113) - the id is spliced into a hand-written SQL subselect against the join table declared at :19-:21, so the reference is held in raw SQL text and in join rows the model never names the class to reach. A merge that missed this leaves tag groups visible only under the retired id and invisible under the survivor"
+  - id: d:form-template
+    group: dependents
+    match: [app/models/form_template.rb]
+    relation: "app/models/form_template.rb:18 `has_many :categories, through: :category_form_templates` - the reference is held entirely as rows in the join table declared at :17; the line that holds it names neither the class nor an id column. A merge that missed this leaves a form template attached to the retired container and unattached to the survivor"
+  - id: d:reviewable
+    group: dependents
+    match: [app/models/reviewable.rb]
+    relation: "app/models/reviewable.rb:463 `\"reviewables.category_id IS NULL OR reviewables.category_id IN (?)\",` inside `Reviewable.viewable_by` (def at :424) - the stored id on the reviewable's own row (assigned at :119 from the topic and at :337 from request params) is filtered on through a hand-written SQL predicate. A merge that missed this leaves review queue items keyed to the retired container, so they disappear from every moderator's view scoped to the survivor"
+  - id: d:category-tag-stat
+    group: dependents
+    match: [app/models/category_tag_stat.rb]
+    relation: "app/models/category_tag_stat.rb:20 `AND category_id = :category_id` inside the heredoc SQL of `CategoryTagStat.topic_moved` (def at :7) - a denormalised per-container tag counter whose rows are found and decremented by raw id in hand-written SQL. A merge that missed this leaves two disjoint counter sets, one under each id, and every tag count under the survivor understated"
+  - id: d:category-featured-topic
+    group: dependents
+    match: [app/models/category_featured_topic.rb]
+    relation: "app/models/category_featured_topic.rb:20 `next_category_id = batched ? Discourse.redis.get(NEXT_CATEGORY_ID_KEY).to_i : 0` inside `CategoryFeaturedTopic.feature_topics` (def at :11) - a bare id parked in a cache under the key declared at :7, held across job runs as the cursor the batched featuring resumes from. A merge that missed this leaves the cursor parked on a retired id, so the batch loop either stalls or skips the survivor"
+
+  # -- area: app/services
+  - id: d:search-indexer
+    group: dependents
+    match: [app/services/search_indexer.rb]
+    relation: "app/services/search_indexer.rb:226 `update_index(table: \"category\", id: category_id, a_weight: name)` inside `SearchIndexer.update_categories_index` (def at :225) - the search-data row is written keyed on the bare id and holds a copy of the name; the reindex queue at :236 splices the same id into heredoc SQL. A merge that missed this leaves search rows under the retired id, so the retired container keeps matching searches and the survivor's own row is stale"
+
+  # -- area: app/jobs/scheduled
+  - id: d:reindex-search-job
+    group: dependents
+    match: [scheduled/reindex_search.rb]
+    relation: "app/jobs/scheduled/reindex_search.rb:113 `.joins(\"LEFT JOIN category_search_data ON category_id = categories.id\")` inside `Jobs::ReindexSearch#load_problem_category_ids` (def at :111) - the staleness sweep joins the search table on the raw id in a hand-written join string. A merge that missed this leaves orphaned search rows that this sweep can never see, because they no longer join to any live record"
+
+  # -- area: app/mailers
+  - id: d:user-notifications
+    group: dependents
+    match: [app/mailers/user_notifications.rb]
+    relation: "app/mailers/user_notifications.rb:633 `\"#{Category.where(id: category.parent_category_id).pick(:name)}/#{show_category_in_subject}\"` inside `UserNotifications#send_notification_email` (def at :599), guarded at :631 - the parent id held on the child's own row is resolved to build the email subject prefix. A merge that missed this sends notification subjects prefixed with the name of a retired parent, or with a blank where the prefix should be"
+
+  # -- area: lib/seed_data
+  - id: d:seed-topics
+    group: dependents
+    match: [seed_data/topics.rb]
+    relation: "lib/seed_data/topics.rb:63 `general_category = Category.find_by(id: SiteSetting.general_category_id)` inside `SeedData::Topics#topics` (def at :57), with two more ids read the same way at :64 and :65 - three bare ids parked in stored configuration and dereferenced here. A merge that missed this leaves the configured pointers on the retired id, so seeded topics land nowhere or the seeder silently skips them"
+
+  # -- area: migrations/ (the ONE row outside app|lib|plugins; it is the single strongest
+  # -- record on this repo at 0/6 baseline, kept for that reason and not as a moat)
+  - id: d:migrations-optimizer
+    group: dependents
+    match: [uploader/tasks/optimizer.rb]
+    relation: "migrations/lib/uploader/tasks/optimizer.rb:43 `@category_id = Category.last.id` inside `Migrations::Uploader::Tasks::Optimizer#initialize_discourse_resources` (def at :40) - one arbitrary id is captured up front into an instance variable and then carried as plain data into every synthetic upload built at :172 `category: @category_id,`. A merge that missed this leaves the optimiser attaching uploads to a retired container for the rest of the run"
+
+  # -- area: plugins/
+  - id: d:rss-polling
+    group: dependents
+    match: [discourse_rss_polling/poll_feed.rb]
+    relation: "plugins/discourse-rss-polling/app/jobs/jobs/discourse_rss_polling/poll_feed.rb:14 `@discourse_category_id = args[:discourse_category_id]` inside `Jobs::DiscourseRssPolling::PollFeed#execute` (def at :8) - the id arrives as a queued job argument out of stored feed configuration, is checked for existence at :15 and is stamped onto every created topic at :64 `category_id: discourse_category_id,`. A merge that missed this leaves already-queued polls filing imported items into the retired container, or aborting on a container that no longer exists"
+  - id: d:topic-voting-setting
+    group: dependents
+    match: [discourse_topic_voting/category_setting.rb]
+    relation: "plugins/discourse-topic-voting/app/models/discourse_topic_voting/category_setting.rb:18 `WHERE topics.category_id = :category_id` inside the heredoc SQL of `DiscourseTopicVoting::CategorySetting#unarchive_votes` (def at :13, run as a before_create at :9) - the id held on this plugin table's own row (association at :7, table named at :5) is spliced into hand-written SQL that reaches the votes through topics, and again at :31 in `#archive_votes`. A merge that missed this leaves the retired container's votes archived or unarchived on their own, out of step with the survivor's setting"
+  - id: d:ai-research-filter
+    group: dependents
+    match: [research/filter.rb]
+    relation: "plugins/discourse-ai/lib/utils/research/filter.rb:141 `found_category_ids << category.id if category` inside the block passed to `register_filter(/\\A(?:categories?|category):(.*)\\z/i)` at :134 - the filter sits in no def; it is a block registered in the class body. Names typed by a user are resolved once to bare ids at :140, accumulated into a list, and it is that id list, not the names, that the query predicate is built from at :145. A merge that missed this leaves a stored research filter resolving to an id that matches nothing"

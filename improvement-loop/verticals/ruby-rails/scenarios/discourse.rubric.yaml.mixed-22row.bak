@@ -1,0 +1,168 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# WHY map_quality carries the most weight here: this scenario's axis is ATTRIBUTION, not
+# enumeration. A search prints the line that takes the dependency; it never prints the
+# routine that owns that line. The answer that matters says WHOSE behaviour changes - the
+# enclosing routine, and what it would start getting wrong - for every dependent, under a
+# budget the first step already spent.
+#
+# TWO steps, matching the cycle-2 two-step probe. The five steps of the superseded
+# seven-step session are kept at discourse.rubric.yaml.briefed-7step.bak.
+#
+# Step names MUST match scenarios/discourse.yaml exactly (the judge pairs by name).
+
+audience: 'An AI coding agent that will use this answer to safely rework the Discourse category
+
+  class - the container topics are filed under, carrying its own permissions, settings and
+
+  hierarchy. Score for that agent, not a human reader and not a docs page. A perfect answer
+
+  leaves the agent able to change that class knowing two things: how the rest of the system
+
+  gets hold of one of these records when all it holds is the human-readable path out of a
+
+  URL - traced through the routines that make that path up - and every other place that
+
+  would have to change with the class, each one attributed to the routine the dependency
+
+  sits inside, pinned to an exact file:line, with the consequence of the change on that
+
+  routine stated. The dependents that matter are not the ones whose job is categories; they
+
+  are the ones doing some unrelated job - destroying a user, indexing for search, receiving
+
+  an email, casting a vote, restoring a backup - that reach for the class once in the
+
+  middle of it, from a routine named after that other job. A weak answer lists places
+
+  rather than routines; sweeps the obviously category-named neighbours and stops; collapses
+
+  a set into "all the services"; or gives file:line with nothing said about which routine
+
+  owns the line or what breaks in it - which leaves the agent knowing where the name
+
+  appears and not what its change would do.
+
+  '
+steps:
+- name: Map the category contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is the slug-path resolution path traced end to end as one connected path, rather
+
+        than listed as places the class is mentioned? A strong answer reaches the
+
+        class-level entry point every lookup bottoms out in, the trailing-id variant, the
+
+        one-level lookup the hierarchy walk is built from, the hierarchy walk itself, the
+
+        HTTP front door, the rename path that keeps a stored slug in step, and the
+
+        retired-path redirect. Credit is for showing how they connect, not for the count.
+
+        Could the next step act from this map with small targeted lookups rather than a
+
+        fresh exploration?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every place carry an exact file:line AND the name of the routine it lives
+
+        in? A bare filename is not specific. A file:line with no routine named around it
+
+        is not specific - the maintainer asked whose code it is, not where the character
+
+        offset falls. A routine named without the file:line where it is defined is not
+
+        specific either.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it contributes to the resolution path -
+
+        which input form it accepts, what it disambiguates, what it falls back to, why it
+
+        refuses? Do the closing sentences say what a rework must preserve in terms of
+
+        behaviour, rather than restating the method names?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate what it verified by reading from what it inferred from a
+
+        name? Guessing at a fallback it never opened is worse than saying it did not
+
+        check. Is completeness claimed without saying how it was established?
+
+        '
+- name: Audit every dependent of the category contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'THE DISCRIMINATOR. Is this an exhaustive, area-grouped audit of everywhere that
+
+        would have to change with the class, reaching the scattered periphery rather than
+
+        the obvious category-named neighbours? The dependents that matter are in the
+
+        middle of some other job entirely: destroying a user, indexing for search,
+
+        deciding whether inbound email is a mailing-list mirror, serializing a topic
+
+        timer, seeding a new site, composing a notification subject, scoping a chat
+
+        channel search, publishing a shared draft, explaining a tag exclusion, gating a
+
+        vote, restoring a backup, polling a feed, deciding a featured-link permission.
+
+        Breadth across areas is what is being measured, and missing a whole area is a
+
+        regression shipped. Re-listing the class''s own surface, or the association models
+
+        named after it, is not this question.
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'For every dependent: the routine the dependency sits inside, its file:line, and
+
+        the consequence. A file:line with no routine named around it does not count - it
+
+        is the output of a search, not the answer to the question asked. A routine named
+
+        with no consequence stated does not count. Marks are lost per dependent that
+
+        arrives as a bare location.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each dependent carry one phrase on what that routine would start getting
+
+        wrong if the class stopped handing back what it hands back today? The consequence
+
+        must be about the routine''s own job - what breaks for the user being destroyed,
+
+        the email being received, the vote being cast - not a restatement of the line of
+
+        code.
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say how it convinced itself the audit is exhaustive, and name
+
+        where it is likely still thin? An unqualified claim of completeness over a
+
+        codebase this size is overconfidence. Flagging areas it could not reach within
+
+        budget is worth more than a confident list that quietly stops.
+
+        '

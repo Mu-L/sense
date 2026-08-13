@@ -1,0 +1,161 @@
+name: Mastodon work session - audit the account-record contract before a rework
+repo: mastodon
+contract_symbol: Account
+contract_file: app/models/account.rb
+# TWO-STEP PROBE SCENARIO (plans/01-author.md). It exists so the next phase can run the
+# mini-bench - both arms, once, at the real wall, unscored - against a real baseline.
+# Nothing here is a verdict: no delta is claimed and none has been measured on this shape.
+#
+# Single-prompt session bench (bench/drivers/bench-sense-local.sh): every step is presented
+# in ONE prompt and worked in order. Rendered to the agent: the description + each step's
+# name and prompt ONLY (checks and gold are NEVER shown). Everything rendered is kept
+# NEUTRAL - it states the task, never the answer's shape, file paths, class or method
+# names, counts, or which tool to reach for.
+#
+# THE CONTRACT. `Account` (app/models/account.rb) is the record every other model,
+# service, worker and controller in Mastodon hangs off: local users and remote actors
+# are both rows in it, and it carries the lookup surface (named scopes, finders,
+# aggregates and the mention pattern constant) that the rest of the codebase queries.
+# It is the thing a maintainer reworking identity storage would actually open first.
+#
+# SEAM PROFILE (bench/lib/seam_hunt.py, `Account --file app/models/account.rb`):
+#   app caller files : 107   (total incl test/non-app: 107)
+#   SCATTER (dirs)   : 34
+#   GREP-NOISE       : 'Account' in 257 app files   PRECISION=0.42
+#   VERDICT          : SCATTERED + GREP-NOISY
+# Ranked against the two other candidates profiled this session, lowest precision first:
+#   Account                        0.42  (107 callers / 257 grep files, 34 dirs)  <- chosen
+#   ActivityPub::TagManager        0.53  (75 callers / 141 grep files, 22 dirs)
+#   ApplicationPolicy              0.53 REJECTED - the caller edges are false. Its
+#     "callers" are controllers that define their own `current_user` / `user_signed_in?`,
+#     the same method names ApplicationPolicy declares privately; checked by hand,
+#     `grep -n 'Policy' app/controllers/about_controller.rb` and
+#     `app/controllers/concerns/localized.rb` return NOTHING. A profile is not a caller
+#     set until a sample of it is opened.
+# Two more were profiled and are RESOLVER-GAP for this axis, recorded not hidden:
+# `Redisable` and `Paginable` return 0 app caller files from seam_hunt; the MCP blast
+# does show `Redisable` as 65 `includes Redisable` edges, but every one of those
+# dependents writes the token on line 3, so its precision is ~1.0 - the near-transcription
+# profile that has never separated arms.
+# PRECISION RANKS, IT NEVER KILLS: the two-arm mini-bench next phase is what decides.
+#
+# THE AXIS (the whole thesis, and what the mini-bench measures). A dependent of this
+# contract usually never holds an account object. It reaches the record class itself on
+# ONE line - a named scope, a finder, an aggregate, or a shared pattern constant declared
+# on the class - inside a file whose subject is something else entirely: a text-length
+# check, a disk-usage figure, an index rebuild, a moderation sweep, a request-signature
+# test, an admin log filter. The dependency is a single class-level call in a file about
+# another job, so it is invisible in a reading of the model and unremarkable in a reading
+# of the dependent.
+#
+# WHAT A GREP PRINTS, RECORDED AND NEVER A GATE (laws.md: NO GREP SCREEN IS A GATE, IN
+# ANY FORM). The token is the repo's most common word: it is a column (`account_id`), a
+# parameter, a local variable, an association (`belongs_to :account`) and a namespace
+# (`AccountsController`, `AccountSuggestions`) in files with no dependency on the class
+# at all. `Account` appears in 257 app files against 107 real caller files - precision
+# 0.42, the lowest of the candidates profiled. That number ORDERS the candidates; it
+# does not decide, and the run does.
+#
+# WHAT THE ARM IS SHOWN. `sense_blast Account` is AMBIGUOUS at MCP defaults (13 symbols
+# named Account; the tool returns the hint and the top matches, so an arm pays one extra
+# call to disambiguate). `sense_blast Account --file app/models/account.rb` returns 60
+# direct callers over 30 areas, risk high, truncated. EVERY one of the 16 `dependents`
+# rows below appears in that shown set; each row's ref was then opened by hand, because
+# the blast payload gives the enclosing `def`, not the line that touches the contract.
+#
+# MEMORIZATION (memorization_probe.py, per row). CUT as recited: `InstancePresenter`
+# (0.842, 16 members named) and `FeedManager` (0.818, 18 members named) - both are real,
+# shown, in-pool dependents and both are dropped anyway. Every surviving row scored
+# `not recited` or declared too few members to score. The anchor itself comes back
+# recited (`Account` 0.312, 29 members) - that is the contract's own API surface, which
+# is why the contract centre is a NON-SCORING anchor group here; no gold row's credit is
+# a member list, each is a line-level fact at a path the probe never produces.
+description: |
+  You are a maintainer about to rework how a user account record is stored and looked
+  up - the record that both local users and remote actors are rows in, and the lookup
+  surface the rest of the codebase queries it through. Before you touch it, audit what
+  depends on that contract, completely enough that the rework cannot silently break a
+  dependent. Do not stop at the obvious half - the account model, the account
+  controllers, the account services and the things whose own name is about accounts.
+  A dependent counts wherever the record class itself is reached to make a decision, and
+  the ones that matter live in files that are about something else. For each one give an
+  exact file:line a teammate could jump straight to, plus one phrase on how it uses the
+  contract. A filename with no line number does not count, and a missed dependent is a
+  regression shipped.
+steps:
+- name: Map the account-record contract
+  prompt: "Task: orient. In a few sentences plus exact file:line references, where does
+    the account record live, what is the lookup surface it exposes to the rest of the
+    codebase, and what would a rework of it have to preserve? Give file:line for
+    everything you name.
+    "
+  checks:
+  - type: response_richness
+    value: '3'
+    required: true
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+- name: Audit every dependent of the account-record contract
+  prompt: "Task: this is the core of the ticket. Find EVERY place in the codebase that
+    depends on the account-record contract, so the rework cannot silently break one. Be
+    exhaustive and group them by area. Most dependents never hold one of these records:
+    they reach the record class itself on a SINGLE line - a named scope, a finder, an
+    aggregate, or a shared pattern constant declared on the class - inside a file whose
+    subject is an entirely different job, so the dependency is unremarkable in a reading
+    of that file and invisible in a reading of the model. The record's name is also one
+    of the most common words in this codebase: it is a column, a parameter, a local
+    variable, an association and a namespace in files that do not depend on the contract
+    at all, so a text search for it returns mostly non-dependents and gives no way to
+    tell them apart. For each dependent give file:line and one phrase on how it uses the
+    contract. A filename with no line number does not count, and a missed dependent is a
+    regression shipped.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Enumerated the scattered class-level dependent set, not just the account-named files
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
+# Gold is the must-find audit of what depends on the account record. TWO groups:
+#   - `contract` (4, NON-SCORING anchor): the record itself and the obvious centre both
+#     arms reach. It does not discriminate and it is not meant to.
+#   - `dependents` (16, THE discriminator): the scattered periphery, ONE row per FILE,
+#     across 12 directories. Every row is in the shown `sense_blast` output above, and
+#     every credit below was read off its own line by hand (gold_audit stamp/verify),
+#     never taken from a script tally.
+gold:
+  # --- NON-SCORING anchors: the contract centre ---
+  - {id: contract-model, group: contract, match: [models/account.rb], relation: "app/models/account.rb:65 `class Account < ApplicationRecord` - the account record itself, the contract under change"}
+  - {id: c:status, group: contract, match: [models/status.rb], relation: "app/models/status.rb:77 `belongs_to :account, inverse_of: :statuses` - the content model hangs off the account association"}
+  - {id: c:user, group: contract, match: [models/user.rb], relation: "app/models/user.rb:72 `belongs_to :account, inverse_of: :user` - a local login is a User row pointing at an Account row"}
+  - {id: c:resolve-service, group: contract, match: [services/resolve_account_service.rb], relation: "app/services/resolve_account_service.rb:27 `@account ||= Account.find_remote(@username, @domain)` - the webfinger resolve path, the obvious lookup entry point for accounts"}
+  # --- THE DISCRIMINATOR: one class-level reach per file, in a file about another job ---
+  - {id: d:note-length-validator, group: dependents, match: [validators/note_length_validator.rb], relation: "app/validators/note_length_validator.rb:19 `new_text.gsub!(Account::MENTION_RE, '@\\2')` - a bio-length validator borrows the account class's mention pattern so a mention counts as its short form"}
+  - {id: d:extractor, group: dependents, match: [lib/extractor.rb], relation: "app/lib/extractor.rb:28 `text.scan(Account::MENTION_RE) do |screen_name, _|` - the text entity extractor scans for mentions with the account class's pattern constant"}
+  - {id: d:self-destruct-scheduler, group: dependents, match: [scheduler/self_destruct_scheduler.rb], relation: "app/workers/scheduler/self_destruct_scheduler.rb:54 `@inboxes ||= Account.inboxes` - the instance self-destruct sweep asks the account class for every delivery inbox to notify"}
+  - {id: d:media-privacy-check, group: dependents, match: [system_check/media_privacy_check.rb], relation: "app/lib/admin/system_check/media_privacy_check.rb:79 `attachment = Account.representative.media_attachments.take` - the admin storage-privacy check reaches the instance's representative account to get a real attachment URL to probe"}
+  - {id: d:space-usage-dimension, group: dependents, match: [dimension/space_usage_dimension.rb], relation: "app/lib/admin/metrics/dimension/space_usage_dimension.rb:44 `Account.sum(Arel.sql('COALESCE(avatar_file_size, 0) + COALESCE(header_file_size, 0)'))` - the admin disk-usage figure aggregates avatar and header sizes straight off the account table"}
+  - {id: d:json-ld-helper, group: dependents, match: [helpers/json_ld_helper.rb], relation: "app/helpers/json_ld_helper.rb:233 `on_behalf_of ||= Account.representative` - unsigned fetches fall back to the instance representative account to sign the request with"}
+  - {id: d:moderation-action, group: dependents, match: [admin/moderation_action.rb], relation: "app/models/admin/moderation_action.rb:85 `representative_account = Account.representative` - marking statuses sensitive attributes the moderation edit to the representative account"}
+  - {id: d:action-log-filter, group: dependents, match: [admin/action_log_filter.rb], relation: "app/models/admin/action_log_filter.rb:114 `account = Account.find_or_initialize_by(id: value)` - filtering the audit log by target builds an unsaved account to match the polymorphic target on"}
+  - {id: d:entity-cache, group: dependents, match: [lib/entity_cache.rb], relation: "app/lib/entity_cache.rb:15 `Account.select(:id, :username, :domain, :url).find_remote(username, domain)` - the mention entity cache uses the class finder with a narrowed column set"}
+  - {id: d:accounts-index-importer, group: dependents, match: [importer/accounts_index_importer.rb], relation: "app/lib/importer/accounts_index_importer.rb:28 `Account.searchable` - the search index rebuild defines its import scope as the searchable account scope"}
+  - {id: d:statuses-index-importer, group: dependents, match: [importer/statuses_index_importer.rb], relation: "app/lib/importer/statuses_index_importer.rb:62 `Mention.where(account: Account.local, silent: false).select(:id, :status_id)` - the status index rebuild narrows mentions to local accounts via the class scope"}
+  - {id: d:suggestions-source, group: dependents, match: [account_suggestions/source.rb], relation: "app/models/account_suggestions/source.rb:13 `Account` then `.searchable.where(discoverable: true).without_silenced.without_memorial` - the follow-suggestion base scope is chained off the class"}
+  - {id: d:friends-of-friends, group: dependents, match: [friends_of_friends_source.rb], relation: "app/models/account_suggestions/friends_of_friends_source.rb:10 `Account.find_by_sql([<<~SQL.squish, { id: account.id, limit: limit }])` - the friends-of-friends suggestion runs raw SQL through the account class"}
+  - {id: d:account-batch-form, group: dependents, match: [form/account_batch.rb], relation: "app/models/form/account_batch.rb:69 `Account.where(id: account_ids)` - the admin bulk-action form resolves its checked ids back to records through the class"}
+  - {id: d:signature-verification, group: dependents, match: [concerns/signature_verification.rb], relation: "app/controllers/concerns/signature_verification.rb:48 `signed_request_actor.is_a?(Account) ? signed_request_actor : nil` - HTTP signature verification type-tests the signing actor against the class before treating it as an account"}
+  - {id: d:application-controller, group: dependents, match: [controllers/application_controller.rb], relation: "app/controllers/application_controller.rb:108 `@single_user_mode ||= Rails.configuration.x.single_user_mode && Account.without_internal.exists?` - the single-user-mode gate is an existence check over the non-internal account scope"}

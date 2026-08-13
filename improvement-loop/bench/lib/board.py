@@ -1,0 +1,477 @@
+#!/usr/bin/env python3
+"""The cycle 2 board: one repo's scenario, measured across every arm.
+
+Three jobs, all read-only over what is already on disk:
+
+  eligible   which banked cells are owed a board
+  gate       is this machine allowed to bench them
+  assemble   the numbers JSON a board renders from
+
+THE HEADLINE COLUMN IS READ, NEVER RE-RUN. The scenario earned its way here by
+winning on the headline arm, and that cell is already in banked.jsonl with its
+runs, its groups and its billed tokens. Re-running it would spend the most
+constrained subscription to reproduce a number we hold, so the board reuses it
+and stamps the date per column instead of per page.
+
+EVERY NUMBER IS WITHIN ONE MODEL. A column is that model's sense arm against
+that model's own baseline. Absolute scores are NOT comparable across models -
+they run different harnesses at different budgets - so the board carries deltas
+and the replication count, never a ranking. cost_parity.py owns the parity call;
+this file carries raw billed tokens and does not become a rival answer to it.
+
+THE VERSION GATE EXISTS BECAUSE THE COLUMNS MUST BE THE SAME PRODUCT. The
+headline column was banked at one sense build. If the confirmation arms run at
+another, the board quietly compares two products and reads as a model
+difference. Refuse loudly instead: same build for every column, or no board.
+
+A COLUMN THAT NEVER CALLED SENSE IS NOT A COLUMN ABOUT SENSE. mechanism_table.py
+splits never-routed from harness-failure from routed; this file carries that
+split into the replication count so an arm that ignored Sense cannot be reported
+as Sense failing to help it.
+
+Usage:
+    board.py eligible  <vertical-dir> --headline <model>
+    board.py gate      <vertical-dir> --repo <repo> --headline <model>
+    board.py assemble  <vertical-dir> --repo <repo> --headline <model> [--arms "a b"]
+"""
+import argparse
+import glob
+import json
+import os
+import re
+import subprocess
+import sys
+
+import banked
+import mechanism_table
+import run_validity
+import sense_build
+
+THRESHOLD = 0.50
+VERSION_DIR = re.compile(r"^[0-9a-f]{16}$")
+
+
+def short_version(scenario_version):
+    """The bare hex of a `sha256:...` scenario version - the board's identity."""
+    return (scenario_version or "").split(":")[-1]
+
+
+def report_path(vertical_dir, repo, scenario_version):
+    """One board per (repo, question). A second one is a redo, not a new page."""
+    return os.path.join(vertical_dir, "reports",
+                        f"{repo}-{short_version(scenario_version)}.md")
+
+
+def banked_rows(vertical_dir):
+    path = os.path.join(vertical_dir, "banked.jsonl")
+    if not os.path.exists(path):
+        return []
+    rows = []
+    for line in open(path):
+        line = line.strip()
+        if line:
+            rows.append(json.loads(line))
+    return rows
+
+
+def eligible(vertical_dir, headline):
+    """Banked WINs on the headline arm that have no board yet."""
+    out = []
+    for row in banked_rows(vertical_dir):
+        if row.get("verdict") != "WIN" or row.get("model") != headline:
+            continue
+        if os.path.exists(report_path(vertical_dir, row["repo"], row["scenario_version"])):
+            continue
+        out.append(row)
+    return out
+
+
+def installed_sense_version():
+    try:
+        out = subprocess.run(["sense", "--version"], capture_output=True, text=True,
+                             timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return (out.stdout or "").strip().splitlines()[0] if out.stdout.strip() else None
+
+
+def installed_build_key():
+    """The 12-char content key of the binary in hand, or None if it cannot be read."""
+    try:
+        return sense_build.build_identity()["sense_build_key"]
+    except (SystemExit, OSError, KeyError):
+        return None
+
+
+def gate(vertical_dir, repo, headline, installed=None, installed_key=None):
+    """Refuse a board whose columns would not be the same Sense build.
+
+    THE KEY IS THE BUILD; THE LABEL IS NOT. `sense --version` prints the same
+    `sense 1.13.5 (...)` for every dirty working-tree binary between two releases, so a
+    gate standing on the label alone passes a rebuild that changed the product and calls
+    the resulting board one comparison. lib/sense_build.py has hashed the binary since it
+    landed and the runners stamp `sense_build_key` into every run_meta; this reads it back.
+
+    Rows banked before the key was carried have none, and those fall back to the label -
+    NOT to "ok". A missing key is missing provenance, not proof of sameness, so the
+    fallback says so in `basis` and the caller can see which check actually ran.
+    """
+    rows = [r for r in banked_rows(vertical_dir)
+            if r["repo"] == repo and r.get("model") == headline
+            and r.get("verdict") == "WIN"]
+    if not rows:
+        return {"ok": False, "reason": f"no banked WIN for {repo} on {headline}"}
+    row = rows[-1]
+    want, want_key = row.get("sense_version"), row.get("sense_build_key")
+    have = installed if installed is not None else installed_sense_version()
+    if not have:
+        return {"ok": False, "reason": "cannot read `sense --version`", "banked": want}
+
+    if want_key:
+        have_key = installed_key if installed_key is not None else installed_build_key()
+        if not have_key:
+            return {"ok": False, "banked": want_key, "basis": "build key",
+                    "reason": "the banked column names a build key and the installed "
+                              "binary cannot be hashed (set SENSE_BIN)"}
+        if have_key != want_key:
+            return {"ok": False, "banked": want_key, "installed": have_key,
+                    "basis": "build key",
+                    "reason": "installed Sense is a DIFFERENT BUILD from the banked "
+                              "headline column (same version label, different bytes); "
+                              "the board would compare two products"}
+        out = {"ok": True, "sense_version": want, "sense_build_key": want_key,
+               "basis": "build key", "scenario_version": row["scenario_version"]}
+        # A win banked off an uncommitted tree is reproducible only by whoever holds that
+        # tree. It does not refuse the board - the bytes still match - but the board must
+        # say so rather than imply a released product.
+        if row.get("sense_dirty"):
+            out["dirty"] = True
+        return out
+
+    if have != want:
+        return {"ok": False, "banked": want, "installed": have, "basis": "version label",
+                "reason": "installed Sense differs from the banked headline column; "
+                          "the board would compare two products"}
+    return {"ok": True, "sense_version": want, "basis": "version label (no build key "
+            "banked - provenance is weaker than it looks)",
+            "scenario_version": row["scenario_version"]}
+
+
+def arm_root(vertical_dir, model, scenario_version):
+    """One arm's question root, mirroring bench-paths.sh."""
+    return os.path.join(vertical_dir, "results",
+                        model.replace("/", "_").replace(":", "_"),
+                        short_version(scenario_version))
+
+
+def _scored(root, arm, repo):
+    """Every scored run for one arm, in run order."""
+    out = []
+    for path in sorted(glob.glob(os.path.join(root, arm, repo, "run-*", "scored.json"))):
+        try:
+            out.append(json.load(open(path)))
+        except (OSError, ValueError):
+            continue
+    return out
+
+
+def _mean(values):
+    """Mean over the values that exist. None is absent, never zero.
+
+    The subscription arms report no dollar cost at all by design (see
+    parse-codex-result.py and parse-opencode-result.py, which emit
+    total_cost_usd null because a flat-rate plan has no per-token price). Summing
+    that as zero would print "$0.00 with Sense" on a public page, which is a
+    claim we cannot make.
+    """
+    real = [v for v in values if v is not None]
+    return round(sum(real) / len(real), 2) if real else None
+
+
+def session(root, repo):
+    """What the work actually cost, per arm: time, tokens, money, tool calls.
+
+    A delta with no cost beside it is half a result. These come from the metrics
+    block the scorer already writes, so the board reports what was measured rather
+    than a second opinion about it.
+
+    TOKENS ARE THE COST AXIS, NOT DOLLARS. Four of the five arms run on flat-rate
+    plans and report no price at all, so a dollar column would be filled for one
+    model and empty for the rest. token_total_all is built the same way on every
+    harness - billed plus cache reads plus cache writes, with the competitor
+    runners mapping their own fields onto that shape - so it is the one cost
+    number that means the same thing in every column.
+    """
+    out = {}
+    for arm in ("baseline", "sense"):
+        runs = _scored_metrics_with_wall(root, arm, repo)
+        if not runs:
+            continue
+        out[arm] = {
+            key: _mean([m.get(key) for m in runs])
+            for key in ("wall_time_seconds", "token_total_all", "token_total_billed",
+                        "cost_usd", "tool_calls", "grep_count", "read_count",
+                        "mcp_count")
+        }
+    return out
+
+
+def _scored_metrics_with_wall(root, arm, repo):
+    """Each MEASUREMENT run's metrics, with a zero wall time healed from run_meta.
+
+    Two fixes to what this arm's cost row used to say. Measurement artifacts are
+    dropped through run_validity, the same gate matrix.py and scoreboard.py use:
+    two crashed Kimi sessions were averaged into a published time. And a zero
+    wall is healed from run_meta, because scorer.py reads wall time from the
+    Claude transcript's `duration_ms`, which the codex and opencode harnesses
+    never emit - so every non-Claude arm scored 0 seconds while its run_meta held
+    the real number, and the board printed a blank "time with Sense" for four of
+    five columns. A zero here is the scorer failing to read a wall, never a
+    session that took no time.
+    """
+    out = []
+    for path in run_validity.measured_runs(os.path.join(root, arm, repo)):
+        try:
+            metrics = dict(json.load(open(path)).get("metrics") or {})
+        except (OSError, ValueError):
+            continue
+        if not metrics.get("wall_time_seconds"):
+            metrics["wall_time_seconds"] = _wall_from_meta(path)
+        out.append(metrics)
+    return out
+
+
+def _wall_from_meta(scored_path):
+    """This run's wall time as its own runner recorded it, or None."""
+    meta_path = os.path.join(os.path.dirname(scored_path), "run_meta.json")
+    try:
+        return json.load(open(meta_path)).get("wall_time_seconds") or None
+    except (OSError, ValueError):
+        return None
+
+
+def _run_metas(root, arm, repo):
+    out = []
+    for path in sorted(glob.glob(os.path.join(root, arm, repo, "run-*", "run_meta.json"))):
+        try:
+            out.append(json.load(open(path)))
+        except (OSError, ValueError):
+            continue
+    return out
+
+
+def timeouts(root, repo):
+    """The wall each arm was given, and how it was set.
+
+    THE WALL IS NOT THE SAME ON EVERY HARNESS and the board has to say so. The
+    Claude runner runs the SENSE arm first at the default ceiling and derives the
+    baseline's wall from it (paired sense run x1.2), which asks "given the time it
+    takes WITH the tool, can you get there without it". The metered runners have no
+    matched budget: both arms get one fixed ceiling, and that ceiling differs per
+    model (Codex max(600, repo), opencode max(1200, repo), opencode/kimi
+    max(3000, repo)). A wider wall favours the BASELINE, so a page that hides this
+    is overstating those columns rather than flattering them.
+    """
+    out = {}
+    for arm in ("baseline", "sense"):
+        metas = _run_metas(root, arm, repo)
+        if not metas:
+            continue
+        secs = [m.get("session_timeout_seconds") for m in metas
+                if m.get("session_timeout_seconds")]
+        bases = {m.get("timeout_basis") for m in metas if m.get("timeout_basis")}
+        out[arm] = {
+            "seconds": _mean(secs),
+            "basis": sorted(bases)[0] if bases else None,
+        }
+    return out
+
+
+def _cited_ids(root, arm, repo):
+    """Every gold id this arm cited in ANY of its runs."""
+    seen = set()
+    for scored in _scored(root, arm, repo):
+        for d in (scored.get("gold_recall", {}) or {}).get("details", []):
+            if d.get("cited"):
+                seen.add(d.get("id"))
+    return seen
+
+
+def coverage(root, repo, gold):
+    """The 38 answers split by WHICH ARM reached them. The value picture.
+
+    Without a baseline in it, a breakdown of the Sense run alone reads as "Sense
+    supplied about half" when the truth is that a chunk of those answers exist
+    only because Sense was there. The split that shows the value honestly is by
+    arm, not by provenance inside one arm:
+
+        both          the model would have got these anyway
+        sense_only    it never reached these without Sense, in any run
+        baseline_only reached without Sense but not with; noise, and shown
+        neither       reached by no arm; the honest remainder
+    """
+    base, sense = _cited_ids(root, "baseline", repo), _cited_ids(root, "sense", repo)
+    if not gold:
+        return {}
+    ids = {row["id"] for row in gold}
+    base, sense = base & ids, sense & ids
+    return {
+        "both": len(base & sense),
+        "sense_only": len(sense - base),
+        "baseline_only": len(base - sense),
+        "neither": len(ids - base - sense),
+        "total": len(ids),
+    }
+
+
+def sense_only_reach(root, repo):
+    """Answers the Sense arm reached that its own baseline never reached.
+
+    The headline of the whole programme: not "scored higher" but "found what it
+    could not otherwise find". Mirrors the sense-only reach in efficiency.py -
+    cited by the Sense arm in at least one run, cited by the baseline in none.
+    """
+    return sorted(_cited_ids(root, "sense", repo) - _cited_ids(root, "baseline", repo))
+
+
+def _column(root, repo, model, gold, source):
+    """One model's column: its own pair, plus why the number is what it is."""
+    row = banked.build_row(root, repo) if os.path.isdir(root) else None
+    if row is None:
+        return {"model": model, "source": source, "measured": False,
+                "reason": "no scored runs under this arm's root"}
+    mech = mechanism_table.build(root, repo, gold) if gold else {}
+    return {
+        "model": model,
+        "source": source,
+        "measured": True,
+        "runs": row["runs"],
+        "overall": row["overall"],
+        "groups": row["groups"],
+        "best_group_delta": row["best_group_delta"],
+        "billed_tokens": row["billed_tokens"],
+        "sense_version": row.get("sense_version"),
+        "recorded_at": row.get("recorded_at"),
+        "session": session(root, repo),
+        "timeouts": timeouts(root, repo),
+        "sense_only_reach": sense_only_reach(root, repo),
+        "coverage": coverage(root, repo, gold),
+        "routing": mech.get("routing", []),
+        "mechanism": {k: mech[k] for k in
+                      ("runs", "measured_runs", "rows_disagreeing", "verdict_split",
+                       "dominant", "gold_rows") if k in mech},
+    }
+
+
+def _replication(columns, threshold=THRESHOLD):
+    """Counted, never ranked - and an arm that ignored Sense is not counted at all."""
+    routed, replicated, never_routed, search_only, not_measured = [], [], [], [], []
+    for col in columns:
+        if not col.get("measured"):
+            not_measured.append(col["model"])
+            continue
+        states = col.get("routing") or []
+        if states == ["never-routed"]:
+            never_routed.append(col["model"])
+            continue
+        if states == ["search-only"]:
+            search_only.append(col["model"])
+            continue
+        routed.append(col["model"])
+        if col["best_group_delta"] >= threshold:
+            replicated.append(col["model"])
+    return {"routed": routed, "replicated": replicated, "never_routed": never_routed,
+            "search_only": search_only, "not_measured": not_measured,
+            "threshold": threshold}
+
+
+def question(scenario_path):
+    """The task the models were given, verbatim.
+
+    A public board has to show the actual ask, not a paraphrase: a reader cannot
+    judge a result without seeing the question that produced it, and paraphrasing
+    it here would let the page drift from what the models were sent.
+    """
+    if not scenario_path or not os.path.exists(scenario_path):
+        return {}
+    import yaml
+
+    doc = yaml.safe_load(open(scenario_path))
+    return {
+        "name": doc.get("name", ""),
+        "description": (doc.get("description") or "").strip(),
+        "contract_symbol": doc.get("contract_symbol", ""),
+        "contract_file": doc.get("contract_file", ""),
+        "steps": [{"name": s.get("name", ""), "prompt": (s.get("prompt") or "").strip()}
+                  for s in (doc.get("steps") or [])],
+    }
+
+
+def assemble(vertical_dir, repo, headline, arms, scenario_path=None):
+    """The numbers JSON. Nothing downstream may print a figure absent from here."""
+    banked_row = next((r for r in reversed(banked_rows(vertical_dir))
+                       if r["repo"] == repo and r.get("model") == headline
+                       and r.get("verdict") == "WIN"), None)
+    if banked_row is None:
+        raise SystemExit(f"board.py: no banked WIN for {repo} on {headline}")
+    version = banked_row["scenario_version"]
+    gold = mechanism_table.load_gold(scenario_path) if scenario_path else []
+
+    head = _column(arm_root(vertical_dir, headline, version), repo, headline, gold,
+                   source="banked")
+    if head.get("measured"):
+        head["recorded_at"] = banked_row.get("recorded_at")
+    columns = [head] + [
+        _column(arm_root(vertical_dir, m, version), repo, m, gold, source="benched")
+        for m in arms
+    ]
+    return {
+        "repo": repo,
+        "vertical": os.path.basename(os.path.normpath(vertical_dir)),
+        "scenario_version": version,
+        "sense_version": banked_row.get("sense_version"),
+        "gold_rows": len(gold),
+        "headline": headline,
+        "question": question(scenario_path),
+        "columns": columns,
+        "replication": _replication(columns[1:]),
+    }
+
+
+def _vdir(args):
+    return os.path.normpath(args.vertical_dir)
+
+
+def main(argv):
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    for name in ("eligible", "gate", "assemble"):
+        p = sub.add_parser(name)
+        p.add_argument("vertical_dir")
+        p.add_argument("--headline", required=True)
+        if name != "eligible":
+            p.add_argument("--repo", required=True)
+        if name == "assemble":
+            p.add_argument("--arms", default="", help="space-separated confirmation arms")
+            p.add_argument("--scenario", default=None)
+    args = ap.parse_args(argv[1:])
+
+    if args.cmd == "eligible":
+        rows = eligible(_vdir(args), args.headline)
+        for r in rows:
+            print(f"{r['repo']}\t{r['scenario_version']}\t{r['sense_version']}")
+        return 0 if rows else 1
+
+    if args.cmd == "gate":
+        res = gate(_vdir(args), args.repo, args.headline)
+        print(json.dumps(res, indent=2, sort_keys=True))
+        return 0 if res["ok"] else 1
+
+    out = assemble(_vdir(args), args.repo, args.headline,
+                   args.arms.split(), args.scenario)
+    print(json.dumps(out, indent=2, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

@@ -1,0 +1,10 @@
+{
+  "chatwoot": "done",
+  "chatwoot#reruns": "2",
+  "discourse": "done",
+  "discourse#reruns": "2",
+  "mastodon": "done",
+  "mastodon#reruns": "2",
+  "rails": "done",
+  "rails#reruns": "2"
+}

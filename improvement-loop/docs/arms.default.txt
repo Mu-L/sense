@@ -1,0 +1,24 @@
+# The default arms. stamp.sh copies this to verticals/<key>/arms.txt, where the
+# campaign edits it. THIS FILE IS THE ONLY PLACE A MODEL ID IS NAMED - when a release
+# supersedes one, edit here (for future verticals) and in the vertical's own arms.txt
+# (for a live one). No doc, driver, or one-pager may hardcode a model id.
+#
+# One arm per line:   <role>  <model-id>  <runs>
+#
+#   headline      the arm a WIN is claimed on. Exactly one.
+#   confirmation  cross-model check that the win is not an artifact of one model.
+#   judge         grades the rubric axes. Exactly one, and it is PINNED: a judge that
+#                 moves with the arm makes every board incomparable (LEDGER
+#                 stopper/judge-model-drift).
+#
+# Dispatch is by model id, not by a column: claude-* runs on the Claude CLI, gpt-*/codex
+# on the Codex CLI, everything else on opencode. Runs default to 2 - a single run carries
+# an OPEN flag and cannot be published as a result.
+
+headline      claude-opus-5           2
+judge         claude-opus-4-7         1
+confirmation  claude-fable-5          2
+confirmation  gpt-5.6-sol             2
+confirmation  kimi-for-coding/k3      2
+confirmation  glm-5.2:cloud           2
+confirmation  mistral-large-3:cloud   2

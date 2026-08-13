@@ -1,0 +1,122 @@
+{
+ "bar1": {
+  "fails": []
+ },
+ "bar2": {
+  "grep_hit_files": 201,
+  "grep_invisible": 3,
+  "invisible_files": [
+   "app/Http/Livewire/Menu/Favorite.php",
+   "app/Http/Livewire/Report/Pin.php",
+   "app/Http/Livewire/Tab/Pin.php"
+  ],
+  "invisible_ratio": 0.088,
+  "precision": 0.1542,
+  "prod_dependent_files": 34,
+  "retained_prod_files": 0,
+  "scatter_dirs": 10,
+  "survive_at_0.7": 34,
+  "total_affected": 729,
+  "total_affected_raw": false
+ },
+ "bar3": {
+  "battery": [
+   {
+    "cover": 0.912,
+    "kind": "token",
+    "pattern": "Jobs",
+    "precision": 0.154,
+    "repo_hits": 201,
+    "usable": false
+   },
+   {
+    "cover": 0.647,
+    "kind": "php-ns-use",
+    "pattern": "use App\\Traits\\",
+    "precision": 0.101,
+    "repo_hits": 218,
+    "usable": false
+   },
+   {
+    "cover": 0.441,
+    "kind": "php-use",
+    "pattern": "use \u2026\\Jobs;",
+    "precision": 0.484,
+    "repo_hits": 31,
+    "usable": false
+   },
+   {
+    "cover": 0.059,
+    "kind": "layout",
+    "pattern": "layout Categories.php",
+    "precision": 0.25,
+    "repo_hits": 8,
+    "usable": false
+   },
+   {
+    "cover": 0.0,
+    "kind": "type-accessor",
+    "pattern": ".*Jobs*( call",
+    "precision": 0.0,
+    "repo_hits": 1,
+    "usable": false
+   },
+   {
+    "cover": 0.0,
+    "kind": "import",
+    "pattern": "import \u2026Jobs",
+    "precision": null,
+    "repo_hits": 0,
+    "usable": false
+   },
+   {
+    "cover": 0.0,
+    "kind": "subclass",
+    "pattern": "class X(Jobs) / < Jobs",
+    "precision": null,
+    "repo_hits": 0,
+    "usable": false
+   },
+   {
+    "cover": 0.0,
+    "kind": "annotation",
+    "pattern": "field: Jobs",
+    "precision": null,
+    "repo_hits": 0,
+    "usable": false
+   }
+  ],
+  "best_cover": 0.912,
+  "best_pattern": "Jobs (token)",
+  "covered": false,
+  "name_family_union_cover": 0.912
+ },
+ "bar4": {
+  "at_0.3": {
+   "bytes": 17837,
+   "err": "",
+   "ok": true,
+   "within_budget": true
+  },
+  "at_0.7": {
+   "bytes": 17837,
+   "err": "",
+   "ok": true,
+   "within_budget": true
+  },
+  "graph": {
+   "blast_direct_at_0.7": 60,
+   "blast_direct_callers": 60,
+   "called_by": 404,
+   "err": "",
+   "fold_collapse": false,
+   "ok": true
+  }
+ },
+ "bar6": {
+  "fails": []
+ },
+ "bar7": {
+  "fails": []
+ }
+}

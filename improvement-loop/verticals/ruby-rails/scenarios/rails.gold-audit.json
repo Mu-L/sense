@@ -1,0 +1,30 @@
+{
+  "gold_sha256": "7bfdf4fdc342c19b7e8f4ec67302d4fab56fbf55ce8df303800115f1b1fb8380",
+  "rows": {
+    "ctx:connection-handling": "DEMOTED from dependents: `grep -rl \"ActiveRecord::Relation\"` (14 files) covers it, so it is a dead shape as a discriminator. Still a true dependent; kept as context.",
+    "ctx:encryption-queries": "path unique; rewrites Relation query building for deterministic encryption. OK",
+    "ctx:enumerable-coreext": "VERIFIED: enumerable.rb:161 def pick mirrors calculations.rb:356 def pick. Cross-gem claim holds. OK",
+    "ctx:integration": "path unique; collection_cache_key over a Relation. OK",
+    "ctx:predicate-builder": "DEMOTED from dependents: `grep -rlw Relation` (34 files) covers it, and it was also cap-evicted from the shown output. Dead shape as a discriminator; kept as context.",
+    "ctx:query-command": "path unique; railties query command renders a Relation result. OK",
+    "ctx:sanitization": "VERIFIED in source: sanitization.rb:214 `if ActiveRecord::Relation === value`, exactly the stated relation. OK",
+    "ctx:scoping-named": "path unique; named scopes return a Relation. OK",
+    "ctx:signed-id": "VERIFIED: signed_id.rb:32 `module RelationMethods`, :33 find_signed, :37 find_signed!. Matches the stated relation. OK",
+    "delegation": "path unique; Delegation generates class-specific Relation methods. OK",
+    "dep:association": "READ association.rb:260 find_target: `scope = self.scope` then runs the association query through it. Builds a Relation, never names it. grep-dark on both probe greps. Shown over MCP.",
+    "dep:association-scope": "READ association_scope.rb:21-32: `scope = klass.unscoped` then extending!/add_constraints/limit! chained onto it. Textbook unnamed relation construction. grep-dark. Shown.",
+    "dep:collection-renderer": "READ collection_renderer.rb:95: `@relation.preload_associations(@collection)`. CROSS-GEM (Action View), consumes a Relation passed in. grep-dark. Shown.",
+    "dep:from-clause": "RESOLVED 2026-08-01: same shape. from_clause.rb:4-5 = ActiveRecord::Relation::FromClause, inner :nodoc: class, required by query_methods.rb:3. Blast omitting it is CORRECT (an inner class is not a caller), so this was never a resolver miss. MOVED to `contract`.",
+    "dep:hmt-association": "READ has_many_through_association.rb:71-79: `scope.where_values_hash(...)` consumes the Relation's accumulated where-clause. grep-dark. Shown.",
+    "dep:join-dependency": "ActiveRecord::Associations::JoinDependency, a separate class. Genuine dependent, shown over MCP. OK",
+    "dep:preloader-assoc": "ActiveRecord::Associations::Preloader::Association, separate class. Genuine dependent, shown over MCP. OK",
+    "dep:preloader-through": "READ preloader/through_association.rb:104-110: `through_reflection.klass.unscoped`, then merges reflection_scope.values. grep-dark. Shown.",
+    "dep:uniqueness": "READ validations/uniqueness.rb:116-124: `relation = klass.unscoped`, then relation.bind_attribute / relation.none!. grep-dark. Shown.",
+    "dep:variant-record": "READ variant_with_record.rb:73-78: goes through the `blob.variant_records` relation-backed collection. CROSS-GEM (Active Storage). grep-dark. Shown.",
+    "dep:where-clause": "RESOLVED 2026-08-01: was misgrouped as a dependent. where_clause.rb:6-7 = ActiveRecord::Relation::WhereClause, an inner :nodoc: class of the contract, required by query_methods.rb:5 and carried as @scope.where_clause. MOVED to `contract`.",
+    "finder-methods": "path unique; FinderMethods mixed into Relation. OK",
+    "query-methods": "path unique; QueryMethods is mixed into Relation and builds where/joins/select. OK",
+    "relation-model": "path unique (activerecord/lib/active_record/relation.rb); the contract itself. OK",
+    "spawn-methods": "path unique; SpawnMethods#spawn/merge clone on chain. OK"
+  }
+}

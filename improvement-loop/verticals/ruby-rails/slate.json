@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "vertical": "ruby-rails",
+    "note": "Written by compose.py; verified by slate_check.py."
+  },
+  "rails": {
+    "slot": "framework",
+    "size": "medium",
+    "prod_files": 1495,
+    "stars": 58657,
+    "banner": false,
+    "backup": {
+      "repo": "spree",
+      "size": "medium",
+      "prod_files": 2233,
+      "stars": 15591
+    }
+  },
+  "mastodon": {
+    "slot": "medium",
+    "size": "medium",
+    "prod_files": 2303,
+    "stars": 50151,
+    "banner": false,
+    "backup": {
+      "repo": "gitlabhq",
+      "size": "big",
+      "prod_files": 17869,
+      "stars": 24513
+    }
+  },
+  "discourse": {
+    "slot": "big",
+    "size": "big",
+    "prod_files": 7969,
+    "stars": 47571,
+    "banner": false,
+    "backup": {
+      "repo": "openproject",
+      "size": "big",
+      "prod_files": 8032,
+      "stars": 15731
+    }
+  },
+  "chatwoot": {
+    "slot": "medium",
+    "size": "medium",
+    "prod_files": 1908,
+    "stars": 35050,
+    "banner": false,
+    "backup": {
+      "repo": "forem",
+      "size": "medium",
+      "prod_files": 2556,
+      "stars": 22755
+    }
+  }
+}

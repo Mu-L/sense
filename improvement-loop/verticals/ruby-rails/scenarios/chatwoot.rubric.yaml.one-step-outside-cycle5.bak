@@ -1,0 +1,226 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 5 on chatwoot, TWO steps, matching the probe scenario (plans/01-author.md).
+# Supersedes the cycle-4 seven-step rubric, kept at
+# scenarios/chatwoot.rubric.yaml.handoff-7step-cycle4.bak.
+#
+# WHAT CARRIES OVER UNCHANGED: the ask is cycle 4's ask, so both criteria blocks are
+# cycle 4's mini-bench blocks (chatwoot.rubric.yaml.minibench-cycle4.bak), which is the
+# wording that put the baseline at 0.3333 - inside the window. Changing them would stop
+# that measurement from describing this scenario.
+#
+# THE TWO EDITS, and why each was made rather than left alone:
+#   1. The audience paragraph and step 2's map_quality listed "notification building and
+#      push presenters" and "model concerns ... that passes itself out to a service or a
+#      job" among the places a strong answer is dense in. Those are exactly the rows the
+#      cycle-4 credit table showed the baseline taking off one listener-directory sweep
+#      (d:activity-concern, d:notification-gate) or one token grep (d:push-payload), and
+#      they are OUT of gold this cycle. A rubric that keeps rewarding them scores a shape
+#      the recall metric no longer counts.
+#   2. What replaces them is the shape the twelve remaining rows actually have: a module
+#      folded over a service or a controller that hands the work back down through `super`,
+#      and a subclass hook the parent calls without naming. Four of the twelve are that
+#      shape and cycle 4's rubric had no words for it.
+#
+# Nothing in this rubric may reward or require an arm to reason about what text a file does
+# or does not contain - that clause is what killed cycle 3. Ten of the twelve scored files
+# DO write the record's name and they are gold anyway.
+#
+# Step names MUST match scenarios/chatwoot.yaml exactly and in order (the judge pairs by
+# name). This file carries no `repo:` key.
+
+audience: 'An AI coding agent that will use this answer to safely rework the Chatwoot
+  conversation record - the object the whole product is organised around, that a customer''s
+  back-and-forth with the support team is filed under. Score for that agent, not a human
+  reader and not a docs page. A perfect answer leaves the agent able to change that class
+  knowing two things: how the system gets hold of the right one of these when a reply
+  arrives from outside and all it holds are the mail headers - traced through the routines
+  that make that path up - and then, separately, which code would change behaviour under
+  the rework even though nothing on its own line goes near the record. That second part is
+  the hard half and it is deliberately narrow. It is not the code that deals with the
+  record head-on: that code says the record''s name out loud, a search returns it, and the
+  maintainer said they already have it. It is the ring one step outside - code that reaches
+  the record only at second hand, by handing the work off to some other object, where it is
+  that object and not this code that touches the record. So each entry there is a small
+  path: a caller, the go-between it hands to, and the exact file:line where the hand-off is
+  made, plus what that place would start getting wrong. Those callers sit scattered across
+  the application tree and a second application tree carrying the paid edition, in
+  controllers for the dashboard, for the embedded widget and for the paid edition''s own
+  endpoints, in channel message builders, and in modules folded over a service, a
+  controller or the record itself that hand the work back down the chain. A weak answer
+  re-lists the code that deals with the record directly - the finder strategies, the query
+  builders, the services that write to it - because a name search returns them, and that is
+  exactly what was excluded; or names a caller but cannot say what it hands the work to,
+  which leaves the path unverified; or gives a bare filename; or gives file:line with
+  nothing said about what would break, which leaves the agent knowing where to look and not
+  what its change would do.
+
+  '
+steps:
+- name: Map the conversation-record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is the inbound-mail matching path traced end to end as one connected path,
+
+        rather than listed as places the class is mentioned? A strong answer reaches the
+
+        routing decision that admits an arriving message to this path, the piece that runs
+
+        the candidate matches in a declared order and stops at the first hit, each separate
+
+        attempt and the identifier it keys off, the fallback that prepares a fresh record
+
+        when none matched, and the point where a merely prepared record is made permanent.
+
+        Credit is for showing how they connect and in what order, not for the count. Could
+
+        the next step act from this map with small targeted lookups rather than a fresh
+
+        exploration?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every place carry an exact file:line AND the name of the routine it lives
+
+        in? A bare filename is not specific. A file:line with no routine named around it
+
+        is not specific - the maintainer asked whose code it is, not where the character
+
+        offset falls. A routine named without the file:line where it is defined is not
+
+        specific either.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it contributes to the matching path -
+
+        which identifier it keys off, what it scopes the match by, what it falls back to,
+
+        why it refuses? Do the closing sentences say what a rework must preserve in terms
+
+        of behaviour, rather than restating the method names?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate what it verified by reading from what it inferred from a
+
+        name? Guessing at a fallback it never opened is worse than saying it did not
+
+        check. Is completeness claimed without saying how it was established?
+
+        '
+- name: Audit every dependent of the conversation-record contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'THE DISCRIMINATOR, and it is about a RING, not a count. The maintainer asked
+
+        only for code that reaches the record at second hand - code whose own line hands
+
+        the work to another object, where it is that object and not this code that touches
+
+        the record. Does the audit sit in that ring? A strong answer is dense in callers of
+
+        the record''s handlers: the endpoint or action that builds a service around the
+
+        record and lets the service do the deciding or the writing; the module folded over
+
+        a service, a controller or the record itself whose line is `super`, so the
+
+        behaviour is settled across two files that never call each other by name; the
+
+        subclass hook a parent routine calls without naming the file it lands in; the
+
+        channel builder whose routine calls out to a scope and a builder rather than
+
+        querying anything. A weak answer re-lists the code that deals with the record
+
+        head-on - the lookup strategies, the query builders, the services and jobs that
+
+        write to it - because that is what a name search returns, and it is exactly what
+
+        was excluded. Padding the list with excluded entries is worse than a shorter list
+
+        that stays in the ring, and should pull this criterion down. Does the answer reach
+
+        BEYOND the main application tree into the second application tree carrying the paid
+
+        edition, and across dashboard, widget and paid-edition controllers, channel
+
+        builders and the modules folded over them, or is it dense in one kind of place and
+
+        silent about the rest? Does it notice that one go-between is handed the work from
+
+        several places that are not neighbours, or does it stop at the first caller it
+
+        finds? Areas it could not finish should be declared unfinished rather than quietly
+
+        summarised.
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does EVERY place carry its own exact file:line AND the name of what it hands the
+
+        work to? Both, because the entry is a path and half a path locates nothing. A bare
+
+        filename does not count - a file is not where a hand-off happens, a line is, and the
+
+        agent has to be able to jump to it. A file:line
+
+        with no go-between named is an assertion the agent cannot check, and should be
+
+        scored weaker than one that names the object the work is handed to. Where the
+
+        hand-off is a call back up the chain rather than a named object, saying so and
+
+        naming the routine it lands in counts as naming the go-between. Several places
+
+        named together on one line as a set that shares a go-between is the failure this
+
+        criterion exists to catch: however correct the shared reason is, it is one item,
+
+        not a set of located dependents, and it should be scored as one.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it would start getting wrong if the
+
+        record changed under it? The consequence must be about that place''s own job - the
+
+        agent who stops being assigned, the attachment list an agent should not see, the
+
+        conversation list a customer''s company page stops showing, the field an update
+
+        endpoint stops accepting, the broadcast that loses a key, the inbound message filed
+
+        onto the wrong thread - not a restatement of the line of code, and not a
+
+        restatement of the hand-off. Does the answer make the path legible, so the agent
+
+        can see WHY this place breaks when nothing it does touches the record itself?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say how it convinced itself this audit is exhaustive, given that
+
+        what it is looking for is defined by a link it has to traverse backwards rather than
+
+        by a name it can search for? An unqualified claim of completeness is overconfidence
+
+        here more than anywhere. Naming a go-between whose callers it knows it did not work
+
+        to the end, and what it expects is still there, is worth more than a confident list
+
+        that quietly stops.
+
+        '

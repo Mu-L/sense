@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "note": "Repo pins for this vertical. Top-level keys are repo keys; _meta is metadata, not a repo. Fill after the repo-selection gate: {\"url\": ..., \"sha\": ...} per repo.",
+    "vertical": "ruby-rails"
+  },
+  "chatwoot": {
+    "sha": "92a1fb8ab7226cadf4dcdee822fac47abad45a36",
+    "url": "https://github.com/chatwoot/chatwoot.git"
+  },
+  "discourse": {
+    "sha": "d73e4484b4b9dcffa1e75e2ceff6e0a005d479c6",
+    "url": "/Users/luc/Developer/luuuc/oss/sense-benchmark/_reference/discourse"
+  },
+  "mastodon": {
+    "sha": "963a54664804e60ea8e30795090a0f20de7a48dc",
+    "url": "https://github.com/mastodon/mastodon.git"
+  },
+  "rails": {
+    "sha": "cd62ccd424a2ea7716746da3e45b711747dba3bc",
+    "url": "https://github.com/rails/rails.git"
+  }
+}

@@ -1,0 +1,141 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# CYCLE 5. The axis moved, so this rubric moved with it.
+#
+# WHY map_quality carries the most weight here: this scenario's axis is HELD REFERENCES,
+# not call sites and not breadth of directory. The scored group is fourteen places that
+# are keeping a bare identifier for one of these records - in a column, a join row, a
+# hand-written SQL predicate, a queued job's arguments, a cache key, a stored setting -
+# which a merge that retires one record onto another would have to rewrite. Nine of the
+# fourteen pin a line that never names the class. Separating a holder from a reader is
+# what is being scored; a list of every place the class is mentioned is the failure.
+#
+# WHY specificity demands the routine OR the declaration: several rows here are
+# declarations rather than calls (a through-association, a habtm) and sit in no routine.
+# So the criterion asks for the enclosing routine where there is one and the declaration
+# itself where there is not - and it still refuses a bare filename.
+#
+# TWO steps, matching the cycle-5 two-step probe. The superseded seven-step rubric is at
+# discourse.rubric.yaml.session-7step-cycle4.bak, the cycle-4 probe at
+# discourse.rubric.yaml.probe-2step-cycle4.bak, cycle 3 at
+# discourse.rubric.yaml.declared-link-12row.bak, cycle 2 at
+# discourse.rubric.yaml.mixed-22row.bak, cycle 1 at
+# discourse.rubric.yaml.briefed-7step.bak.
+#
+# Step names MUST match scenarios/discourse.yaml exactly (the judge pairs by name).
+
+audience: 'An AI coding agent that will use this answer to safely rework the Discourse
+  category class - the container topics are filed under, carrying its own permissions,
+  settings and hierarchy - so that two of these records can be merged, one retired onto
+  the other. Score for that agent, not a human reader and not a docs page. A perfect
+  answer leaves the agent able to make that change knowing two things: how the system
+  decides which of these records a request is talking about, traced through the routines
+  that make that decision up; and every place in the codebase that is currently HOLDING a
+  reference to one of these records in a form the merge would have to rewrite, each
+  pinned to an exact file:line with the dangling or stale consequence stated. The holders
+  that matter are mostly not the code named after this class, and mostly do not name the
+  class on the line where they hold the reference: what they keep is a bare identifier
+  sitting in a column, in a join row another model writes on their behalf, spliced into a
+  hand-written query string, parked in stored configuration or in the arguments of a job
+  queued yesterday, or cached as a cursor between runs. A weak answer re-lists every
+  place the class is mentioned and calls that the audit, which buries the holders among
+  readers that keep nothing; or collapses a run of holders into one line with a shared
+  reason and no location on any of them; or gives file:line with nothing said about what
+  would dangle, which leaves the agent knowing where a name appears and not what the
+  merge would break.
+
+  '
+steps:
+- name: Map the category contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is record identity traced end to end as one connected path - how a
+        human-readable path becomes one of these records - rather than listed as places
+        the class is mentioned? A strong answer reaches the class-level entry point every
+        lookup bottoms out in, the trailing-id variant, the one-level lookup the
+        hierarchy walk is built from, the hierarchy walk itself, the HTTP front door, the
+        rename path that keeps a stored path in step, and the retired-path redirect.
+        Credit is for showing how they connect, not for the count. Does the answer close
+        by saying what identity a rework must preserve, and what would have to be true
+        for two of these records to be collapsed into one? Could the next step act from
+        this map with small targeted lookups rather than a fresh exploration?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every place carry an exact file:line AND the name of the routine it
+        lives in? A bare filename is not specific. A file:line with no routine named
+        around it is not specific - the maintainer asked whose code it is, not where the
+        character offset falls. A routine named without the file:line where it is defined
+        is not specific either.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it contributes to deciding which
+        record is meant - which input form it accepts, what it disambiguates, what it
+        falls back to, why it refuses? Do the closing sentences talk about behaviour a
+        rework must preserve, rather than restating the method names?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate what it verified by reading from what it inferred
+        from a name? Guessing at a fallback it never opened is worse than saying it did
+        not check. Is completeness claimed without saying how it was established?
+
+        '
+- name: Audit every dependent of the category contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'THE DISCRIMINATOR, and it is HOLDERS versus READERS. Does the audit
+        actually separate the places that are KEEPING a reference to one of these records
+        - a bare identifier in a column, a row in a join table some other model writes on
+        their behalf, a value spliced into a hand-written query string, a number parked
+        in stored configuration or in the arguments of a job queued earlier, a cursor in
+        a cache - from the far larger set of places that merely look a record up, use it
+        and keep nothing? An answer that re-lists every place the class is mentioned has
+        answered a different question and should be scored as having missed this one,
+        however long the list is. Most holders do not name the class on the line where
+        they hold the reference, so an answer built only from places the name appears
+        will be thin exactly where it matters. Is the answer organised by area with each
+        area worked to the end, and are areas it could not finish declared as unfinished
+        rather than quietly summarised?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does EVERY holder carry its own exact file:line AND the routine it sits
+        inside, or - where the holder is a declaration rather than a call - the
+        declaration itself? Is the line pinned where the reference is actually HELD,
+        rather than at some nearby line where the class happens to be named? Several
+        holders named together on one line as a set that shares a reason is the failure
+        this criterion exists to catch: however correct the shared reason is, it is one
+        item, not a set of located holders, and it should be scored as one. A bare
+        filename does not count.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each holder carry one phrase on what would be left dangling, stale or
+        pointed at the wrong record if the merge skipped it? The consequence must be
+        about that holder''s own job - what breaks for the outbound payload already
+        queued, the join rows behind an association, the counters kept per container, the
+        search rows keyed by id, the cursor a batch job resumes from, the configured
+        pointer a seeder reads - not a restatement of the line of code.
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say how it convinced itself the audit is exhaustive, and
+        name where it is likely still thin? An unqualified claim of completeness over a
+        codebase this size is overconfidence. Naming an area it knows it did not finish,
+        and what it left there, is worth more than a confident list that quietly stops.
+        Does it say which entries it is unsure are holders rather than readers?
+
+        '

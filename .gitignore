@@ -6,11 +6,33 @@
 doc/
 
 # AI assistant workspace (kept local, never pushed)
-.claude/
+# `.claude/*` and not `.claude/`: git does not descend into an EXCLUDED DIRECTORY, so
+# a negation below a `.claude/` rule can never match. Each level is re-included, then
+# re-excluded, so the allowlist at the bottom is reachable.
+.claude/*
 CLAUDE.md
 # Exception: bench/global/docker/**/CLAUDE.md are baked into docker images
 # at build time, not the user's local AI context.
 !bench/global/docker/**/CLAUDE.md
+# Exception: improvement-loop/CLAUDE.md is the bench loop's own rule-book, read by
+# the headless phase agents the driver spawns. Same reason the four bench agents are
+# tracked: it is load-bearing instructions, not one person's local AI context. The
+# ROOT CLAUDE.md stays private - that one is the local context.
+!improvement-loop/CLAUDE.md
+
+# ALLOWLIST, not a blocklist: the four bench agents the loop actually spawns are
+# tracked, every other agent stays local. These carry load-bearing rubrics - the
+# six-branch diagnosis taxonomy, the five definition-of-done checks, the struggle
+# read's contract - so a rubric the bench stands on cannot live one `rm` from gone.
+# Add a name here only when the driver spawns it; personal review agents do not
+# belong in the public repo.
+!.claude/agents/
+.claude/agents/*
+!.claude/agents/bench-evaluator.md
+!.claude/agents/bench-struggle-read.md
+!.claude/agents/bench-win-confirm.md
+!.claude/agents/chore.md
+
 .claude.json
 .mcp.json
 .opencode/
@@ -92,6 +114,50 @@ sense.yml
 # ----------------------------------------------------------------------------
 /testdata/.sense/
 /assets
+
+# ----------------------------------------------------------------------------
+# improvement-loop/ - public by default, small private allowlist
+# ----------------------------------------------------------------------------
+# The default INVERTS here. Everything under improvement-loop/ is tracked unless
+# it matches a line below. Do not add reactive exceptions: the allowlist is the
+# stated policy (improvement-loop/README.md), not an accretion.
+#
+# Results: run cells and transcripts. Large, and provider model output.
+improvement-loop/verticals/*/results/
+# Run cells moved OUT of the results tree keep the results policy. A retired validation
+# pair is archived rather than deleted (it is the evidence a reuse happened), and it is
+# the same transcripts under a different path - 1.5MB of model output, still private.
+improvement-loop/verticals/*/archive/
+# The global (non-vertical) results tree: loopA-scan.sh writes gap logs here, and
+# bench-paths.sh points the non-VERTICAL bench at it. Same policy as the per-vertical
+# tree - it is run output, so it stays private.
+improvement-loop/bench/results/
+improvement-loop/**/transcripts/
+# Cycle 3's windows: the same policy one cycle up. A window holds agent transcripts,
+# make ci logs, raw MCP probe returns and a built binary - run output, not instructions.
+# What survives a window is the git branch it produced, which is tracked as code.
+improvement-loop/product-window/
+# Working artifacts a driver rewrites as it runs: per-repo phase state and the
+# model-shared variance scratch. Position is read from the results tree, not these.
+improvement-loop/verticals/**/.loop-state.json
+improvement-loop/verticals/**/variance/
+# The admission-gate cache: machine-written, embeds absolute clone paths, and the
+# loop's own instruction is to delete it before trusting a verdict
+# (docs/bootstrap.md: `rm -rf verticals/<v>/.gate-cells`, then re-run).
+improvement-loop/verticals/**/.gate-cells/
+# The scout cache, same family: seam_hunt/screen write one JSON per candidate repo
+# (140 of them on ruby-rails), machine-written and regenerated on demand.
+improvement-loop/verticals/**/.screen-cells/
+# The placement linter carries the private names list it exists to protect, and its
+# own header says so: "the names list is itself private, so nothing here is ever
+# committed". The .git/hooks shims no-op when it is absent, so a public clone still
+# has a working commit path.
+improvement-loop/bench/lib/placement-lint.sh
+# Journal: candid self-directed reasoning (named losses, cost numbers, self-logged
+# bad decisions). A public "how we bench" story is written as a curated doc, never
+# by exposing the raw journal.
+improvement-loop/verticals/**/LEDGER.md
+improvement-loop/docs/**/decision-errors.md
 
 # ----------------------------------------------------------------------------
 # Bench harness (per-run results)

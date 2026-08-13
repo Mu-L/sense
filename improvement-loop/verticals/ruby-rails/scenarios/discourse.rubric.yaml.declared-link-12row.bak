@@ -1,0 +1,183 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# WHY map_quality carries the most weight here: this scenario's axis is REACH INTO TWO
+# DIFFERENT KINDS OF DEPENDENT. One kind calls the class once from the middle of an
+# unrelated job; the other never calls it at all and only holds a stored reference to one
+# of its records, declared by a lowercase symbol the framework resolves. A search over the
+# class name prints the first kind and cannot print the second.
+#
+# WHY specificity NO LONGER demands an enclosing routine for every dependent: the cycle-2
+# rubric and ask both did, and a declared link sits in no routine. The sense arm reached all
+# seven declared-link rows and then collapsed them into a single unlocated bullet, scoring
+# mentioned 7 / cited 1. The unit demanded here is a file:line per dependent; the routine is
+# demanded only where one exists.
+#
+# TWO steps, matching the cycle-3 two-step probe. The cycle-2 rubric is kept at
+# discourse.rubric.yaml.mixed-22row.bak; the seven-step one at
+# discourse.rubric.yaml.briefed-7step.bak.
+#
+# Step names MUST match scenarios/discourse.yaml exactly (the judge pairs by name).
+
+audience: 'An AI coding agent that will use this answer to safely rework the Discourse category
+
+  class - the container topics are filed under, carrying its own permissions, settings and
+
+  hierarchy. Score for that agent, not a human reader and not a docs page. A perfect answer
+
+  leaves the agent able to change that class knowing two things: how the rest of the system
+
+  gets hold of one of these records when all it holds is the human-readable path out of a
+
+  URL - traced through the routines that make that path up - and every other place that
+
+  would have to be reviewed or changed with the class, each pinned to an exact file:line
+
+  with the consequence of the change on that place stated. The dependents that matter come
+
+  in two kinds and the answer must reach both. Some are doing an unrelated job - seeding a
+
+  new site, composing a notification subject, polling a feed, initialising an import,
+
+  explaining a tag exclusion - and reach for the class once in the middle of it. Others
+
+  never reach for it at all: they are record types that hold a stored reference to one of
+
+  these, declared once as a lowercase association and resolved by the framework, so the
+
+  class name is nowhere in their file. A weak answer sweeps the obviously category-named
+
+  neighbours and stops; collapses a set of record types into one line of names with a
+
+  shared reason and no location on any of them; or gives file:line with nothing said about
+
+  what would break - which leaves the agent knowing where the name appears and not what its
+
+  change would do.
+
+  '
+steps:
+- name: Map the category contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'Is the slug-path resolution path traced end to end as one connected path, rather
+
+        than listed as places the class is mentioned? A strong answer reaches the
+
+        class-level entry point every lookup bottoms out in, the trailing-id variant, the
+
+        one-level lookup the hierarchy walk is built from, the hierarchy walk itself, the
+
+        HTTP front door, the rename path that keeps a stored slug in step, and the
+
+        retired-path redirect. Credit is for showing how they connect, not for the count.
+
+        Could the next step act from this map with small targeted lookups rather than a
+
+        fresh exploration?
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does every place carry an exact file:line AND the name of the routine it lives
+
+        in? A bare filename is not specific. A file:line with no routine named around it
+
+        is not specific - the maintainer asked whose code it is, not where the character
+
+        offset falls. A routine named without the file:line where it is defined is not
+
+        specific either.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each place carry one phrase on what it contributes to the resolution path -
+
+        which input form it accepts, what it disambiguates, what it falls back to, why it
+
+        refuses? Do the closing sentences say what a rework must preserve in terms of
+
+        behaviour, rather than restating the method names?
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer separate what it verified by reading from what it inferred from a
+
+        name? Guessing at a fallback it never opened is worse than saying it did not
+
+        check. Is completeness claimed without saying how it was established?
+
+        '
+- name: Audit every dependent of the category contract
+  criteria:
+    map_quality:
+      weight: 0.4
+      question: 'THE DISCRIMINATOR. Does the audit reach BOTH kinds of dependent, or only the
+
+        kind a reader working outward from the class itself would find? The first kind is
+
+        code in the middle of an unrelated job - seeding a new site, composing a
+
+        notification subject line, polling an external feed, initialising an import
+
+        uploader, explaining why a tag was excluded - that reaches for the class exactly
+
+        once. The second kind never reaches for it: a record type that stores a reference
+
+        to one of these, declared as a lowercase association or through a join, so its
+
+        file never writes the class name. An answer that is strong on the first kind and
+
+        silent on the second has found what a text search finds and stopped. Breadth
+
+        across areas is being measured, and missing a whole area is a regression shipped.
+
+        Re-listing the class''s own surface, or the join models named after it, is not
+
+        this question.
+
+        '
+    specificity:
+      weight: 0.25
+      question: 'Does EVERY dependent carry its own exact file:line - the line that makes the
+
+        call, or the line that declares the stored reference? Several record types named
+
+        together on one line as a set that shares a reason is the failure this criterion
+
+        exists to catch: however correct the shared reason is, it is one item, not a set
+
+        of located dependents, and it should be scored as one. Where the dependency sits
+
+        inside a routine, is that routine named? A bare filename does not count.
+
+        '
+    justification:
+      weight: 0.2
+      question: 'Does each dependent carry one phrase on what that place would start getting wrong
+
+        if the class changed under it? The consequence must be about that place''s own job
+
+        - what breaks for the site being seeded, the email being addressed, the feed being
+
+        polled, the draft waiting to be published, the timer waiting to fire, the webhook
+
+        waiting to be filtered - not a restatement of the line of code.
+
+        '
+    uncertainty:
+      weight: 0.15
+      question: 'Does the answer say how it convinced itself the audit is exhaustive, and name
+
+        where it is likely still thin? An unqualified claim of completeness over a
+
+        codebase this size is overconfidence. Flagging areas it could not reach within
+
+        budget is worth more than a confident list that quietly stops.
+
+        '

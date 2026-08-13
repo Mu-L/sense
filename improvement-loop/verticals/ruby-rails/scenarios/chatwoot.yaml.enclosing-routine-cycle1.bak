@@ -1,0 +1,289 @@
+name: Chatwoot work session - audit the conversation-record contract before a rework
+repo: chatwoot
+contract_symbol: Conversation
+contract_file: app/models/conversation.rb
+# TWO-STEP PROBE SCENARIO (plans/01-author.md), CYCLE 1 on this repo - a FIRST DRAFT, not
+# a re-question. It exists so the next phase can run the mini-bench - both arms, once, at
+# the real wall, unscored - against a real baseline. Nothing here is a verdict: no delta
+# is claimed and none has been measured on this repo, ever.
+#
+# Single-prompt session bench (bench/drivers/bench-sense-local.sh): every step is presented
+# in ONE prompt and worked in order. Rendered to the agent: the description + each step's
+# name and prompt ONLY (checks and gold are NEVER shown). Everything rendered is kept
+# NEUTRAL - it states the task, never the answer's shape, file paths, class or method
+# names, counts, or which tool to reach for.
+#
+# ------------------------------------------------------------------------------------
+# NO TRAJECTORY - THIS REPO HAS NEVER BEEN RUN
+# ------------------------------------------------------------------------------------
+#   ls verticals/ruby-rails/results/loop/chatwoot/
+#     author.agent.json  author.agent.log      (both zero bytes - this run's own files)
+#   ls verticals/ruby-rails/results/dryrun/chatwoot/
+#     (empty)
+# There is no cycles.jsonl, no minibench.md and no scenario .bak on this repo, so there is
+# no window side to correct from and no previous cycle to read. Everything below that is
+# carried in comes from the BANKED cells on the other three repos of this vertical, quoted
+# under WHAT IS BEING REPRODUCED.
+#
+#   python3 bench/lib/inverse_frequency.py chatwoot .../claude-opus-5/validation
+#   has nothing to say here: every run under that root is a mastodon or discourse or rails
+#   run, and no run on disk has ever scored a chatwoot gold row. The free / hard /
+#   discriminating classification therefore did NOT cut or keep a single row below, and no
+#   later cycle should mistake its absence for evidence about these rows.
+#
+# ------------------------------------------------------------------------------------
+# WHAT IS BEING REPRODUCED - the measured recipe, quoted from banked.jsonl
+# ------------------------------------------------------------------------------------
+#   mastodon  dependents  baseline 4/20, 5/20 (mean 0.225)  sense 20/20, 20/20 (1.000)  +0.775
+#   discourse dependents  baseline 4/12, 1/12 (mean 0.208)  sense 10/12, 12/12 (0.917)  +0.708
+#   rails     dependents  baseline 5/9, 3/9, 3/9 (0.407)    sense 9/9, 9/9, 8/9 (0.963)  +0.556
+# All three are the SAME shape: a central Rails class as the anchor, a teardown audit as
+# the ask, a narrow non-scoring step 1, and a scored `dependents` group of scattered
+# one-per-file periphery rows. The mastodon cell is the closest match - same vertical, same
+# model, same two-step probe expanded - and its axis is the one copied here, stated below.
+# This draft does not invent a new lever; it applies the vertical's three-for-three recipe
+# to a repo it has not been tried on.
+#
+# ------------------------------------------------------------------------------------
+# THE AXIS
+# ------------------------------------------------------------------------------------
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS:
+#   for each dependent, the ENCLOSING ROUTINE the dependency sits inside - the method, or
+#   the class-body position, that owns the line and whose behaviour actually changes - plus
+#   what that routine's own job starts getting wrong. A search prints the matching line,
+#   its path and its number; it never prints the definition that encloses the match. To
+#   name the enclosing routine you have to open the file and read upward, or ask something
+#   that already holds the structure.
+#
+# That is an asymmetry in this instrument's payload on THIS anchor, not a wording trick.
+# Quoted from the mcp_probe output recorded under SEAM PROFILE below, the shown blast set
+# gives the enclosing routine on every row for free:
+#     {"symbol":"AutomationRules::ConditionsFilterService#base_relation", ...}
+#     {"symbol":"Captain::Tools::Copilot::SearchConversationsService#valid_status?", ...}
+#     {"symbol":"ChatwootHub.instance_metrics", ...}
+# and `grep -rn '\bConversation\b'` gives, for the same three rows:
+#     app/services/automation_rules/conditions_filter_service.rb:188:    records = Conversation.where(id: @conversation.id).joins(
+#     enterprise/app/services/captain/tools/copilot/search_conversations_service.rb:44:    status.present? && Conversation.statuses.key?(status)
+#     lib/chatwoot_hub.rb:74:      conversations_count: fetch_count(Conversation),
+# Not one of the three grep lines contains the name of the routine it is inside.
+#
+# THE MECHANISM SENTENCE, which the next phase measures: a dependent reaches this record
+# class once, in the middle of doing some other job - rolling up an instance metric,
+# validating a saved filter operand, claiming a row for an auto-assignment, unfurling a
+# chat link, deciding whether a bot may still reply - and the line that takes the
+# dependency does not say whose behaviour changes when the contract moves.
+#
+# THE HONEST RISK, stated before the run, per QUOTE IT OR YOU HAVE NOT VERIFIED IT:
+#  a. The scorer cannot enforce the enclosing-routine demand. `bench/lib/gold.py:_cited`
+#     credits a gold path followed by ANY line number and never compares it to gold's, so
+#     an arm that dumps grep output and omits every routine name still scores the row. The
+#     bet is behavioural, and it is the same bet the mastodon cell won on. Only the judge's
+#     map_quality and specificity see the demand directly.
+#  b. WEAKER THAN MASTODON ON ONE POINT, and it is checked, not assumed. Mastodon's axis
+#     leaned on the enclosing routine being named after some OTHER job. Here that holds for
+#     eleven of the eighteen scored rows - `base_relation`, `claim_and_assign`,
+#     `valid_priorities`, `valid_status?`, `unread_since_last_seen_condition`,
+#     `instance_metrics`, `index`, `filter_unassigned_and_mine`, `perform`,
+#     `user_can_access_conversation?`, the `Notification` class body - and NOT for the
+#     other seven, whose routine names do echo the contract's own word
+#     (`conversation_status_values`, `merge_conversations`, `find_conversation_by_id`,
+#     `conversation`, `set_conversation`, `conversation_pending?`,
+#     `build_orphan_conversations_query`). Every routine name above was read out of the
+#     file with an enclosing-def scan, not guessed. So the ask below demands the enclosing
+#     routine AND the consequence for that routine's own job; the consequence is the part
+#     that holds on all eighteen.
+#
+# ------------------------------------------------------------------------------------
+# SEAM PROFILE - recorded, never a gate
+# ------------------------------------------------------------------------------------
+#   python3 bench/lib/seam_hunt.py $CLONE Conversation --file app/models/conversation.rb
+#     app caller files : 59   (total incl test/non-app: 61)
+#     SCATTER (dirs)   : 40
+#     GREP-NOISE       : 'Conversation' in 61 app files   PRECISION=0.97
+#     VERDICT          : SCATTERED + grep-clean
+#   PRECISION=0.97 is the instrument's number and it is recorded as such. It is INFLATED on
+#   this repo by a known denominator gap: seam_hunt's ruby row greps `app` and `lib` only
+#   (bench/lib/seam_hunt.py:51), and chatwoot keeps a whole second application tree under
+#   `enterprise/`. Counting the tree the arms actually see -
+#     grep -rlw --include='*.rb' Conversation app lib enterprise db config | wc -l  ->  87
+#   gives 59/87 = 0.68. Both numbers are stated; neither one decided anything. Per
+#   PRECISION RANKS, IT NEVER KILLS, it was used only to order the pool, and the run decides.
+#
+#   The two alternates profiled, same command, same corrected denominator:
+#     Inbox   (app/models/inbox.rb)   25 callers / 21 dirs / 35 grep files  prec 0.71
+#     Contact (app/models/contact.rb) 31 callers / 23 dirs / 43 grep files  prec 0.72
+#   Both are ranked better than 0.97 on the instrument's own scale and worse than
+#   Conversation's on scatter (21 and 23 dirs against 40), and both concentrate: Inbox puts
+#   9 of its 34 shown callers in one seeder file and 5 more in one jobs directory, Contact
+#   puts 6 of 31 in `app/services/contacts`. Conversation is taken as the repo's central
+#   contract - the record the whole product hangs off - with the widest scatter of the three.
+#
+#   python3 bench/lib/mcp_probe.py $CLONE '[{"name":"sense_blast","arguments":
+#     {"symbol":"Conversation","file":"app/models/conversation.rb"}}]'
+#     "risk":"high","risk_factors":["60 direct callers"]
+#     "affected_symbols":271,"affected_files":88,"production_affected":97,"test_affected":36
+#     "direct_callers_by_area": 40 areas
+#     "affected_via_composition": 17 rows   "affected_via_includes":[]  "affected_subclasses":[]
+#   THE ANCHOR IS AMBIGUOUS OVER MCP, and the sense arm pays one extra call for it. With no
+#   `file` argument the same probe returns, verbatim:
+#     {"ambiguous":true,"matches":4,"hint":"Multiple symbols named \"Conversation\" exist -
+#      retry this tool with the `file` parameter ... e.g. file: \"app/models/conversation.rb\"",
+#      "top_matches":["Conversation (136 edges, class) app/models/conversation.rb:54",
+#                     "Enterprise::Concerns::Conversation ...", ...]}
+#   The hint names the contract file as its own example and lists it first at 136 edges, so
+#   the retry is mechanical, not a dead end. Recorded because it makes the sense arm's first
+#   blast cost two calls instead of one, which is an efficiency-axis fact the next phase
+#   will see in the transcripts.
+#     python3 bench/lib/gold_confidence_check.py $YAML Conversation --group dependents
+#       gold rows: 18   shown: 0    FAIL      <- the ambiguous, no-`file` call
+#     ... --file app/models/conversation.rb --group dependents
+#       gold rows: 18   shown: 18   PASS      <- the call the arm makes after the hint
+#   Both are reported; the second is the one the DONE WHEN gate is met on, because it is the
+#   payload the arm is actually shown.
+#
+#   All 18 `dependents` rows below appear in that shown payload - 17 in `direct_callers`,
+#   `app/models/notification.rb` among them. Checked one by one against the printed set.
+#   TWO CANDIDATE ROWS WERE DROPPED FOR BEING FALSE EDGES, by hand, not by a census:
+#   `app/models/user_session.rb` (payload pins `UserSession#should_update_activity?`) and
+#   `enterprise/app/services/captain/llm/faq_generator_service.rb` (pins `#system_prompt`)
+#   contain no reference to the contract anywhere in the file -
+#     grep -n 'Conversation' app/models/user_session.rb   ->  (no output)
+#   - so neither could be credited honestly and neither is golded. That is a real defect in
+#   the resolver's caller edges on this anchor, named here per the scope-lock rule and not
+#   acted on: the loop routes it, this phase does not.
+#
+#   python3 bench/lib/ring_sweep.py $CLONE --top 12
+#     0 candidate(s) above the bar - all twelve anchors at rows 0, files 0, vias 0.
+#   The ring is EMPTY, as it was on both Ruby repos previously swept, so the "what HOLDS X"
+#   kind is off the menu here. This is KIND ONE in its shape - an occurrence-list question -
+#   and the sentence under THE AXIS says what its ANSWER is that the occurrence list does
+#   not contain. What makes this the banked sort rather than the five-failure sort: the
+#   scored group is asked SECOND, after step 1 has already spent wall and context on a
+#   different sub-surface, and step 1's own targets are all in the non-scoring group so
+#   nothing it finds can be cashed in step 2.
+#
+#   MEMORIZATION: python3 bench/lib/memorization_probe.py $CLONE Conversation
+#     "reason": "closed-book recall 0.194 < 0.3 - not recited", samples 0.194 / 0.0 / 0.0
+#     hits (7 of 36): cached_label_list_array, last_activity_at, last_incoming_message,
+#                     recent_messages, toggle_status, unread_incoming_messages, unread_messages
+#   What comes back recited is the contract's own MEMBER NAMES. The probe named no dependent
+#   file and no file:line for anything; no gold row below is a member of the class - every
+#   one is a third-party file citing it.
+description: |
+  You are a maintainer about to rework the record that stands for a single back-and-forth
+  between a customer and the support team - the one the whole product is organised around,
+  that the rest of the system keeps having to ask about. The rework will change what that
+  record hands back to the code that asks it questions. Before you touch it you have to
+  know two things: how the system gets hold of the right one of these when a reply arrives
+  from outside and all it holds are the headers that came with it, and everywhere else in
+  the codebase that would have to change with it. Throughout, an answer that points at a
+  place must say which routine that place is inside, and give an exact file:line a teammate
+  could jump straight to, plus one phrase on why it matters. A bare filename does not
+  count, a file:line with no routine named around it does not count, and a missed dependent
+  is a regression shipped.
+steps:
+- name: Map the conversation-record contract
+  prompt: "Task: orient, and be thorough - the rest of the ticket is built on this. Start
+    with the one part of this record's job that the whole inbound-mail side leans on:
+    getting hold of the right one of these when a message arrives from outside and all the
+    system holds are the headers that came with it. Trace that path end to end. Show where
+    an arriving message is decided to belong to this path at all, the piece that runs the
+    candidate matches in order, each separate way a match is attempted and what identifier
+    it keys off, the fallback that starts a fresh record when none of them matched, and the
+    point where a record that was only prepared is finally made permanent. For each one
+    give the file:line, the name of the routine it lives in, and one phrase on what it
+    contributes to that path. Then say, in a few sentences, what a rework would have to
+    preserve for that path to keep working. A place named without the routine it lives in
+    does not count, and neither does a routine named without the file:line where it is
+    defined.
+    "
+  checks:
+  - type: response_richness
+    value: '8'
+    required: true
+    description: Inbound matching path traced through the routines that make it up, each located
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+- name: Audit every dependent of the conversation-record contract
+  prompt: "Task: this is the core of the ticket, and you are working it with the budget the
+    first part already cost you. Widen back out from that one path to the record class as a
+    whole, as a single subject, and find EVERY place in the codebase that would have to
+    change with it, so the rework cannot silently break one. Be exhaustive and group them
+    by area. Most of what you are looking for is not doing this record's job at all: it is
+    in the middle of some other job entirely - counting something for a dashboard, checking
+    a stored filter operand, claiming a row so two background runs cannot collide,
+    rendering a preview for a chat integration, deciding whether an automated replier may
+    still speak - and it reaches for this class exactly once to settle a question that
+    other job needs answered. So the answer you owe is not where the dependency sits but
+    WHOSE behaviour changes: for every dependent, name the routine the dependency is
+    inside, give its file:line, and say in one phrase what that routine would start getting
+    wrong if the class stopped handing back what it hands back today. A file:line with no
+    routine named around it does not count, a routine you cannot state the consequence for
+    does not count, and a missed dependent is a regression shipped.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Dependents attributed to the enclosing routine, with the consequence named
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
+# Gold is the must-find audit of what depends on the conversation record. TWO groups:
+#   - `contract` (9, NON-SCORING anchors): the class file and the eight files that make up
+#     the inbound-mail matching path. These are step 1's targets. Both arms reach them and
+#     they do NOT score; they are here so step 1's cost is charged without step 1 handing
+#     anything to step 2, and so no file step 1 leads to can be cashed in the scored group.
+#   - `dependents` (18, THE DISCRIMINATOR): one row per FILE, across 17 distinct
+#     directories in three trees (`app`, `lib`, `enterprise`). Not one of them is on the
+#     matching path step 1 traces. Every row appears in the shown blast payload quoted in
+#     the header, and every line below was opened and read by hand - the payload pins the
+#     enclosing definition, not the dependency line, and the two differ on several rows
+#     (`app/models/notification.rb` most sharply: the payload pins line 196, the dependency
+#     is the class-body constant on line 56).
+# Stated plainly, so no later cycle has to rediscover it: all 18 files contain the literal
+# token `Conversation`, and one `grep -rn` returns all 18 paths with line numbers. That is
+# forced - plan step 3 requires gold to come from the shown payload, and this payload's
+# `direct_callers` rows are all `"relation":"calls Conversation"` - and per
+# TOKEN-DARKNESS IS NOT THE MECHANISM the banked cells of this vertical did not need
+# darkness either. The discriminator this draft rests on is the enclosing routine and the
+# consequence for its own job, which grep's output carries for none of the 18.
+gold:
+- {id: contract-model, group: contract, match: [app/models/conversation.rb], relation: "app/models/conversation.rb:54 `class Conversation < ApplicationRecord` - the contract under rework; lines 55-63 mix in the nine concerns its behaviour is assembled from"}
+- {id: c:application-mailbox, group: contract, match: [app/mailboxes/application_mailbox.rb], relation: "app/mailboxes/application_mailbox.rb:10 `routing(lambda { |inbound_mail| valid_to_address?(inbound_mail) && (reply_uuid_mail?(inbound_mail) || EmailChannelFinder.new(inbound_mail.mail).perform.present?) } => :reply)` - the front door that decides an arriving mail belongs to this path at all"}
+- {id: c:reply-mailbox, group: contract, match: [app/mailboxes/reply_mailbox.rb], relation: "app/mailboxes/reply_mailbox.rb:24 `@conversation = Mailbox::ConversationFinder.new(mail).find` - inside `ReplyMailbox#find_conversation`, the before_processing hook every inbound reply enters through"}
+- {id: c:finder, group: contract, match: [app/services/mailbox/conversation_finder.rb], relation: "app/services/mailbox/conversation_finder.rb:15 `@strategies.each do |strategy_class|` - inside `Mailbox::ConversationFinder#find`, the piece that runs the four candidate matches in the order declared at line 2 and returns the first that hits"}
+- {id: c:base-strategy, group: contract, match: [app/services/mailbox/conversation_finder_strategies/base_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/base_strategy.rb:12 `def find` raising `NotImplementedError` - the contract every match attempt implements, and the comment above it declares the return type as the record or nil"}
+- {id: c:receiver-uuid, group: contract, match: [app/services/mailbox/conversation_finder_strategies/receiver_uuid_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/receiver_uuid_strategy.rb:9 `Conversation.find_by(uuid: uuid)` - inside `#find`, the first attempt; it keys off the uuid embedded in the reply-to address by the pattern on line 3"}
+- {id: c:in-reply-to, group: contract, match: [app/services/mailbox/conversation_finder_strategies/in_reply_to_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/in_reply_to_strategy.rb:23 `conversation = Conversation.find_by(uuid: uuid)` - inside `#find`, the second attempt; it keys off the In-Reply-To header, and line 29 falls back to the record hanging off a matched message"}
+- {id: c:references, group: contract, match: [app/services/mailbox/conversation_finder_strategies/references_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/references_strategy.rb:41 `conversation = Conversation.find_by(uuid: uuid, inbox_id: @channel.inbox.id)` - inside `#find_conversation_from_reference`, the third attempt; it walks the References header and scopes the match to the channel's inbox"}
+- {id: c:new-conversation, group: contract, match: [app/services/mailbox/conversation_finder_strategies/new_conversation_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/new_conversation_strategy.rb:57 `@conversation = ::Conversation.new(account_id: @account.id, inbox_id: @inbox.id, ...)` - inside `#build_conversation`, the fallback that PREPARES an unsaved record; `ReplyMailbox#persist_conversation_if_needed` is what makes it permanent"}
+- {id: d:hub-instance-metrics, group: dependents, match: [lib/chatwoot_hub.rb], relation: "lib/chatwoot_hub.rb:74 `conversations_count: fetch_count(Conversation)` - inside `ChatwootHub.instance_metrics`, whose job is the telemetry payload sent home; the class is one counted term among several"}
+- {id: d:filter-status-values, group: dependents, match: [app/helpers/filters/filter_helper.rb], relation: "app/helpers/filters/filter_helper.rb:98 `return Conversation.statuses.values if values.include?('all')` - inside `#conversation_status_values`, whose job is casting a saved filter's operand; it reads the enum mapping off the class to do it"}
+- {id: d:automation-base-relation, group: dependents, match: [app/services/automation_rules/conditions_filter_service.rb], relation: "app/services/automation_rules/conditions_filter_service.rb:188 `records = Conversation.where(id: @conversation.id).joins(` - inside `#base_relation`, whose job is building the query an automation rule's conditions are evaluated against"}
+- {id: d:auto-assign-claim, group: dependents, match: [app/services/auto_assignment/assignment_service.rb], relation: "app/services/auto_assignment/assignment_service.rb:93 `Conversation.transaction do` - inside `#claim_and_assign`, whose job is stopping two overlapping bulk runs from assigning the same row twice; it opens the transaction on the class"}
+- {id: d:unread-counts-arel, group: dependents, match: [app/services/conversations/unread_counts/builder.rb], relation: "app/services/conversations/unread_counts/builder.rb:57 `conversations = Conversation.arel_table` - inside `#unread_since_last_seen_condition`, whose job is the unread badge figure; it reaches through to the class's arel table to write the comparison"}
+- {id: d:orphan-sweep-scope, group: dependents, match: [app/services/internal/remove_orphan_conversations_service.rb], relation: "app/services/internal/remove_orphan_conversations_service.rb:27 `base = @account ? @account.conversations : Conversation.all` - inside `#build_orphan_conversations_query`, whose job is the housekeeping sweep; the class scope is what it falls back to when no account narrows it"}
+- {id: d:contact-merge, group: dependents, match: [app/actions/contact_merge_action.rb], relation: "app/actions/contact_merge_action.rb:34 `Conversation.where(contact_id: @mergee_contact.id).update(contact_id: @base_contact.id)` - inside `#merge_conversations`, whose job is folding one customer record into another; it repoints the rows in bulk"}
+- {id: d:notification-primary-actor, group: dependents, match: [app/models/notification.rb], relation: "app/models/notification.rb:56 `PRIMARY_ACTORS = ['Conversation'].freeze` - in the `Notification` class body, whose job is the notification record; it names the class as a STRING, so the dependency is a polymorphic type name and not a constant reference"}
+- {id: d:notification-builder-access, group: dependents, match: [app/builders/notification_builder.rb], relation: "app/builders/notification_builder.rb:43 `conversation = primary_actor.is_a?(Conversation) ? primary_actor : primary_actor.try(:conversation)` - inside `#user_can_access_conversation?`, whose job is suppressing a notification the recipient may not see; it type-tests the polymorphic actor"}
+- {id: d:reply-email-job, group: dependents, match: [app/jobs/conversation_reply_email_job.rb], relation: "app/jobs/conversation_reply_email_job.rb:5 `conversation = Conversation.find(conversation_id)` - inside `#perform`, whose job is sending the batched email reply; it is handed an id, not a record, so it re-looks it up in the background"}
+- {id: d:super-admin-dashboard, group: dependents, match: [app/controllers/super_admin/dashboard_controller.rb], relation: "app/controllers/super_admin/dashboard_controller.rb:5 `@data = Conversation.unscoped.group_by_day(:created_at, range: 30.days.ago..2.seconds.ago).count.to_a` - inside `#index`, whose job is the installation-wide admin chart; it goes UNSCOPED, deliberately outside account scoping"}
+- {id: d:csat-public-lookup, group: dependents, match: [app/controllers/public/api/v1/csat_survey_controller.rb], relation: "app/controllers/public/api/v1/csat_survey_controller.rb:18 `@conversation = Conversation.find_by!(uuid: params[:id])` - inside `#set_conversation`, whose job is serving the unauthenticated survey page; the uuid is the only credential the request carries"}
+- {id: d:slack-thread-lookup, group: dependents, match: [lib/integrations/slack/slack_message_helper.rb], relation: "lib/integrations/slack/slack_message_helper.rb:86 `@conversation ||= Conversation.where(identifier: params[:event][:thread_ts]).first` - inside `#conversation`, whose job is routing a reply typed in a chat thread back into the product; it keys off the thread timestamp stored on the record"}
+- {id: d:slack-unfurl, group: dependents, match: [lib/integrations/slack/slack_link_unfurl_service.rb], relation: "lib/integrations/slack/slack_link_unfurl_service.rb:65 `Conversation.find_by(display_id: conversation_id, account_id: integration_hook.account_id)` - inside `#find_conversation_by_id`, whose job is rendering a link preview in a chat message; it resolves the per-account display id, not the primary key"}
+- {id: d:enterprise-permission-filter, group: dependents, match: [enterprise/app/services/enterprise/conversations/permission_filter_service.rb], relation: "enterprise/app/services/enterprise/conversations/permission_filter_service.rb:36 `Conversation.from(\"(#{mine.to_sql} UNION #{unassigned.to_sql}) as conversations\")` - inside `#filter_unassigned_and_mine`, whose job is the restricted-agent view; it re-wraps two subqueries as the class so the caller still gets a relation"}
+- {id: d:captain-pending-check, group: dependents, match: [enterprise/app/jobs/captain/conversation/response_builder_job.rb], relation: "enterprise/app/jobs/captain/conversation/response_builder_job.rb:215 `status = Conversation.uncached { Conversation.where(id: @conversation.id).pick(:status) }` - inside `#conversation_pending?`, whose job is deciding whether the automated replier may still speak; it bypasses the query cache to re-read the status"}
+- {id: d:captain-search-status, group: dependents, match: [enterprise/app/services/captain/tools/copilot/search_conversations_service.rb], relation: "enterprise/app/services/captain/tools/copilot/search_conversations_service.rb:44 `status.present? && Conversation.statuses.key?(status)` - inside `#valid_status?`, whose job is validating an argument the assistant supplied; the enum mapping is the whitelist"}
+- {id: d:captain-priority-tool, group: dependents, match: [enterprise/lib/captain/tools/update_priority_tool.rb], relation: "enterprise/lib/captain/tools/update_priority_tool.rb:36 `@valid_priorities ||= [nil] + Conversation.priorities.keys` - inside `#valid_priorities`, whose job is declaring the tool's accepted argument values to the model calling it"}

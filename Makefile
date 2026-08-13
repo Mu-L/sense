@@ -1,7 +1,15 @@
 .PHONY: build test test-hermetic cover ledger clean install lint fmt ci run fetch-deps bench smoke
 
-VERSION ?= dev
 COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
+# A local build gets a RELEASE-RELATIVE dev label, so a dev binary NAMES the change it
+# carries: 1.13.3-dev+g3b186b4, not a bare "dev" that every build shared. The base comes
+# from git-cliff (the next version the conventional commits imply), falling back to the
+# last tag. Releases are stamped by goreleaser ({{.Version}}), so this only labels local
+# builds. NOTE: a label is not an identity - every rebuild of one spike shares it. What
+# expires a probe verdict is the binary's hash (improvement-loop/bench/lib/sense_build.py).
+DEV_BASE := $(shell (git-cliff --bumped-version 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || echo v0.0.0) | tail -1 | sed 's/^v//')
+DEV_DIRTY := $(shell git diff --quiet HEAD 2>/dev/null || echo .dirty)
+VERSION ?= $(DEV_BASE)-dev+g$(COMMIT)$(DEV_DIRTY)
 LDFLAGS := -ldflags="-s -w -X 'github.com/luuuc/sense/internal/version.Version=$(VERSION)'"
 
 # Single source of the golangci-lint version: CI runs `make lint`, so it
