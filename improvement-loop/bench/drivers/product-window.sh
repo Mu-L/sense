@@ -215,6 +215,22 @@ for line in reversed(sys.stdin.read().splitlines()):
 '
 }
 
+# record_target <label> <bin> <scan> - the SAME question asked of the language the window
+# is changing. The control repos prove no OTHER language moved; nothing was asking whether
+# the target language LOST anything, and a lane that adds one edge shape while dropping
+# another reads as a pass on every check above. Measured by hand on the first C# window:
+# 142,742 edges before against 161,424 after, symbols identical - the shape this row exists
+# to make automatic. It runs on the first corpus repo, which is already cloned.
+record_target() {
+  local label="$1" bin="$2" scan="$3" repo counts
+  repo="$(head -1 "$WDIR/corpus.txt" | cut -d'|' -f1)"
+  [ -n "$repo" ] && [ -d "$CLONES/$repo" ] || { echo "UNRUN no corpus repo" > "$WDIR/target.$label"; return 0; }
+  [ "$scan" = 1 ] && (cd "$CLONES/$repo" && "$bin" scan -dir . -rebuild) >> "$WDIR/control.scan.log" 2>&1
+  counts="$(status_counts "$CLONES/$repo" "$bin")"
+  printf '%s %s\n' "$repo" "${counts:-UNRUN}" > "$WDIR/target.$label"
+  echo "## [$PHASE] target language ($label, $(basename "$bin")):"; sed 's/^/     /' "$WDIR/target.$label"
+}
+
 # record_control <label> <bin> - scan every control repo with THIS binary and record what
 # it produced. Re-scanning is the whole point: reading an index the binary never rebuilt
 # compares a number with itself and can only pass.
@@ -285,6 +301,7 @@ do_build() {
   # BEFORE, with the installed binary: main's behaviour on three other languages, measured
   # while this branch still carries nothing but tests.
   record_control before "${SENSE_BIN:-sense}"
+  record_target before "${SENSE_BIN:-sense}" 1
   spawn_plan 04-build.md
   require_verdict build "BUILD,CANNOT-BUILD"
   [ "$VERDICT" = "CANNOT-BUILD" ] && { state_set "$KEY" done
@@ -408,8 +425,14 @@ print("\n".join(lines))
 PY
 
   record_control after "$bin"
+  # The corpus was just re-indexed with the branch binary, so the target row is read, not
+  # re-scanned: scanning it a second time would only cost minutes to reproduce itself.
+  record_target after "$bin" 0
   {
-    echo "repo  symbols edges (before)  symbols edges (after)"
+    echo "TARGET LANGUAGE - symbols edges, before then after"
+    cat "$WDIR/target.before" "$WDIR/target.after" 2>/dev/null
+    echo ""
+    echo "OTHER LANGUAGES - repo  symbols edges (before)  symbols edges (after)"
     join -a1 -a2 "$WDIR/control.before" "$WDIR/control.after" 2>/dev/null \
       || { cat "$WDIR/control.before"; echo "--"; cat "$WDIR/control.after"; }
   } > "$WDIR/probes/control.txt"

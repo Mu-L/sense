@@ -49,9 +49,19 @@ that happen to be there.**
    language sits at a handful of symbols is reading a fraction of the corpus, and that
    belongs in the artifact.
 
-4. The control, which is the no-regress half:
+4. The control, which is the no-regress half, and it has two sections:
 
        cat "$WDIR/probes/control.txt"
+
+   **TARGET LANGUAGE** is the first corpus repo, counted with the installed binary before
+   the build and with the branch binary after it. The lane is expected to ADD edges; what
+   this row exists to catch is a lane that adds one shape while silently dropping another,
+   which every other check in this window would pass. **A drop in target-language edges is
+   a REVERT**, and equal counts on a lane whose whole purpose was new edges is a finding to
+   state, not a pass to bank. Symbols may legitimately hold steady: an edge-only lane adds
+   relationships, not declarations.
+
+   **OTHER LANGUAGES** is the per-language boundary.
 
    The driver scanned three repositories in other languages with the INSTALLED binary
    before the build and with the BRANCH binary after it, and recorded each one's symbol
@@ -71,6 +81,10 @@ One verdict.
   says at that line: the next window rewrites against this file and it is the only thing it
   will have.
 
+**A target language that LOST edges is a REVERT on its own**, however green the probes
+are: the probes measure the shapes the window set out to add and are blind to the ones it
+took away.
+
 **A control repo that moved is a REVERT on its own**, even with every probe green. A
 per-language change that alters another language's index is a different change from the one
 that was reviewed, and the identity of this cycle rests on that boundary.
@@ -89,8 +103,9 @@ Write `$WDIR/prove.md`, five headings:
     # Verdict          PROVEN or REVERT, and the sentence that decides it
     # Probe table      one row per probe: PASS or MISS, expected, returned, source cite
     # Corpus reach     the sense_status language row per corpus clone, quoted
-    # Control          per control repo, symbols and edges before and after, and whether
-                       they are identical
+    # Control          the target-language row, before and after, with the direction
+                       stated; then per control repo, symbols and edges before and after,
+                       and whether they are identical
     # If REVERT        what a corrected lane must resolve, per row, in the form the probe
                        asks for it
 
@@ -110,6 +125,7 @@ Then `$WDIR/prove.verdict.json`:
 - Every MISS has had its source line opened and read, and is classified as a lane miss or
   a bad probe.
 - The control counts are quoted per repo, before and after, and compared in writing.
+- The target-language row is quoted and its direction stated: gained, held or dropped.
 - The `sense_status` language row is quoted per corpus clone.
 - The verdict JSON exists and parses.
 

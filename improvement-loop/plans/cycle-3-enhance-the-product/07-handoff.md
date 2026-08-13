@@ -43,12 +43,21 @@ Work from `improvement-loop/`.
 
        cd "$SENSE_ROOT" && git-cliff --bumped-version
 
-4. The tree is clean and everything is committed:
+4. The tree is clean, and what is on the branch belongs to this lane:
 
        cd "$SENSE_ROOT" && git status --short
+       cd "$SENSE_ROOT" && git diff --name-only main...$BRANCH
 
-   If anything is uncommitted, commit it on `$BRANCH` with a conventional subject before
-   you write the page.
+   **Commit only files this window created under `internal/`.** Anything else uncommitted -
+   a bench script, a plan, a doc, another lane's file - belongs on another branch, and you
+   STOP and say so rather than adopting it. Measured on the first C# window: this step read
+   "commit whatever is uncommitted", and it swept an entire cycle of bench wiring onto the
+   product branch, mixing `bench(cycle3)` into a `feat(csharp)` lane that a reviewer then
+   had to untangle. A phase cannot tell a stray build artifact from work that belongs
+   somewhere else, so it does not get to guess.
+
+   The same test applies to what is ALREADY committed: if `git diff --name-only` shows a
+   file outside `internal/` on this branch, name it and STOP.
 
 ## DECIDE
 
@@ -106,7 +115,8 @@ Then `$WDIR/handoff.verdict.json`:
 - Every worklist row appears under either `# What it resolves` or `# What it does not`.
 - The branch name, the commit subjects, the diffstat and the bumped version are quoted.
 - Every row of `gates.txt` is on the page, verbatim, and both council verdicts are named.
-- `git status --short` is empty in `$SENSE_ROOT`.
+- `git status --short` is empty in `$SENSE_ROOT`, and every file on the branch is one this
+  lane created under `internal/`.
 - The provenance line is on the page, ready to paste.
 - The verdict JSON exists and parses.
 
