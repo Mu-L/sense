@@ -67,6 +67,17 @@ LANGS = {
         or f.startswith("config/") or "/config/" in f
         or f.startswith("docs/") or "/docs/" in f,
     },
+    "csharp": {
+        "include": "*.cs",
+        "grep_roots": ["."],
+        "exclude_dirs": [".git", "bin", "obj", "packages", "node_modules"],
+        "is_test": lambda f: f.startswith("test/") or "/test/" in f
+        or "/tests/" in f or ".Tests/" in f or ".Test/" in f
+        or os.path.basename(f).endswith("Tests.cs")
+        or os.path.basename(f).endswith("Test.cs"),
+        "nonapp": lambda f: "/Migrations/" in f or f.startswith("docs/")
+        or "/docs/" in f,
+    },
     "python": {
         "include": "*.py",
         "grep_roots": ["."],
@@ -85,7 +96,16 @@ def run(cmd, cwd):
 
 
 def detect_lang(clone):
-    """Marker-file first (cheap, unambiguous), then a *.py-vs-*.rb file count."""
+    """Marker-file first (cheap, unambiguous), then a *.py-vs-*.rb file count.
+
+    Returns "" when nothing matches, and the caller halts on that. It used to
+    return "ruby" for any unknown tree, which is the worst possible failure for
+    this script: on a C# clone it grepped '*.rb' under app/ and lib/, found
+    nothing, and printed PRECISION=0.00 for every anchor - and 0.00 is the BEST
+    value the ranking law knows, so a broken run reported an ideal profile
+    rather than an error. Measured on bitwarden-server, where ICurrentContext
+    sits in 256 .cs files and profiled as 0 callers / 0 hits / 0.00.
+    """
     if os.path.exists(os.path.join(clone, "Gemfile")):
         return "ruby"
     if any(os.path.exists(os.path.join(clone, m)) for m in
@@ -94,17 +114,56 @@ def detect_lang(clone):
     if any(os.path.exists(os.path.join(clone, m)) for m in
            ("manage.py", "pyproject.toml", "setup.py", "setup.cfg")):
         return "python"
+    if any(os.path.exists(os.path.join(clone, m)) for m in
+           ("Directory.Build.props", "Directory.Packages.props", "global.json")):
+        return "csharp"
     rb = run(["bash", "-c", "git ls-files '*.rb' | head -1"], clone).stdout.strip()
     py = run(["bash", "-c", "git ls-files '*.py' | head -1"], clone).stdout.strip()
-    if py and not rb:
+    cs = run(["bash", "-c", "git ls-files '*.csproj' '*.sln' '*.slnx' | head -1"],
+             clone).stdout.strip()
+    if rb:
+        return "ruby"
+    if py:
         return "python"
-    return "ruby"  # default preserves v2 behavior for unknown trees
+    if cs:
+        return "csharp"
+    return ""
 
 
 def sense_call(clone, tool, args):
     """One Sense tool over MCP. Never the CLI - campaign-laws, MCP IS THE ONLY SURFACE."""
     results, _ = probe(clone, [{"name": tool, "arguments": args}], SENSE_BIN)
     return json.loads(results[0][1]) if results else {}
+
+
+def collect_holders(clone, symbol, file_hint):
+    """Files that DEPEND on the symbol without calling it: composition holders,
+    subclasses, includes. Read straight off the same blast payload.
+
+    Reported beside PRECISION and deliberately NOT folded into it. Injection is
+    the dominant seam in C#: ICurrentContext has 0 callers and 108 composers, so
+    the caller-only view calls a 108-dependent hub a resolver gap. But the same
+    keys are populated in Ruby too - 25 rows on mastodon/Status, 54 on
+    discourse/Topic - so adding them to the numerator would move PRECISION on
+    the vertical the ranking law was calibrated against, where 0.078 preceded a
+    +1.00 cell. A second figure answers the C# question without rewriting a
+    banked one.
+    """
+    args = {"symbol": symbol}
+    if file_hint:
+        args["file"] = file_hint
+    holders = {}
+    try:
+        d = sense_call(clone, "sense_blast", args)
+    except Exception:
+        return holders
+    for key in ("affected_via_composition", "affected_subclasses",
+                "affected_via_includes"):
+        for c in d.get(key) or []:
+            f = c.get("file")
+            if f:
+                holders.setdefault(f, set()).add(c.get("relation") or key)
+    return holders
 
 
 def collect_callers(clone, symbol, conf, hops, file_hint):
@@ -219,6 +278,11 @@ def main():
         lang = detect_lang(clone)
     cfg = LANGS.get(lang)
     if not cfg:
+        if not lang:
+            sys.exit("could not detect the language of this clone. Pass --lang "
+                     f"explicitly (known: {', '.join(LANGS)}), or add a row to "
+                     "LANGS. Guessing here reports a perfect PRECISION for every "
+                     "anchor instead of an error.")
         sys.exit(f"unknown --lang '{lang}' (known: {', '.join(LANGS)})")
 
     callers = collect_callers(clone, symbol, conf, hops, file_hint)
@@ -227,6 +291,8 @@ def main():
     app_callers = {f: s for f, s in callers.items() if is_app(f)}
     dirs = collections.Counter(os.path.dirname(f) for f in app_callers)
 
+    holders = collect_holders(clone, symbol, file_hint)
+    app_holders = {f: v for f, v in holders.items() if is_app(f)}
     grep_files = grep_precision(clone, cfg, token, is_test)
     grep_n = len(grep_files)
     prec = (len(app_callers) / grep_n) if grep_n else 0.0
@@ -236,6 +302,7 @@ def main():
     print(f"  app caller files : {len(app_callers)}   (total incl test/non-app: {len(callers)})")
     print(f"  SCATTER (dirs)   : {len(dirs)}   -> {dict(dirs.most_common(8))}")
     print(f"  GREP-NOISE       : '{token}' in {grep_n} app files   PRECISION={prec:.2f}  (lower=grep-hostile)")
+    print(f"  HOLDERS (no call): {len(app_holders)} app files compose/inherit/include it")
     verdict = []
     if len(dirs) >= 5:
         verdict.append("SCATTERED")
@@ -245,9 +312,18 @@ def main():
         verdict.append("GREP-NOISY")
     elif grep_n:
         verdict.append("grep-clean")
-    if not app_callers:
+    if not app_callers and not app_holders:
         verdict.append("RESOLVER-GAP?")
+    elif not app_callers:
+        # Not a gap: the dependents are holders, which is what injection looks
+        # like. Saying RESOLVER-GAP here sent a phase agent hunting a product
+        # bug that did not exist.
+        verdict.append(f"HELD-NOT-CALLED({len(app_holders)})")
     print(f"  VERDICT          : {' + '.join(verdict)}")
+    if app_holders and not app_callers:
+        print(f"  --- app holders ---")
+        for f in sorted(app_holders):
+            print(f"    {f}  <- {', '.join(sorted(app_holders[f]))[:70]}")
     print(f"  --- app callers ---")
     for f in sorted(app_callers):
         print(f"    {f}  <- {', '.join(sorted(s for s in app_callers[f] if s))[:70]}")
