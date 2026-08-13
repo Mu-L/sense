@@ -1,6 +1,6 @@
 # csharp-aspnet - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-13 20:07 GMT by `bench/lib/render-status.sh csharp-aspnet`.
+> AUTO-RENDERED 2026-08-13 20:11 GMT by `bench/lib/render-status.sh csharp-aspnet`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -10,7 +10,8 @@
 |---|---|---|
 | bitwarden-server | author | `BLOCKED` stored but its artifact is GONE - the author agent re-runs |
 
-Resume (bitwarden-server): `VERTICAL=csharp-aspnet bash bench/drivers/vertical-loop.sh <repo>`
+Resume - run the line for the repo you are taking:
+- `VERTICAL=csharp-aspnet bash bench/drivers/vertical-loop.sh bitwarden-server`
 
 ## Cycle 2: cross-model boards (`.cycle2-state.json`, `reports/`)
 

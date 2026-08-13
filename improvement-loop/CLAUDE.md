@@ -94,10 +94,19 @@ what may be concluded from a run:
 
 | Need | Read |
 |---|---|
+| WHERE A VERTICAL STANDS - read this FIRST when resuming | `verticals/<key>/STATUS.md` |
 | the phase you are running | `plans/cycle-1-craft-the-scenario/<phase>.md` - authority at runtime |
 | the laws in one line each | `plans/cycle-1-craft-the-scenario/laws.md` |
 | why the design is what it is | `docs/` - authority on design, not at runtime |
 | a script | `bench/lib/`, `bench/drivers/`, `bench/bootstrap/` |
+
+`STATUS.md` is auto-rendered and write-only: it carries the loop position, the resume
+line for each repo, the banked cells and the latest ledger entry, and it is re-rendered on
+every driver run. Read it to find out where things stand; never edit it, and never decide
+anything from it - position is authoritative on disk (the results tree, `repos.md`,
+`LEDGER.md`), and the page says so at the top. It was the pickup file by intention and by
+nothing else until this line existed: a resuming session was pointed at `plans/` and
+`laws.md` and had to discover position by asking.
 
 **If you open a `docs/` page mid-run, that is a bug report**: what you needed was missing from
 the plan. Say so in your report and name the line the plan should carry.
