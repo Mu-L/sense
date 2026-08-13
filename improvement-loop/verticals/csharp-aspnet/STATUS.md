@@ -1,6 +1,6 @@
 # csharp-aspnet - STATUS (auto-rendered)
 
-> AUTO-RENDERED 2026-08-13 19:34 GMT by `bench/lib/render-status.sh csharp-aspnet`.
+> AUTO-RENDERED 2026-08-13 20:07 GMT by `bench/lib/render-status.sh csharp-aspnet`.
 > Do not edit by hand; do not use for loop decisions (write-only law, `ledger.md`).
 > Position is authoritative ON DISK: the results tree, `repos.md`, `LEDGER.md`.
 
@@ -8,7 +8,7 @@
 
 | repo | phase | verdict on disk |
 |---|---|---|
-| bitwarden-server | author | none - the next run RE-SPAWNS the author agent |
+| bitwarden-server | author | `BLOCKED` stored but its artifact is GONE - the author agent re-runs |
 
 Resume (bitwarden-server): `VERTICAL=csharp-aspnet bash bench/drivers/vertical-loop.sh <repo>`
 
@@ -22,11 +22,11 @@ _no banked cells yet (`python3 bench/lib/banked.py rebuild verticals/csharp-aspn
 
 ## Results cells on disk (`verticals/csharp-aspnet/results`)
 
-_no results tree yet at /Users/luc/Developer/luuuc/oss/sense/improvement-loop/verticals/csharp-aspnet/results_
+_no run cells on disk yet_
 
 ## Ledger
 
-- latest entry: 2026-08-13 | bootstrap/scaffold | C# / ASP.NET Core stamped and evaluated green
+- latest entry: 2026-08-13 | bootstrap/slate | csharp-aspnet slate composed: 1 big + 1 framework + 2 medium
 - full narrative: `LEDGER.md` (this folder)
 - decision-errors intake: 0 open incident(s) (`../../docs/decision-errors.md`)
 

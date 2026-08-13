@@ -1162,6 +1162,12 @@ do_board() {
 # ---- driver: run phases from the current one until a gate stops us ----------
 PHASE="${FORCE_PHASE:-$(state_get "$REPO")}"; [ -z "$PHASE" ] && PHASE=index
 echo "[$VERTICAL/$REPO] entering at phase '$PHASE' (models='$MODELS' runs=$RUNS)"
+# Render on ENTRY as well as on each transition. The page only ever re-rendered when
+# a phase CHANGED, so a phase that fails and retries in place - a rejected verdict, a
+# re-spawn - left it frozen at the moment before the failure, which is exactly when
+# someone opens it. Measured on csharp-aspnet: it read "no results tree yet" while an
+# author transcript and a rejected verdict sat in that tree. $0, read-only, never fatal.
+bash "$LIB/render-status.sh" "$VERTICAL" >/dev/null 2>&1 || true
 
 while :; do
   NEXT=""
