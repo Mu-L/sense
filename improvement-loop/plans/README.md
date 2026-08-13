@@ -30,6 +30,7 @@ cannot record a loss, cycle 2 publishes one.
 |---|---|
 | `cycle-1-craft-the-scenario/` | takes a repo, hands back a scenario that wins on the headline model |
 | `cycle-2-bench-across-models/` | takes that banked win, puts it to the other models, publishes the page |
+| `cycle-3-enhance-the-product/` | takes a stack Sense cannot read, hands back a branch that reads it |
 
 ### `cycle-1-craft-the-scenario/`
 
@@ -49,6 +50,26 @@ cannot record a loss, cycle 2 publishes one.
 | `01-bench.md` | read the confirmation arms, rule on whether the run set is sound | `BOARD`, `RERUN` |
 | `02-report.md` | write the Reading section at the top of the rendered page | `READING` |
 | `laws.md` | not a plan - prepended to both | - |
+
+### `cycle-3-enhance-the-product/`
+
+| File | Phase it runs | Verdicts |
+|---|---|---|
+| `01-intake.md` | measure what Sense misses on real code of the stack, and scope it | `WORKLIST`, `ALREADY-READY`, `OUT-OF-SCOPE` |
+| `02-truth.md` | a failing test per idiom, plus the real-code probes | `TRUTH`, `NO-REPRO` |
+| `03-build.md` | the extractor, model, resolver and detectors, to green through `make ci` | `BUILD`, `CANNOT-BUILD` |
+| `04-prove.md` | read the MCP probes on cloned repos, and the other-language control | `PROVEN`, `REVERT` |
+| `05-handoff.md` | the page a human reads before opening the pull request | `HANDOFF` |
+| `laws.md` | not a plan - prepended to all of them | - |
+
+Cycle 3 is the only cycle that touches Sense's own code, and the only one whose unit is a
+vertical KEY rather than a repo: it makes Sense able to read a stack, once, before the
+stack has a vertical. It shares no state with cycles 1 and 2 - no `verticals/`, no scored
+run, no paid token - and that isolation is what lets it run unattended, because the only
+question it asks is a fact: this relationship exists in the source, does Sense return it?
+It runs to a committed local branch and stops. The human gate is the pull request, and it
+is the only one. Driver: `bench/drivers/product-window.sh`; it opens by itself when
+`bench/drivers/bootstrap-run.sh` sees bootstrap stop on `EXTRACTOR-NOT-READY`.
 
 Cycle 2 has two plans and not five because most of it is not judgment. Eligibility, the
 build gate, the mechanism table, the numbers and the page itself are all deterministic:
