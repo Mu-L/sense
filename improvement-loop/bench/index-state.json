@@ -1,4 +1,12 @@
 {
+  "aspnetcore": {
+    "built_at": "2026-08-13T19:34:26Z",
+    "edges": "380398",
+    "fingerprint": "441a99a2c9de54f6|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "11208"
+  },
   "bagisto": {
     "built_at": "2026-08-12T07:40:18Z",
     "edges": "24959",
@@ -6,6 +14,14 @@
     "git_head": "",
     "sense_version": "",
     "symbols": "2936"
+  },
+  "bitwarden-server": {
+    "built_at": "2026-08-13T18:32:02Z",
+    "edges": "83165",
+    "fingerprint": "441a99a2c9de54f6|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "5306"
   },
   "chatwoot": {
     "built_at": "2026-07-31T17:34:04Z",
@@ -39,6 +55,22 @@
     "sense_version": "",
     "symbols": "5660"
   },
+  "files": {
+    "built_at": "2026-08-13T14:41:09Z",
+    "edges": "14026",
+    "fingerprint": "441a99a2c9de54f6|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "1154"
+  },
+  "jellyfin": {
+    "built_at": "2026-08-13T14:39:53Z",
+    "edges": "30684",
+    "fingerprint": "441a99a2c9de54f6|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "2137"
+  },
   "laravel-framework": {
     "built_at": "2026-08-10T12:43:46Z",
     "edges": "138261",
@@ -63,6 +95,22 @@
     "sense_version": "",
     "symbols": "4014"
   },
+  "roslyn": {
+    "built_at": "2026-08-13T16:07:59Z",
+    "edges": "941960",
+    "fingerprint": "441a99a2c9de54f6|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "17077"
+  },
+  "servicestack": {
+    "built_at": "2026-08-13T18:59:51Z",
+    "edges": "234996",
+    "fingerprint": "441a99a2c9de54f6|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "5084"
+  },
   "snipe-it": {
     "built_at": "2026-08-10T12:52:37Z",
     "edges": "21252",
@@ -70,5 +118,13 @@
     "git_head": "",
     "sense_version": "",
     "symbols": "8233"
+  },
+  "umbraco-cms": {
+    "built_at": "2026-08-13T19:16:51Z",
+    "edges": "162754",
+    "fingerprint": "441a99a2c9de54f6|schema v5, embeddings: all-MiniLM-L6-v2-ctx1",
+    "git_head": "",
+    "sense_version": "",
+    "symbols": "16770"
   }
 }
