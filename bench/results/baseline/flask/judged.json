@@ -1,0 +1,124 @@
+{
+  "scenario": "Flask WSGI dispatch trace and debug instrumentation",
+  "repo": "flask",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "flask.rubric.yaml"
+  },
+  "scenario_quality": 0.8662,
+  "steps": [
+    {
+      "step": "Trace the request dispatch pipeline",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Every method in the required chain (wsgi_app \u2192 full_dispatch_request \u2192 preprocess_request \u2192 dispatch_request \u2192 finalize_request \u2192 make_response \u2192 process_response) is listed in order with file:line and what it calls next. The agent could insert a hook at the correct step without re-reading app.py."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Citations are method-level (e.g. 'Flask.full_dispatch_request, line 992') with specific inner-call line numbers like 'self.preprocess_request(ctx) at 1014' and 'self.finalize_request(ctx, rv) at 1019', making call order explicit between pairs."
+        },
+        "justification": {
+          "score": 0.8,
+          "rationale": "Explains why each method exists (ctx push/pop, signals, before/after_request reverse order, session save via session_interface, OPTIONS shortcut). Misses some nuance like the URL preprocessor pass description being terse, but the rationale for each step is clear."
+        },
+        "uncertainty": {
+          "score": 0.65,
+          "rationale": "Flags blueprints in preprocess/process_response and the error-handler branches (handle_user_exception, from_error_handler mode). Does not explicitly call out extension hooks or that the linear chain can be altered, though most divergence points are noted implicitly."
+        }
+      },
+      "step_quality": 0.875,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 474,
+        "cache_creation_input_tokens": 17062,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Find internal callers of wsgi_app",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Identifies the sole internal caller `Flask.__call__` at src/flask/app.py:1625 with enclosing method and exact expression, and explicitly states no other module under src/flask references wsgi_app. Agent could change the signature in one pass; small confirmation grep is all that's needed."
+        },
+        "specificity": {
+          "score": 1.0,
+          "rationale": "Caller cited as `src/flask/app.py:1625` inside `Flask.__call__ (defined at line 1618)` with the literal expression `return self.wsgi_app(environ, start_response)` \u2014 method-level, not file-level."
+        },
+        "justification": {
+          "score": 0.7,
+          "rationale": "The impact section explains __call__ as the WSGI entry indirection (`WSGI servers invoke app(environ, start_response) \u2192 __call__ \u2192 wsgi_app`), but the step2 block itself doesn't directly state the subclassing-seam rationale; the reader must look to step4 for the why."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Acknowledges the list excludes tests per prompt (`No other module under src/flask references wsgi_app`) and flags the middleware-wrap idiom and third-party subclass overrides as out-of-repo risks. Slightly weak on flagging extensions explicitly within the step2 block."
+        }
+      },
+      "step_quality": 0.8775,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 477,
+        "cache_creation_input_tokens": 16989,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Locate test coverage for the dispatch pipeline",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Enumerates the key test files (test_basic.py, test_reqctx.py, test_signals.py, test_user_error_handler.py, test_subclassing.py, test_async.py, test_views.py, test_helpers.py) with paths and specific test function names and line numbers, giving the agent a directly actionable list."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Citations are concrete: `test_request_dispatching (129)`, `test_teardown_on_pop (16)`, `test_make_response (342)` etc. \u2014 function-level with line numbers, not just file paths."
+        },
+        "justification": {
+          "score": 0.8,
+          "rationale": "Most entries are tagged with what they cover (e.g. `before/after_request`, `ctx.pop side of wsgi_app finally block`, `request_started / request_finished emitted in full_dispatch_request`), explaining WHY each test matters, though a couple of files (test_user_error_handler.py, test_signals.py) get only single-line descriptions."
+        },
+        "uncertainty": {
+          "score": 0.4,
+          "rationale": "Notes indirect/layered coverage (`flask.views.View.dispatch_request overrides are at a different layer`) but does not explicitly flag that some files (e.g. test_signals, test_user_error_handler) touch wsgi_app indirectly without naming it, nor caveat that the list may miss integration tests."
+        }
+      },
+      "step_quality": 0.8175,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 523,
+        "cache_creation_input_tokens": 16998,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Assess impact of adding a debug parameter",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Enumerates the definition edit at app.py:1566, the only internal callsite at app.py:1625, and lists tests to rerun. The agent could open a PR from this list with only small follow-ups (e.g., confirming third-party subclasses)."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Symbols are named precisely with file:line (`Flask.wsgi_app src/flask/app.py:1566`, `Flask.__call__ src/flask/app.py:1618-1625`, middleware idiom at `tests/test_basic.py:298`). No vague 'the testing module' references."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Explains *why* __call__ doesn't need updating (positional-only callsite, kwarg-safe default) and *why* middleware wrap breaks the flag (rebinds bound method to (environ, start_response) callable). Misses any mention of `FlaskClient` parallel signature in testing.py that the rubric flags."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Explicitly flags third-party subclasses not in repo, the middleware-wrap compatibility limitation, and suggests environ/contextvar alternative. Could more sharply call out extensions, but the subclass caveat is there."
+        }
+      },
+      "step_quality": 0.895,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 472,
+        "cache_creation_input_tokens": 17016,
+        "cache_read_input_tokens": 15724
+      }
+    }
+  ]
+}

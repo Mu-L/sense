@@ -1,0 +1,376 @@
+{
+  "scenario": "Mastodon work session - audit the Status contract before a teardown rework",
+  "repo": "mastodon",
+  "judge": {
+    "model": "claude-sonnet-4-6",
+    "prompt_version": "v2-rel",
+    "rubric_path": "mastodon.rubric.yaml"
+  },
+  "scenario_quality": 0.7351,
+  "relationship_audit": {
+    "total": 21,
+    "covered": 21,
+    "related": 21,
+    "contradicted": 0,
+    "covered_recall": 1.0,
+    "related_recall": 1.0,
+    "grounded_precision": 1.0,
+    "missed_covered": [],
+    "missed_related": [],
+    "contradictions": [],
+    "items": [
+      {
+        "id": "status-model",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "c:visibility",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "c:threading",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "a:statuses-ctrl",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "a:post-service",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:feed-manager",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:feed-redis",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:link-feed",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:ap-announce",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:process-links",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:permalink",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:account-warning",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:moderation-act",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:report-service",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:account-merge",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:backup",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:annual-report",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:email-dist",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:user-cleanup",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:unfilter",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "d:media-attach",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": "Orient in the codebase",
+      "scores": {
+        "map_quality": {
+          "score": 0.85,
+          "rationale": "Covers all the named directories (app/models, app/services, app/workers, app/lib, app/serializers, app/policies) with concise descriptions, pins Status at app/models/status.rb:34, and names FeedManager + PostStatusService by path; an agent needs only small targeted follow-ups from here."
+        },
+        "specificity": {
+          "score": 0.9,
+          "rationale": "Every piece cited has a concrete file path (app/models/status.rb:34, app/lib/feed_manager.rb, app/services/post_status_service.rb, app/models/concerns/status/); no vague 'model layer' placeholders."
+        },
+        "justification": {
+          "score": 0.5,
+          "rationale": "States Status 'is a hub (124-191 callers)' and lists what it feeds, but does not explain WHY the architecture is shaped this way (ActivityPub fan-out driving async workers, federation requiring a serializable content record, etc.); naming dominates over reasoning."
+        },
+        "uncertainty": {
+          "score": 0.25,
+          "rationale": "No uncertainty is flagged anywhere; the answer presents all relationships with equal confidence, including the caller-count range (which itself hints at some ambiguity) without acknowledging any gaps or unverified connections."
+        },
+        "relationship": {
+          "score": 0.55,
+          "rationale": "States that Status 'feeds timelines, notifications, federation, moderation' and that it is 'built on concerns' (naming Cacheable, Discard::Model, etc.), but does not say HOW FeedManager consumes Status (Redis-backed timeline hydration), how federation wraps it (ActivityPub Note), or what each concern actually supplies \u2014 named endpoints without connecting paths."
+        }
+      },
+      "step_quality": 0.6875,
+      "usage": {
+        "input_tokens": 3,
+        "output_tokens": 1562,
+        "cache_creation_input_tokens": 18899,
+        "cache_read_input_tokens": 16203
+      }
+    },
+    {
+      "step": "Map the Status contract and what it is built on",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "The answer provides file:line for the model (status.rb:34), every concern with its path (e.g., app/models/concerns/status/fasp_concern.rb:3), all associations with line range (status.rb:75-118), and the critical invariants (default_scope, callback chain order, CACHEABLE_ASSOCIATIONS) an agent must preserve \u2014 small targeted lookups are all that remain."
+        },
+        "specificity": {
+          "score": 0.88,
+          "rationale": "Each concern is named by fully-qualified path and line; associations are enumerated by name with the owning line range; critical callbacks are cited by method name and line (e.g., unlink_from_conversations! prepend: true at status.rb:178)."
+        },
+        "justification": {
+          "score": 0.5,
+          "rationale": "The 'What a teammate must know' section provides some WHY (default_scope silently hides rows, callback order matters, counter caches drift) but the answer does not explain WHY behavior was factored into concerns rather than kept inline (e.g., federation isolation, reuse across models), leaving the architectural motivation implicit."
+        },
+        "uncertainty": {
+          "score": 0.1,
+          "rationale": "The answer asserts every concern path and callback line with no hedges or flagged gaps; it does not indicate anything it could not confirm, even for deep-callback ordering or the HABTM tag relationship."
+        },
+        "relationship": {
+          "score": 0.78,
+          "rationale": "For each concern the answer states what it supplies (e.g., SafeReblogInsert 'overrides _insert_record so reblogs of discarded statuses can't be inserted'; Visibility 'visibility enum, distributable?/hidden?/sign?') \u2014 the binding relationship is clear; the association list names records but omits the relationship type (has_many/belongs_to/polymorphic) for most entries, weakening the association half of this criterion."
+        }
+      },
+      "step_quality": 0.732,
+      "usage": {
+        "input_tokens": 3,
+        "output_tokens": 1429,
+        "cache_creation_input_tokens": 19502,
+        "cache_read_input_tokens": 16203
+      }
+    },
+    {
+      "step": "Trace how a status is created and distributed",
+      "scores": {
+        "map_quality": {
+          "score": 0.93,
+          "rationale": "The answer traces the full ordered chain from PostStatusService#call through inline persist, async queuing, local fan-out via FanOutOnWriteService, and federation via ActivityPub::DistributionWorker, with file:line at every layer and an explicit inline-vs-async split. An agent needs only small targeted lookups to go deeper on any one branch."
+        },
+        "specificity": {
+          "score": 0.93,
+          "rationale": "Key symbols are cited with concrete file:line throughout \u2014 post_status_service.rb:42, distribution_worker.rb:8, fan_out_on_write_service.rb:12, activitypub/distribution_worker.rb:11 \u2014 covering the post service, feed manager push, notification workers, and federation delivery."
+        },
+        "justification": {
+          "score": 0.3,
+          "rationale": "The answer labels pieces inline or async but never explains WHY fan-out is pushed async; the scale reason (each status may target thousands of follower inboxes) is absent, leaving the design rationale implicit."
+        },
+        "uncertainty": {
+          "score": 0.4,
+          "rationale": "The answer flags the async boundary and notes check_race_condition! as a nil-visibility guard, but does not flag where the chain was not fully opened (e.g., what FeedInsertWorker does per-insert, or how ActivityPub::DeliveryWorker retries), leaving those as silent gaps rather than named uncertainties."
+        },
+        "relationship": {
+          "score": 0.9,
+          "rationale": "The answer assembles an explicit chain \u2014 PostStatusService \u2192 process_status!(save) \u2192 postprocess_status! \u2192 DistributionWorker \u2192 FanOutOnWriteService \u2192 FeedManager/LocalNotificationWorker/FeedInsertWorker, and separately ActivityPub::DistributionWorker \u2192 StatusReachFinder#inboxes \u2192 ActivityPub::DeliveryWorker \u2014 naming the connecting call at each hop rather than listing files in isolation."
+        }
+      },
+      "step_quality": 0.7765,
+      "usage": {
+        "input_tokens": 3,
+        "output_tokens": 1310,
+        "cache_creation_input_tokens": 19168,
+        "cache_read_input_tokens": 16203
+      }
+    },
+    {
+      "step": "Audit every dependent of the Status contract",
+      "scores": {
+        "map_quality": {
+          "score": 0.93,
+          "rationale": "All seven required areas are covered with dozens of named dependents, including non-obvious ones the rubric calls out explicitly: BackupService, AnnualReportsPresenter, PermalinkRedirector, AccountWarning, UnfilterNotificationsWorker, and LinkFeed. File:line is present on the vast majority of entries, and the grouping lets an agent navigate directly without re-exploring."
+        },
+        "specificity": {
+          "score": 0.85,
+          "rationale": "Most entries carry both a symbol and a file:line (e.g., `FeedManager#push_to_home app/lib/feed_manager.rb:231`, `BackupService#favourite_statuses app/services/backup_service.rb:154`), but a handful \u2014 DeleteAccountService, SuspendAccountService, RemoveStatusService \u2014 list only the file with no line anchor."
+        },
+        "justification": {
+          "score": 0.72,
+          "rationale": "Grouping by area implies the why for feeds/federation/moderation, and most entries append a one-phrase usage note (\"insert/remove status from redis feeds\", \"apply remote edit + snapshot\"); the answer stops short of explaining WHY the architecture pushes behavior into separate workers versus inline (fan-out scale, AP envelope requirements), which the rubric asks for."
+        },
+        "uncertainty": {
+          "score": 0.15,
+          "rationale": "The answer presents the full list with no caveat about what a static pass cannot see \u2014 dependents reached solely through dynamic dispatch, polymorphic associations resolved at runtime, or Rails callbacks registered via concern hooks are not flagged as potentially unverified."
+        },
+        "relationship": {
+          "score": 0.68,
+          "rationale": "Several entries explicitly name the binding relationship: `Notification` polymorphic `has_one :notification, as: :activity`, `MediaAttachment belongs_to :status`, `Account#statuses (inverse of status.rb:77)`, and the `Status::FaspConcern` / `Status::FetchRepliesConcern` concerns; but many non-obvious entries (AnnualReportsPresenter, PermalinkRedirector, AccountConversation, Admin::Metrics::Measure) are listed with only a usage phrase and no stated association or derivation path connecting them back to the Status contract."
+        }
+      },
+      "step_quality": 0.7545,
+      "usage": {
+        "input_tokens": 3,
+        "output_tokens": 1891,
+        "cache_creation_input_tokens": 22326,
+        "cache_read_input_tokens": 16203
+      }
+    },
+    {
+      "step": "Trace how status identity and visibility are guarded",
+      "scores": {
+        "map_quality": {
+          "score": 0.78,
+          "rationale": "Strong file:line coverage of existence guards (default_scope kept at status.rb:128, SafeReblogInsert at safe_reblog_insert.rb:20,72, race condition at fan_out_on_write_service.rb:29-39) and visibility guards (StatusPolicy at status_policy.rb:4, StatusFilter at status_filter.rb:11, AccountStatusesFilter at account_statuses_filter.rb:34) across feeds, federation, and moderation paths; the backup path is the notable gap, with no guard coverage for backup_service.rb or related export paths."
+        },
+        "specificity": {
+          "score": 0.85,
+          "rationale": "Nearly every guard is named by method and file:line \u2014 `Status::Visibility#distributable?` at visibility.rb:31, `StatusFilter#filtered?` at status_filter.rb:11, `FanOutOnWriteService#check_race_condition!` at fan_out_on_write_service.rb:29-39 \u2014 giving the agent precise insertion points for follow-up reads."
+        },
+        "justification": {
+          "score": 0.55,
+          "rationale": "The answer explains the mechanical effect of each guard (\"a deleted status simply no-ops\", \"discarded statuses are invisible to all normal queries\", \"race guard\") but never states the underlying WHY \u2014 that a status's state can change between enqueue and execution, so each consumer must re-confirm before acting; the reason is implied but not assembled into a principle."
+        },
+        "uncertainty": {
+          "score": 0.2,
+          "rationale": "The answer presents its guard inventory confidently with no flagging of areas where a guard might be absent, implicit, or only partially enforced (e.g., whether backup or annual-report paths apply any visibility check before exporting statuses)."
+        },
+        "relationship": {
+          "score": 0.68,
+          "rationale": "`distributable?` at visibility.rb:31 is explicitly connected to StatusReachFinder:101, FanOutOnWriteService:188, and fasp_concern.rb; `StatusFilter#filtered?` is connected to `ThreadingConcern#permitted_statuses_from_ids`; but several guards (StatusFinder#verify_action!, AccountStatusesFilter scopes) are listed with their own file:line without an explicit chain showing which downstream dependent they protect, making some entries closer to an enumeration than a path."
+        }
+      },
+      "step_quality": 0.6815,
+      "usage": {
+        "input_tokens": 3,
+        "output_tokens": 2290,
+        "cache_creation_input_tokens": 19372,
+        "cache_read_input_tokens": 16203
+      }
+    },
+    {
+      "step": "Assess the blast radius of the contract change",
+      "scores": {
+        "map_quality": {
+          "score": 0.82,
+          "rationale": "The answer covers all required areas \u2014 feeds/timelines (FeedManager, FanOutOnWriteService), federation (ActivityPub workers), moderation (SuspendAccountService), account lifecycle (DeleteAccountService, AccountStatusesCleanupPolicy), backup (BackupService), maintenance (Vacuum::StatusesVacuum) \u2014 with a clear Red/Orange/Yellow/Green risk ranking and a 'must re-verify' checklist; the three change axes (storage/visibility/teardown) frame the map well, though some workers (email-distribution, unfilter-notifications) are only implicit in the lower-risk tier."
+        },
+        "specificity": {
+          "score": 0.75,
+          "rationale": "High-risk items carry precise file:line citations (safe_reblog_insert.rb:20, status.rb:400/479-493/406/89-118/128/48/72, app/policies/status_policy.rb, app/lib/status_filter.rb), but several medium-risk entries (FanOutOnWriteService, FeedInsertWorker, ActivityPub Distribution/Update/Announce workers) are named without file paths or line numbers, requiring the agent to resolve them."
+        },
+        "justification": {
+          "score": 0.83,
+          "rationale": "The answer gives concrete failure modes for most high-risk entries \u2014 'silently inserts reblogs of dead statuses,' 'silent drift,' 'leak risk: exposes private/direct posts,' 'any teardown code not using unscoped will mis-handle discarded rows' \u2014 and distinguishes lower-risk paths as 'mostly read'; justification weakens slightly in the federation tier where the risk is stated but the failure mode is less specific."
+        },
+        "uncertainty": {
+          "score": 0.3,
+          "rationale": "The answer does not flag any dependent it is unsure about \u2014 no 'could not confirm,' 'static analysis may miss,' or 'lower confidence' markers appear anywhere; the risk tiers imply confidence ordering but do not acknowledge gaps in what a static blast pass can and cannot see."
+        },
+        "relationship": {
+          "score": 0.78,
+          "rationale": "Most high-risk dependents have their connecting relationship stated explicitly: SafeReblogInsert 'overrides AR internals (_insert_record),' counter_caches as 'status.rb:479-493 \u2192 Account#statuses_count,' unlink_from_conversations! via '(prepend: true),' CACHEABLE_ASSOCIATIONS at status.rb:48, Chewy via update_index at status.rb:72; the federation and feed tier is weaker, naming the files without specifying the association/concern path that links them to the changed contract."
+        }
+      },
+      "step_quality": 0.7475,
+      "usage": {
+        "input_tokens": 3,
+        "output_tokens": 2285,
+        "cache_creation_input_tokens": 19516,
+        "cache_read_input_tokens": 16203
+      }
+    },
+    {
+      "step": "Produce the change + verification map",
+      "scores": {
+        "map_quality": {
+          "score": 0.92,
+          "rationale": "The map is complete and actionable: edit targets (status.rb:34, all eight concerns, migration/cache_key/Chewy) are enumerated; dependents are exhaustively grouped across seven areas with file:line; specs/fixtures are listed down to activitypub activity specs and the statuses.yml fixture. A teammate could land the change working from this map alone with only small targeted follow-ups."
+        },
+        "specificity": {
+          "score": 0.88,
+          "rationale": "Virtually every entry carries a concrete file:line (e.g., app/models/concerns/status/safe_reblog_insert.rb:20, app/services/fan_out_on_write_service.rb:12, spec/lib/feed_manager_spec.rb). The spec section uses a few glob patterns like spec/models/concerns/status/*_spec.rb which is slightly less precise but still actionable."
+        },
+        "justification": {
+          "score": 0.65,
+          "rationale": "The map is well-grouped and carries implicit justification (e.g., 'Concerns as the contract changes: visibility/distributable, edits, discard-aware insert'), and the trailing fixture note flags discarded-status + counter-cache as thin. However, for the large bulk of dependents in step4_dependents_by_area, there is no per-file 'why this file is in the map' \u2014 only the area label carries the reasoning."
+        },
+        "uncertainty": {
+          "score": 0.55,
+          "rationale": "The answer flags that 'sense_blast reported the affected set has thin direct test coverage' and explicitly calls out discarded-status and counter-cache as needing new coverage. Beyond that, no explicit uncertainty is stated about which specs already exist or whether the dependent enumeration is exhaustive, leaving the agent to assume completeness."
+        },
+        "relationship": {
+          "score": 0.58,
+          "rationale": "Concern relationships to Status are implied by group headers ('Concerns as the contract changes') and the step2_contract block names which concern supplies what (e.g., Status::SafeReblogInsert for discard-aware insert). But for the downstream dependent blocks \u2014 feeds, federation, moderation, lifecycle \u2014 entries are file:line lists with no explicit connecting path (e.g., no 'Report.status_id FK', no 'FeedManager calls Status.where via feed', no 'account_statuses_cleanup_policy scopes Status via account_id'); the relationship is assumed from area grouping, not stated."
+        }
+      },
+      "step_quality": 0.7665,
+      "usage": {
+        "input_tokens": 3,
+        "output_tokens": 1927,
+        "cache_creation_input_tokens": 24085,
+        "cache_read_input_tokens": 16203
+      }
+    }
+  ]
+}

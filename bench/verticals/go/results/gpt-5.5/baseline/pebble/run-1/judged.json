@@ -1,0 +1,158 @@
+{
+  "scenario": "Pebble work session - interface-laundered retention audit of the write batch before pooling it",
+  "repo": "pebble",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "pebble.rubric.yaml"
+  },
+  "scenario_quality": 0.8217,
+  "relationship_audit": {
+    "total": 7,
+    "covered": 5,
+    "related": 5,
+    "contradicted": 0,
+    "covered_recall": 0.7143,
+    "related_recall": 0.7143,
+    "grounded_precision": 1.0,
+    "missed_covered": [
+      "dep:internaliteropts",
+      "dep:blockpropfilterer"
+    ],
+    "missed_related": [
+      "dep:internaliteropts",
+      "dep:blockpropfilterer"
+    ],
+    "contradictions": [],
+    "items": [
+      {
+        "id": "contract-handle",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:invalidating",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:iterv2interleave",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:rangekeymask",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:internaliteropts",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:blockpropfilterer",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:walfailoverwriter",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": "Orient on the handle",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Nails the essentials fast: identifies Pebble as CockroachDB's LSM KV store, points at Batch in batch.go:240, and names the direct holders (indexedBatch, batchIter, flushableBatch, iterator's batch state, commit queue slots) with file:line."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every direct holder cited as concrete path:line (batch.go:488, batch.go:1761, batch.go:1974, iterator.go:393, commit.go:62) \u2014 no vague 'core write path' phrasing."
+        },
+        "justification": {
+          "score": 0.5,
+          "rationale": "Says Batch is 'caller-facing write batch built up before Commit/DB.Apply', but does not really argue why it's central to the whole DB, nor explicitly set up why direct holders alone are insufficient \u2014 instead it barrels into indirect retainers."
+        },
+        "uncertainty": {
+          "score": 0.6,
+          "rationale": "The orientation portion asserts direct holders confidently without flagging any uncertainty; later sections do label 'invariants-only' and 'not_found_or_downgraded', but the Step 1 orientation itself does not hedge."
+        }
+      },
+      "step_quality": 0.7875,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 440,
+        "cache_creation_input_tokens": 22891,
+        "cache_read_input_tokens": 31981
+      }
+    },
+    {
+      "step": "Find the retainers hidden behind abstractions",
+      "scores": {
+        "map_quality": {
+          "score": 0.85,
+          "rationale": "Covers the key interface-laundered retainers: WAL recordQueueEntry with *Batch as RefCount, flushableEntry embedding flushable, mergingIterLevel.iter/rangeDelIter, iterv2.InterleavingIter, rangekeystack chain, keyspan.InterleavingIter masking, and invariants wrappers. Missing explicit call-out of the rangeKeyMasking BoundLimitedBlockPropertyFilter chain through internalIterOpts/BlockPropertiesFilterer named in the audience spec."
+        },
+        "specificity": {
+          "score": 0.9,
+          "rationale": "Each row gives struct file:line, interface stored, concrete carrier, and injection site with file:line (e.g. 'db.go:908 -> wal/failover_writer.go:539 -> wal/failover_writer.go:176', 'range_keys.go:43->:44'). Concrete and citable."
+        },
+        "justification": {
+          "score": 0.75,
+          "rationale": "Explains that concrete carrier is proved from construction sites and shows discipline (downgrading scheduler, readCompactionQueue, replay as not-found). Doesn't explicitly narrate why a field-type sweep misses each one, though it's implicit from the interface/concrete columns."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Labels invariants-only rows as 'confirmed, invariants-only', flags bench rows as 'not a struct field retaining a specific batch', and includes a 'not_found_or_downgraded' section for scheduler/replay/readCompactionQueue. Honest about edges."
+        }
+      },
+      "step_quality": 0.8425,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 599,
+        "cache_creation_input_tokens": 23306,
+        "cache_read_input_tokens": 31981
+      }
+    },
+    {
+      "step": "Produce the indirect-retention risk map",
+      "scores": {
+        "map_quality": {
+          "score": 0.85,
+          "rationale": "The map carries over every retainer from prior step (WAL failover ring, flushable path, mergingIter/InterleavingIter, rangekeystack, invariants wrappers, bench interface) with lifetime classes and goroutine-crossing flags; risk ranking correctly places process-long, goroutine-crossing WAL and flush paths first. Compact.Iter and multiple invariants wrappers are included as separate rows, satisfying completeness."
+        },
+        "specificity": {
+          "score": 0.9,
+          "rationale": "Each row cites file:line for struct, abstraction, concrete carrier, and injection site (e.g., 'wal/failover_writer.go:539 -> wal/failover_writer.go:176', 'db.go:2821', 'compaction.go:1389' for go-statement); top-risk rows include explicit goroutine_proof lines like 'compaction.go:1389 starts go d.flush()'."
+        },
+        "justification": {
+          "score": 0.75,
+          "rationale": "The 'top_risk_pooling_checks' section argues from evidence (refcount at batch.go:291-305, db.go:849 nils batch.data) rather than asserting; ranking rationale is implicit in the crosses_goroutine/lifetime fields but not explicitly narrated per row."
+        },
+        "uncertainty": {
+          "score": 0.8,
+          "rationale": "The 'not_found_or_downgraded' section honestly flags scheduler/replay/readCompactionQueue as checked-but-negative, and invariants rows are labeled 'invariants-only'; bench row is honestly downgraded as 'not a struct field retaining a specific batch'. Missing an explicit statement of un-audited edges (closures, third-party structs)."
+        }
+      },
+      "step_quality": 0.835,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 621,
+        "cache_creation_input_tokens": 23133,
+        "cache_read_input_tokens": 31981
+      }
+    }
+  ]
+}

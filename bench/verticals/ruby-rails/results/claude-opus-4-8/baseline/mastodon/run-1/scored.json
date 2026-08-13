@@ -1,0 +1,914 @@
+{
+  "scenario": "Mastodon work session - audit the Status contract before a teardown rework",
+  "repo": "mastodon",
+  "adoption_score": 0.4,
+  "keyword_coverage": 1.0,
+  "step_avg_score": 0.9286,
+  "efficiency": 0.1773,
+  "completeness": 0.6881,
+  "tool_fluency": 0.0,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 63,
+    "grounded": 49,
+    "unresolved": 14,
+    "hallucinated": 0,
+    "rate": 0.7778,
+    "examples": {
+      "grounded": [
+        "app/models/status.rb:34 (line 34 in app/models/status.rb (file has 502 lines))",
+        "status.rb:48 (line 48 in status.rb (file has 502 lines) [via app/models/status.rb])",
+        "status.rb:36 (line 36 in status.rb (file has 502 lines) [via app/models/status.rb])",
+        "status.rb:66 (line 66 in status.rb (file has 502 lines) [via app/models/status.rb])",
+        "status.rb:128 (line 128 in status.rb (file has 502 lines) [via app/models/status.rb])"
+      ],
+      "unresolved": [
+        "/fetch_replies_concern.rb:3 (file not found at /fetch_replies_concern.rb)",
+        "/safe_reblog_insert.rb:3 (file not found at /safe_reblog_insert.rb)",
+        "/search_concern.rb:3 (file not found at /search_concern.rb)",
+        "/snapshot_concern.rb:3 (file not found at /snapshot_concern.rb)",
+        "/threading_concern.rb:3 (file not found at /threading_concern.rb)"
+      ],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "app/models/status.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "status.rb",
+        "locator": "48",
+        "status": "grounded",
+        "reason": "line 48 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "36",
+        "status": "grounded",
+        "reason": "line 36 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "66",
+        "status": "grounded",
+        "reason": "line 66 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "128",
+        "status": "grounded",
+        "reason": "line 128 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "64",
+        "status": "grounded",
+        "reason": "line 64 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "app/models/concerns/status/fasp_concern.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/status/fasp_concern.rb (file has 53 lines)"
+      },
+      {
+        "file": "/fetch_replies_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at /fetch_replies_concern.rb"
+      },
+      {
+        "file": "/safe_reblog_insert.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at /safe_reblog_insert.rb"
+      },
+      {
+        "file": "/search_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at /search_concern.rb"
+      },
+      {
+        "file": "/snapshot_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at /snapshot_concern.rb"
+      },
+      {
+        "file": "/threading_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at /threading_concern.rb"
+      },
+      {
+        "file": "/visibility.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at /visibility.rb"
+      },
+      {
+        "file": "/interaction_policy_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at /interaction_policy_concern.rb"
+      },
+      {
+        "file": "status.rb",
+        "locator": "75",
+        "status": "grounded",
+        "reason": "line 75 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "400",
+        "status": "grounded",
+        "reason": "line 400 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "178",
+        "status": "grounded",
+        "reason": "line 178 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "160",
+        "status": "grounded",
+        "reason": "line 160 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "app/services/post_status_service.rb",
+        "locator": "42",
+        "status": "grounded",
+        "reason": "line 42 in app/services/post_status_service.rb (file has 299 lines)"
+      },
+      {
+        "file": "status.rb",
+        "locator": "166",
+        "status": "grounded",
+        "reason": "line 166 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "post_status_service.rb",
+        "locator": "162",
+        "status": "grounded",
+        "reason": "line 162 in post_status_service.rb (file has 299 lines) [via app/services/post_status_service.rb]"
+      },
+      {
+        "file": "app/services/fan_out_on_write_service.rb",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in app/services/fan_out_on_write_service.rb (file has 195 lines)"
+      },
+      {
+        "file": "app/lib/status_reach_finder.rb",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in app/lib/status_reach_finder.rb (file has 118 lines)"
+      },
+      {
+        "file": "fan_out_on_write_service.rb",
+        "locator": "64",
+        "status": "grounded",
+        "reason": "line 64 in fan_out_on_write_service.rb (file has 195 lines) [via app/services/fan_out_on_write_service.rb]"
+      },
+      {
+        "file": "app/workers/feed_insert_worker.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/workers/feed_insert_worker.rb (file has 86 lines)"
+      },
+      {
+        "file": "app/services/update_status_service.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in app/services/update_status_service.rb (file has 174 lines)"
+      },
+      {
+        "file": "app/models/concerns/account/associations.rb",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in app/models/concerns/account/associations.rb (file has 81 lines)"
+      },
+      {
+        "file": "status.rb",
+        "locator": "199",
+        "status": "grounded",
+        "reason": "line 199 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "274",
+        "status": "grounded",
+        "reason": "line 274 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "72",
+        "status": "grounded",
+        "reason": "line 72 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "post_status_service.rb",
+        "locator": "164",
+        "status": "grounded",
+        "reason": "line 164 in post_status_service.rb (file has 299 lines) [via app/services/post_status_service.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "361",
+        "status": "grounded",
+        "reason": "line 361 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "app/workers/feed_insert_worker.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in app/workers/feed_insert_worker.rb (file has 86 lines)"
+      },
+      {
+        "file": "safe_reblog_insert.rb",
+        "locator": "72",
+        "status": "grounded",
+        "reason": "line 72 in safe_reblog_insert.rb (file has 77 lines) [via app/models/concerns/status/safe_reblog_insert.rb]"
+      },
+      {
+        "file": "status_reach_finder.rb",
+        "locator": "69",
+        "status": "grounded",
+        "reason": "line 69 in status_reach_finder.rb (file has 118 lines) [via app/lib/status_reach_finder.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "420",
+        "status": "grounded",
+        "reason": "line 420 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "visibility.rb",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in visibility.rb (file has 47 lines) [via app/models/concerns/status/visibility.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "474",
+        "status": "grounded",
+        "reason": "line 474 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": "fan_out_on_write_service.rb",
+        "locator": "185",
+        "status": "grounded",
+        "reason": "line 185 in fan_out_on_write_service.rb (file has 195 lines) [via app/services/fan_out_on_write_service.rb]"
+      },
+      {
+        "file": "fetch_replies_concern.rb",
+        "locator": "38",
+        "status": "grounded",
+        "reason": "line 38 in fetch_replies_concern.rb (file has 42 lines) [via app/models/concerns/status/fetch_replies_concern.rb]"
+      },
+      {
+        "file": "app/policies/status_policy.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in app/policies/status_policy.rb (file has 89 lines)"
+      },
+      {
+        "file": "app/lib/status_filter.rb",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in app/lib/status_filter.rb (file has 72 lines)"
+      },
+      {
+        "file": "threading_concern.rb",
+        "locator": "14",
+        "status": "grounded",
+        "reason": "line 14 in threading_concern.rb (file has 121 lines) [via app/models/concerns/status/threading_concern.rb]"
+      },
+      {
+        "file": "app/lib/account_statuses_filter.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in app/lib/account_statuses_filter.rb (file has 151 lines)"
+      },
+      {
+        "file": "feed_manager.rb",
+        "locator": "448",
+        "status": "grounded",
+        "reason": "line 448 in feed_manager.rb (file has 676 lines) [via app/lib/feed_manager.rb]"
+      },
+      {
+        "file": "status_reach_finder.rb",
+        "locator": "96",
+        "status": "grounded",
+        "reason": "line 96 in status_reach_finder.rb (file has 118 lines) [via app/lib/status_reach_finder.rb]"
+      },
+      {
+        "file": "status_policy.rb",
+        "locator": "18",
+        "status": "grounded",
+        "reason": "line 18 in status_policy.rb (file has 89 lines) [via app/policies/status_policy.rb]"
+      },
+      {
+        "file": "interaction_policy_concern.rb",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in interaction_policy_concern.rb (file has 70 lines) [via app/models/concerns/account/interaction_policy_concern.rb]"
+      },
+      {
+        "file": "status.rb",
+        "locator": "190",
+        "status": "grounded",
+        "reason": "line 190 in status.rb (file has 502 lines) [via app/models/status.rb]"
+      },
+      {
+        "file": ".../fetch_replies_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at .../fetch_replies_concern.rb"
+      },
+      {
+        "file": ".../safe_reblog_insert.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at .../safe_reblog_insert.rb"
+      },
+      {
+        "file": ".../search_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at .../search_concern.rb"
+      },
+      {
+        "file": ".../snapshot_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at .../snapshot_concern.rb"
+      },
+      {
+        "file": ".../threading_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at .../threading_concern.rb"
+      },
+      {
+        "file": ".../visibility.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at .../visibility.rb"
+      },
+      {
+        "file": ".../interaction_policy_concern.rb",
+        "locator": "3",
+        "status": "unresolved",
+        "reason": "file not found at .../interaction_policy_concern.rb"
+      },
+      {
+        "file": "concerns/account/associations.rb",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in concerns/account/associations.rb (file has 81 lines) [via app/models/concerns/account/associations.rb]"
+      },
+      {
+        "file": "delete_account_service.rb",
+        "locator": "160",
+        "status": "grounded",
+        "reason": "line 160 in delete_account_service.rb (file has 330 lines) [via app/services/delete_account_service.rb]"
+      },
+      {
+        "file": "backup_service.rb",
+        "locator": "37",
+        "status": "grounded",
+        "reason": "line 37 in backup_service.rb (file has 214 lines) [via app/services/backup_service.rb]"
+      },
+      {
+        "file": "account_statuses_cleanup_policy.rb",
+        "locator": "59",
+        "status": "grounded",
+        "reason": "line 59 in account_statuses_cleanup_policy.rb (file has 194 lines) [via app/models/account_statuses_cleanup_policy.rb]"
+      },
+      {
+        "file": "distribution_worker.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in distribution_worker.rb (file has 41 lines) [via app/workers/activitypub/distribution_worker.rb]"
+      },
+      {
+        "file": "activitypub/distribution_worker.rb",
+        "locator": "15",
+        "status": "grounded",
+        "reason": "line 15 in activitypub/distribution_worker.rb (file has 41 lines) [via app/workers/activitypub/distribution_worker.rb]"
+      },
+      {
+        "file": "feed_insert_worker.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in feed_insert_worker.rb (file has 86 lines) [via app/workers/feed_insert_worker.rb]"
+      }
+    ]
+  },
+  "gold_recall": {
+    "total": 23,
+    "mentioned": 14,
+    "cited": 6,
+    "mention_recall": 0.6087,
+    "cited_recall": 0.2609,
+    "groups": {
+      "contract": {
+        "total": 3,
+        "mentioned": 3,
+        "cited": 3,
+        "mention_recall": 1.0,
+        "cited_recall": 1.0
+      },
+      "write-path": {
+        "total": 2,
+        "mentioned": 2,
+        "cited": 1,
+        "mention_recall": 1.0,
+        "cited_recall": 0.5
+      },
+      "dependents": {
+        "total": 16,
+        "mentioned": 8,
+        "cited": 2,
+        "mention_recall": 0.5,
+        "cited_recall": 0.125
+      },
+      "specs": {
+        "total": 2,
+        "mentioned": 1,
+        "cited": 0,
+        "mention_recall": 0.5,
+        "cited_recall": 0.0
+      }
+    },
+    "missed_mention": [
+      "d:feed-redis",
+      "d:link-feed",
+      "d:process-links",
+      "d:permalink",
+      "d:annual-report",
+      "d:email-dist",
+      "d:user-cleanup",
+      "d:unfilter",
+      "spec:post-svc"
+    ],
+    "missed_cite": [
+      "a:statuses-ctrl",
+      "d:feed-redis",
+      "d:link-feed",
+      "d:ap-announce",
+      "d:process-links",
+      "d:permalink",
+      "d:account-warning",
+      "d:moderation-act",
+      "d:report-service",
+      "d:account-merge",
+      "d:annual-report",
+      "d:email-dist",
+      "d:user-cleanup",
+      "d:unfilter",
+      "d:media-attach",
+      "spec:status",
+      "spec:post-svc"
+    ],
+    "details": [
+      {
+        "id": "status-model",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "c:visibility",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "c:threading",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "a:statuses-ctrl",
+        "group": "write-path",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "a:post-service",
+        "group": "write-path",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:feed-manager",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:feed-redis",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:link-feed",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:ap-announce",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:process-links",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:permalink",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:account-warning",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:moderation-act",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:report-service",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:account-merge",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:backup",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:annual-report",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:email-dist",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:user-cleanup",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:unfilter",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:media-attach",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "spec:status",
+        "group": "specs",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "spec:post-svc",
+        "group": "specs",
+        "mentioned": false,
+        "cited": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the codebase",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Status",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 43,
+          "unique_refs": 63,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_conventions",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 3,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.3333,
+      "combined_score": 0.6,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the Status contract and what it is built on",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "concern",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 43,
+          "unique_refs": 63,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "status.rb",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 3,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.6667,
+      "combined_score": 0.8,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how a status is created and distributed",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "feed",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 43,
+          "unique_refs": 63,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.75,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Audit every dependent of the Status contract",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 43,
+          "unique_refs": 63,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.5,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how status identity and visibility are guarded",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 43,
+          "unique_refs": 63,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 0,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 0,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.5,
+      "fairness_score": 0.5
+    },
+    {
+      "name": "Assess the blast radius of the contract change",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 43,
+          "unique_refs": 63,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Produce the change + verification map",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 43,
+          "unique_refs": 63,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "spec",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [],
+    "post_mcp_misses": [],
+    "has_mcp_tools": false,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 27,
+    "grep_count": 9,
+    "read_count": 10,
+    "mcp_count": 0,
+    "token_input_uncached": 2997,
+    "token_output": 25834,
+    "token_cache_read": 953335,
+    "token_cache_write": 58820,
+    "token_total_billed": 28831,
+    "token_total_all": 1040986,
+    "wall_time_seconds": 328.5,
+    "cost_usd": 1.7272,
+    "effective_token_total_billed": 28831,
+    "effective_wall_time_seconds": 328.5,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 480,
+    "token_efficiency": 0.039,
+    "time_efficiency": 0.3156,
+    "answer_chars": 45645,
+    "audit_chars": 162975,
+    "overhead": null
+  }
+}

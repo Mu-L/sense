@@ -1,0 +1,1013 @@
+{
+  "scenario": "Langchainrb work session - add a new LLM provider with tool-calling support",
+  "repo": "langchainrb",
+  "adoption_score": 0.4857,
+  "keyword_coverage": 1.0,
+  "step_avg_score": 1.0,
+  "efficiency": 0.5584,
+  "completeness": 0.8282,
+  "tool_fluency": 0.1429,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 60,
+    "grounded": 60,
+    "unresolved": 0,
+    "hallucinated": 0,
+    "rate": 1.0,
+    "examples": {
+      "grounded": [
+        "lib/langchain/engine.rb:5 (line 5 in lib/langchain/engine.rb (file has 8 lines))",
+        "lib/langchain/llm/base.rb:20 (line 20 in lib/langchain/llm/base.rb (file has 89 lines))",
+        "adapters/base.rb:7 (line 7 in adapters/base.rb (file has 63 lines) [via lib/langchain/assistant/llm/adapters/base.rb])",
+        "adapter.rb:8 (line 8 in adapter.rb (file has 28 lines) [via lib/langchain/assistant/llm/adapter.rb])",
+        "messages/base.rb:6 (line 6 in messages/base.rb (file has 60 lines) [via lib/langchain/assistant/messages/base.rb])"
+      ],
+      "unresolved": [],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "lib/langchain/engine.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in lib/langchain/engine.rb (file has 8 lines)"
+      },
+      {
+        "file": "lib/langchain/llm/base.rb",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in lib/langchain/llm/base.rb (file has 89 lines)"
+      },
+      {
+        "file": "adapters/base.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in adapters/base.rb (file has 63 lines) [via lib/langchain/assistant/llm/adapters/base.rb]"
+      },
+      {
+        "file": "adapter.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in adapter.rb (file has 28 lines) [via lib/langchain/assistant/llm/adapter.rb]"
+      },
+      {
+        "file": "messages/base.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in messages/base.rb (file has 60 lines) [via lib/langchain/assistant/messages/base.rb]"
+      },
+      {
+        "file": "response/base_response.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in response/base_response.rb (file has 89 lines) [via lib/langchain/llm/response/base_response.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "57",
+        "status": "grounded",
+        "reason": "line 57 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "assistant/llm/adapter.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in assistant/llm/adapter.rb (file has 28 lines) [via lib/langchain/assistant/llm/adapter.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "143",
+        "status": "grounded",
+        "reason": "line 143 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "302",
+        "status": "grounded",
+        "reason": "line 302 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "303",
+        "status": "grounded",
+        "reason": "line 303 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "338",
+        "status": "grounded",
+        "reason": "line 338 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "341",
+        "status": "grounded",
+        "reason": "line 341 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "adapters/openai.rb",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in adapters/openai.rb (file has 103 lines) [via lib/langchain/assistant/llm/adapters/openai.rb]"
+      },
+      {
+        "file": "adapters/openai.rb",
+        "locator": "68",
+        "status": "grounded",
+        "reason": "line 68 in adapters/openai.rb (file has 103 lines) [via lib/langchain/assistant/llm/adapters/openai.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "348",
+        "status": "grounded",
+        "reason": "line 348 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "llm/openai.rb",
+        "locator": "148",
+        "status": "grounded",
+        "reason": "line 148 in llm/openai.rb (file has 221 lines) [via lib/langchain/llm/openai.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "305",
+        "status": "grounded",
+        "reason": "line 305 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "response/openai_response.rb",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in response/openai_response.rb (file has 63 lines) [via lib/langchain/llm/response/openai_response.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "308",
+        "status": "grounded",
+        "reason": "line 308 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "327",
+        "status": "grounded",
+        "reason": "line 327 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "365",
+        "status": "grounded",
+        "reason": "line 365 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "366",
+        "status": "grounded",
+        "reason": "line 366 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "adapters/openai.rb",
+        "locator": "50",
+        "status": "grounded",
+        "reason": "line 50 in adapters/openai.rb (file has 103 lines) [via lib/langchain/assistant/llm/adapters/openai.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "379",
+        "status": "grounded",
+        "reason": "line 379 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "base.rb",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in base.rb (file has 195 lines) [via lib/langchain/vectorsearch/base.rb]"
+      },
+      {
+        "file": "base.rb",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in base.rb (file has 195 lines) [via lib/langchain/vectorsearch/base.rb]"
+      },
+      {
+        "file": "base.rb",
+        "locator": "42",
+        "status": "grounded",
+        "reason": "line 42 in base.rb (file has 195 lines) [via lib/langchain/vectorsearch/base.rb]"
+      },
+      {
+        "file": "base.rb",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in base.rb (file has 195 lines) [via lib/langchain/vectorsearch/base.rb]"
+      },
+      {
+        "file": "base.rb",
+        "locator": "56",
+        "status": "grounded",
+        "reason": "line 56 in base.rb (file has 195 lines) [via lib/langchain/vectorsearch/base.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "229",
+        "status": "grounded",
+        "reason": "line 229 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "410",
+        "status": "grounded",
+        "reason": "line 410 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "adapters/openai.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in adapters/openai.rb (file has 103 lines) [via lib/langchain/assistant/llm/adapters/openai.rb]"
+      },
+      {
+        "file": "adapters/anthropic.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in adapters/anthropic.rb (file has 103 lines) [via lib/langchain/assistant/llm/adapters/anthropic.rb]"
+      },
+      {
+        "file": "adapters/aws_bedrock_anthropic.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in adapters/aws_bedrock_anthropic.rb (file has 35 lines) [via lib/langchain/assistant/llm/adapters/aws_bedrock_anthropic.rb]"
+      },
+      {
+        "file": "adapters/google_gemini.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in adapters/google_gemini.rb (file has 102 lines) [via lib/langchain/assistant/llm/adapters/google_gemini.rb]"
+      },
+      {
+        "file": "adapters/mistralai.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in adapters/mistralai.rb (file has 102 lines) [via lib/langchain/assistant/llm/adapters/mistralai.rb]"
+      },
+      {
+        "file": "adapters/ollama.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in adapters/ollama.rb (file has 92 lines) [via lib/langchain/assistant/llm/adapters/ollama.rb]"
+      },
+      {
+        "file": "lib/langchain/assistant/messages/base.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in lib/langchain/assistant/messages/base.rb (file has 60 lines)"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "264",
+        "status": "grounded",
+        "reason": "line 264 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "messages/openai_message.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in messages/openai_message.rb (file has 157 lines) [via lib/langchain/assistant/messages/openai_message.rb]"
+      },
+      {
+        "file": "messages/google_gemini_message.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in messages/google_gemini_message.rb (file has 133 lines) [via lib/langchain/assistant/messages/google_gemini_message.rb]"
+      },
+      {
+        "file": "assistant.rb",
+        "locator": "316",
+        "status": "grounded",
+        "reason": "line 316 in assistant.rb (file has 421 lines) [via lib/langchain/assistant.rb]"
+      },
+      {
+        "file": "adapters/openai.rb",
+        "locator": "43",
+        "status": "grounded",
+        "reason": "line 43 in adapters/openai.rb (file has 103 lines) [via lib/langchain/assistant/llm/adapters/openai.rb]"
+      },
+      {
+        "file": "lib/langchain/llm/response/base_response.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in lib/langchain/llm/response/base_response.rb (file has 89 lines)"
+      },
+      {
+        "file": "openai_response.rb",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in openai_response.rb (file has 63 lines) [via lib/langchain/llm/response/openai_response.rb]"
+      },
+      {
+        "file": "openai_response.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in openai_response.rb (file has 63 lines) [via lib/langchain/llm/response/openai_response.rb]"
+      },
+      {
+        "file": "llm/openai.rb",
+        "locator": "122",
+        "status": "grounded",
+        "reason": "line 122 in llm/openai.rb (file has 221 lines) [via lib/langchain/llm/openai.rb]"
+      },
+      {
+        "file": "llm/google_gemini.rb",
+        "locator": "39",
+        "status": "grounded",
+        "reason": "line 39 in llm/google_gemini.rb (file has 110 lines) [via lib/langchain/llm/google_gemini.rb]"
+      },
+      {
+        "file": "lib/langchain/assistant/llm/adapter.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in lib/langchain/assistant/llm/adapter.rb (file has 28 lines)"
+      },
+      {
+        "file": "adapter.rb",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in adapter.rb (file has 28 lines) [via lib/langchain/assistant/llm/adapter.rb]"
+      },
+      {
+        "file": "engine.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in engine.rb (file has 8 lines) [via lib/langchain/engine.rb]"
+      },
+      {
+        "file": "lib/langchain/llm/openai.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in lib/langchain/llm/openai.rb (file has 221 lines)"
+      },
+      {
+        "file": "response/openai_response.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in response/openai_response.rb (file has 63 lines) [via lib/langchain/llm/response/openai_response.rb]"
+      },
+      {
+        "file": "adapters/base.rb",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in adapters/base.rb (file has 63 lines) [via lib/langchain/assistant/llm/adapters/base.rb]"
+      },
+      {
+        "file": "lib/langchain/assistant/llm/adapter.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in lib/langchain/assistant/llm/adapter.rb (file has 28 lines)"
+      },
+      {
+        "file": "lib/langchain/tool_definition.rb",
+        "locator": "111",
+        "status": "grounded",
+        "reason": "line 111 in lib/langchain/tool_definition.rb (file has 231 lines)"
+      },
+      {
+        "file": "lib/langchain/tool_definition.rb",
+        "locator": "to_openai_format:111",
+        "status": "grounded",
+        "reason": "`to_openai_format` found near line 111 in lib/langchain/tool_definition.rb"
+      },
+      {
+        "file": "llm/google_gemini.rb",
+        "locator": "64",
+        "status": "grounded",
+        "reason": "line 64 in llm/google_gemini.rb (file has 110 lines) [via lib/langchain/llm/google_gemini.rb]"
+      },
+      {
+        "file": "llm/openai.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in llm/openai.rb (file has 221 lines) [via lib/langchain/llm/openai.rb]"
+      }
+    ]
+  },
+  "gold_recall": {
+    "total": 29,
+    "mentioned": 20,
+    "cited": 15,
+    "mention_recall": 0.6897,
+    "cited_recall": 0.5172,
+    "groups": {
+      "dispatch": {
+        "total": 2,
+        "mentioned": 2,
+        "cited": 2,
+        "mention_recall": 1.0,
+        "cited_recall": 1.0
+      },
+      "adapters": {
+        "total": 6,
+        "mentioned": 5,
+        "cited": 5,
+        "mention_recall": 0.8333,
+        "cited_recall": 0.8333
+      },
+      "messages": {
+        "total": 6,
+        "mentioned": 4,
+        "cited": 3,
+        "mention_recall": 0.6667,
+        "cited_recall": 0.5
+      },
+      "clients": {
+        "total": 6,
+        "mentioned": 6,
+        "cited": 3,
+        "mention_recall": 1.0,
+        "cited_recall": 0.5
+      },
+      "responses": {
+        "total": 6,
+        "mentioned": 2,
+        "cited": 2,
+        "mention_recall": 0.3333,
+        "cited_recall": 0.3333
+      },
+      "specs": {
+        "total": 3,
+        "mentioned": 1,
+        "cited": 0,
+        "mention_recall": 0.3333,
+        "cited_recall": 0.0
+      }
+    },
+    "missed_mention": [
+      "adapter:mistral",
+      "msg:anthropic",
+      "msg:ollama",
+      "resp:anthropic",
+      "resp:gemini",
+      "resp:mistral",
+      "resp:ollama",
+      "spec:assistant",
+      "spec:msg-openai"
+    ],
+    "missed_cite": [
+      "adapter:mistral",
+      "msg:anthropic",
+      "msg:mistral",
+      "msg:ollama",
+      "llm:anthropic",
+      "llm:mistral",
+      "llm:ollama",
+      "resp:anthropic",
+      "resp:gemini",
+      "resp:mistral",
+      "resp:ollama",
+      "spec:assistant",
+      "spec:adapter",
+      "spec:msg-openai"
+    ],
+    "details": [
+      {
+        "id": "adapter-build",
+        "group": "dispatch",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "assistant",
+        "group": "dispatch",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "adapter-base",
+        "group": "adapters",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "adapter:openai",
+        "group": "adapters",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "adapter:anthropic",
+        "group": "adapters",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "adapter:gemini",
+        "group": "adapters",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "adapter:mistral",
+        "group": "adapters",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "adapter:ollama",
+        "group": "adapters",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "msg-base",
+        "group": "messages",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "msg:openai",
+        "group": "messages",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "msg:anthropic",
+        "group": "messages",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "msg:gemini",
+        "group": "messages",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "msg:mistral",
+        "group": "messages",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "msg:ollama",
+        "group": "messages",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "llm-base",
+        "group": "clients",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "llm:openai",
+        "group": "clients",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "llm:anthropic",
+        "group": "clients",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "llm:gemini",
+        "group": "clients",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "llm:mistral",
+        "group": "clients",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "llm:ollama",
+        "group": "clients",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "resp-base",
+        "group": "responses",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "resp:openai",
+        "group": "responses",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "resp:anthropic",
+        "group": "responses",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "resp:gemini",
+        "group": "responses",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "resp:mistral",
+        "group": "responses",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "resp:ollama",
+        "group": "responses",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "spec:assistant",
+        "group": "specs",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "spec:adapter",
+        "group": "specs",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "spec:msg-openai",
+        "group": "specs",
+        "mentioned": false,
+        "cited": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the codebase",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "LLM",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Assistant",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 27,
+          "unique_refs": 60,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_conventions",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 4,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how the assistant talks to a provider for a tool-calling turn",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Adapter",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "build",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 27,
+          "unique_refs": 60,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.8333,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the provider-integration family and its contract",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Adapter",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "build_chat_params",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 27,
+          "unique_refs": 60,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "adapters/base.rb",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 2,
+      "total_bonus": 4,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.75,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the per-provider message and response families",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Message",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Response",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 27,
+          "unique_refs": 60,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 3,
+      "total_required": 3,
+      "hits_bonus": 0,
+      "total_bonus": 1,
+      "fairness_hits_required": 3,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.8571,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the raw LLM client family and its contract",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "LLM",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "chat",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "5",
+          "unique_files": 27,
+          "unique_refs": 60,
+          "threshold": 5,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 3,
+      "total_required": 3,
+      "hits_bonus": 0,
+      "total_bonus": 1,
+      "fairness_hits_required": 3,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.8571,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Find every site that must change to add a new tool-calling provider",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Adapter",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 27,
+          "unique_refs": 60,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "spec",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.8333,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Produce the edit map",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 27,
+          "unique_refs": 60,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "spec",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "response",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [
+      "Read(adapter.rb)",
+      "Read(base.rb)",
+      "Read(assistant.rb)",
+      "Read(openai.rb)",
+      "Read(base.rb)",
+      "Read(openai_message.rb)",
+      "Read(base.rb)",
+      "Read(base_response.rb)"
+    ],
+    "post_mcp_misses": [
+      "Bash(cd /Users/luc/Developer/luuuc/oss/sense-benchmark/sense/lang)",
+      "Bash(cd /Users/luc/Developer/luuuc/oss/sense-benchmark/sense/lang)",
+      "Bash(cd /Users/luc/Developer/luuuc/oss/sense-benchmark/sense/lang)",
+      "Bash(cd /Users/luc/Developer/luuuc/oss/sense-benchmark/sense/lang)",
+      "Bash(cd /Users/luc/Developer/luuuc/oss/sense-benchmark/sense/lang)",
+      "Bash(cd /Users/luc/Developer/luuuc/oss/sense-benchmark/sense/lang)"
+    ],
+    "has_mcp_tools": true,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 8, post-MCP misses: 6 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 18,
+    "grep_count": 6,
+    "read_count": 8,
+    "mcp_count": 1,
+    "token_input_uncached": 2694,
+    "token_output": 13439,
+    "token_cache_read": 384418,
+    "token_cache_write": 32401,
+    "token_total_billed": 16133,
+    "token_total_all": 432952,
+    "wall_time_seconds": 165.8,
+    "cost_usd": 0.8657,
+    "effective_token_total_billed": 16133,
+    "effective_wall_time_seconds": 165.8,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 480,
+    "token_efficiency": 0.4622,
+    "time_efficiency": 0.6546,
+    "answer_chars": 19487,
+    "audit_chars": 79523,
+    "overhead": null
+  }
+}

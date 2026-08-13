@@ -1,0 +1,124 @@
+{
+  "scenario": "Axum Handler trait propagation and request context layer assessment",
+  "repo": "axum",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "axum.rubric.yaml"
+  },
+  "scenario_quality": 0.91,
+  "steps": [
+    {
+      "step": "Find all Handler trait implementations",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Enumerates all 7 Handler impl sites with precise file:line (handler/mod.rs:208, 227, 271, 317; method_routing.rs:1355; axum-extra mod.rs:167; or.rs:56), with T/S markers, extractor flow, and exact closure invocation lines. Agent can edit directly."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Cites the macro expansion concretely (`all_the_tuples!` at line 262 generating 1..=16 args), names IntoResponseHandler (line 267) and Layered's L: Layer<HandlerService<H,T,S>> bound, and pinpoints invocation lines like 217, 255, 278."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Explains T as a 'type-state marker that disambiguates blanket impls (coherence workaround)', IntoResponseHandler as 'fixed-data handler' where 'value IS the response', and Layered's role in trait composition via with_state\u2192layer\u2192oneshot."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Flags axum-extra IntoHandler and Or combinators explicitly, and notes the macro-generated nature of the tuple impls. Mentions MakeErasedHandler as a non-impl callsite worth knowing, though doesn't explicitly caveat that the enumeration could miss feature-gated impls."
+        }
+      },
+      "step_quality": 0.925,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 524,
+        "cache_creation_input_tokens": 23284,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Trace the extractor chain",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Provides FromRequestParts (axum-core/src/extract/mod.rs:53) and FromRequest (mod.rs:79) with file:line, lists ~25 built-in extractors (well above 8) with kind and file:line, and maps the rejection path through handler/mod.rs:241-253 and axum-core/src/extract/rejection.rs. Agent could write a new extractor with only targeted lookups."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Names are exact (FromRef, State, Extension, Path, Query, Json, Form, Multipart, etc.) with precise file:line. ViaParts vs ViaRequest marker distinction is concrete, and the blanket impl for FromRequestParts\u2192FromRequest is cited at mod.rs:91-105."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Explicitly explains why two traits exist (\"cannot consume body\" vs \"consumes body; only the LAST handler arg\"), and how State uses FromRef including the identity blanket `impl<T: Clone> FromRef<T> for T` at line 19. Could marginally tie sub-state extraction to a derive example, but the why is clear."
+        },
+        "uncertainty": {
+          "score": 0.7,
+          "rationale": "Flags Optional* variants, the Result<T, T::Rejection> blanket as an opt-out from short-circuit, and the __define_rejection!/__composite_rejection! macro plumbing. Does not explicitly call out user-defined extractor pitfalls (S: Send + Sync bound is mentioned in recipe but rejection-conversion subtleties aren't deeply warned)."
+        }
+      },
+      "step_quality": 0.9025,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 607,
+        "cache_creation_input_tokens": 23243,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Trace the full serve-to-response lifecycle",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Walks all 7 layers with file:line at each (serve/mod.rs:28-118, handle_connection 558-632, routing/mod.rs:579-595, 599-618, 452-462, path_router.rs:325-372, method_routing.rs:1167, handler/mod.rs:208/227/271/317). Includes extension-mutation sites that pinpoint where middleware can insert."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Exact method names like `call_with_state`, `oneshot_inner_owned`, `TowerToHyperService::new`, `set_matched_path_for_request`, `url_params::insert_url_params` \u2014 not generic 'the call method'. Tower-to-hyper bridge is cited at handle_connection."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Explains each layer's role: make_service 'resolves state once per connection', Router::call does 'body type erasure', PathRouter does matchit lookup then dispatches to Endpoint, MethodRouter dispatches by method. Could be slightly sharper on why PathRouter and MethodRouter are separated, but the role of each is clear."
+        },
+        "uncertainty": {
+          "score": 0.6,
+          "rationale": "Implicitly distinguishes axum-core vs axum (e.g. FromRequestParts in axum-core, Extension in axum) but doesn't explicitly flag the split or alternative serve paths (hyper directly vs axum::serve). Doesn't note what to verify for fallback / catch_all_fallback edge."
+        }
+      },
+      "step_quality": 0.8775,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 574,
+        "cache_creation_input_tokens": 23269,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Assess adding a request context layer",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Provides a concrete edit map with new file paths (axum/src/middleware/request_id.rs), touch sites (middleware/mod.rs, lib.rs, Cargo.toml), and explicitly lists what stays unchanged. Agent could open a PR directly from the minimal_edit_map section."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Tradeoffs grounded in actual axum surfaces with file:line \u2014 Router::layer at routing/mod.rs:296 vs route_layer at :313, MatchedPath injection at path_router.rs:347, Extension<T> bound posture at extension.rs:83. Not abstract middleware talk."
+        },
+        "justification": {
+          "score": 0.95,
+          "rationale": "Explicitly explains WHY Extension-layer is least-breaking (avoids changes to 7 Handler impl sites enumerated from Step 1, no major version bump, mirrors MatchedPath's established 3-part pattern). Rejects alternatives with concrete reasoning."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Flags layer-ordering interactions (outer vs route_layer affecting 404 coverage and MatchedPath ordering), tower-http RequestIdLayer interop race, and response-echo requiring Map/poll_ready pattern. Could more explicitly flag nested router and fallback edge cases though fallback is partially covered."
+        }
+      },
+      "step_quality": 0.935,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 524,
+        "cache_creation_input_tokens": 23266,
+        "cache_read_input_tokens": 15724
+      }
+    }
+  ]
+}

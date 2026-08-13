@@ -1,0 +1,551 @@
+{
+  "scenario": "Next.js SSR render path tracing and request ID threading",
+  "repo": "nextjs",
+  "adoption_score": 0.9091,
+  "keyword_coverage": 1.0,
+  "step_avg_score": 1.0,
+  "efficiency": 0.7309,
+  "completeness": 0.9808,
+  "tool_fluency": 0.8485,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 39,
+    "grounded": 39,
+    "unresolved": 0,
+    "hallucinated": 0,
+    "rate": 1.0,
+    "examples": {
+      "grounded": [
+        "packages/next/src/server/base-server.ts:316 (line 316 in packages/next/src/server/base-server.ts (file has 3070 lines))",
+        "packages/next/src/server/next-server.ts:175 (line 175 in packages/next/src/server/next-server.ts (file has 2178 lines))",
+        "packages/next/src/server/next.ts:125 (line 125 in packages/next/src/server/next.ts (file has 622 lines))",
+        "packages/next/src/server/next.ts:518 (line 518 in packages/next/src/server/next.ts (file has 622 lines))",
+        "next-server.ts:616 (line 616 in next-server.ts (file has 2178 lines) [via packages/next/src/server/next-server.ts])"
+      ],
+      "unresolved": [],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "packages/next/src/server/base-server.ts",
+        "locator": "316",
+        "status": "grounded",
+        "reason": "line 316 in packages/next/src/server/base-server.ts (file has 3070 lines)"
+      },
+      {
+        "file": "packages/next/src/server/next-server.ts",
+        "locator": "175",
+        "status": "grounded",
+        "reason": "line 175 in packages/next/src/server/next-server.ts (file has 2178 lines)"
+      },
+      {
+        "file": "packages/next/src/server/next.ts",
+        "locator": "125",
+        "status": "grounded",
+        "reason": "line 125 in packages/next/src/server/next.ts (file has 622 lines)"
+      },
+      {
+        "file": "packages/next/src/server/next.ts",
+        "locator": "518",
+        "status": "grounded",
+        "reason": "line 518 in packages/next/src/server/next.ts (file has 622 lines)"
+      },
+      {
+        "file": "next-server.ts",
+        "locator": "616",
+        "status": "grounded",
+        "reason": "line 616 in next-server.ts (file has 2178 lines) [via packages/next/src/server/next-server.ts]"
+      },
+      {
+        "file": "lib/router-server.ts",
+        "locator": "226",
+        "status": "grounded",
+        "reason": "line 226 in lib/router-server.ts (file has 935 lines) [via packages/next/src/server/lib/router-server.ts]"
+      },
+      {
+        "file": "next-server.ts",
+        "locator": "1260",
+        "status": "grounded",
+        "reason": "line 1260 in next-server.ts (file has 2178 lines) [via packages/next/src/server/next-server.ts]"
+      },
+      {
+        "file": "base-server.ts",
+        "locator": "1852",
+        "status": "grounded",
+        "reason": "line 1852 in base-server.ts (file has 3070 lines) [via packages/next/src/server/base-server.ts]"
+      },
+      {
+        "file": "next-server.ts",
+        "locator": "845",
+        "status": "grounded",
+        "reason": "line 845 in next-server.ts (file has 2178 lines) [via packages/next/src/server/next-server.ts]"
+      },
+      {
+        "file": "load-components.ts",
+        "locator": "355",
+        "status": "grounded",
+        "reason": "line 355 in load-components.ts (file has 358 lines) [via packages/next/src/server/load-components.ts]"
+      },
+      {
+        "file": "next-server.ts",
+        "locator": "658",
+        "status": "grounded",
+        "reason": "line 658 in next-server.ts (file has 2178 lines) [via packages/next/src/server/next-server.ts]"
+      },
+      {
+        "file": "route-modules/pages/module.ts",
+        "locator": "136",
+        "status": "grounded",
+        "reason": "line 136 in route-modules/pages/module.ts (file has 164 lines) [via packages/next/src/server/route-modules/pages/module.ts]"
+      },
+      {
+        "file": "server/render.tsx",
+        "locator": "457",
+        "status": "grounded",
+        "reason": "line 457 in server/render.tsx (file has 1641 lines) [via packages/next/src/server/render.tsx]"
+      },
+      {
+        "file": "next-server.ts",
+        "locator": "635",
+        "status": "grounded",
+        "reason": "line 635 in next-server.ts (file has 2178 lines) [via packages/next/src/server/next-server.ts]"
+      },
+      {
+        "file": "route-modules/app-page/module.ts",
+        "locator": "155",
+        "status": "grounded",
+        "reason": "line 155 in route-modules/app-page/module.ts (file has 212 lines) [via packages/next/src/server/route-modules/app-page/module.ts]"
+      },
+      {
+        "file": "server/app-render/app-render.tsx",
+        "locator": "3077",
+        "status": "grounded",
+        "reason": "line 3077 in server/app-render/app-render.tsx (file has 8742 lines) [via packages/next/src/server/app-render/app-render.tsx]"
+      },
+      {
+        "file": "packages/next/src/server/app-render/app-render.tsx",
+        "locator": "3077",
+        "status": "grounded",
+        "reason": "line 3077 in packages/next/src/server/app-render/app-render.tsx (file has 8742 lines)"
+      },
+      {
+        "file": "packages/next/src/server/route-modules/app-page/module.ts",
+        "locator": "160",
+        "status": "grounded",
+        "reason": "line 160 in packages/next/src/server/route-modules/app-page/module.ts (file has 212 lines)"
+      },
+      {
+        "file": "packages/next/src/server/next-server.ts",
+        "locator": "635",
+        "status": "grounded",
+        "reason": "line 635 in packages/next/src/server/next-server.ts (file has 2178 lines)"
+      },
+      {
+        "file": "packages/next/src/server/route-modules/app-page/module.ts",
+        "locator": "210",
+        "status": "grounded",
+        "reason": "line 210 in packages/next/src/server/route-modules/app-page/module.ts (file has 212 lines)"
+      },
+      {
+        "file": "packages/next/src/server/route-modules/app-page/module.render.ts",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in packages/next/src/server/route-modules/app-page/module.render.ts (file has 13 lines)"
+      },
+      {
+        "file": "module.ts",
+        "locator": "155",
+        "status": "grounded",
+        "reason": "line 155 in module.ts (file has 1388 lines) [via packages/next/src/server/route-modules/app-route/module.ts]"
+      },
+      {
+        "file": "module.render.ts",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in module.render.ts (file has 13 lines) [via packages/next/src/server/route-modules/app-page/module.render.ts]"
+      },
+      {
+        "file": "module.ts",
+        "locator": "210",
+        "status": "grounded",
+        "reason": "line 210 in module.ts (file has 1388 lines) [via packages/next/src/server/route-modules/app-route/module.ts]"
+      },
+      {
+        "file": "packages/next/src/server/lib/router-server.ts",
+        "locator": "226",
+        "status": "grounded",
+        "reason": "line 226 in packages/next/src/server/lib/router-server.ts (file has 935 lines)"
+      },
+      {
+        "file": "next-server.ts",
+        "locator": "1954",
+        "status": "grounded",
+        "reason": "line 1954 in next-server.ts (file has 2178 lines) [via packages/next/src/server/next-server.ts]"
+      },
+      {
+        "file": "packages/next/src/client/components/app-router-headers.ts",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in packages/next/src/client/components/app-router-headers.ts (file has 53 lines)"
+      },
+      {
+        "file": "app-render.tsx",
+        "locator": "418",
+        "status": "grounded",
+        "reason": "line 418 in app-render.tsx (file has 8742 lines) [via packages/next/src/server/app-render/app-render.tsx]"
+      },
+      {
+        "file": "packages/next/src/server/request-meta.ts",
+        "locator": "51",
+        "status": "grounded",
+        "reason": "line 51 in packages/next/src/server/request-meta.ts (file has 442 lines)"
+      },
+      {
+        "file": "app-render/app-render.tsx",
+        "locator": "3145",
+        "status": "grounded",
+        "reason": "line 3145 in app-render/app-render.tsx (file has 8742 lines) [via packages/next/src/server/app-render/app-render.tsx]"
+      },
+      {
+        "file": "packages/next/src/server/app-render/app-render.tsx",
+        "locator": "418",
+        "status": "grounded",
+        "reason": "line 418 in packages/next/src/server/app-render/app-render.tsx (file has 8742 lines)"
+      },
+      {
+        "file": "packages/next/src/server/route-modules/pages/module.ts",
+        "locator": "141",
+        "status": "grounded",
+        "reason": "line 141 in packages/next/src/server/route-modules/pages/module.ts (file has 164 lines)"
+      },
+      {
+        "file": "packages/next/src/server/base-server.ts",
+        "locator": "379",
+        "status": "grounded",
+        "reason": "line 379 in packages/next/src/server/base-server.ts (file has 3070 lines)"
+      },
+      {
+        "file": "base-server.ts",
+        "locator": "2026",
+        "status": "grounded",
+        "reason": "line 2026 in base-server.ts (file has 3070 lines) [via packages/next/src/server/base-server.ts]"
+      },
+      {
+        "file": "router-server.ts",
+        "locator": "226",
+        "status": "grounded",
+        "reason": "line 226 in router-server.ts (file has 935 lines) [via packages/next/src/server/lib/router-server.ts]"
+      },
+      {
+        "file": "packages/next/src/server/response-cache/index.ts",
+        "locator": "200",
+        "status": "grounded",
+        "reason": "line 200 in packages/next/src/server/response-cache/index.ts (file has 512 lines)"
+      },
+      {
+        "file": "packages/next/src/server/response-cache/index.ts",
+        "locator": "310",
+        "status": "grounded",
+        "reason": "line 310 in packages/next/src/server/response-cache/index.ts (file has 512 lines)"
+      },
+      {
+        "file": "packages/next/src/server/lib/incremental-cache/index.ts",
+        "locator": "660",
+        "status": "grounded",
+        "reason": "line 660 in packages/next/src/server/lib/incremental-cache/index.ts (file has 719 lines)"
+      },
+      {
+        "file": "test/e2e/opentelemetry/instrumentation/opentelemetry.test.ts",
+        "locator": "1483",
+        "status": "grounded",
+        "reason": "line 1483 in test/e2e/opentelemetry/instrumentation/opentelemetry.test.ts (file has 1644 lines)"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the Next.js server architecture",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "NextNodeServer",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "base-server",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 26,
+          "unique_refs": 39,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "app-render",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "Pages",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "NextCustomServer",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 3,
+      "total_required": 3,
+      "hits_bonus": 3,
+      "total_bonus": 3,
+      "fairness_hits_required": 3,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 3,
+      "fairness_total_bonus": 3,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace the SSR request lifecycle",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "handleRequest",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "renderToHTML",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 26,
+          "unique_refs": 39,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "loadComponents",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "findPageComponents",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "render.tsx",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "router-server",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "renderToHTMLOrFlightImpl",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 3,
+      "total_required": 3,
+      "hits_bonus": 6,
+      "total_bonus": 7,
+      "fairness_hits_required": 3,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 5,
+      "fairness_total_bonus": 5,
+      "score_required": 1.0,
+      "score_bonus": 0.8571,
+      "combined_score": 0.9231,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Find callers of renderToHTMLOrFlight",
+      "checks": [
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "renderToHTMLOrFlight",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "app-render",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 26,
+          "unique_refs": 39,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "route-modules",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 3,
+      "total_bonus": 3,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Assess where to thread a request ID",
+      "checks": [
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "RequestMeta",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "handleRequest",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "5",
+          "unique_files": 26,
+          "unique_refs": 39,
+          "threshold": 5,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "cache",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "NEXT_REQUEST_ID_HEADER",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 3,
+      "total_required": 3,
+      "hits_bonus": 3,
+      "total_bonus": 3,
+      "fairness_hits_required": 3,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [
+      "Read(module.ts)",
+      "Read(base-server.ts)",
+      "Read(base-server.ts)",
+      "Read(request-meta.ts)",
+      "Read(next-server.ts)",
+      "Read(app-render.tsx)",
+      "Read(app-render.tsx)",
+      "Read(module.ts)"
+    ],
+    "post_mcp_misses": [
+      "Grep(NEXT_REQUEST_ID_HEADER|NEXT_HTML_REQUEST)",
+      "Grep(NEXT_REQUEST_ID_HEADER|NEXT_HTML_REQUEST)",
+      "Grep(renderHTML|renderToHTML|renderToHTMLOrFl)",
+      "Grep(requestHandlerImpl|handleRequest|invokeR)",
+      "Grep(NEXT_REQUEST_ID_HEADER)"
+    ],
+    "has_mcp_tools": true,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 8, post-MCP misses: 5 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 42,
+    "grep_count": 5,
+    "read_count": 8,
+    "mcp_count": 28,
+    "token_input_uncached": 58,
+    "token_output": 11675,
+    "token_cache_read": 698729,
+    "token_cache_write": 90383,
+    "token_total_billed": 11733,
+    "token_total_all": 800845,
+    "wall_time_seconds": 176.3,
+    "cost_usd": 1.2064,
+    "efficiency_ceiling": 40000,
+    "time_ceiling_seconds": 720,
+    "token_efficiency": 0.7067,
+    "time_efficiency": 0.7551,
+    "answer_chars": 9644,
+    "audit_chars": 109158
+  }
+}

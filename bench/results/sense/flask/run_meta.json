@@ -1,0 +1,12 @@
+{
+  "tool": "sense",
+  "repo": "flask",
+  "scenario": "flask",
+  "wall_time_seconds": 108,
+  "max_budget_usd": 1.0,
+  "timestamp": "2026-05-16T17:00:11Z",
+  "tool_version": "dev",
+  "repo_commit": "2ac89889",
+  "model": null,
+  "claude_exit_code": 0
+}

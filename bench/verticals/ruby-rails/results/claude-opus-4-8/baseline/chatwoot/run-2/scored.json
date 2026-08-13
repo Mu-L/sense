@@ -1,0 +1,941 @@
+{
+  "scenario": "Chatwoot work session - audit the Inbox contract before a teardown rework",
+  "repo": "chatwoot",
+  "adoption_score": 0.4,
+  "keyword_coverage": 0.9474,
+  "step_avg_score": 0.881,
+  "efficiency": 0.3386,
+  "completeness": 0.6429,
+  "tool_fluency": 0.0,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 74,
+    "grounded": 73,
+    "unresolved": 1,
+    "hallucinated": 0,
+    "rate": 0.9865,
+    "examples": {
+      "grounded": [
+        "app/models/inbox.rb:42 (line 42 in app/models/inbox.rb (file has 271 lines))",
+        "inbox.rb:60 (line 60 in inbox.rb (file has 271 lines) [via app/models/inbox.rb])",
+        "inbox.rb:68 (line 68 in inbox.rb (file has 271 lines) [via app/models/inbox.rb])",
+        "inbox.rb:64 (line 64 in inbox.rb (file has 271 lines) [via app/models/inbox.rb])",
+        "app/models/concerns/reportable.rb:3 (line 3 in app/models/concerns/reportable.rb (file has 9 lines))"
+      ],
+      "unresolved": [
+        "enterprise/.../inbox_capacity_limit.rb:20 (file not found at enterprise/.../inbox_capacity_limit.rb)"
+      ],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "app/models/inbox.rb",
+        "locator": "42",
+        "status": "grounded",
+        "reason": "line 42 in app/models/inbox.rb (file has 271 lines)"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "60",
+        "status": "grounded",
+        "reason": "line 60 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "68",
+        "status": "grounded",
+        "reason": "line 68 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "64",
+        "status": "grounded",
+        "reason": "line 64 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "app/models/concerns/reportable.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/reportable.rb (file has 9 lines)"
+      },
+      {
+        "file": "app/models/concerns/avatarable.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/avatarable.rb (file has 37 lines)"
+      },
+      {
+        "file": "app/models/concerns/out_of_offisable.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/out_of_offisable.rb (file has 63 lines)"
+      },
+      {
+        "file": "app/models/concerns/account_cache_revalidator.rb",
+        "locator": "1",
+        "status": "grounded",
+        "reason": "line 1 in app/models/concerns/account_cache_revalidator.rb (file has 11 lines)"
+      },
+      {
+        "file": "app/models/concerns/inbox_agent_availability.rb",
+        "locator": "1",
+        "status": "grounded",
+        "reason": "line 1 in app/models/concerns/inbox_agent_availability.rb (file has 28 lines)"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "269",
+        "status": "grounded",
+        "reason": "line 269 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "app/models/concerns/channelable.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/models/concerns/channelable.rb (file has 13 lines)"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "57",
+        "status": "grounded",
+        "reason": "line 57 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "58",
+        "status": "grounded",
+        "reason": "line 58 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "channelable.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in channelable.rb (file has 45 lines) [via enterprise/app/models/enterprise/channelable.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "62",
+        "status": "grounded",
+        "reason": "line 62 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "63",
+        "status": "grounded",
+        "reason": "line 63 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "66",
+        "status": "grounded",
+        "reason": "line 66 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "67",
+        "status": "grounded",
+        "reason": "line 67 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "69",
+        "status": "grounded",
+        "reason": "line 69 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "71",
+        "status": "grounded",
+        "reason": "line 71 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "72",
+        "status": "grounded",
+        "reason": "line 72 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "73",
+        "status": "grounded",
+        "reason": "line 73 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "74",
+        "status": "grounded",
+        "reason": "line 74 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "75",
+        "status": "grounded",
+        "reason": "line 75 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "76",
+        "status": "grounded",
+        "reason": "line 76 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "reportable.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in reportable.rb (file has 9 lines) [via app/models/concerns/reportable.rb]"
+      },
+      {
+        "file": "out_of_offisable.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in out_of_offisable.rb (file has 63 lines) [via app/models/concerns/out_of_offisable.rb]"
+      },
+      {
+        "file": "avatarable.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in avatarable.rb (file has 37 lines) [via app/models/concerns/avatarable.rb]"
+      },
+      {
+        "file": "enterprise/app/models/enterprise/concerns/inbox.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in enterprise/app/models/enterprise/concerns/inbox.rb (file has 12 lines)"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "80",
+        "status": "grounded",
+        "reason": "line 80 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "account_cache_revalidator.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in account_cache_revalidator.rb (file has 11 lines) [via app/models/concerns/account_cache_revalidator.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "82",
+        "status": "grounded",
+        "reason": "line 82 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "212",
+        "status": "grounded",
+        "reason": "line 212 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "out_of_offisable.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in out_of_offisable.rb (file has 63 lines) [via app/models/concerns/out_of_offisable.rb]"
+      },
+      {
+        "file": "avatarable.rb",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in avatarable.rb (file has 37 lines) [via app/models/concerns/avatarable.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "117",
+        "status": "grounded",
+        "reason": "line 117 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "169",
+        "status": "grounded",
+        "reason": "line 169 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "202",
+        "status": "grounded",
+        "reason": "line 202 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "173",
+        "status": "grounded",
+        "reason": "line 173 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "189",
+        "status": "grounded",
+        "reason": "line 189 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "182",
+        "status": "grounded",
+        "reason": "line 182 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "inbox.rb",
+        "locator": "90",
+        "status": "grounded",
+        "reason": "line 90 in inbox.rb (file has 271 lines) [via app/models/inbox.rb]"
+      },
+      {
+        "file": "app/controllers/api/v1/accounts/inboxes_controller.rb",
+        "locator": "77",
+        "status": "grounded",
+        "reason": "line 77 in app/controllers/api/v1/accounts/inboxes_controller.rb (file has 191 lines)"
+      },
+      {
+        "file": "app/jobs/delete_object_job.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/jobs/delete_object_job.rb (file has 43 lines)"
+      },
+      {
+        "file": "delete_object_job.rb",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in delete_object_job.rb (file has 43 lines) [via app/jobs/delete_object_job.rb]"
+      },
+      {
+        "file": "delete_object_job.rb",
+        "locator": "18",
+        "status": "grounded",
+        "reason": "line 18 in delete_object_job.rb (file has 43 lines) [via app/jobs/delete_object_job.rb]"
+      },
+      {
+        "file": "delete_object_job.rb",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in delete_object_job.rb (file has 43 lines) [via app/jobs/delete_object_job.rb]"
+      },
+      {
+        "file": "delete_object_job.rb",
+        "locator": "14",
+        "status": "grounded",
+        "reason": "line 14 in delete_object_job.rb (file has 43 lines) [via app/jobs/delete_object_job.rb]"
+      },
+      {
+        "file": "enterprise/app/jobs/enterprise/delete_object_job.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in enterprise/app/jobs/enterprise/delete_object_job.rb (file has 26 lines)"
+      },
+      {
+        "file": "contact_inbox.rb",
+        "locator": "26",
+        "status": "grounded",
+        "reason": "line 26 in contact_inbox.rb (file has 79 lines) [via app/models/contact_inbox.rb]"
+      },
+      {
+        "file": "conversation.rb",
+        "locator": "101",
+        "status": "grounded",
+        "reason": "line 101 in conversation.rb (file has 367 lines) [via app/models/conversation.rb]"
+      },
+      {
+        "file": "reporting_event.rb",
+        "locator": "37",
+        "status": "grounded",
+        "reason": "line 37 in reporting_event.rb (file has 56 lines) [via app/models/reporting_event.rb]"
+      },
+      {
+        "file": "enterprise/.../inbox_capacity_limit.rb",
+        "locator": "20",
+        "status": "unresolved",
+        "reason": "file not found at enterprise/.../inbox_capacity_limit.rb"
+      },
+      {
+        "file": "base_listener.rb",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in base_listener.rb (file has 39 lines) [via app/listeners/base_listener.rb]"
+      },
+      {
+        "file": "app/jobs/delete_object_job.rb",
+        "locator": "18",
+        "status": "grounded",
+        "reason": "line 18 in app/jobs/delete_object_job.rb (file has 43 lines)"
+      },
+      {
+        "file": "app/models/inbox.rb",
+        "locator": "60",
+        "status": "grounded",
+        "reason": "line 60 in app/models/inbox.rb (file has 271 lines)"
+      },
+      {
+        "file": "app/models/concerns/out_of_offisable.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in app/models/concerns/out_of_offisable.rb (file has 63 lines)"
+      },
+      {
+        "file": "app/models/concerns/reportable.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/models/concerns/reportable.rb (file has 9 lines)"
+      },
+      {
+        "file": "app/models/concerns/avatarable.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in app/models/concerns/avatarable.rb (file has 37 lines)"
+      },
+      {
+        "file": "app/models/concerns/account_cache_revalidator.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in app/models/concerns/account_cache_revalidator.rb (file has 11 lines)"
+      },
+      {
+        "file": "enterprise/app/jobs/enterprise/delete_object_job.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in enterprise/app/jobs/enterprise/delete_object_job.rb (file has 26 lines)"
+      },
+      {
+        "file": "app/models/inbox.rb",
+        "locator": "269",
+        "status": "grounded",
+        "reason": "line 269 in app/models/inbox.rb (file has 271 lines)"
+      },
+      {
+        "file": "enterprise/concerns/inbox.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in enterprise/concerns/inbox.rb (file has 12 lines) [via enterprise/app/models/enterprise/concerns/inbox.rb]"
+      },
+      {
+        "file": "enterprise/concerns/inbox.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in enterprise/concerns/inbox.rb (file has 12 lines) [via enterprise/app/models/enterprise/concerns/inbox.rb]"
+      },
+      {
+        "file": "enterprise/concerns/inbox.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in enterprise/concerns/inbox.rb (file has 12 lines) [via enterprise/app/models/enterprise/concerns/inbox.rb]"
+      },
+      {
+        "file": "app/jobs/delete_object_job.rb",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in app/jobs/delete_object_job.rb (file has 43 lines)"
+      },
+      {
+        "file": "app/models/contact_inbox.rb",
+        "locator": "26",
+        "status": "grounded",
+        "reason": "line 26 in app/models/contact_inbox.rb (file has 79 lines)"
+      },
+      {
+        "file": "app/models/conversation.rb",
+        "locator": "101",
+        "status": "grounded",
+        "reason": "line 101 in app/models/conversation.rb (file has 367 lines)"
+      },
+      {
+        "file": "app/models/inbox_assignment_policy.rb",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in app/models/inbox_assignment_policy.rb (file has 21 lines)"
+      },
+      {
+        "file": "app/models/reporting_event.rb",
+        "locator": "37",
+        "status": "grounded",
+        "reason": "line 37 in app/models/reporting_event.rb (file has 56 lines)"
+      },
+      {
+        "file": "enterprise/app/models/captain_inbox.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in enterprise/app/models/captain_inbox.rb (file has 22 lines)"
+      },
+      {
+        "file": "enterprise/app/models/inbox_capacity_limit.rb",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in enterprise/app/models/inbox_capacity_limit.rb (file has 24 lines)"
+      },
+      {
+        "file": "app/listeners/base_listener.rb",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in app/listeners/base_listener.rb (file has 39 lines)"
+      },
+      {
+        "file": "app/models/inbox.rb",
+        "locator": "80",
+        "status": "grounded",
+        "reason": "line 80 in app/models/inbox.rb (file has 271 lines)"
+      }
+    ]
+  },
+  "gold_recall": {
+    "total": 17,
+    "mentioned": 8,
+    "cited": 4,
+    "mention_recall": 0.4706,
+    "cited_recall": 0.2353,
+    "groups": {
+      "contract": {
+        "total": 5,
+        "mentioned": 4,
+        "cited": 3,
+        "mention_recall": 0.8,
+        "cited_recall": 0.6
+      },
+      "teardown": {
+        "total": 1,
+        "mentioned": 1,
+        "cited": 1,
+        "mention_recall": 1.0,
+        "cited_recall": 1.0
+      },
+      "dependents": {
+        "total": 11,
+        "mentioned": 3,
+        "cited": 0,
+        "mention_recall": 0.2727,
+        "cited_recall": 0.0
+      }
+    },
+    "missed_mention": [
+      "cache-keys-concern",
+      "dep:accounts-ctrl",
+      "dep:dashboard-ctrl",
+      "dep:widget-tests",
+      "dep:assignee-handler",
+      "dep:twitter-webhook",
+      "dep:whatsapp-create",
+      "dep:chatwoot-hub",
+      "dep:slack-unfurl"
+    ],
+    "missed_cite": [
+      "cache-keys-concern",
+      "enterprise-inbox",
+      "dep:accounts-ctrl",
+      "dep:dashboard-ctrl",
+      "dep:widget-tests",
+      "dep:assignment-job",
+      "dep:imap-fetch-job",
+      "dep:stale-notif-job",
+      "dep:assignee-handler",
+      "dep:twitter-webhook",
+      "dep:whatsapp-create",
+      "dep:chatwoot-hub",
+      "dep:slack-unfurl"
+    ],
+    "details": [
+      {
+        "id": "inbox-model",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "cache-keys-concern",
+        "group": "contract",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "channelable-concern",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "contact-inbox",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "enterprise-inbox",
+        "group": "contract",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "delete-object-job",
+        "group": "teardown",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "dep:accounts-ctrl",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:dashboard-ctrl",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:widget-tests",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:assignment-job",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "dep:imap-fetch-job",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "dep:stale-notif-job",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "dep:assignee-handler",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:twitter-webhook",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:whatsapp-create",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:chatwoot-hub",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:slack-unfurl",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the codebase",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Inbox",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Channel",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 31,
+          "unique_refs": 74,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_conventions",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 4,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the Inbox contract and what it is built on",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "concern",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 31,
+          "unique_refs": 74,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "inbox.rb",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_conventions",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 4,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how an inbox and its attached data are torn down",
+      "checks": [
+        {
+          "hit": false,
+          "type": "word",
+          "value": "DeleteObject",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 31,
+          "unique_refs": 74,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.5,
+      "fairness_score": 0.6667
+    },
+    {
+      "name": "Audit every dependent of the Inbox contract",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 31,
+          "unique_refs": 74,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.5,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how inbox availability and identity are guarded",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 31,
+          "unique_refs": 74,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 0,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 0,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.5,
+      "fairness_score": 0.5
+    },
+    {
+      "name": "Assess the blast radius of the contract change",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 31,
+          "unique_refs": 74,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Produce the change + verification map",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 31,
+          "unique_refs": 74,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "spec",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [],
+    "post_mcp_misses": [],
+    "has_mcp_tools": false,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 31,
+    "grep_count": 7,
+    "read_count": 16,
+    "mcp_count": 0,
+    "token_input_uncached": 2402,
+    "token_output": 21197,
+    "token_cache_read": 673655,
+    "token_cache_write": 44827,
+    "token_total_billed": 23599,
+    "token_total_all": 742081,
+    "wall_time_seconds": 257.4,
+    "cost_usd": 1.3285,
+    "effective_token_total_billed": 23599,
+    "effective_wall_time_seconds": 257.4,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 480,
+    "token_efficiency": 0.2134,
+    "time_efficiency": 0.4637,
+    "answer_chars": 31086,
+    "audit_chars": 116842,
+    "overhead": null
+  }
+}

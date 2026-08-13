@@ -1,0 +1,124 @@
+{
+  "scenario": "Discourse topic creation flow and authorization tracing",
+  "repo": "discourse",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "discourse.rubric.yaml"
+  },
+  "scenario_quality": 0.9038,
+  "steps": [
+    {
+      "step": "Orient in the Discourse codebase",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Hands the agent a complete map: top-level layout (app/, lib/, lib/guardian/, config/, plugins/, etc.), key abstractions with file paths (Guardian at lib/guardian.rb:20, Creators in lib/, Service::Base in app/services/, Serializers, Reviewables), and six explicit entry points with file:line. An agent could pick a starting point with only targeted lookups."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Paths are concrete (lib/guardian.rb:20, app/controllers/application_controller.rb:484-488, app/serializers/current_user_serializer.rb:56,140) and named abstractions are tied to specific files/classes (PostCreator, TopicCreator, NewPostManager, ReviewableQueuedPost) rather than vague layer names."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Explains roles of Guardian (composes 15 concern modules, gates fields via scope), distinguishes older Creator classes from newer Service::Base pattern, and notes serializers receive Guardian via scope. Could go slightly deeper on WHY Creators exist alongside ActiveRecord, but the role framing is present."
+        },
+        "uncertainty": {
+          "score": 0.7,
+          "rationale": "Flags plugin Guardian overrides via DiscoursePluginRegistry and the Service::Base/Creator coexistence as complexity zones, and notes alternate paths that bypass guardian. Doesn't explicitly hedge on multisite or unindexed plugin surface area, but the plugin caveat is clearly raised."
+        }
+      },
+      "step_quality": 0.8925,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 592,
+        "cache_creation_input_tokens": 21393,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Trace topic creation from controller to persistence",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Provides a complete ordered call chain from `config/routes.rb:1267` \u2192 `PostsController#create` (posts_controller.rb:183) \u2192 `NewPostManager#perform` (line 228) \u2192 `default_handler` (line 149) \u2192 `perform_create_post` (line 321) \u2192 `PostCreator#create` (line 198) \u2192 `TopicCreator#create` (line 56) \u2192 `save_topic` (line 268), with alternate entry sites enumerated (reviewable approval, topic_embed, group_message, scheduled jobs, plugins). An agent could insert a check at the right layer with only targeted lookups."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Citations are consistently file:line (e.g., `lib/post_creator.rb:198`, `lib/topic_creator.rb:268`, `app/models/reviewable_queued_post.rb:101-106`) and method signatures are named exactly (`PostCreator.new(target_created_by, opts.merge(skip_guardian: true))`, `TopicCreator.new(@user, guardian, opts)`)."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Each layer's purpose is explained \u2014 NewPostManager handles WordWatcher/approval routing, PostCreator runs transactional save with ordered sub-steps, TopicCreator handles topic-row persistence with tags/PMs/auto-close. The why behind skip_guardian on the review queue path is called out explicitly."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Flags plugin Guardian overrides via `DiscoursePluginRegistry`/`add_to_class`, the drafts publish-vs-save UX gap, and that PostCreator-direct callers (TopicEmbed) bypass NewPostManager's guardian short-circuit. Could more explicitly hedge about uninspected job retry paths, but coverage is strong."
+        }
+      },
+      "step_quality": 0.925,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 690,
+        "cache_creation_input_tokens": 21400,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Understand Guardian authorization",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Provides Guardian instantiation at application_controller.rb:484-488, composition root at lib/guardian.rb:20-35, methods on the create path with file:line (topic_guardian.rb:45, :53, :75; post_guardian.rb:144, :415), concern ownership, and serializer surfaces (current_user_serializer.rb:56,140). Agent can drop in a permission edit with minimal follow-up."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Method names are exact (`can_create_topic?`, `can_create_topic_on_category?`, `can_create_post_on_topic?`, `topic_posting_review_required?`) and concern files are cited individually (topic_guardian.rb, post_guardian.rb, category_guardian.rb) rather than just the monolithic guardian.rb."
+        },
+        "justification": {
+          "score": 0.75,
+          "rationale": "Explains the composition pattern (Guardian includes 15 per-domain mixins) and shows guardian is shared into serializers via `scope` to gate UI affordances, conveying centralised-permission rationale. Could state the 'scattered if-current_user-can vs. centralised' contrast more explicitly, but the role is well-communicated."
+        },
+        "uncertainty": {
+          "score": 0.7,
+          "rationale": "Flags plugin override risk in step4 (`add_to_class :Guardian, :can_create_topic?`) and skip_guardian bypass paths, acknowledging the observed checks aren't exhaustive. Could be a touch more explicit in the step3 block itself about DiscoursePluginRegistry/prepended modules, but the caveat is present."
+        }
+      },
+      "step_quality": 0.8725,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 602,
+        "cache_creation_input_tokens": 21392,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Assess impact of adding a permission check",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Comprehensive edit map covering primary edit (lib/guardian/topic_guardian.rb:45), invocation points, specs across guardian/manager/creator/controller/serializer/system levels, and 11 alternate paths with file:line. Agent could open a PR with only targeted lookups."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Concrete file:line throughout \u2014 e.g. 'app/models/reviewable_queued_post.rb:101-106', 'lib/post_creator.rb:167', specific spec files like 'spec/lib/new_post_manager_spec.rb' and 'spec/requests/posts_controller_spec.rb', plus exact method signatures like can_create_topic?(parent)."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Explains WHY the primary edit site is the right chokepoint ('Single chokepoint already invoked by every create surface...propagates automatically'), and behaviorally distinguishes paths (e.g. skip_guardian for reviewable approval vs. TopicEmbed direct PostCreator bypass). Could be slightly tighter on queue-vs-reject distinction."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Flags plugin Guardian overrides via DiscoursePluginRegistry with a grep hint, calls out TopicEmbed as needing verification, notes 'verify with embedded-blog specs', and questions created_at vs first_post_created_at. Could more explicitly flag dynamic dispatch in plugins like discourse-ai."
+        }
+      },
+      "step_quality": 0.925,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 581,
+        "cache_creation_input_tokens": 21401,
+        "cache_read_input_tokens": 15724
+      }
+    }
+  ]
+}

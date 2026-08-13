@@ -1,0 +1,152 @@
+{
+  "scenario": "Pebble work session - interface-laundered retention audit of the write batch before pooling it",
+  "repo": "pebble",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "pebble.rubric.yaml"
+  },
+  "scenario_quality": 0.8467,
+  "relationship_audit": {
+    "total": 7,
+    "covered": 7,
+    "related": 7,
+    "contradicted": 0,
+    "covered_recall": 1.0,
+    "related_recall": 1.0,
+    "grounded_precision": 1.0,
+    "missed_covered": [],
+    "missed_related": [],
+    "contradictions": [],
+    "items": [
+      {
+        "id": "contract-handle",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:invalidating",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:iterv2interleave",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:rangekeymask",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:internaliteropts",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:blockpropfilterer",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:walfailoverwriter",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": "Orient on the handle",
+      "scores": {
+        "map_quality": {
+          "score": 0.75,
+          "rationale": "Names Pebble, cites Batch at batch.go:240, and lists direct holders (indexedBatch, batchIter, commitQueue, iteratorBatchState) plus test harnesses. Misses framing Pebble as a general LSM engine (frames only as CockroachDB-internal), but the essentials for the next step are present."
+        },
+        "specificity": {
+          "score": 0.9,
+          "rationale": "Every holder is cited with file:line (batch.go:489, batch.go:1761, commit.go:25, iterator.go:392, metamorphic/test.go:47, replay/replay.go:621) rather than vague prose."
+        },
+        "justification": {
+          "score": 0.5,
+          "rationale": "Explains what batchInternal holds (data []byte recycled on Reset/Close) which motivates pooling, but doesn't explicitly say every write goes through a Batch or set up why direct holders alone are insufficient before pivoting to Step 2."
+        },
+        "uncertainty": {
+          "score": 0.5,
+          "rationale": "Flags that retained_via_interfaces is a 'candidate list' to verify, which shows appropriate caution, but doesn't call out any specific unsureness about the direct-holder claims themselves."
+        }
+      },
+      "step_quality": 0.7,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 450,
+        "cache_creation_input_tokens": 16201,
+        "cache_read_input_tokens": 31932
+      }
+    },
+    {
+      "step": "Find the retainers hidden behind abstractions",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Surfaces the key interface-laundered retainers the rubric names: invalidating.iter, iterv2.InterleavingIter, keyspan.InterleavingIter/rangeKeyMasking chain (SpanMask, boundLimitedFilter, BoundLimitedBlockPropertyFilter), and WAL failover recordQueueEntry/poppedEntry with RefCount \u2190 *Batch. Also adds mergingIterLevel, compaction scheduler, and bench harness \u2014 strong recall with each carrier tied to a construction site."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every row gives struct file:line, the interface stored, the concrete carrier, and the injection site file:line (e.g. 'db.go:1436 sets iter: &i.batch.pointIter', 'db.go:908/950 WriteRecord(repr,\u2026,b) \u2192 refCount: refCount at wal/failover_writer.go:179'). Not vague."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Each entry implicitly explains why a field-type sweep misses it (the field is InternalIterator/SpanMask/RefCount) and the answer visibly audits candidates \u2014 flagging compact.Iter and record.Writer.flusher as tool-reported but source-unconfirmed / likely false positives rather than accepting them."
+        },
+        "uncertainty": {
+          "score": 0.95,
+          "rationale": "Labels every row CONFIRMED / CANDIDATE / UNCONFIRMED, notes the invariants build-tag constraint on invalidating.iter, flags keyspan.InterleavingIter as transitive-only, and explicitly reports likely false positives rather than dropping them silently \u2014 exactly the recall-first labeling the rubric asks for."
+        }
+      },
+      "step_quality": 0.92,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 649,
+        "cache_creation_input_tokens": 18667,
+        "cache_read_input_tokens": 31932
+      }
+    },
+    {
+      "step": "Produce the indirect-retention risk map",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Carries over every retainer from prior step (14 rows, including false positives labeled rather than dropped), classifies lifetime per-call/per-session/process-long, flags goroutine crossings, and ranks process-long GX rows (10-13) first as required."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every row has file:line, abstraction, carrier, lifetime, GX flag; top-risk rows include injection sites (db.go:908/950, compaction_scheduler.go:304-306, ycsb.go:316/327) and go-statement proofs (periodicGranter :306, wg.Go :327, Unref on separate goroutine :273)."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Ranking argued from evidence \u2014 WAL failover cites the lifecycle/Ref/Unref handshake at batch.go:291-306 as the exact race; compaction cited as background loop every 100ms; iterator-stack GX caveat honestly explained as caller-dependent rather than inherent."
+        },
+        "uncertainty": {
+          "score": 0.95,
+          "rationale": "Explicitly flags rows 5 and 14 as likely false positives (retained, not silently dropped), row 4 as candidate/transitive, row 9's intra-sstable hop as unverified, and the method_note bounds the audit's edge."
+        }
+      },
+      "step_quality": 0.92,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 499,
+        "cache_creation_input_tokens": 21069,
+        "cache_read_input_tokens": 31932
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "tool": "gitnexus",
+  "repo": "flask",
+  "scenario": "flask",
+  "wall_time_seconds": 86,
+  "max_budget_usd": 1.0,
+  "timestamp": "2026-05-16T16:22:02Z",
+  "tool_version": null,
+  "repo_commit": "2ac89889",
+  "model": null,
+  "claude_exit_code": 0
+}

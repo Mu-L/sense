@@ -1,0 +1,124 @@
+{
+  "scenario": "Flask WSGI dispatch trace and debug instrumentation",
+  "repo": "flask",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "flask.rubric.yaml"
+  },
+  "scenario_quality": 0.8969,
+  "steps": [
+    {
+      "step": "Trace the request dispatch pipeline",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Every method in the required chain (wsgi_app \u2192 full_dispatch_request \u2192 preprocess_request \u2192 dispatch_request \u2192 finalize_request \u2192 make_response \u2192 process_response) is listed in order with file:line ranges and explicit calls_next links. The agent could insert a hook without reopening app.py."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Citations are method-level with line ranges and inner line refs (e.g., 'src/flask/app.py:1566-1616' plus 'ctx.push, line 1596'). Call order is explicit via numbered steps and calls_next arrays."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Explains WHY each step exists (context push/pop, URL preprocessors, before_request short-circuit, signal emission, after_request reverse unwinding, session save). Could go slightly deeper on finalize_request's from_error_handler path semantics but covers the core rationale."
+        },
+        "uncertainty": {
+          "score": 0.8,
+          "rationale": "Flags blueprint interactions (after_request_funcs reverse for blueprints+app), ensure_sync async branch, handle_exception/handle_user_exception error paths, and middleware wrap idiom. Doesn't explicitly call out extension hooks like teardown_request as branches to verify."
+        }
+      },
+      "step_quality": 0.9075,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 485,
+        "cache_creation_input_tokens": 19250,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Find internal callers of wsgi_app",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "The answer pinpoints the single internal caller as Flask.__call__ at src/flask/app.py:1625 with the exact snippet, and explicitly notes 'No other src/flask/* code invokes wsgi_app directly.' The agent can change the signature in one pass without re-reading."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Caller is cited as 'src/flask/app.py:1625' with enclosing 'Flask.__call__' and the literal call line `return self.wsgi_app(environ, start_response)`. Docstring references at 1577 and 1622 are separately classified, not conflated with call sites."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "The step4 section explains that __call__ is 'Kept thin so middleware can wrap wsgi_app without losing the app reference' and discusses the `app.wsgi_app = MyMiddleware(app.wsgi_app)` idiom, making the subclassing/middleware seam clear rather than just naming the caller."
+        },
+        "uncertainty": {
+          "score": 0.8,
+          "rationale": "Flags third-party subclasses ('flask_compress/Talisman patterns') and the middleware-wrap idiom that can replace self.wsgi_app, and scopes the result to src/flask/** excluding tests/docs/examples. Could more explicitly caveat that the listing excludes tests per the prompt, but the scope is stated."
+        }
+      },
+      "step_quality": 0.9075,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 531,
+        "cache_creation_input_tokens": 19177,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Locate test coverage for the dispatch pipeline",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "step3_test_coverage enumerates 8 test files with concrete paths and key functions including test_request_dispatching, test_request_processing, test_request_preprocessing_early_return, test_after_request_processing \u2014 covering basic dispatch, blueprints, reqctx, signals, async, testing. The agent could go straight to the right specs without re-walking tests/."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Tests are cited by name with line numbers (e.g. 'test_request_dispatching (line 129)', 'test_request_processing (line 707)'), and paths are concrete (tests/test_basic.py, tests/test_blueprints.py). One entry uses '~327 class' which is slightly soft, but the rest are precise."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Each entry explains what the test covers ('wsgi_app routing end-to-end', 'before/after_request ordering through full_dispatch_request', 'ensure_sync path used by preprocess_request and process_response'), tying each file to a pipeline method rather than just listing them."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Closing note explicitly flags 'wsgi_app itself has no direct unit test; coverage is via end-to-end requests through the test client' and identifies priority files \u2014 the kind of indirect-coverage caveat the rubric asks for."
+        }
+      },
+      "step_quality": 0.895,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 523,
+        "cache_creation_input_tokens": 19186,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Assess impact of adding a debug parameter",
+      "scores": {
+        "map_quality": {
+          "score": 0.85,
+          "rationale": "Enumerates every file/symbol the agent needs to touch \u2014 wsgi_app signature at src/flask/app.py:1566-1568, __call__ at 1618-1625, optional test at tests/test_basic.py:298 \u2014 with concrete file:line. Misses FlaskClient/testing.py parallel-signature consideration explicitly named in the rubric, though it captures the middleware-wrap concern thoroughly."
+        },
+        "specificity": {
+          "score": 0.85,
+          "rationale": "Symbols are named precisely (Flask.wsgi_app, Flask.__call__, PrefixPathMiddleware wrap) with line refs, not vague 'the testing module'. Slight gap: FlaskClient.open is not cited by name."
+        },
+        "justification": {
+          "score": 0.95,
+          "rationale": "Each site has a 'notes'/'detail' explaining WHY \u2014 keyword-only-with-default preserves WSGI contract, middleware wrap rebinds self.wsgi_app so kwarg won't propagate, subclass overrides only break if caller passes _trace. Strong reasoning beyond enumeration."
+        },
+        "uncertainty": {
+          "score": 0.9,
+          "rationale": "Explicitly flags third-party subclasses ('flask_compress/Talisman patterns') the agent cannot enumerate from this repo, calls out the middleware wrap edge case, and recommends environ-key activation as a workaround. Calibrated against the 106s spent."
+        }
+      },
+      "step_quality": 0.8775,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 543,
+        "cache_creation_input_tokens": 19204,
+        "cache_read_input_tokens": 15724
+      }
+    }
+  ]
+}

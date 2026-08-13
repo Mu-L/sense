@@ -1,0 +1,124 @@
+{
+  "scenario": "Discourse topic creation flow and authorization tracing",
+  "repo": "discourse",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "discourse.rubric.yaml"
+  },
+  "scenario_quality": 0.88,
+  "steps": [
+    {
+      "step": "Orient in the Discourse codebase",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Provides a comprehensive map: top-level dirs, key abstractions (Guardian, Service::Base, Serializers, Creators, DiscourseEvent, PluginRegistry) with file paths, and explicit 'Entry points to read first' list. Agent can pick an entry point and edit with minimal re-exploration."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Concrete file:line citations throughout (lib/guardian.rb:3, app/controllers/application_controller.rb:484, lib/guardian.rb:182, serializer line numbers), and named classes/modules rather than vague 'controller layer'."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Explains WHY each abstraction exists: Guardian is 'per-request authorization object' composed via concerns, serializers 'flatten Guardian into JSON', services are 'newer-style' vs older POROs, NewPostManager 'orchestrates queue-vs-create'. Could go slightly deeper on the historical service-vs-lib split."
+        },
+        "uncertainty": {
+          "score": 0.5,
+          "rationale": "Mentions plugin extension surfaces (DiscoursePluginRegistry, DiscourseEvent) which hints at variability, but doesn't explicitly flag uncertainty about plugin overrides, multisite, or what wasn't enumerated."
+        }
+      },
+      "step_quality": 0.8625,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 514,
+        "cache_creation_input_tokens": 15450,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Trace topic creation from controller to persistence",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "The answer hands the agent a complete file:line map of the creation flow in execution order (PostsController#create:183 \u2192 NewPostManager#perform:228 \u2192 perform_create_post:321 \u2192 PostCreator#create:198 \u2192 TopicCreator#create:56 \u2192 save_topic:268), with the exact line where ensure_can_create! fires (lib/topic_creator.rb:165). The agent can insert a permission check at the correct layer with only targeted lookups."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Citations are precise file:line throughout (e.g., 'lib/post_creator.rb:202', 'lib/topic_creator.rb:165', 'config/routes.rb:1267'), and method signatures/args are named ('TopicCreator.new(@user, guardian, opts).create', 'NewPostManager.default_handler'). Job-level alternate entries are cited with line numbers too."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "The answer explains each layer's role inline \u2014 NewPostManager 'default handler decides queue vs create', PostCreator wraps in a transaction and dispatches side effects, TopicCreator runs ensure_can_create! in setup_topic_params \u2014 though the rationale for why NewPostManager sits between controller and PostCreator could be slightly more explicit."
+        },
+        "uncertainty": {
+          "score": 0.8,
+          "rationale": "It flags plugin override points ('plugin modifier :posts_controller_create_user', 'plugins may intercept'), bulk-import bypasses ('skip_validations', 'import_mode', 'bypass ensure_can_create!'), and the queue-vs-create branch \u2014 covering the main alternate-entry risks without explicitly labeling them 'uncertain', so a touch short of a clear hedging signal."
+        }
+      },
+      "step_quality": 0.9075,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 653,
+        "cache_creation_input_tokens": 16233,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Understand Guardian authorization",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Hands the agent a complete map: instantiation at application_controller.rb:484, concern composition in lib/guardian.rb with line numbers, ordered call path through TopicCreator with file:line, and serializer surfaces. Agent could insert a new check with only targeted lookups."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Citations are file:line throughout (e.g., `lib/guardian/topic_guardian.rb:45`, `app/serializers/current_user_serializer.rb:140`), method names are exact with `?` suffix, and concern files are cited individually rather than just `guardian.rb`."
+        },
+        "justification": {
+          "score": 0.75,
+          "rationale": "Explains concern ownership (TopicGuardian vs PostGuardian vs generic dispatcher) and shows the `can_create_topic?` body so the agent understands what the check actually does, but the underlying 'why centralised Guardians vs scattered checks' rationale is mostly implicit."
+        },
+        "uncertainty": {
+          "score": 0.45,
+          "rationale": "Flags one ambiguity (`can_create_topic_on_category?` is 'not directly in TopicCreator') and admits one missing line ('Guardian \u2014 PM path'), but doesn't flag plugin extension surfaces (DiscoursePluginRegistry, prepended modules) where Guardian is commonly extended."
+        }
+      },
+      "step_quality": 0.835,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 509,
+        "cache_creation_input_tokens": 15855,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Assess impact of adding a permission check",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Enumerates the Guardian edit point (lib/guardian/topic_guardian.rb:45-51), affected specs (guardian_spec, topic_creator_spec, request specs, queued post, spam_rules), and alternate paths (queue at new_post_manager.rb:262, drafts at post_creator.rb:344, embedded topics, scheduled jobs, imports, plugin handlers, PMs) with file:line throughout \u2014 agent could open a PR from this list."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Specs named concretely (spec/lib/topic_creator_spec.rb with line 4 fab!(:user), spec/integration/spam_rules_spec.rb), alternate paths named with file:line (new_post_manager.rb:262, reviewable_queued_post.rb:106, post_creator.rb:414, app/jobs/scheduled/*.rb), and exact method/argument references (archetype private_message, skip_validations)."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Explains WHY each affected site matters: queue re-runs ensure_can_create! at approval (decide behavior), drafts bypass Guardian (UX implication), system jobs use skip_validations (auto-bypass), plugin handlers can intercept before perform_create_post. Could be slightly sharper on the reject-vs-queue behavioral difference."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Explicitly flags plugin overrides needing audit ('Audit plugins/*/lib for NewPostManager.add_handler and add_to_class(:guardian, :can_create_topic?, ...)'), and notes decisions to make (queue approval behavior, PM exemption). Doesn't deeply call out retry jobs or dynamic dispatch risks but acknowledges the audit boundary."
+        }
+      },
+      "step_quality": 0.915,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 670,
+        "cache_creation_input_tokens": 20297,
+        "cache_read_input_tokens": 15724
+      }
+    }
+  ]
+}

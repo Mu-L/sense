@@ -1,0 +1,13 @@
+{
+  "tool": "probe",
+  "repo": "nextjs",
+  "scenario": "nextjs",
+  "wall_time_seconds": 324,
+  "max_budget_usd": 2.25,
+  "timestamp": "2026-05-16T16:09:34Z",
+  "tool_version": null,
+  "repo_commit": "16e5f9e685",
+  "model": null,
+  "claude_exit_code": 1,
+  "error": "claude_session_failed"
+}

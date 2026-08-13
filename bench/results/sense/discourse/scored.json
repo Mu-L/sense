@@ -1,0 +1,688 @@
+{
+  "scenario": "Discourse topic creation flow and authorization tracing",
+  "repo": "discourse",
+  "adoption_score": 0.6222,
+  "keyword_coverage": 0.9706,
+  "step_avg_score": 0.9688,
+  "efficiency": 0.4812,
+  "completeness": 0.953,
+  "tool_fluency": 0.3704,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 59,
+    "grounded": 59,
+    "unresolved": 0,
+    "hallucinated": 0,
+    "rate": 1.0,
+    "examples": {
+      "grounded": [
+        "lib/guardian.rb:3 (line 3 in lib/guardian.rb (file has 682 lines))",
+        "lib/guardian.rb:22 (line 22 in lib/guardian.rb (file has 682 lines))",
+        "app/controllers/application_controller.rb:484 (line 484 in app/controllers/application_controller.rb (file has 1113 lines))",
+        "lib/guardian.rb:182 (line 182 in lib/guardian.rb (file has 682 lines))",
+        "app/serializers/current_user_serializer.rb:140 (line 140 in app/serializers/current_user_serializer.rb (file has 409 lines))"
+      ],
+      "unresolved": [],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "lib/guardian.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in lib/guardian.rb (file has 682 lines)"
+      },
+      {
+        "file": "lib/guardian.rb",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in lib/guardian.rb (file has 682 lines)"
+      },
+      {
+        "file": "app/controllers/application_controller.rb",
+        "locator": "484",
+        "status": "grounded",
+        "reason": "line 484 in app/controllers/application_controller.rb (file has 1113 lines)"
+      },
+      {
+        "file": "lib/guardian.rb",
+        "locator": "182",
+        "status": "grounded",
+        "reason": "line 182 in lib/guardian.rb (file has 682 lines)"
+      },
+      {
+        "file": "app/serializers/current_user_serializer.rb",
+        "locator": "140",
+        "status": "grounded",
+        "reason": "line 140 in app/serializers/current_user_serializer.rb (file has 409 lines)"
+      },
+      {
+        "file": "lib/topic_creator.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in lib/topic_creator.rb (file has 370 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "lib/new_post_manager.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in lib/new_post_manager.rb (file has 335 lines)"
+      },
+      {
+        "file": "app/controllers/posts_controller.rb",
+        "locator": "189",
+        "status": "grounded",
+        "reason": "line 189 in app/controllers/posts_controller.rb (file has 1117 lines)"
+      },
+      {
+        "file": "config/routes.rb",
+        "locator": "1267",
+        "status": "grounded",
+        "reason": "line 1267 in config/routes.rb (file has 1948 lines)"
+      },
+      {
+        "file": "app/controllers/posts_controller.rb",
+        "locator": "183",
+        "status": "grounded",
+        "reason": "line 183 in app/controllers/posts_controller.rb (file has 1117 lines)"
+      },
+      {
+        "file": "lib/new_post_manager.rb",
+        "locator": "228",
+        "status": "grounded",
+        "reason": "line 228 in lib/new_post_manager.rb (file has 335 lines)"
+      },
+      {
+        "file": "lib/new_post_manager.rb",
+        "locator": "321",
+        "status": "grounded",
+        "reason": "line 321 in lib/new_post_manager.rb (file has 335 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "198",
+        "status": "grounded",
+        "reason": "line 198 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "186",
+        "status": "grounded",
+        "reason": "line 186 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "404",
+        "status": "grounded",
+        "reason": "line 404 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "501",
+        "status": "grounded",
+        "reason": "line 501 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "596",
+        "status": "grounded",
+        "reason": "line 596 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "268",
+        "status": "grounded",
+        "reason": "line 268 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "256",
+        "status": "grounded",
+        "reason": "line 256 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "lib/topic_creator.rb",
+        "locator": "56",
+        "status": "grounded",
+        "reason": "line 56 in lib/topic_creator.rb (file has 370 lines)"
+      },
+      {
+        "file": "lib/topic_creator.rb",
+        "locator": "165",
+        "status": "grounded",
+        "reason": "line 165 in lib/topic_creator.rb (file has 370 lines)"
+      },
+      {
+        "file": "app/models/reviewable_queued_post.rb",
+        "locator": "106",
+        "status": "grounded",
+        "reason": "line 106 in app/models/reviewable_queued_post.rb (file has 272 lines)"
+      },
+      {
+        "file": "lib/new_post_manager.rb",
+        "locator": "262",
+        "status": "grounded",
+        "reason": "line 262 in lib/new_post_manager.rb (file has 335 lines)"
+      },
+      {
+        "file": "app/jobs/scheduled/pending_queued_posts_reminder.rb",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in app/jobs/scheduled/pending_queued_posts_reminder.rb (file has 55 lines)"
+      },
+      {
+        "file": "app/jobs/scheduled/old_keys_reminder.rb",
+        "locator": "14",
+        "status": "grounded",
+        "reason": "line 14 in app/jobs/scheduled/old_keys_reminder.rb (file has 79 lines)"
+      },
+      {
+        "file": "app/jobs/scheduled/pending_users_reminder.rb",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in app/jobs/scheduled/pending_users_reminder.rb (file has 80 lines)"
+      },
+      {
+        "file": "app/jobs/scheduled/ignored_users_summary.rb",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in app/jobs/scheduled/ignored_users_summary.rb (file has 47 lines)"
+      },
+      {
+        "file": "app/jobs/regular/create_linked_topic.rb",
+        "locator": "74",
+        "status": "grounded",
+        "reason": "line 74 in app/jobs/regular/create_linked_topic.rb (file has 125 lines)"
+      },
+      {
+        "file": "app/controllers/topics_controller.rb",
+        "locator": "863",
+        "status": "grounded",
+        "reason": "line 863 in app/controllers/topics_controller.rb (file has 1634 lines)"
+      },
+      {
+        "file": "app/controllers/topics_controller.rb",
+        "locator": "948",
+        "status": "grounded",
+        "reason": "line 948 in app/controllers/topics_controller.rb (file has 1634 lines)"
+      },
+      {
+        "file": "lib/guardian/topic_guardian.rb",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in lib/guardian/topic_guardian.rb (file has 406 lines)"
+      },
+      {
+        "file": "lib/guardian/post_guardian.rb",
+        "locator": "144",
+        "status": "grounded",
+        "reason": "line 144 in lib/guardian/post_guardian.rb (file has 442 lines)"
+      },
+      {
+        "file": "topic_guardian.rb",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in topic_guardian.rb (file has 406 lines) [via lib/guardian/topic_guardian.rb]"
+      },
+      {
+        "file": "lib/topic_creator.rb",
+        "locator": "83",
+        "status": "grounded",
+        "reason": "line 83 in lib/topic_creator.rb (file has 370 lines)"
+      },
+      {
+        "file": "lib/guardian.rb",
+        "locator": "229",
+        "status": "grounded",
+        "reason": "line 229 in lib/guardian.rb (file has 682 lines)"
+      },
+      {
+        "file": "lib/topic_creator.rb",
+        "locator": "29",
+        "status": "grounded",
+        "reason": "line 29 in lib/topic_creator.rb (file has 370 lines)"
+      },
+      {
+        "file": "lib/topic_creator.rb",
+        "locator": "253",
+        "status": "grounded",
+        "reason": "line 253 in lib/topic_creator.rb (file has 370 lines)"
+      },
+      {
+        "file": "lib/guardian.rb",
+        "locator": "220",
+        "status": "grounded",
+        "reason": "line 220 in lib/guardian.rb (file has 682 lines)"
+      },
+      {
+        "file": "lib/topic_creator.rb",
+        "locator": "236",
+        "status": "grounded",
+        "reason": "line 236 in lib/topic_creator.rb (file has 370 lines)"
+      },
+      {
+        "file": "lib/guardian/topic_guardian.rb",
+        "locator": "53",
+        "status": "grounded",
+        "reason": "line 53 in lib/guardian/topic_guardian.rb (file has 406 lines)"
+      },
+      {
+        "file": "app/controllers/topics_controller.rb",
+        "locator": "996",
+        "status": "grounded",
+        "reason": "line 996 in app/controllers/topics_controller.rb (file has 1634 lines)"
+      },
+      {
+        "file": "app/serializers/category_list_serializer.rb",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in app/serializers/category_list_serializer.rb (file has 15 lines)"
+      },
+      {
+        "file": "app/serializers/topic_list_serializer.rb",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in app/serializers/topic_list_serializer.rb (file has 54 lines)"
+      },
+      {
+        "file": "app/serializers/grouped_search_result_serializer.rb",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in app/serializers/grouped_search_result_serializer.rb (file has 47 lines)"
+      },
+      {
+        "file": "lib/guardian.rb",
+        "locator": "195",
+        "status": "grounded",
+        "reason": "line 195 in lib/guardian.rb (file has 682 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "344",
+        "status": "grounded",
+        "reason": "line 344 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "lib/post_creator.rb",
+        "locator": "414",
+        "status": "grounded",
+        "reason": "line 414 in lib/post_creator.rb (file has 691 lines)"
+      },
+      {
+        "file": "pending_queued_posts_reminder.rb",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in pending_queued_posts_reminder.rb (file has 55 lines) [via app/jobs/scheduled/pending_queued_posts_reminder.rb]"
+      },
+      {
+        "file": "pending_users_reminder.rb",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in pending_users_reminder.rb (file has 80 lines) [via app/jobs/scheduled/pending_users_reminder.rb]"
+      },
+      {
+        "file": "ignored_users_summary.rb",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in ignored_users_summary.rb (file has 47 lines) [via app/jobs/scheduled/ignored_users_summary.rb]"
+      },
+      {
+        "file": "lib/topic_creator.rb",
+        "locator": "164",
+        "status": "grounded",
+        "reason": "line 164 in lib/topic_creator.rb (file has 370 lines)"
+      },
+      {
+        "file": "lib/new_post_manager.rb",
+        "locator": "244",
+        "status": "grounded",
+        "reason": "line 244 in lib/new_post_manager.rb (file has 335 lines)"
+      },
+      {
+        "file": "lib/topic_creator.rb",
+        "locator": "240",
+        "status": "grounded",
+        "reason": "line 240 in lib/topic_creator.rb (file has 370 lines)"
+      },
+      {
+        "file": "old_keys_reminder.rb",
+        "locator": "14",
+        "status": "grounded",
+        "reason": "line 14 in old_keys_reminder.rb (file has 79 lines) [via app/jobs/scheduled/old_keys_reminder.rb]"
+      },
+      {
+        "file": "lib/guardian.rb",
+        "locator": "28",
+        "status": "grounded",
+        "reason": "line 28 in lib/guardian.rb (file has 682 lines)"
+      },
+      {
+        "file": "lib/guardian.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in lib/guardian.rb (file has 682 lines)"
+      },
+      {
+        "file": "lib/guardian.rb",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in lib/guardian.rb (file has 682 lines)"
+      },
+      {
+        "file": "lib/guardian/topic_guardian.rb",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in lib/guardian/topic_guardian.rb (file has 406 lines)"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the Discourse codebase",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Guardian",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Topic",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 25,
+          "unique_refs": 59,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "service",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 3,
+      "total_bonus": 3,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace topic creation from controller to persistence",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "TopicsController",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "TopicCreator",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "PostCreator",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "5",
+          "unique_files": 25,
+          "unique_refs": 59,
+          "threshold": 5,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "PostsController",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "NewPostManager",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 5,
+      "total_required": 5,
+      "hits_bonus": 2,
+      "total_bonus": 3,
+      "fairness_hits_required": 5,
+      "fairness_total_required": 5,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.6667,
+      "combined_score": 0.9231,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Understand Guardian authorization",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "topic_guardian",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "can_create_topic",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 25,
+          "unique_refs": 59,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "ensure",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "can_create_topic_on_category",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "CurrentUserSerializer",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 3,
+      "total_required": 3,
+      "hits_bonus": 3,
+      "total_bonus": 3,
+      "fairness_hits_required": 3,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 3,
+      "fairness_total_bonus": 3,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Assess impact of adding a permission check",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Guardian",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 25,
+          "unique_refs": 59,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "spec",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "plugin",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "spam_rules_spec",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "reply_as_new_topic",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "queue",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 6,
+      "total_bonus": 7,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 5,
+      "fairness_total_bonus": 6,
+      "score_required": 1.0,
+      "score_bonus": 0.8571,
+      "combined_score": 0.8889,
+      "fairness_score": 0.875
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [
+      "Read(README.md)",
+      "Read(topic_creator.rb)",
+      "Read(posts_controller.rb)",
+      "Read(topic_creator.rb)",
+      "Read(post_creator.rb)",
+      "Read(guardian.rb)",
+      "Read(topic_guardian.rb)",
+      "Read(application_controller.rb)",
+      "Read(current_user_serializer.rb)",
+      "Read(post_guardian.rb)",
+      "Read(new_post_manager.rb)",
+      "Read(new_post_manager.rb)",
+      "Read(topic_creator_spec.rb)"
+    ],
+    "post_mcp_misses": [
+      "Grep(def create\\b|def perform_create_post|New)",
+      "Grep(def can_create\\?|def can_create_topic|en)",
+      "Grep(def can_create\\?|def can_create_topic|en)",
+      "Grep(include TopicGuardian|include PostGuardi)",
+      "Grep(NewPostManager|def perform\\b)",
+      "Grep(def can_create_post\\?|def can_create_pos)",
+      "Grep(def perform_create_post|enqueue_jobs|def)",
+      "Grep(trust_level_locked|trust_level_24|user.c)",
+      "Grep(can_create_topic\\?|can_create\\?|TopicCre)",
+      "Grep(can_create_topic\\?|create_topic_allowed_)",
+      "Grep(TopicCreator|PostCreator)",
+      "Grep(PostCreator|TopicCreator)",
+      "Grep(posts#create|topics#)",
+      "Grep(posts|topics)",
+      "Grep(post \"posts\"|post \"/posts\"|\"posts#create)",
+      "Grep(\"/posts\" =>|resources :posts|post.+posts)",
+      "Grep(posts_create|/posts.json|posts#create)"
+    ],
+    "has_mcp_tools": true,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 13, post-MCP misses: 17 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 41,
+    "grep_count": 17,
+    "read_count": 13,
+    "mcp_count": 10,
+    "token_input_uncached": 48,
+    "token_output": 16824,
+    "token_cache_read": 819516,
+    "token_cache_write": 58829,
+    "token_total_billed": 16872,
+    "token_total_all": 895217,
+    "wall_time_seconds": 228.1,
+    "cost_usd": 1.1993,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 480,
+    "token_efficiency": 0.4376,
+    "time_efficiency": 0.5248,
+    "answer_chars": 25239,
+    "audit_chars": 102858
+  }
+}

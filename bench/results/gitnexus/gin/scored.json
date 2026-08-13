@@ -1,0 +1,586 @@
+{
+  "scenario": "Gin middleware chain tracing and recovery modification assessment",
+  "repo": "gin",
+  "adoption_score": 0.48,
+  "keyword_coverage": 0.8889,
+  "step_avg_score": 0.8366,
+  "efficiency": 0.3031,
+  "completeness": 0.7311,
+  "tool_fluency": 0.5,
+  "discoverability": 0.45,
+  "citation_grounding": {
+    "total": 42,
+    "grounded": 41,
+    "unresolved": 1,
+    "hallucinated": 0,
+    "rate": 0.9762,
+    "examples": {
+      "grounded": [
+        "gin.go:Engine (`Engine` found in gin.go)",
+        "gin.go:661 (line 661 in gin.go (file has 832 lines))",
+        "gin.go:517 (line 517 in gin.go (file has 832 lines))",
+        "gin.go:690 (line 690 in gin.go (file has 832 lines))",
+        "gin.go:504 (line 504 in gin.go (file has 832 lines))"
+      ],
+      "unresolved": [
+        "recovery_test.go:extend (`extend` not found anywhere in recovery_test.go)"
+      ],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "gin.go",
+        "locator": "Engine",
+        "status": "grounded",
+        "reason": "`Engine` found in gin.go"
+      },
+      {
+        "file": "gin.go",
+        "locator": "661",
+        "status": "grounded",
+        "reason": "line 661 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "517",
+        "status": "grounded",
+        "reason": "line 517 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "690",
+        "status": "grounded",
+        "reason": "line 690 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "504",
+        "status": "grounded",
+        "reason": "line 504 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "680",
+        "status": "grounded",
+        "reason": "line 680 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "tree.go",
+        "locator": "401",
+        "status": "grounded",
+        "reason": "line 401 in tree.go (file has 950 lines)"
+      },
+      {
+        "file": "context.go",
+        "locator": "188",
+        "status": "grounded",
+        "reason": "line 188 in context.go (file has 1489 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "781",
+        "status": "grounded",
+        "reason": "line 781 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "808",
+        "status": "grounded",
+        "reason": "line 808 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "764",
+        "status": "grounded",
+        "reason": "line 764 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "820",
+        "status": "grounded",
+        "reason": "line 820 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "context.go",
+        "locator": "67",
+        "status": "grounded",
+        "reason": "line 67 in context.go (file has 1489 lines)"
+      },
+      {
+        "file": "context.go",
+        "locator": "68",
+        "status": "grounded",
+        "reason": "line 68 in context.go (file has 1489 lines)"
+      },
+      {
+        "file": "context.go",
+        "locator": "57",
+        "status": "grounded",
+        "reason": "line 57 in context.go (file has 1489 lines)"
+      },
+      {
+        "file": "context.go",
+        "locator": "206",
+        "status": "grounded",
+        "reason": "line 206 in context.go (file has 1489 lines)"
+      },
+      {
+        "file": "context.go",
+        "locator": "198",
+        "status": "grounded",
+        "reason": "line 198 in context.go (file has 1489 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "720",
+        "status": "grounded",
+        "reason": "line 720 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "751",
+        "status": "grounded",
+        "reason": "line 751 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "758",
+        "status": "grounded",
+        "reason": "line 758 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "routergroup.go",
+        "locator": "241",
+        "status": "grounded",
+        "reason": "line 241 in routergroup.go (file has 259 lines)"
+      },
+      {
+        "file": "routergroup.go",
+        "locator": "86",
+        "status": "grounded",
+        "reason": "line 86 in routergroup.go (file has 259 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "364",
+        "status": "grounded",
+        "reason": "line 364 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "context.go",
+        "locator": "238",
+        "status": "grounded",
+        "reason": "line 238 in context.go (file has 1489 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "482",
+        "status": "grounded",
+        "reason": "line 482 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "context.go",
+        "locator": "1017",
+        "status": "grounded",
+        "reason": "line 1017 in context.go (file has 1489 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "109",
+        "status": "grounded",
+        "reason": "line 109 in recovery.go (file has 199 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in recovery.go (file has 199 lines)"
+      },
+      {
+        "file": "tree.go",
+        "locator": "52",
+        "status": "grounded",
+        "reason": "line 52 in tree.go (file has 950 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "371",
+        "status": "grounded",
+        "reason": "line 371 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "test_helpers.go",
+        "locator": "39",
+        "status": "grounded",
+        "reason": "line 39 in test_helpers.go (file has 57 lines)"
+      },
+      {
+        "file": "context_appengine.go",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in context_appengine.go (file has 11 lines)"
+      },
+      {
+        "file": "mode.go",
+        "locator": "51",
+        "status": "grounded",
+        "reason": "line 51 in mode.go (file has 100 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "32",
+        "status": "grounded",
+        "reason": "line 32 in recovery.go (file has 199 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in recovery.go (file has 199 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "40",
+        "status": "grounded",
+        "reason": "line 40 in recovery.go (file has 199 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in recovery.go (file has 199 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "53",
+        "status": "grounded",
+        "reason": "line 53 in recovery.go (file has 199 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "90",
+        "status": "grounded",
+        "reason": "line 90 in recovery.go (file has 199 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "58",
+        "status": "grounded",
+        "reason": "line 58 in recovery.go (file has 199 lines)"
+      },
+      {
+        "file": "gin.go",
+        "locator": "239",
+        "status": "grounded",
+        "reason": "line 239 in gin.go (file has 832 lines)"
+      },
+      {
+        "file": "recovery_test.go",
+        "locator": "extend",
+        "status": "unresolved",
+        "reason": "`extend` not found anywhere in recovery_test.go"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Trace HTTP dispatch from entry point",
+      "checks": [
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "ServeHTTP",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "handleHTTPRequest",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "gin.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 9,
+          "unique_refs": 42,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "context.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "tree.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "Engine.HandleContext",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 4,
+      "total_required": 4,
+      "hits_bonus": 3,
+      "total_bonus": 4,
+      "fairness_hits_required": 4,
+      "fairness_total_required": 4,
+      "fairness_hits_bonus": 3,
+      "fairness_total_bonus": 3,
+      "score_required": 1.0,
+      "score_bonus": 0.75,
+      "combined_score": 0.9167,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Understand middleware flow",
+      "checks": [
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "context.go:188",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "context.go:207",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 9,
+          "unique_refs": 42,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "handlers",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "recovery.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "logger.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "abortIndex",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "combineHandlers",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "AbortWithError",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "math.MaxInt8",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 3,
+      "hits_bonus": 7,
+      "total_bonus": 8,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 7,
+      "fairness_total_bonus": 7,
+      "score_required": 0.6667,
+      "score_bonus": 0.875,
+      "combined_score": 0.7857,
+      "fairness_score": 0.8462
+    },
+    {
+      "name": "Find dead code in the gin package",
+      "checks": [
+        {
+          "hit": false,
+          "type": "word",
+          "value": "localhostIP",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "dead",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 9,
+          "unique_refs": 42,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "binding",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 0,
+      "hits_bonus": 2,
+      "total_bonus": 6,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 0,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 4,
+      "score_required": 1.0,
+      "score_bonus": 0.3333,
+      "combined_score": 0.3333,
+      "fairness_score": 0.5
+    },
+    {
+      "name": "Assess modifying the recovery middleware",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Recovery",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "recovery.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 9,
+          "unique_refs": 42,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "CustomRecovery",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "CustomRecoveryWithWriter",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Default",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 4,
+      "total_bonus": 5,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 4,
+      "fairness_total_bonus": 4,
+      "score_required": 1.0,
+      "score_bonus": 0.8,
+      "combined_score": 0.8889,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [],
+    "post_mcp_misses": [],
+    "has_mcp_tools": false,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 32,
+    "grep_count": 9,
+    "read_count": 12,
+    "mcp_count": 9,
+    "token_input_uncached": 37,
+    "token_output": 12914,
+    "token_cache_read": 535236,
+    "token_cache_write": 60335,
+    "token_total_billed": 12951,
+    "token_total_all": 608522,
+    "wall_time_seconds": 169.7,
+    "cost_usd": 0.9689,
+    "efficiency_ceiling": 15000,
+    "time_ceiling_seconds": 320,
+    "token_efficiency": 0.1366,
+    "time_efficiency": 0.4697,
+    "answer_chars": 14084,
+    "audit_chars": 81000
+  }
+}

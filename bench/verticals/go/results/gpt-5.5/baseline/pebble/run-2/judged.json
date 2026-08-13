@@ -1,0 +1,160 @@
+{
+  "scenario": "Pebble work session - interface-laundered retention audit of the write batch before pooling it",
+  "repo": "pebble",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "pebble.rubric.yaml"
+  },
+  "scenario_quality": 0.8525,
+  "relationship_audit": {
+    "total": 7,
+    "covered": 4,
+    "related": 4,
+    "contradicted": 0,
+    "covered_recall": 0.5714,
+    "related_recall": 0.5714,
+    "grounded_precision": 1.0,
+    "missed_covered": [
+      "dep:invalidating",
+      "dep:internaliteropts",
+      "dep:blockpropfilterer"
+    ],
+    "missed_related": [
+      "dep:invalidating",
+      "dep:internaliteropts",
+      "dep:blockpropfilterer"
+    ],
+    "contradictions": [],
+    "items": [
+      {
+        "id": "contract-handle",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:invalidating",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:iterv2interleave",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:rangekeymask",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:internaliteropts",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:blockpropfilterer",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:walfailoverwriter",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": "Orient on the handle",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Correctly identifies Pebble as an LSM key-value store, names pebble.Batch in batch.go, and lists direct holders (batchInternal, indexedBatch, batchIter, flushableBatch, commitQueue slots, iteratorBatchState) that a field sweep would find. Goes well beyond orientation into step 2/3 material, which is more than asked but doesn't hurt the map."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every direct holder is cited with concrete file:line (batch.go:310, batch.go:488, batch.go:1761, batch.go:1974, commit.go:25, iterator.go:392) and the Batch definition itself at batch.go:240 with constructors."
+        },
+        "justification": {
+          "score": 0.6,
+          "rationale": "Sets up why direct holders aren't the whole story by immediately moving into interface-hidden retainers, but does not explicitly explain WHY Batch is central (that every write goes through one); the centrality is implied rather than stated."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Flags candidates it downgrades (pickedCompactionCache, workloadStep.flushBatch, metamorphic writeSSTForIngestion) with reasons, and marks retainers 'confirmed' vs downgraded, showing calibrated confidence."
+        }
+      },
+      "step_quality": 0.845,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 499,
+        "cache_creation_input_tokens": 22652,
+        "cache_read_input_tokens": 31981
+      }
+    },
+    {
+      "step": "Find the retainers hidden behind abstractions",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Surfaces the key interface-laundered retainers: WAL failover recordQueueEntry/poppedEntry/snapshot, flushableEntry, v1/v2 merging levels, iterv2.InterleavingIter, keyspan.InterleavingIter, lazyCombinedIter, level checker, and bench.Batch. Slightly weaker on the rangeKeyMasking chain (SpanMask/BoundLimitedBlockPropertyFilter details are not fully unpacked)."
+        },
+        "specificity": {
+          "score": 0.9,
+          "rationale": "Nearly every row has struct file:line, the interface stored, concrete carrier, and multiple construction/injection file:line proofs (e.g. 'wal/failover_writer.go:22' with injections at 'db.go:908', 'db.go:950'). A few line numbers (e.g. batchInternal at batch.go:310) may be approximate but the injection sites are pinned."
+        },
+        "justification": {
+          "score": 0.8,
+          "rationale": "Explains why field sweeps miss each (interface-typed fields whose satisfaction is the hidden fact) and shows evidence of downgrading candidates that turn out not to be batch-wired (pickedCompactionCache, workloadStep.flushBatch as direct, metamorphic writeSSTForIngestion as non-retaining). Could more explicitly tie each row's carrier proof to the injection call."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Honest labeling: 'downgraded_candidates' list with reasons, 'may be a merging iterator stack containing an indexed-batch level' for lazyCombinedIter/keyspan, and per-row 'evidence: confirmed' tags. Doesn't silently drop weak candidates; states audit is read-only with 'tests_run: none'."
+        }
+      },
+      "step_quality": 0.8725,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 665,
+        "cache_creation_input_tokens": 23067,
+        "cache_read_input_tokens": 31981
+      }
+    },
+    {
+      "step": "Produce the indirect-retention risk map",
+      "scores": {
+        "map_quality": {
+          "score": 0.85,
+          "rationale": "The map carries over every retainer from prior steps (WAL failover queue/popped/snapshot, flushableEntry, tableCompaction.flush, v1/v2 merging levels, interleaving iters, lazy combined, level checker, bench interfaces), classifies lifetimes, and flags goroutine crossings with process-long WAL and background flush ranked first. Minor gap: rangeKeyMasking/BoundLimitedBlockPropertyFilter chain is folded into the range-key row rather than surfaced as its own retainer, and poppedEntry is bundled into the WAL row rather than ranked."
+        },
+        "specificity": {
+          "score": 0.85,
+          "rationale": "Every row has file:line for the struct, abstraction, and concrete carrier, and the top-risk rows cite injection sites (db.go:908/950, wal/failover_manager.go:335) plus release/detach anchors; pooling requirements are concrete (\"do not reset Batch.data while refcount nonzero\", \"detach Batch.data before pooling\"). The `go d.flush()` line is cited (compaction.go:1388) but the WAL monitor goroutine registration is cited by function line rather than the actual `go` statement."
+        },
+        "justification": {
+          "score": 0.8,
+          "rationale": "Ranking is argued from evidence \u2014 WAL first because it is process-long queue-owned with explicit \"Writer may read p after WriteRecord returns\", flush second because entries sit in DB.mu.mem.queue until a background goroutine drains them, iterators lower because per-iterator with no crossing. Downgraded candidates (pickedCompactionCache, replay.flushBatch) are explained."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Explicit `downgraded_candidates` section names what was checked and rejected with reasons; `tests_run: none; read-only audit` bounds the audit's edge. Could name more unverified surfaces (closures, third-party embedders) explicitly, but honesty about scope is clear."
+        }
+      },
+      "step_quality": 0.84,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 729,
+        "cache_creation_input_tokens": 22894,
+        "cache_read_input_tokens": 31981
+      }
+    }
+  ]
+}

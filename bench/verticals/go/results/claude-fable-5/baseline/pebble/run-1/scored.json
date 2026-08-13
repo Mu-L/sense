@@ -1,0 +1,746 @@
+{
+  "scenario": "Pebble work session - interface-laundered retention audit of the write batch before pooling it",
+  "repo": "pebble",
+  "adoption_score": 0.4,
+  "keyword_coverage": 0.9231,
+  "step_avg_score": 0.9333,
+  "efficiency": 0.0,
+  "completeness": 0.7182,
+  "tool_fluency": 0.0,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 78,
+    "grounded": 78,
+    "unresolved": 0,
+    "hallucinated": 0,
+    "rate": 1.0,
+    "examples": {
+      "grounded": [
+        "range_keys.go:43 (line 43 in range_keys.go (file has 745 lines))",
+        "batch.go:240 (line 240 in batch.go (file has 2609 lines))",
+        "batch.go:488 (line 488 in batch.go (file has 2609 lines))",
+        "batch.go:1762 (line 1762 in batch.go (file has 2609 lines))",
+        "batch.go:1974 (line 1974 in batch.go (file has 2609 lines))"
+      ],
+      "unresolved": [],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "range_keys.go",
+        "locator": "43",
+        "status": "grounded",
+        "reason": "line 43 in range_keys.go (file has 745 lines)"
+      },
+      {
+        "file": "batch.go",
+        "locator": "240",
+        "status": "grounded",
+        "reason": "line 240 in batch.go (file has 2609 lines)"
+      },
+      {
+        "file": "batch.go",
+        "locator": "488",
+        "status": "grounded",
+        "reason": "line 488 in batch.go (file has 2609 lines)"
+      },
+      {
+        "file": "batch.go",
+        "locator": "1762",
+        "status": "grounded",
+        "reason": "line 1762 in batch.go (file has 2609 lines)"
+      },
+      {
+        "file": "batch.go",
+        "locator": "1974",
+        "status": "grounded",
+        "reason": "line 1974 in batch.go (file has 2609 lines)"
+      },
+      {
+        "file": "batch.go",
+        "locator": "385",
+        "status": "grounded",
+        "reason": "line 385 in batch.go (file has 2609 lines)"
+      },
+      {
+        "file": "iterator.go",
+        "locator": "392",
+        "status": "grounded",
+        "reason": "line 392 in iterator.go (file has 3329 lines)"
+      },
+      {
+        "file": "commit.go",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in commit.go (file has 520 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "463",
+        "status": "grounded",
+        "reason": "line 463 in recovery.go (file has 763 lines)"
+      },
+      {
+        "file": "recovery.go",
+        "locator": "664",
+        "status": "grounded",
+        "reason": "line 664 in recovery.go (file has 763 lines)"
+      },
+      {
+        "file": "flushable.go",
+        "locator": "70",
+        "status": "grounded",
+        "reason": "line 70 in flushable.go (file has 590 lines)"
+      },
+      {
+        "file": "flushable.go",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in flushable.go (file has 590 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "832",
+        "status": "grounded",
+        "reason": "line 832 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "2821",
+        "status": "grounded",
+        "reason": "line 2821 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "2826",
+        "status": "grounded",
+        "reason": "line 2826 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "read_state.go",
+        "locator": "29",
+        "status": "grounded",
+        "reason": "line 29 in read_state.go (file has 110 lines)"
+      },
+      {
+        "file": "read_state.go",
+        "locator": "90",
+        "status": "grounded",
+        "reason": "line 90 in read_state.go (file has 110 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "451",
+        "status": "grounded",
+        "reason": "line 451 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "compaction.go",
+        "locator": "218",
+        "status": "grounded",
+        "reason": "line 218 in compaction.go (file has 3164 lines)"
+      },
+      {
+        "file": "compaction.go",
+        "locator": "333",
+        "status": "grounded",
+        "reason": "line 333 in compaction.go (file has 3164 lines)"
+      },
+      {
+        "file": "compaction.go",
+        "locator": "844",
+        "status": "grounded",
+        "reason": "line 844 in compaction.go (file has 3164 lines)"
+      },
+      {
+        "file": "compaction.go",
+        "locator": "369",
+        "status": "grounded",
+        "reason": "line 369 in compaction.go (file has 3164 lines)"
+      },
+      {
+        "file": "merging_iter.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in merging_iter.go (file has 1497 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "1432",
+        "status": "grounded",
+        "reason": "line 1432 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "1450",
+        "status": "grounded",
+        "reason": "line 1450 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "merging_iter.go",
+        "locator": "26",
+        "status": "grounded",
+        "reason": "line 26 in merging_iter.go (file has 1497 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "1428",
+        "status": "grounded",
+        "reason": "line 1428 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "iterator.go",
+        "locator": "239",
+        "status": "grounded",
+        "reason": "line 239 in iterator.go (file has 3329 lines)"
+      },
+      {
+        "file": "batch.go",
+        "locator": "1374",
+        "status": "grounded",
+        "reason": "line 1374 in batch.go (file has 2609 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "1242",
+        "status": "grounded",
+        "reason": "line 1242 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "scan_internal.go",
+        "locator": "1014",
+        "status": "grounded",
+        "reason": "line 1014 in scan_internal.go (file has 1383 lines)"
+      },
+      {
+        "file": "internal/keyspan/keyspanimpl/merging_iter.go",
+        "locator": "236",
+        "status": "grounded",
+        "reason": "line 236 in internal/keyspan/keyspanimpl/merging_iter.go (file has 1259 lines)"
+      },
+      {
+        "file": "merging_iter.go",
+        "locator": "335",
+        "status": "grounded",
+        "reason": "line 335 in merging_iter.go (file has 1497 lines)"
+      },
+      {
+        "file": "iterator.go",
+        "locator": "419",
+        "status": "grounded",
+        "reason": "line 419 in iterator.go (file has 3329 lines)"
+      },
+      {
+        "file": "range_keys.go",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in range_keys.go (file has 745 lines)"
+      },
+      {
+        "file": "range_keys.go",
+        "locator": "243",
+        "status": "grounded",
+        "reason": "line 243 in range_keys.go (file has 745 lines)"
+      },
+      {
+        "file": "range_keys.go",
+        "locator": "227",
+        "status": "grounded",
+        "reason": "line 227 in range_keys.go (file has 745 lines)"
+      },
+      {
+        "file": "internal/keyspan/interleaving_iter.go",
+        "locator": "227",
+        "status": "grounded",
+        "reason": "line 227 in internal/keyspan/interleaving_iter.go (file has 1235 lines)"
+      },
+      {
+        "file": "range_keys.go",
+        "locator": "259",
+        "status": "grounded",
+        "reason": "line 259 in range_keys.go (file has 745 lines)"
+      },
+      {
+        "file": "wal/failover_writer.go",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in wal/failover_writer.go (file has 1058 lines)"
+      },
+      {
+        "file": "wal/wal.go",
+        "locator": "432",
+        "status": "grounded",
+        "reason": "line 432 in wal/wal.go (file has 481 lines)"
+      },
+      {
+        "file": "batch.go",
+        "locator": "291",
+        "status": "grounded",
+        "reason": "line 291 in batch.go (file has 2609 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "908",
+        "status": "grounded",
+        "reason": "line 908 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "db.go",
+        "locator": "950",
+        "status": "grounded",
+        "reason": "line 950 in db.go (file has 3189 lines)"
+      },
+      {
+        "file": "wal/failover_writer.go",
+        "locator": "529",
+        "status": "grounded",
+        "reason": "line 529 in wal/failover_writer.go (file has 1058 lines)"
+      },
+      {
+        "file": "failover_writer.go",
+        "locator": "176",
+        "status": "grounded",
+        "reason": "line 176 in failover_writer.go (file has 1058 lines) [via wal/failover_writer.go]"
+      },
+      {
+        "file": "wal/failover_writer.go",
+        "locator": "24",
+        "status": "grounded",
+        "reason": "line 24 in wal/failover_writer.go (file has 1058 lines)"
+      },
+      {
+        "file": "commit.go",
+        "locator": "439",
+        "status": "grounded",
+        "reason": "line 439 in commit.go (file has 520 lines)"
+      },
+      {
+        "file": "record/log_writer.go",
+        "locator": "53",
+        "status": "grounded",
+        "reason": "line 53 in record/log_writer.go (file has 1133 lines)"
+      },
+      {
+        "file": "log_writer.go",
+        "locator": "96",
+        "status": "grounded",
+        "reason": "line 96 in log_writer.go (file has 1133 lines) [via record/log_writer.go]"
+      },
+      {
+        "file": "log_writer.go",
+        "locator": "201",
+        "status": "grounded",
+        "reason": "line 201 in log_writer.go (file has 1133 lines) [via record/log_writer.go]"
+      },
+      {
+        "file": "log_writer.go",
+        "locator": "246",
+        "status": "grounded",
+        "reason": "line 246 in log_writer.go (file has 1133 lines) [via record/log_writer.go]"
+      },
+      {
+        "file": "log_writer.go",
+        "locator": "148",
+        "status": "grounded",
+        "reason": "line 148 in log_writer.go (file has 1133 lines) [via record/log_writer.go]"
+      },
+      {
+        "file": "bench/db.go",
+        "locator": "46",
+        "status": "grounded",
+        "reason": "line 46 in bench/db.go (file has 193 lines)"
+      },
+      {
+        "file": "bench/db.go",
+        "locator": "159",
+        "status": "grounded",
+        "reason": "line 159 in bench/db.go (file has 193 lines)"
+      },
+      {
+        "file": "bench/queue.go",
+        "locator": "65",
+        "status": "grounded",
+        "reason": "line 65 in bench/queue.go (file has 120 lines)"
+      },
+      {
+        "file": "bench/sync.go",
+        "locator": "57",
+        "status": "grounded",
+        "reason": "line 57 in bench/sync.go (file has 132 lines)"
+      },
+      {
+        "file": "bench/ycsb.go",
+        "locator": "258",
+        "status": "grounded",
+        "reason": "line 258 in bench/ycsb.go (file has 566 lines)"
+      },
+      {
+        "file": "bench/ycsb.go",
+        "locator": "428",
+        "status": "grounded",
+        "reason": "line 428 in bench/ycsb.go (file has 566 lines)"
+      },
+      {
+        "file": "snapshot.go",
+        "locator": "223",
+        "status": "grounded",
+        "reason": "line 223 in snapshot.go (file has 560 lines)"
+      },
+      {
+        "file": "wal/failover_writer.go",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in wal/failover_writer.go (file has 1058 lines)"
+      },
+      {
+        "file": "merging_iter.go",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in merging_iter.go (file has 1497 lines)"
+      },
+      {
+        "file": "iterator.go",
+        "locator": "3057",
+        "status": "grounded",
+        "reason": "line 3057 in iterator.go (file has 3329 lines)"
+      },
+      {
+        "file": "keyspanimpl/merging_iter.go",
+        "locator": "237",
+        "status": "grounded",
+        "reason": "line 237 in keyspanimpl/merging_iter.go (file has 1259 lines) [via internal/keyspan/keyspanimpl/merging_iter.go]"
+      },
+      {
+        "file": "wal/failover_writer.go",
+        "locator": "532",
+        "status": "grounded",
+        "reason": "line 532 in wal/failover_writer.go (file has 1058 lines)"
+      },
+      {
+        "file": "failover_writer.go",
+        "locator": "539",
+        "status": "grounded",
+        "reason": "line 539 in failover_writer.go (file has 1058 lines) [via wal/failover_writer.go]"
+      },
+      {
+        "file": "wal/failover_manager.go",
+        "locator": "335",
+        "status": "grounded",
+        "reason": "line 335 in wal/failover_manager.go (file has 1068 lines)"
+      },
+      {
+        "file": "failover_writer.go",
+        "locator": "272",
+        "status": "grounded",
+        "reason": "line 272 in failover_writer.go (file has 1058 lines) [via wal/failover_writer.go]"
+      },
+      {
+        "file": "record/log_writer.go",
+        "locator": "96",
+        "status": "grounded",
+        "reason": "line 96 in record/log_writer.go (file has 1133 lines)"
+      },
+      {
+        "file": "record/log_writer.go",
+        "locator": "595",
+        "status": "grounded",
+        "reason": "line 595 in record/log_writer.go (file has 1133 lines)"
+      },
+      {
+        "file": "compaction.go",
+        "locator": "1389",
+        "status": "grounded",
+        "reason": "line 1389 in compaction.go (file has 3164 lines)"
+      },
+      {
+        "file": "failover_writer.go",
+        "locator": "532",
+        "status": "grounded",
+        "reason": "line 532 in failover_writer.go (file has 1058 lines) [via wal/failover_writer.go]"
+      },
+      {
+        "file": "internal/keyspan/keyspanimpl/merging_iter.go",
+        "locator": "237",
+        "status": "grounded",
+        "reason": "line 237 in internal/keyspan/keyspanimpl/merging_iter.go (file has 1259 lines)"
+      },
+      {
+        "file": "wal/failover_writer.go",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in wal/failover_writer.go (file has 1058 lines)"
+      },
+      {
+        "file": "failover_writer.go",
+        "locator": "529",
+        "status": "grounded",
+        "reason": "line 529 in failover_writer.go (file has 1058 lines) [via wal/failover_writer.go]"
+      },
+      {
+        "file": "bench/queue.go",
+        "locator": "72",
+        "status": "grounded",
+        "reason": "line 72 in bench/queue.go (file has 120 lines)"
+      },
+      {
+        "file": "bench/sync.go",
+        "locator": "66",
+        "status": "grounded",
+        "reason": "line 66 in bench/sync.go (file has 132 lines)"
+      },
+      {
+        "file": "log_writer.go",
+        "locator": "595",
+        "status": "grounded",
+        "reason": "line 595 in log_writer.go (file has 1133 lines) [via record/log_writer.go]"
+      }
+    ]
+  },
+  "gold_recall": {
+    "total": 7,
+    "mentioned": 4,
+    "cited": 4,
+    "mention_recall": 0.5714,
+    "cited_recall": 0.5714,
+    "groups": {
+      "contract": {
+        "total": 1,
+        "mentioned": 1,
+        "cited": 1,
+        "mention_recall": 1.0,
+        "cited_recall": 1.0
+      },
+      "dependents": {
+        "total": 6,
+        "mentioned": 3,
+        "cited": 3,
+        "mention_recall": 0.5,
+        "cited_recall": 0.5
+      }
+    },
+    "missed_mention": [
+      "dep:invalidating",
+      "dep:iterv2interleave",
+      "dep:blockpropfilterer"
+    ],
+    "missed_cite": [
+      "dep:invalidating",
+      "dep:iterv2interleave",
+      "dep:blockpropfilterer"
+    ],
+    "details": [
+      {
+        "id": "contract-handle",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "dep:invalidating",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:iterv2interleave",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:rangekeymask",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "dep:internaliteropts",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "dep:blockpropfilterer",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "dep:walfailoverwriter",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient on the handle",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Batch",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "batch.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 25,
+          "unique_refs": 78,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.8333,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Find the retainers hidden behind abstractions",
+      "checks": [
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "failover_writer.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "interleaving_iter.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "block_property.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "5",
+          "unique_files": 25,
+          "unique_refs": 78,
+          "threshold": 5,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 5,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 3,
+      "score_required": 1.0,
+      "score_bonus": 0.4,
+      "combined_score": 0.5714,
+      "fairness_score": 0.8
+    },
+    {
+      "name": "Produce the indirect-retention risk map",
+      "checks": [
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "failover_manager.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "5",
+          "unique_files": 25,
+          "unique_refs": 78,
+          "threshold": 5,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.75,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [],
+    "post_mcp_misses": [],
+    "has_mcp_tools": false,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only - grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 41,
+    "grep_count": 39,
+    "read_count": 0,
+    "mcp_count": 0,
+    "token_input_uncached": 52,
+    "token_output": 32529,
+    "token_cache_read": 1390424,
+    "token_cache_write": 63155,
+    "token_total_billed": 32581,
+    "token_total_all": 1486160,
+    "wall_time_seconds": 478.2,
+    "cost_usd": 4.2823,
+    "effective_token_total_billed": 32581,
+    "effective_wall_time_seconds": 478.2,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 300,
+    "token_efficiency": 0.0,
+    "time_efficiency": 0.0,
+    "answer_chars": 17190,
+    "audit_chars": 98088,
+    "overhead": null
+  }
+}

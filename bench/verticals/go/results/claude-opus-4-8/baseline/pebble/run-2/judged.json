@@ -1,0 +1,168 @@
+{
+  "scenario": "Pebble work session - interface-laundered retention audit of the write batch before pooling it",
+  "repo": "pebble",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "pebble.rubric.yaml"
+  },
+  "scenario_quality": 0.0,
+  "relationship_audit": {
+    "total": 7,
+    "covered": 0,
+    "related": 0,
+    "contradicted": 0,
+    "covered_recall": 0.0,
+    "related_recall": 0.0,
+    "grounded_precision": null,
+    "missed_covered": [
+      "contract-handle",
+      "dep:invalidating",
+      "dep:iterv2interleave",
+      "dep:rangekeymask",
+      "dep:internaliteropts",
+      "dep:blockpropfilterer",
+      "dep:walfailoverwriter"
+    ],
+    "missed_related": [
+      "contract-handle",
+      "dep:invalidating",
+      "dep:iterv2interleave",
+      "dep:rangekeymask",
+      "dep:internaliteropts",
+      "dep:blockpropfilterer",
+      "dep:walfailoverwriter"
+    ],
+    "contradictions": [],
+    "items": [
+      {
+        "id": "contract-handle",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:invalidating",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:iterv2interleave",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:rangekeymask",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:internaliteropts",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:blockpropfilterer",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:walfailoverwriter",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": "Orient on the handle",
+      "scores": {
+        "map_quality": {
+          "score": 0.0,
+          "rationale": "The answer contains no orientation content \u2014 no identification of Pebble, no batch.go path, no direct holders named. It is only narration of intended next steps."
+        },
+        "specificity": {
+          "score": 0.0,
+          "rationale": "No file paths, no line numbers, no struct names cited anywhere in the answer."
+        },
+        "justification": {
+          "score": 0.0,
+          "rationale": "No explanation of why Batch is central or what makes direct holders insufficient \u2014 the answer never states any fact to justify."
+        },
+        "uncertainty": {
+          "score": 0.0,
+          "rationale": "No uncertainty flagged because no claims are made; the answer is purely process narration despite completed=true and 16k tokens spent."
+        }
+      },
+      "step_quality": 0.0,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 274,
+        "cache_creation_input_tokens": 25597,
+        "cache_read_input_tokens": 22129
+      }
+    },
+    {
+      "step": "Find the retainers hidden behind abstractions",
+      "scores": {
+        "map_quality": {
+          "score": 0.0,
+          "rationale": "The answer text contains no retainers at all \u2014 only narration like 'I've established the first several retainers' without ever stating what they are. Zero of the required interface-laundered holders (invalidating.iter, InterleavingIter, rangeKeyMasking chain, WAL recordQueueEntry) are named."
+        },
+        "specificity": {
+          "score": 0.0,
+          "rationale": "No file:line, no struct, no abstraction, no carrier, no injection site \u2014 the answer is entirely process narration with no concrete citations."
+        },
+        "justification": {
+          "score": 0.0,
+          "rationale": "No explanation of why any candidate is interface-laundered or how it was verified; no evidence of checking wired-vs-type-compatible because no candidates are stated."
+        },
+        "uncertainty": {
+          "score": 0.0,
+          "rationale": "Nothing is flagged as confirmed or unconfirmed because nothing is stated at all; the run 'completed' in 300s but produced no findings, which is the explicit failure mode the prompt warned against ('an audit that dies with its findings unstated helped nobody')."
+        }
+      },
+      "step_quality": 0.0,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 413,
+        "cache_creation_input_tokens": 16209,
+        "cache_read_input_tokens": 31932
+      }
+    },
+    {
+      "step": "Produce the indirect-retention risk map",
+      "scores": {
+        "map_quality": {
+          "score": 0.0,
+          "rationale": "The answer contains only narration ('Let me...', 'Excellent...') with no actual map, no retainers listed, no rows, no risk ranking. Nothing was delivered."
+        },
+        "specificity": {
+          "score": 0.0,
+          "rationale": "Zero file:line citations, no abstractions, no carriers, no lifetime classes, no crossing flags."
+        },
+        "justification": {
+          "score": 0.0,
+          "rationale": "No ranking argued from evidence \u2014 there is no ranking at all."
+        },
+        "uncertainty": {
+          "score": 0.0,
+          "rationale": "No edges of the audit stated; the answer never reaches any claim to hedge."
+        }
+      },
+      "step_quality": 0.0,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 267,
+        "cache_creation_input_tokens": 16036,
+        "cache_read_input_tokens": 31932
+      }
+    }
+  ]
+}

@@ -1,0 +1,328 @@
+{
+  "scenario": "Gin middleware chain tracing and recovery modification assessment",
+  "repo": "gin",
+  "adoption_score": 0.502,
+  "keyword_coverage": 0.0278,
+  "step_avg_score": 0.0625,
+  "efficiency": 0.6011,
+  "completeness": 0.0417,
+  "tool_fluency": 0.8367,
+  "discoverability": 0.0,
+  "citation_grounding": {
+    "total": 0,
+    "grounded": 0,
+    "unresolved": 0,
+    "hallucinated": 0,
+    "rate": 0.0,
+    "examples": {
+      "grounded": [],
+      "unresolved": [],
+      "hallucinated": []
+    },
+    "details": []
+  },
+  "steps": [
+    {
+      "name": "Trace HTTP dispatch from entry point",
+      "checks": [
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "ServeHTTP",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "handleHTTPRequest",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "gin.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 0,
+          "unique_refs": 0,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "context.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "tree.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "Engine.HandleContext",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 4,
+      "hits_bonus": 0,
+      "total_bonus": 4,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 4,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 3,
+      "score_required": 0.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.0,
+      "fairness_score": 0.0
+    },
+    {
+      "name": "Understand middleware flow",
+      "checks": [
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "context.go:188",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "context.go:207",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 0,
+          "unique_refs": 0,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "handlers",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "recovery.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "logger.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "abortIndex",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "combineHandlers",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "AbortWithError",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "math.MaxInt8",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 3,
+      "hits_bonus": 0,
+      "total_bonus": 8,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 7,
+      "score_required": 0.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.0,
+      "fairness_score": 0.0
+    },
+    {
+      "name": "Find dead code in the gin package",
+      "checks": [
+        {
+          "hit": false,
+          "type": "word",
+          "value": "localhostIP",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "dead",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 0,
+          "unique_refs": 0,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "contains",
+          "value": "binding",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 0,
+      "hits_bonus": 1,
+      "total_bonus": 6,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 0,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 4,
+      "score_required": 1.0,
+      "score_bonus": 0.1667,
+      "combined_score": 0.1667,
+      "fairness_score": 0.25
+    },
+    {
+      "name": "Assess modifying the recovery middleware",
+      "checks": [
+        {
+          "hit": false,
+          "type": "word",
+          "value": "Recovery",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "recovery.go",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 0,
+          "unique_refs": 0,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "CustomRecovery",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "CustomRecoveryWithWriter",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "word",
+          "value": "Default",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 2,
+      "hits_bonus": 0,
+      "total_bonus": 5,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 4,
+      "score_required": 0.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.0,
+      "fairness_score": 0.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [],
+    "post_mcp_misses": [],
+    "has_mcp_tools": false,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 55,
+    "grep_count": 8,
+    "read_count": 2,
+    "mcp_count": 41,
+    "token_input_uncached": 35,
+    "token_output": 6664,
+    "token_cache_read": 547581,
+    "token_cache_write": 44647,
+    "token_total_billed": 6699,
+    "token_total_all": 598927,
+    "wall_time_seconds": 112.4,
+    "cost_usd": 1.0435,
+    "efficiency_ceiling": 15000,
+    "time_ceiling_seconds": 320,
+    "token_efficiency": 0.5534,
+    "time_efficiency": 0.6487,
+    "answer_chars": 149,
+    "audit_chars": 37694
+  },
+  "failed": false,
+  "constrained": true,
+  "constraint_reason": "claude_session_failed"
+}

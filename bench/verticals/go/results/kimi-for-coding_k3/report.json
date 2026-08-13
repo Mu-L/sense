@@ -1,0 +1,29 @@
+{
+  "vertical": "kimi-for-coding_k3",
+  "models": {
+    "_quarantine-firstsweep-dolt-20260724": {
+      "dolt": {
+        "runs": [
+          1,
+          1
+        ],
+        "baseline_overall": 0.0,
+        "sense_overall": 1.0,
+        "overall_delta": 1.0,
+        "deps_delta": null,
+        "baseline_metrics": {
+          "wall_time_seconds": 1297.0,
+          "token_total_billed": 107816.0,
+          "token_cache_read": 3581440.0,
+          "token_output": 16798.0
+        },
+        "sense_metrics": {
+          "wall_time_seconds": 1564.0,
+          "token_total_billed": 124333.0,
+          "token_cache_read": 1318400.0,
+          "token_output": 22672.0
+        }
+      }
+    }
+  }
+}

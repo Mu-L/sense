@@ -1,0 +1,124 @@
+{
+  "scenario": "Gin middleware chain tracing and recovery modification assessment",
+  "repo": "gin",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "gin.rubric.yaml"
+  },
+  "scenario_quality": 0.88,
+  "steps": [
+    {
+      "step": "Trace HTTP dispatch from entry point",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Provides a complete ordered pipeline with file:line for Engine.ServeHTTP (gin.go:661-674), updateRouteTrees (517-521), handleHTTPRequest (690-760), node.getValue, serveError (764-779), and redirect handlers (781, 808, 820). An agent could insert a request-ID hook without re-tracing. Minor gap: a few cited locations (response_writer.go, context.go reset) lack precise line numbers."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Receivers are named (Engine.ServeHTTP, Engine.updateRouteTrees, Engine.handleHTTPRequest, node.getValue) and intermediates like updateRouteTrees and serveError are cited with file:line. Engine.HandleContext is included as an alternate entry. Strong concrete citations throughout."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Explains why handleHTTPRequest is split (rPath handling, tree iteration, redirects/405/404 fan-out), the role of methodTrees iteration, and the sync.Once guard on updateRouteTrees. Does not explicitly explain WHY a radix tree is used (vs. e.g. map), but covers the structural rationale for the split."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Flags redirect paths (trailing-slash, fixed-path), NoRoute/NoMethod fallbacks via serveError + allNoRoute/allNoMethod, and the 301-for-GET / 307-otherwise branch in redirectRequest. Doesn't explicitly address HEAD-vs-GET subtleties, but covers the main branching surfaces."
+        }
+      },
+      "step_quality": 0.895,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 631,
+        "cache_creation_input_tokens": 19745,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Understand middleware flow",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Provides file:line for Context.Next (context.go:188-196), Context.Abort (context.go:206-209), abortIndex (context.go:57), handlers field (context.go:67), combineHandlers (routergroup.go:241), and assignment sites (gin.go:720/751/758). Agent could write a middleware without re-reading context.go."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Internal callers of Next listed at gin.go:722, gin.go:766, recovery.go:90, logger.go:214, logger.go:282; Abort callers at context.go:216/223/231/1164 and recovery.go:84. abortIndex is named explicitly with its sentinel value."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Explains Next's pre-increment + loop, reentrancy for before/after pattern, and that Abort sets index to abortIndex (math.MaxInt8>>1) without halting the current handler. combineHandlers role is stated as concatenating group + route handlers."
+        },
+        "uncertainty": {
+          "score": 0.6,
+          "rationale": "Flags reentrancy and the subtle 'Abort does not stop the current handler' caveat, plus AbortWithError's indirect path. Misses panic-recovery ordering and goroutine-safety concerns that could surprise a new middleware author."
+        }
+      },
+      "step_quality": 0.8875,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 499,
+        "cache_creation_input_tokens": 19747,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Find dead code in the gin package",
+      "scores": {
+        "map_quality": {
+          "score": 0.75,
+          "rationale": "Answer returns an empty `verified_unexported_dead` list with a defensible conclusion ('deletion PR should be aborted or rescoped'), and documents rejected candidates with file:line. The agent could close the PR confidently, though no positively-identified candidates means no deletions to execute."
+        },
+        "specificity": {
+          "score": 0.85,
+          "rationale": "Rejected candidates cite exact file:line (e.g. `validateHeader` at gin.go:482, `defaultHandleRecovery` at recovery.go:109, `methodTrees.get` at tree.go:52), and scope is explicit ('Root-package non-_test.go files' enumerated). Missing line ranges on a couple of entries."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Each rejection has a concrete 'why': 'Called via c.engine.validateHeader at context.go:1017 (graph missed method-on-field dispatch)', 'Used as function VALUE at recovery.go:49', etc. The conclusion explains why graph 'no-caller' hits were false positives."
+        },
+        "uncertainty": {
+          "score": 0.9,
+          "rationale": "Explicitly flags reflection-style edge cases the indexer misses: method-on-field dispatch, function-value references, runtime `init`, and test-only helpers \u2014 exactly the categories that would break an automated deletion."
+        }
+      },
+      "step_quality": 0.8275,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 505,
+        "cache_creation_input_tokens": 19738,
+        "cache_read_input_tokens": 15724
+      }
+    },
+    {
+      "step": "Assess modifying the recovery middleware",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Provides file:line for all four public entries (recovery.go:35/40/45/53), the convergence point at recovery.go:90 where c.Next() is called, plus registration in Default() at gin.go:239 and test sites. The agent can inject request-ID logic without re-reading recovery.go."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Concrete signatures with line numbers ('func CustomRecoveryWithWriter(out io.Writer, handle RecoveryFunc) HandlerFunc, recovery.go:53'), call hierarchy chained explicitly, and registration cited as 'engine.Use(Logger(), Recovery())' at gin.go:239 with benchmark/test lines enumerated."
+        },
+        "justification": {
+          "score": 0.9,
+          "rationale": "Explains the three (actually four) flavours converging on CustomRecoveryWithWriter, identifies it as 'the right surface to extend', and articulates the tradeoff between editing Recovery vs a dedicated RequestID middleware in the risk section."
+        },
+        "uncertainty": {
+          "score": 0.75,
+          "rationale": "Flags public-API stability, Default() inheritance, and that custom chains without Recovery() won't get the ID; also notes test impacts. Misses explicit mention of transitive Abort callers like BasicAuthForRealm and panic-in-middleware ordering subtleties."
+        }
+      },
+      "step_quality": 0.91,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 520,
+        "cache_creation_input_tokens": 19717,
+        "cache_read_input_tokens": 15724
+      }
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "scenario": "Pebble work session - interface-laundered retention audit of the write batch before pooling it",
+  "repo": "pebble",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v1",
+    "rubric_path": "pebble.rubric.yaml"
+  },
+  "scenario_quality": 0.815,
+  "relationship_audit": {
+    "total": 7,
+    "covered": 4,
+    "related": 4,
+    "contradicted": 0,
+    "covered_recall": 0.5714,
+    "related_recall": 0.5714,
+    "grounded_precision": 1.0,
+    "missed_covered": [
+      "dep:invalidating",
+      "dep:internaliteropts",
+      "dep:blockpropfilterer"
+    ],
+    "missed_related": [
+      "dep:invalidating",
+      "dep:internaliteropts",
+      "dep:blockpropfilterer"
+    ],
+    "contradictions": [],
+    "items": [
+      {
+        "id": "contract-handle",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:invalidating",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:iterv2interleave",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:rangekeymask",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "dep:internaliteropts",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:blockpropfilterer",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "dep:walfailoverwriter",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": "Orient on the handle",
+      "scores": {
+        "map_quality": {
+          "score": 0.85,
+          "rationale": "Lands the essentials fast: identifies Pebble as an LSM KV store, names Batch in batch.go, and enumerates direct holders (batchIter, indexedBatch, flushableBatch, iteratorBatchState, commitQueue). Covers the field-type-sweep holders the rubric asks for."
+        },
+        "specificity": {
+          "score": 0.8,
+          "rationale": "Most citations are concrete file:line (batch.go:240, 310, 326, 385, 1974; iterator.go:393). A few (batchIter, indexedBatch, commitQueue) get only file paths without line numbers, which slightly weakens the map."
+        },
+        "justification": {
+          "score": 0.55,
+          "rationale": "Explains structure (embeds batchInternal, data buffer) but doesn't explicitly say why Batch is central (every write goes through one) or set up that direct holders aren't the whole story \u2014 the next-step motivation is implicit at best."
+        },
+        "uncertainty": {
+          "score": 0.4,
+          "rationale": "No flags on anything unverified (e.g. commitQueue slots cited without a line, flushableBatch described as 'ownership transfer' as fact). Terse and assertive throughout with no hedging."
+        }
+      },
+      "step_quality": 0.71,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 446,
+        "cache_creation_input_tokens": 47909,
+        "cache_read_input_tokens": 0
+      }
+    },
+    {
+      "step": "Find the retainers hidden behind abstractions",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "Surfaces the key interface-laundered retainers the rubric names: WAL failover ring (R1), range-key masking chain via InterleavingIter (R5-R6), V1 iterator stack (R3-R4, R8), V2 InterleavingIter (R9), and bench/workload harness (R10). Adds flushableEntry (R2) and lazyCombinedIter (R7) as bonuses; the rangeKeyMasking-specific SpanMask/BoundLimitedBlockPropertyFilter chain isn't broken out as distinct rows but the parent Iterator-to-batch chain is covered."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every row cites struct file:line, the interface stored, the concrete carrier, AND the injection site file:line (e.g. 'injected at db.go:1435-1436', 'db.go:1310-1316', 'failover_writer.go:539-546'). Proof is delivered at the moment of establishment, not deferred."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Each row implicitly shows why a field-sweep misses it (declared type is an interface, concrete only visible at injection). Shows real audit discipline with negative findings section ruling out compaction scheduler, standaloneWriter, and metamorphic harness \u2014 evidence of checking wiring vs mere type-compatibility."
+        },
+        "uncertainty": {
+          "score": 0.85,
+          "rationale": "Labels each row 'Confirmed at source', flags R11 as minor with 'no in-repo retention', and explicitly lists negative findings with reasons. Could more explicitly flag that some interface fields COULD receive non-batch satisfiers at other injection sites, but the evidence bounding is honest."
+        }
+      },
+      "step_quality": 0.895,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 636,
+        "cache_creation_input_tokens": 18165,
+        "cache_read_input_tokens": 31981
+      }
+    },
+    {
+      "step": "Produce the indirect-retention risk map",
+      "scores": {
+        "map_quality": {
+          "score": 0.85,
+          "rationale": "Carries over all retainers from prior step into a single table with lifetime and goroutine-crossing flags, ranks correctly with WAL failover and flushable at the top, and identifies background flush/compaction/monitor threads. Slight loss: the rangeKeyMasking chain (SpanMask/BoundLimitedBlockPropertyFilter) and invalidating.iter wrappers listed in the audience spec are not explicitly enumerated as distinct rows, collapsed into the generic iterator stack."
+        },
+        "specificity": {
+          "score": 0.9,
+          "rationale": "Every row has file:line for the field, abstraction, carrier, lifetime class, and crossing flag; top-risk rows include construction/injection sites (`db.go:908,950`, `db.go:2821-2826`) and go-statement proofs (`compaction.go:1389 go d.flush()`, `record/log_writer.go:595-596 flushLoop`, `stopper.runAsync` at `failover_writer.go:611,721`)."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Ranking is argued from lifetime + background-goroutine registration rather than asserted, and the pooling safeguards tie directly to the cited lifecycle refcount (`batch.go:278`) and severing (`db.go:849-851`). The 'why field-type sweep missed it' framing is implicit rather than restated per row."
+        },
+        "uncertainty": {
+          "score": 0.7,
+          "rationale": "Negative-findings block explicitly names what was checked and ruled out (standalone WAL, metamorphic harness, CompactionScheduler), bounding the audit's edge. Does not state what remained unverified (other injection sites, closures, third-party structs) as clearly as the rubric asks."
+        }
+      },
+      "step_quality": 0.84,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 642,
+        "cache_creation_input_tokens": 19895,
+        "cache_read_input_tokens": 31981
+      }
+    }
+  ]
+}

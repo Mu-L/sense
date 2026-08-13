@@ -1,0 +1,803 @@
+{
+  "scenario": "Forem work session - audit the Article contract before a teardown rework",
+  "repo": "forem",
+  "adoption_score": 0.4,
+  "keyword_coverage": 1.0,
+  "step_avg_score": 0.9286,
+  "efficiency": 0.2009,
+  "completeness": 0.6786,
+  "tool_fluency": 0.0,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 40,
+    "grounded": 40,
+    "unresolved": 0,
+    "hallucinated": 0,
+    "rate": 1.0,
+    "examples": {
+      "grounded": [
+        "app/models/application_record.rb:4 (line 4 in app/models/application_record.rb (file has 137 lines))",
+        "article.rb:2 (line 2 in article.rb (file has 1858 lines) [via app/models/article.rb])",
+        "article.rb:396 (line 396 in article.rb (file has 1858 lines) [via app/models/article.rb])",
+        "application_record.rb:4 (line 4 in application_record.rb (file has 137 lines) [via app/models/application_record.rb])",
+        "concerns/purgeable.rb:49 (line 49 in concerns/purgeable.rb (file has 76 lines) [via app/models/concerns/purgeable.rb])"
+      ],
+      "unresolved": [],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "app/models/application_record.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in app/models/application_record.rb (file has 137 lines)"
+      },
+      {
+        "file": "article.rb",
+        "locator": "2",
+        "status": "grounded",
+        "reason": "line 2 in article.rb (file has 1858 lines) [via app/models/article.rb]"
+      },
+      {
+        "file": "article.rb",
+        "locator": "396",
+        "status": "grounded",
+        "reason": "line 396 in article.rb (file has 1858 lines) [via app/models/article.rb]"
+      },
+      {
+        "file": "application_record.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in application_record.rb (file has 137 lines) [via app/models/application_record.rb]"
+      },
+      {
+        "file": "concerns/purgeable.rb",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in concerns/purgeable.rb (file has 76 lines) [via app/models/concerns/purgeable.rb]"
+      },
+      {
+        "file": "destroyer.rb",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in destroyer.rb (file has 24 lines) [via app/services/articles/destroyer.rb]"
+      },
+      {
+        "file": "webpage_trackable.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in webpage_trackable.rb (file has 27 lines) [via app/models/concerns/webpage_trackable.rb]"
+      },
+      {
+        "file": "liquid_embeddable.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in liquid_embeddable.rb (file has 30 lines) [via app/models/concerns/liquid_embeddable.rb]"
+      },
+      {
+        "file": "webpage_trackable.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in webpage_trackable.rb (file has 27 lines) [via app/models/concerns/webpage_trackable.rb]"
+      },
+      {
+        "file": "stories_controller.rb",
+        "locator": "48",
+        "status": "grounded",
+        "reason": "line 48 in stories_controller.rb (file has 737 lines) [via app/controllers/stories_controller.rb]"
+      },
+      {
+        "file": "services/mentions/create_all.rb",
+        "locator": "85",
+        "status": "grounded",
+        "reason": "line 85 in services/mentions/create_all.rb (file has 96 lines) [via app/services/mentions/create_all.rb]"
+      },
+      {
+        "file": "models/notification.rb",
+        "locator": "65",
+        "status": "grounded",
+        "reason": "line 65 in models/notification.rb (file has 240 lines) [via app/models/notification.rb]"
+      },
+      {
+        "file": "models/article.rb",
+        "locator": "450",
+        "status": "grounded",
+        "reason": "line 450 in models/article.rb (file has 1858 lines) [via app/models/article.rb]"
+      },
+      {
+        "file": "article.rb",
+        "locator": "132",
+        "status": "grounded",
+        "reason": "line 132 in article.rb (file has 1858 lines) [via app/models/article.rb]"
+      },
+      {
+        "file": "bust_cache_worker.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in bust_cache_worker.rb (file has 15 lines) [via app/workers/comments/bust_cache_worker.rb]"
+      },
+      {
+        "file": "score_calc_worker.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in score_calc_worker.rb (file has 14 lines) [via app/workers/articles/score_calc_worker.rb]"
+      },
+      {
+        "file": "enrich_image_attributes_worker.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in enrich_image_attributes_worker.rb (file has 17 lines) [via app/workers/articles/enrich_image_attributes_worker.rb]"
+      },
+      {
+        "file": "detect_code_block_languages_worker.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in detect_code_block_languages_worker.rb (file has 19 lines) [via app/workers/articles/detect_code_block_languages_worker.rb]"
+      },
+      {
+        "file": "generate_context_note_worker.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in generate_context_note_worker.rb (file has 17 lines) [via app/workers/articles/generate_context_note_worker.rb]"
+      },
+      {
+        "file": "generate_freeform_context_note_worker.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in generate_freeform_context_note_worker.rb (file has 20 lines) [via app/workers/articles/generate_freeform_context_note_worker.rb]"
+      },
+      {
+        "file": "generate_summary_worker.rb",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in generate_summary_worker.rb (file has 21 lines) [via app/workers/articles/generate_summary_worker.rb]"
+      },
+      {
+        "file": "handle_spam_worker.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in handle_spam_worker.rb (file has 63 lines) [via app/workers/articles/handle_spam_worker.rb]"
+      },
+      {
+        "file": "update_dependent_embeds_worker.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in update_dependent_embeds_worker.rb (file has 41 lines) [via app/workers/articles/update_dependent_embeds_worker.rb]"
+      },
+      {
+        "file": "generate_article_embedding_worker.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in generate_article_embedding_worker.rb (file has 25 lines) [via app/workers/generate_article_embedding_worker.rb]"
+      },
+      {
+        "file": "update_article_activity_worker.rb",
+        "locator": "89",
+        "status": "grounded",
+        "reason": "line 89 in update_article_activity_worker.rb (file has 102 lines) [via app/workers/articles/update_article_activity_worker.rb]"
+      },
+      {
+        "file": "bust_article.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in bust_article.rb (file has 88 lines) [via app/services/edge_cache/bust_article.rb]"
+      },
+      {
+        "file": "update_organic_page_views_worker.rb",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in update_organic_page_views_worker.rb (file has 28 lines) [via app/workers/articles/update_organic_page_views_worker.rb]"
+      },
+      {
+        "file": "images/social_image_worker.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in images/social_image_worker.rb (file has 12 lines) [via app/workers/images/social_image_worker.rb]"
+      },
+      {
+        "file": "article.rb",
+        "locator": "1122",
+        "status": "grounded",
+        "reason": "line 1122 in article.rb (file has 1858 lines) [via app/models/article.rb]"
+      },
+      {
+        "file": "article.rb",
+        "locator": "411",
+        "status": "grounded",
+        "reason": "line 411 in article.rb (file has 1858 lines) [via app/models/article.rb]"
+      },
+      {
+        "file": "article.rb",
+        "locator": "1814",
+        "status": "grounded",
+        "reason": "line 1814 in article.rb (file has 1858 lines) [via app/models/article.rb]"
+      },
+      {
+        "file": "update_page_views_worker.rb",
+        "locator": "38",
+        "status": "grounded",
+        "reason": "line 38 in update_page_views_worker.rb (file has 77 lines) [via app/workers/articles/update_page_views_worker.rb]"
+      },
+      {
+        "file": "notification.rb",
+        "locator": "65",
+        "status": "grounded",
+        "reason": "line 65 in notification.rb (file has 240 lines) [via app/models/notification.rb]"
+      },
+      {
+        "file": "comment.rb",
+        "locator": "250",
+        "status": "grounded",
+        "reason": "line 250 in comment.rb (file has 482 lines) [via app/models/comment.rb]"
+      },
+      {
+        "file": "find_featured_story.rb",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in find_featured_story.rb (file has 35 lines) [via app/services/articles/feeds/find_featured_story.rb]"
+      },
+      {
+        "file": "app/models/concerns/reactable.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in app/models/concerns/reactable.rb (file has 101 lines)"
+      },
+      {
+        "file": "liquid_embeddable.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in liquid_embeddable.rb (file has 30 lines) [via app/models/concerns/liquid_embeddable.rb]"
+      },
+      {
+        "file": "webpage_trackable.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in webpage_trackable.rb (file has 27 lines) [via app/models/concerns/webpage_trackable.rb]"
+      },
+      {
+        "file": "user_subscription_sourceable.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in user_subscription_sourceable.rb (file has 64 lines) [via spec/models/shared_examples/user_subscription_sourceable.rb]"
+      },
+      {
+        "file": "reactable.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in reactable.rb (file has 101 lines) [via app/models/concerns/reactable.rb]"
+      }
+    ]
+  },
+  "gold_recall": {
+    "total": 26,
+    "mentioned": 19,
+    "cited": 4,
+    "mention_recall": 0.7308,
+    "cited_recall": 0.1538,
+    "groups": {
+      "contract": {
+        "total": 5,
+        "mentioned": 5,
+        "cited": 4,
+        "mention_recall": 1.0,
+        "cited_recall": 0.8
+      },
+      "write-path": {
+        "total": 2,
+        "mentioned": 1,
+        "cited": 0,
+        "mention_recall": 0.5,
+        "cited_recall": 0.0
+      },
+      "dependents": {
+        "total": 16,
+        "mentioned": 10,
+        "cited": 0,
+        "mention_recall": 0.625,
+        "cited_recall": 0.0
+      },
+      "specs": {
+        "total": 3,
+        "mentioned": 3,
+        "cited": 0,
+        "mention_recall": 1.0,
+        "cited_recall": 0.0
+      }
+    },
+    "missed_mention": [
+      "a:articles-ctrl",
+      "d:feed-tag",
+      "d:feed-event",
+      "d:tag-hotness",
+      "d:suggest-prominent",
+      "d:award-streak",
+      "d:audit-unpublish"
+    ],
+    "missed_cite": [
+      "c:taggable",
+      "a:articles-ctrl",
+      "a:creator",
+      "d:admin-tools",
+      "d:moderations",
+      "d:tag-adjustments",
+      "d:video-states",
+      "d:feed-tag",
+      "d:feed-event",
+      "d:tag-hotness",
+      "d:suggest-prominent",
+      "d:trend-detector",
+      "d:award-streak",
+      "d:welcome-gen",
+      "d:edge-cache",
+      "d:liquid-embed-extr",
+      "d:notifiable-action",
+      "d:audit-unpublish",
+      "d:interest-embed",
+      "spec:article",
+      "spec:articles-req",
+      "spec:creator"
+    ],
+    "details": [
+      {
+        "id": "article-model",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "c:reactable",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "c:taggable",
+        "group": "contract",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "c:liquid-embeddable",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "c:subscription-src",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "a:articles-ctrl",
+        "group": "write-path",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "a:creator",
+        "group": "write-path",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:admin-tools",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:moderations",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:tag-adjustments",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:video-states",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:feed-tag",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:feed-event",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:tag-hotness",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:suggest-prominent",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:trend-detector",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:award-streak",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:welcome-gen",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:edge-cache",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:liquid-embed-extr",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:notifiable-action",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "d:audit-unpublish",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:interest-embed",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "spec:article",
+        "group": "specs",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "spec:articles-req",
+        "group": "specs",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "spec:creator",
+        "group": "specs",
+        "mentioned": true,
+        "cited": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the codebase",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Article",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "concern",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 32,
+          "unique_refs": 40,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_conventions",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 4,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the Article contract and what it is built on",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "concern",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 32,
+          "unique_refs": 40,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "article.rb",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_conventions",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 4,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how an article and its attached data are handled on change",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Worker",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 32,
+          "unique_refs": 40,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.75,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Audit every dependent of the Article contract",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 32,
+          "unique_refs": 40,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.5,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how article identity and visibility are guarded",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 32,
+          "unique_refs": 40,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 0,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 0,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.5,
+      "fairness_score": 0.5
+    },
+    {
+      "name": "Assess the blast radius of the contract change",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 32,
+          "unique_refs": 40,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 0,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.0,
+      "combined_score": 0.6667,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Produce the change + verification map",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 32,
+          "unique_refs": 40,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "spec",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [],
+    "post_mcp_misses": [],
+    "has_mcp_tools": false,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 25,
+    "grep_count": 11,
+    "read_count": 13,
+    "mcp_count": 0,
+    "token_input_uncached": 2930,
+    "token_output": 25775,
+    "token_cache_read": 676358,
+    "token_cache_write": 49688,
+    "token_total_billed": 28705,
+    "token_total_all": 754751,
+    "wall_time_seconds": 307.9,
+    "cost_usd": 1.4956,
+    "effective_token_total_billed": 28705,
+    "effective_wall_time_seconds": 307.9,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 480,
+    "token_efficiency": 0.0432,
+    "time_efficiency": 0.3585,
+    "answer_chars": 39024,
+    "audit_chars": 140188,
+    "overhead": null
+  }
+}

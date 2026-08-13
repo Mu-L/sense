@@ -1,0 +1,1439 @@
+{
+  "scenario": "Mastodon work session - audit the Status contract before a teardown rework",
+  "repo": "mastodon",
+  "adoption_score": 0.775,
+  "keyword_coverage": 0.9444,
+  "step_avg_score": 0.8929,
+  "efficiency": 0.0,
+  "completeness": 0.9357,
+  "tool_fluency": 0.625,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 143,
+    "grounded": 142,
+    "unresolved": 0,
+    "hallucinated": 1,
+    "rate": 0.993,
+    "examples": {
+      "grounded": [
+        "app/models/status.rb:34 (line 34 in app/models/status.rb (file has 502 lines))",
+        "app/models/concerns/cacheable.rb:3 (line 3 in app/models/concerns/cacheable.rb (file has 25 lines))",
+        "app/models/concerns/status/visibility.rb:3 (line 3 in app/models/concerns/status/visibility.rb (file has 47 lines))",
+        "app/models/concerns/paginable.rb:3 (line 3 in app/models/concerns/paginable.rb (file has 32 lines))",
+        "app/models/concerns/status/fetch_replies_concern.rb:3 (line 3 in app/models/concerns/status/fetch_replies_concern.rb (file has 42 lines))"
+      ],
+      "unresolved": [],
+      "hallucinated": [
+        "app/workers/local_notification_worker.rb:80 (line 80 out of range (file only 23 lines))"
+      ]
+    },
+    "details": [
+      {
+        "file": "app/models/status.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/concerns/cacheable.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/cacheable.rb (file has 25 lines)"
+      },
+      {
+        "file": "app/models/concerns/status/visibility.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/status/visibility.rb (file has 47 lines)"
+      },
+      {
+        "file": "app/models/concerns/paginable.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/paginable.rb (file has 32 lines)"
+      },
+      {
+        "file": "app/models/concerns/status/fetch_replies_concern.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/status/fetch_replies_concern.rb (file has 42 lines)"
+      },
+      {
+        "file": "app/models/concerns/status/threading_concern.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/status/threading_concern.rb (file has 121 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "75",
+        "status": "grounded",
+        "reason": "line 75 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "82",
+        "status": "grounded",
+        "reason": "line 82 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "87",
+        "status": "grounded",
+        "reason": "line 87 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "89",
+        "status": "grounded",
+        "reason": "line 89 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "93",
+        "status": "grounded",
+        "reason": "line 93 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "110",
+        "status": "grounded",
+        "reason": "line 110 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "112",
+        "status": "grounded",
+        "reason": "line 112 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "157",
+        "status": "grounded",
+        "reason": "line 157 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "160",
+        "status": "grounded",
+        "reason": "line 160 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "163",
+        "status": "grounded",
+        "reason": "line 163 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "166",
+        "status": "grounded",
+        "reason": "line 166 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "171",
+        "status": "grounded",
+        "reason": "line 171 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "173",
+        "status": "grounded",
+        "reason": "line 173 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "178",
+        "status": "grounded",
+        "reason": "line 178 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "400",
+        "status": "grounded",
+        "reason": "line 400 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/create.rb",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in app/lib/activitypub/activity/create.rb (file has 492 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/create.rb",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in app/lib/activitypub/activity/create.rb (file has 492 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/create.rb",
+        "locator": "63",
+        "status": "grounded",
+        "reason": "line 63 in app/lib/activitypub/activity/create.rb (file has 492 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/create.rb",
+        "locator": "81",
+        "status": "grounded",
+        "reason": "line 81 in app/lib/activitypub/activity/create.rb (file has 492 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/create.rb",
+        "locator": "84",
+        "status": "grounded",
+        "reason": "line 84 in app/lib/activitypub/activity/create.rb (file has 492 lines)"
+      },
+      {
+        "file": "app/workers/distribution_worker.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in app/workers/distribution_worker.rb (file has 15 lines)"
+      },
+      {
+        "file": "app/services/fan_out_on_write_service.rb",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in app/services/fan_out_on_write_service.rb (file has 195 lines)"
+      },
+      {
+        "file": "app/services/fan_out_on_write_service.rb",
+        "locator": "41",
+        "status": "grounded",
+        "reason": "line 41 in app/services/fan_out_on_write_service.rb (file has 195 lines)"
+      },
+      {
+        "file": "app/services/fan_out_on_write_service.rb",
+        "locator": "62",
+        "status": "grounded",
+        "reason": "line 62 in app/services/fan_out_on_write_service.rb (file has 195 lines)"
+      },
+      {
+        "file": "app/services/fan_out_on_write_service.rb",
+        "locator": "66",
+        "status": "grounded",
+        "reason": "line 66 in app/services/fan_out_on_write_service.rb (file has 195 lines)"
+      },
+      {
+        "file": "app/workers/feed_insert_worker.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/workers/feed_insert_worker.rb (file has 86 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "76",
+        "status": "grounded",
+        "reason": "line 76 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "102",
+        "status": "grounded",
+        "reason": "line 102 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/workers/local_notification_worker.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/workers/local_notification_worker.rb (file has 23 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "90",
+        "status": "grounded",
+        "reason": "line 90 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "117",
+        "status": "grounded",
+        "reason": "line 117 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "231",
+        "status": "grounded",
+        "reason": "line 231 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "251",
+        "status": "grounded",
+        "reason": "line 251 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "134",
+        "status": "grounded",
+        "reason": "line 134 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "161",
+        "status": "grounded",
+        "reason": "line 161 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity.rb",
+        "locator": "70",
+        "status": "grounded",
+        "reason": "line 70 in app/lib/activitypub/activity.rb (file has 206 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/announce.rb",
+        "locator": "85",
+        "status": "grounded",
+        "reason": "line 85 in app/lib/activitypub/activity/announce.rb (file has 88 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/delete.rb",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in app/lib/activitypub/activity/delete.rb (file has 82 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/undo.rb",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in app/lib/activitypub/activity/undo.rb (file has 131 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/undo.rb",
+        "locator": "72",
+        "status": "grounded",
+        "reason": "line 72 in app/lib/activitypub/activity/undo.rb (file has 131 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/update.rb",
+        "locator": "29",
+        "status": "grounded",
+        "reason": "line 29 in app/lib/activitypub/activity/update.rb (file has 57 lines)"
+      },
+      {
+        "file": "app/lib/activitypub/activity/quote_request.rb",
+        "locator": "55",
+        "status": "grounded",
+        "reason": "line 55 in app/lib/activitypub/activity/quote_request.rb (file has 70 lines)"
+      },
+      {
+        "file": "app/services/activitypub/fetch_remote_status_service.rb",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in app/services/activitypub/fetch_remote_status_service.rb (file has 100 lines)"
+      },
+      {
+        "file": "app/services/activitypub/process_status_update_service.rb",
+        "locator": "42",
+        "status": "grounded",
+        "reason": "line 42 in app/services/activitypub/process_status_update_service.rb (file has 472 lines)"
+      },
+      {
+        "file": "app/workers/activitypub/fetch_replies_worker.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in app/workers/activitypub/fetch_replies_worker.rb (file has 14 lines)"
+      },
+      {
+        "file": "app/workers/activitypub/fetch_all_replies_worker.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in app/workers/activitypub/fetch_all_replies_worker.rb (file has 94 lines)"
+      },
+      {
+        "file": "app/workers/distribution_worker.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in app/workers/distribution_worker.rb (file has 15 lines)"
+      },
+      {
+        "file": "app/workers/email_distribution_worker.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in app/workers/email_distribution_worker.rb (file has 37 lines)"
+      },
+      {
+        "file": "app/workers/link_crawl_worker.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in app/workers/link_crawl_worker.rb (file has 13 lines)"
+      },
+      {
+        "file": "app/workers/thread_resolve_worker.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in app/workers/thread_resolve_worker.rb (file has 25 lines)"
+      },
+      {
+        "file": "app/workers/mention_resolve_worker.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in app/workers/mention_resolve_worker.rb (file has 33 lines)"
+      },
+      {
+        "file": "app/workers/tagged_collection_resolve_worker.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in app/workers/tagged_collection_resolve_worker.rb (file has 24 lines)"
+      },
+      {
+        "file": "app/workers/removal_worker.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/workers/removal_worker.rb (file has 11 lines)"
+      },
+      {
+        "file": "app/workers/push_update_worker.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/workers/push_update_worker.rb (file has 39 lines)"
+      },
+      {
+        "file": "app/workers/unfavourite_worker.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/workers/unfavourite_worker.rb (file has 11 lines)"
+      },
+      {
+        "file": "app/workers/unfilter_notifications_worker.rb",
+        "locator": "32",
+        "status": "grounded",
+        "reason": "line 32 in app/workers/unfilter_notifications_worker.rb (file has 48 lines)"
+      },
+      {
+        "file": "app/services/activitypub/fetch_all_replies_service.rb",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in app/services/activitypub/fetch_all_replies_service.rb (file has 54 lines)"
+      },
+      {
+        "file": "app/services/fan_out_on_write_service.rb",
+        "locator": "45",
+        "status": "grounded",
+        "reason": "line 45 in app/services/fan_out_on_write_service.rb (file has 195 lines)"
+      },
+      {
+        "file": "app/workers/local_notification_worker.rb",
+        "locator": "80",
+        "status": "hallucinated",
+        "reason": "line 80 out of range (file only 23 lines)"
+      },
+      {
+        "file": "app/models/quote.rb",
+        "locator": "102",
+        "status": "grounded",
+        "reason": "line 102 in app/models/quote.rb (file has 138 lines)"
+      },
+      {
+        "file": "app/policies/status_policy.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/policies/status_policy.rb (file has 89 lines)"
+      },
+      {
+        "file": "app/policies/admin/status_policy.rb",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in app/policies/admin/status_policy.rb (file has 33 lines)"
+      },
+      {
+        "file": "app/services/remove_status_service.rb",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in app/services/remove_status_service.rb (file has 169 lines)"
+      },
+      {
+        "file": "app/services/remove_status_service.rb",
+        "locator": "134",
+        "status": "grounded",
+        "reason": "line 134 in app/services/remove_status_service.rb (file has 169 lines)"
+      },
+      {
+        "file": "app/lib/status_filter.rb",
+        "locator": "69",
+        "status": "grounded",
+        "reason": "line 69 in app/lib/status_filter.rb (file has 72 lines)"
+      },
+      {
+        "file": "app/controllers/api/oembed_controller.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in app/controllers/api/oembed_controller.rb (file has 26 lines)"
+      },
+      {
+        "file": "app/lib/status_reach_finder.rb",
+        "locator": "96",
+        "status": "grounded",
+        "reason": "line 96 in app/lib/status_reach_finder.rb (file has 118 lines)"
+      },
+      {
+        "file": "app/lib/admin/system_check/media_privacy_check.rb",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in app/lib/admin/system_check/media_privacy_check.rb (file has 105 lines)"
+      },
+      {
+        "file": "app/services/delete_account_service.rb",
+        "locator": "160",
+        "status": "grounded",
+        "reason": "line 160 in app/services/delete_account_service.rb (file has 330 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "479",
+        "status": "grounded",
+        "reason": "line 479 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/models/status_pin.rb",
+        "locator": "20",
+        "status": "grounded",
+        "reason": "line 20 in app/models/status_pin.rb (file has 33 lines)"
+      },
+      {
+        "file": "app/models/status_pin.rb",
+        "locator": "26",
+        "status": "grounded",
+        "reason": "line 26 in app/models/status_pin.rb (file has 33 lines)"
+      },
+      {
+        "file": "app/models/favourite.rb",
+        "locator": "47",
+        "status": "grounded",
+        "reason": "line 47 in app/models/favourite.rb (file has 52 lines)"
+      },
+      {
+        "file": "app/models/bookmark.rb",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in app/models/bookmark.rb (file has 35 lines)"
+      },
+      {
+        "file": "app/workers/scheduler/accounts_statuses_cleanup_scheduler.rb",
+        "locator": "100",
+        "status": "grounded",
+        "reason": "line 100 in app/workers/scheduler/accounts_statuses_cleanup_scheduler.rb (file has 131 lines)"
+      },
+      {
+        "file": "app/workers/scheduler/user_cleanup_scheduler.rb",
+        "locator": "29",
+        "status": "grounded",
+        "reason": "line 29 in app/workers/scheduler/user_cleanup_scheduler.rb (file has 42 lines)"
+      },
+      {
+        "file": "app/models/account_statuses_cleanup_policy.rb",
+        "locator": "101",
+        "status": "grounded",
+        "reason": "line 101 in app/models/account_statuses_cleanup_policy.rb (file has 194 lines)"
+      },
+      {
+        "file": "app/lib/account_statuses_filter.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in app/lib/account_statuses_filter.rb (file has 151 lines)"
+      },
+      {
+        "file": "app/services/backup_service.rb",
+        "locator": "154",
+        "status": "grounded",
+        "reason": "line 154 in app/services/backup_service.rb (file has 214 lines)"
+      },
+      {
+        "file": "app/services/backup_service.rb",
+        "locator": "182",
+        "status": "grounded",
+        "reason": "line 182 in app/services/backup_service.rb (file has 214 lines)"
+      },
+      {
+        "file": "app/models/form/import.rb",
+        "locator": "98",
+        "status": "grounded",
+        "reason": "line 98 in app/models/form/import.rb (file has 224 lines)"
+      },
+      {
+        "file": "app/lib/importer/public_statuses_index_importer.rb",
+        "locator": "29",
+        "status": "grounded",
+        "reason": "line 29 in app/lib/importer/public_statuses_index_importer.rb (file has 32 lines)"
+      },
+      {
+        "file": "app/lib/importer/statuses_index_importer.rb",
+        "locator": "77",
+        "status": "grounded",
+        "reason": "line 77 in app/lib/importer/statuses_index_importer.rb (file has 80 lines)"
+      },
+      {
+        "file": "app/models/status_edit.rb",
+        "locator": "85",
+        "status": "grounded",
+        "reason": "line 85 in app/models/status_edit.rb (file has 105 lines)"
+      },
+      {
+        "file": "app/lib/vacuum/statuses_vacuum.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in app/lib/vacuum/statuses_vacuum.rb (file has 47 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "271",
+        "status": "grounded",
+        "reason": "line 271 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "399",
+        "status": "grounded",
+        "reason": "line 399 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "lib/mastodon/cli/statuses.rb",
+        "locator": "40",
+        "status": "grounded",
+        "reason": "line 40 in lib/mastodon/cli/statuses.rb (file has 203 lines)"
+      },
+      {
+        "file": "lib/mastodon/cli/accounts.rb",
+        "locator": "576",
+        "status": "grounded",
+        "reason": "line 576 in lib/mastodon/cli/accounts.rb (file has 621 lines)"
+      },
+      {
+        "file": "lib/mastodon/cli/cache.rb",
+        "locator": "47",
+        "status": "grounded",
+        "reason": "line 47 in lib/mastodon/cli/cache.rb (file has 72 lines)"
+      },
+      {
+        "file": "app/controllers/accounts_controller.rb",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in app/controllers/accounts_controller.rb (file has 108 lines)"
+      },
+      {
+        "file": "app/controllers/accounts_controller.rb",
+        "locator": "54",
+        "status": "grounded",
+        "reason": "line 54 in app/controllers/accounts_controller.rb (file has 108 lines)"
+      },
+      {
+        "file": "app/controllers/accounts_controller.rb",
+        "locator": "58",
+        "status": "grounded",
+        "reason": "line 58 in app/controllers/accounts_controller.rb (file has 108 lines)"
+      },
+      {
+        "file": "app/controllers/accounts_controller.rb",
+        "locator": "62",
+        "status": "grounded",
+        "reason": "line 62 in app/controllers/accounts_controller.rb (file has 108 lines)"
+      },
+      {
+        "file": "app/controllers/activitypub/collections_controller.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in app/controllers/activitypub/collections_controller.rb (file has 82 lines)"
+      },
+      {
+        "file": "app/controllers/activitypub/outboxes_controller.rb",
+        "locator": "56",
+        "status": "grounded",
+        "reason": "line 56 in app/controllers/activitypub/outboxes_controller.rb (file has 80 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/accounts/statuses_controller.rb",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in app/controllers/api/v1/accounts/statuses_controller.rb (file has 53 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/bookmarks_controller.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in app/controllers/api/v1/bookmarks_controller.rb (file has 49 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/favourites_controller.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in app/controllers/api/v1/favourites_controller.rb (file has 49 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/statuses/base_controller.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in app/controllers/api/v1/statuses/base_controller.rb (file has 16 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/statuses/contexts_controller.rb",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in app/controllers/api/v1/statuses/contexts_controller.rb (file has 67 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/statuses/favourites_controller.rb",
+        "locator": "13",
+        "status": "grounded",
+        "reason": "line 13 in app/controllers/api/v1/statuses/favourites_controller.rb (file has 31 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/statuses/reblogs_controller.rb",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in app/controllers/api/v1/statuses/reblogs_controller.rb (file has 55 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/statuses_controller.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in app/controllers/api/v1/statuses_controller.rb (file has 175 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/statuses_controller.rb",
+        "locator": "24",
+        "status": "grounded",
+        "reason": "line 24 in app/controllers/api/v1/statuses_controller.rb (file has 175 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/statuses_controller.rb",
+        "locator": "55",
+        "status": "grounded",
+        "reason": "line 55 in app/controllers/api/v1/statuses_controller.rb (file has 175 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/statuses_controller.rb",
+        "locator": "76",
+        "status": "grounded",
+        "reason": "line 76 in app/controllers/api/v1/statuses_controller.rb (file has 175 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/timelines/home_controller.rb",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in app/controllers/api/v1/timelines/home_controller.rb (file has 55 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/timelines/public_controller.rb",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in app/controllers/api/v1/timelines/public_controller.rb (file has 60 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/timelines/tag_controller.rb",
+        "locator": "25",
+        "status": "grounded",
+        "reason": "line 25 in app/controllers/api/v1/timelines/tag_controller.rb (file has 58 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/trends/statuses_controller.rb",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in app/controllers/api/v1/trends/statuses_controller.rb (file has 50 lines)"
+      },
+      {
+        "file": "app/controllers/api/v1/notifications_controller.rb",
+        "locator": "47",
+        "status": "grounded",
+        "reason": "line 47 in app/controllers/api/v1/notifications_controller.rb (file has 96 lines)"
+      },
+      {
+        "file": "app/controllers/api/v2/notifications_controller.rb",
+        "locator": "66",
+        "status": "grounded",
+        "reason": "line 66 in app/controllers/api/v2/notifications_controller.rb (file has 156 lines)"
+      },
+      {
+        "file": "app/models/concerns/status/visibility.rb",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in app/models/concerns/status/visibility.rb (file has 47 lines)"
+      },
+      {
+        "file": "app/models/concerns/status/visibility.rb",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in app/models/concerns/status/visibility.rb (file has 47 lines)"
+      },
+      {
+        "file": "app/models/concerns/status/visibility.rb",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in app/models/concerns/status/visibility.rb (file has 47 lines)"
+      },
+      {
+        "file": "app/models/concerns/status/visibility.rb",
+        "locator": "39",
+        "status": "grounded",
+        "reason": "line 39 in app/models/concerns/status/visibility.rb (file has 47 lines)"
+      },
+      {
+        "file": "app/models/concerns/status/visibility.rb",
+        "locator": "44",
+        "status": "grounded",
+        "reason": "line 44 in app/models/concerns/status/visibility.rb (file has 47 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "407",
+        "status": "grounded",
+        "reason": "line 407 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/services/remove_status_service.rb",
+        "locator": "124",
+        "status": "grounded",
+        "reason": "line 124 in app/services/remove_status_service.rb (file has 169 lines)"
+      },
+      {
+        "file": "app/services/remove_status_service.rb",
+        "locator": "24",
+        "status": "grounded",
+        "reason": "line 24 in app/services/remove_status_service.rb (file has 169 lines)"
+      },
+      {
+        "file": "app/services/fan_out_on_write_service.rb",
+        "locator": "38",
+        "status": "grounded",
+        "reason": "line 38 in app/services/fan_out_on_write_service.rb (file has 195 lines)"
+      },
+      {
+        "file": "app/services/fan_out_on_write_service.rb",
+        "locator": "189",
+        "status": "grounded",
+        "reason": "line 189 in app/services/fan_out_on_write_service.rb (file has 195 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "133",
+        "status": "grounded",
+        "reason": "line 133 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "286",
+        "status": "grounded",
+        "reason": "line 286 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "332",
+        "status": "grounded",
+        "reason": "line 332 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "448",
+        "status": "grounded",
+        "reason": "line 448 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "app/lib/feed_manager.rb",
+        "locator": "498",
+        "status": "grounded",
+        "reason": "line 498 in app/lib/feed_manager.rb (file has 676 lines)"
+      },
+      {
+        "file": "db/migrate/20161202132159_add_in_reply_to_account_id_to_statuses.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in db/migrate/20161202132159_add_in_reply_to_account_id_to_statuses.rb (file has 20 lines)"
+      },
+      {
+        "file": "db/migrate/20170209184350_add_reply_to_statuses.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in db/migrate/20170209184350_add_reply_to_statuses.rb (file has 12 lines)"
+      },
+      {
+        "file": "app/services/remove_status_service.rb",
+        "locator": "114",
+        "status": "grounded",
+        "reason": "line 114 in app/services/remove_status_service.rb (file has 169 lines)"
+      },
+      {
+        "file": "app/models/status.rb",
+        "locator": "88",
+        "status": "grounded",
+        "reason": "line 88 in app/models/status.rb (file has 502 lines)"
+      },
+      {
+        "file": "app/serializers/rest/status_serializer.rb",
+        "locator": "64",
+        "status": "grounded",
+        "reason": "line 64 in app/serializers/rest/status_serializer.rb (file has 217 lines)"
+      },
+      {
+        "file": "app/services/update_status_service.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in app/services/update_status_service.rb (file has 174 lines)"
+      },
+      {
+        "file": "app/services/process_mentions_service.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in app/services/process_mentions_service.rb (file has 97 lines)"
+      },
+      {
+        "file": "app/services/process_links_service.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in app/services/process_links_service.rb (file has 56 lines)"
+      },
+      {
+        "file": "app/services/notify_service.rb",
+        "locator": "76",
+        "status": "grounded",
+        "reason": "line 76 in app/services/notify_service.rb (file has 320 lines)"
+      }
+    ]
+  },
+  "gold_recall": {
+    "total": 23,
+    "mentioned": 12,
+    "cited": 11,
+    "mention_recall": 0.5217,
+    "cited_recall": 0.4783,
+    "groups": {
+      "contract": {
+        "total": 3,
+        "mentioned": 3,
+        "cited": 3,
+        "mention_recall": 1.0,
+        "cited_recall": 1.0
+      },
+      "write-path": {
+        "total": 2,
+        "mentioned": 1,
+        "cited": 1,
+        "mention_recall": 0.5,
+        "cited_recall": 0.5
+      },
+      "dependents": {
+        "total": 16,
+        "mentioned": 7,
+        "cited": 7,
+        "mention_recall": 0.4375,
+        "cited_recall": 0.4375
+      },
+      "specs": {
+        "total": 2,
+        "mentioned": 1,
+        "cited": 0,
+        "mention_recall": 0.5,
+        "cited_recall": 0.0
+      }
+    },
+    "missed_mention": [
+      "a:post-service",
+      "d:feed-redis",
+      "d:link-feed",
+      "d:permalink",
+      "d:account-warning",
+      "d:moderation-act",
+      "d:report-service",
+      "d:account-merge",
+      "d:annual-report",
+      "d:media-attach",
+      "spec:post-svc"
+    ],
+    "missed_cite": [
+      "a:post-service",
+      "d:feed-redis",
+      "d:link-feed",
+      "d:permalink",
+      "d:account-warning",
+      "d:moderation-act",
+      "d:report-service",
+      "d:account-merge",
+      "d:annual-report",
+      "d:media-attach",
+      "spec:status",
+      "spec:post-svc"
+    ],
+    "details": [
+      {
+        "id": "status-model",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "c:visibility",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "c:threading",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "a:statuses-ctrl",
+        "group": "write-path",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "a:post-service",
+        "group": "write-path",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:feed-manager",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:feed-redis",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:link-feed",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:ap-announce",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:process-links",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:permalink",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:account-warning",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:moderation-act",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:report-service",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:account-merge",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:backup",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:annual-report",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:email-dist",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:user-cleanup",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:unfilter",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:media-attach",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "spec:status",
+        "group": "specs",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "spec:post-svc",
+        "group": "specs",
+        "mentioned": false,
+        "cited": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the codebase",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Status",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 81,
+          "unique_refs": 143,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_conventions",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 3,
+      "total_bonus": 3,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the Status contract and what it is built on",
+      "checks": [
+        {
+          "hit": false,
+          "type": "word",
+          "value": "concern",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 81,
+          "unique_refs": 143,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "status.rb",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 3,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.6667,
+      "combined_score": 0.8,
+      "fairness_score": 0.75
+    },
+    {
+      "name": "Trace how a status is created and distributed",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "feed",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 81,
+          "unique_refs": 143,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Audit every dependent of the Status contract",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 81,
+          "unique_refs": 143,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 0.5,
+      "combined_score": 0.75,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how status identity and visibility are guarded",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 81,
+          "unique_refs": 143,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 0,
+      "hits_bonus": 2,
+      "total_bonus": 2,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 0,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 0.5
+    },
+    {
+      "name": "Assess the blast radius of the contract change",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 81,
+          "unique_refs": 143,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Produce the change + verification map",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 81,
+          "unique_refs": 143,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "spec",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [
+      "Read(status.rb)",
+      "Read(visibility.rb)",
+      "Read(paginable.rb)",
+      "Read(cacheable.rb)",
+      "Read(create.rb)",
+      "Read(distribution_worker.rb)",
+      "Read(feed_insert_worker.rb)",
+      "Read(distribution_worker.rb)",
+      "Read(fetch_replies_concern.rb)",
+      "Read(paginable.rb)",
+      "Read(cacheable.rb)",
+      "Read(feed_insert_worker.rb)",
+      "Read(distribution_worker.rb)",
+      "Read(feed_manager.rb)",
+      "Read(status.rb)",
+      "Read(feed_insert_worker.rb)",
+      "Read(distribution_worker.rb)",
+      "Read(fan_out_on_write_service.rb)",
+      "Read(fan_out_on_write_service.rb)",
+      "Read(feed_insert_worker.rb)",
+      "Read(distribution_worker.rb)",
+      "Read(feed_insert_worker.rb)",
+      "Read(fan_out_on_write_service.rb)",
+      "Read(local_notification_worker.rb)",
+      "Read(feed_insert_worker.rb)",
+      "Read(fan_out_on_write_service.rb)",
+      "Read(local_notification_worker.rb)",
+      "Read(remove_status_service.rb)",
+      "Read(status.rb)",
+      "Read(status.rb)",
+      "Read(remove_status_service.rb)",
+      "Read(status.rb)",
+      "Read(visibility.rb)",
+      "Read(backup_service.rb)",
+      "Read(account_statuses_filter.rb)",
+      "Read(status.rb)",
+      "Read(visibility.rb)",
+      "Read(feed_insert_worker.rb)",
+      "Read(distribution_worker.rb)",
+      "Read(fan_out_on_write_service.rb)",
+      "Read(local_notification_worker.rb)",
+      "Read(feed_manager.rb)",
+      "Read(feed_manager.rb)",
+      "Read(remove_status_service.rb)"
+    ],
+    "post_mcp_misses": [
+      "Glob(app/models/concerns/status/*.rb)",
+      "Glob(app/models/concerns/status/*.rb)",
+      "Glob(app/workers/*.rb)",
+      "Glob(**/workers/**/*.rb)",
+      "Glob(**/lib/*worker.rb)",
+      "Glob(**/status*.rb)"
+    ],
+    "has_mcp_tools": true,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 44, post-MCP misses: 6 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 60,
+    "grep_count": 6,
+    "read_count": 44,
+    "mcp_count": 10,
+    "token_input_uncached": 1157265,
+    "token_output": 7922,
+    "token_cache_read": 0,
+    "token_cache_write": 0,
+    "token_total_billed": 1165187,
+    "token_total_all": 1165187,
+    "wall_time_seconds": 0.0,
+    "cost_usd": null,
+    "effective_token_total_billed": 1165187,
+    "effective_wall_time_seconds": 0.0,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 480,
+    "token_efficiency": 0.0,
+    "time_efficiency": 0.0,
+    "answer_chars": 20170,
+    "audit_chars": 298164,
+    "overhead": null
+  }
+}

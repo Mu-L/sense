@@ -1,0 +1,458 @@
+{
+  "scenario": "Flask WSGI dispatch trace and debug instrumentation",
+  "repo": "flask",
+  "adoption_score": 0.68,
+  "keyword_coverage": 1.0,
+  "step_avg_score": 1.0,
+  "efficiency": 0.5495,
+  "completeness": 0.9688,
+  "tool_fluency": 0.8333,
+  "discoverability": 0.45,
+  "citation_grounding": {
+    "total": 26,
+    "grounded": 26,
+    "unresolved": 0,
+    "hallucinated": 0,
+    "rate": 1.0,
+    "examples": {
+      "grounded": [
+        "src/flask/app.py:1618 (line 1618 in src/flask/app.py (file has 1625 lines))",
+        "src/flask/app.py:1625 (line 1625 in src/flask/app.py (file has 1625 lines))",
+        "src/flask/app.py:1566 (line 1566 in src/flask/app.py (file has 1625 lines))",
+        "src/flask/app.py:1501 (line 1501 in src/flask/app.py (file has 1625 lines))",
+        "src/flask/ctx.py:416 (line 416 in src/flask/ctx.py (file has 540 lines))"
+      ],
+      "unresolved": [],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "src/flask/app.py",
+        "locator": "1618",
+        "status": "grounded",
+        "reason": "line 1618 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1625",
+        "status": "grounded",
+        "reason": "line 1625 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1566",
+        "status": "grounded",
+        "reason": "line 1566 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1501",
+        "status": "grounded",
+        "reason": "line 1501 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/ctx.py",
+        "locator": "416",
+        "status": "grounded",
+        "reason": "line 416 in src/flask/ctx.py (file has 540 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1597",
+        "status": "grounded",
+        "reason": "line 1597 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1600",
+        "status": "grounded",
+        "reason": "line 1600 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/ctx.py",
+        "locator": "446",
+        "status": "grounded",
+        "reason": "line 446 in src/flask/ctx.py (file has 540 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "992",
+        "status": "grounded",
+        "reason": "line 992 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1366",
+        "status": "grounded",
+        "reason": "line 1366 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "966",
+        "status": "grounded",
+        "reason": "line 966 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1021",
+        "status": "grounded",
+        "reason": "line 1021 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1224",
+        "status": "grounded",
+        "reason": "line 1224 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/json/provider.py",
+        "locator": "89",
+        "status": "grounded",
+        "reason": "line 89 in src/flask/json/provider.py (file has 215 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1394",
+        "status": "grounded",
+        "reason": "line 1394 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/sessions.py",
+        "locator": "162",
+        "status": "grounded",
+        "reason": "line 162 in src/flask/sessions.py (file has 385 lines)"
+      },
+      {
+        "file": "src/flask/ctx.py",
+        "locator": "381",
+        "status": "grounded",
+        "reason": "line 381 in src/flask/ctx.py (file has 540 lines)"
+      },
+      {
+        "file": "src/flask/sessions.py",
+        "locator": "263",
+        "status": "grounded",
+        "reason": "line 263 in src/flask/sessions.py (file has 385 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1577",
+        "status": "grounded",
+        "reason": "line 1577 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1622",
+        "status": "grounded",
+        "reason": "line 1622 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "src/flask/app.py",
+        "locator": "1592",
+        "status": "grounded",
+        "reason": "line 1592 in src/flask/app.py (file has 1625 lines)"
+      },
+      {
+        "file": "tests/test_basic.py",
+        "locator": "298",
+        "status": "grounded",
+        "reason": "line 298 in tests/test_basic.py (file has 1970 lines)"
+      },
+      {
+        "file": "tests/test_blueprints.py",
+        "locator": ":test_request_processing",
+        "status": "grounded",
+        "reason": "`test_request_processing` found in tests/test_blueprints.py"
+      },
+      {
+        "file": "tests/test_signals.py",
+        "locator": ":test_request_signals",
+        "status": "grounded",
+        "reason": "`test_request_signals` found in tests/test_signals.py"
+      },
+      {
+        "file": "tests/test_async.py",
+        "locator": ":test_async_before_after_request",
+        "status": "grounded",
+        "reason": "`test_async_before_after_request` found in tests/test_async.py"
+      },
+      {
+        "file": "tests/test_testing.py",
+        "locator": ":test_full_url_request",
+        "status": "grounded",
+        "reason": "`test_full_url_request` found in tests/test_testing.py"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Trace the request dispatch pipeline",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "wsgi_app",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "full_dispatch_request",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "preprocess_request",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "dispatch_request",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "finalize_request",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "make_response",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "process_response",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "2",
+          "unique_files": 9,
+          "unique_refs": 26,
+          "threshold": 2,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "app.py",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 8,
+      "total_required": 8,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 8,
+      "fairness_total_required": 8,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Find internal callers of wsgi_app",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "__call__",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "wsgi_app",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "2",
+          "unique_files": 9,
+          "unique_refs": 26,
+          "threshold": 2,
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "app.py:1625",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 3,
+      "total_bonus": 4,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.75,
+      "combined_score": 0.875,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Locate test coverage for the dispatch pipeline",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "test_basic.py",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "2",
+          "unique_files": 9,
+          "unique_refs": 26,
+          "threshold": 2,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "test_",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "test_blueprints.py",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 2,
+      "total_bonus": 2,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Assess impact of adding a debug parameter",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "__call__",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "wsgi_app",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "2",
+          "unique_files": 9,
+          "unique_refs": 26,
+          "threshold": 2,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "subclass",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "middleware",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "AppContext",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 5,
+      "total_bonus": 5,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 4,
+      "fairness_total_bonus": 4,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [
+      "Read(app.py)",
+      "Read(app.py)"
+    ],
+    "post_mcp_misses": [
+      "Grep(wsgi_app)",
+      "Grep(wsgi_app)"
+    ],
+    "has_mcp_tools": true,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 2, post-MCP misses: 2 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 15,
+    "grep_count": 2,
+    "read_count": 2,
+    "mcp_count": 10,
+    "token_input_uncached": 30,
+    "token_output": 8487,
+    "token_cache_read": 128380,
+    "token_cache_write": 36901,
+    "token_total_billed": 8517,
+    "token_total_all": 173798,
+    "wall_time_seconds": 106.6,
+    "cost_usd": 0.5083,
+    "efficiency_ceiling": 15000,
+    "time_ceiling_seconds": 320,
+    "token_efficiency": 0.4322,
+    "time_efficiency": 0.6669,
+    "answer_chars": 13863,
+    "audit_chars": 50892
+  }
+}

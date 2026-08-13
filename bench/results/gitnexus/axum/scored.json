@@ -1,0 +1,497 @@
+{
+  "scenario": "Axum Handler trait propagation and request context layer assessment",
+  "repo": "axum",
+  "adoption_score": 0.4857,
+  "keyword_coverage": 1.0,
+  "step_avg_score": 1.0,
+  "efficiency": 0.5,
+  "completeness": 0.916,
+  "tool_fluency": 0.1429,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 35,
+    "grounded": 35,
+    "unresolved": 0,
+    "hallucinated": 0,
+    "rate": 1.0,
+    "examples": {
+      "grounded": [
+        "axum/src/handler/service.rs:165 (line 165 in axum/src/handler/service.rs (file has 201 lines))",
+        "service.rs:171 (line 171 in service.rs (file has 201 lines) [via axum/src/handler/service.rs])",
+        "method_routing.rs:1167 (line 1167 in method_routing.rs (file has 1723 lines) [via axum/src/routing/method_routing.rs])",
+        "axum/src/handler/service.rs:22 (line 22 in axum/src/handler/service.rs (file has 201 lines))",
+        "axum/src/handler/service.rs:146 (line 146 in axum/src/handler/service.rs (file has 201 lines))"
+      ],
+      "unresolved": [],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "axum/src/handler/service.rs",
+        "locator": "165",
+        "status": "grounded",
+        "reason": "line 165 in axum/src/handler/service.rs (file has 201 lines)"
+      },
+      {
+        "file": "service.rs",
+        "locator": "171",
+        "status": "grounded",
+        "reason": "line 171 in service.rs (file has 201 lines) [via axum/src/handler/service.rs]"
+      },
+      {
+        "file": "method_routing.rs",
+        "locator": "1167",
+        "status": "grounded",
+        "reason": "line 1167 in method_routing.rs (file has 1723 lines) [via axum/src/routing/method_routing.rs]"
+      },
+      {
+        "file": "axum/src/handler/service.rs",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in axum/src/handler/service.rs (file has 201 lines)"
+      },
+      {
+        "file": "axum/src/handler/service.rs",
+        "locator": "146",
+        "status": "grounded",
+        "reason": "line 146 in axum/src/handler/service.rs (file has 201 lines)"
+      },
+      {
+        "file": "axum/src/extract/mod.rs",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in axum/src/extract/mod.rs (file has 109 lines)"
+      },
+      {
+        "file": "mod.rs",
+        "locator": "56",
+        "status": "grounded",
+        "reason": "line 56 in mod.rs (file has 1354 lines) [via axum/src/routing/tests/mod.rs]"
+      },
+      {
+        "file": "mod.rs",
+        "locator": "82",
+        "status": "grounded",
+        "reason": "line 82 in mod.rs (file has 1354 lines) [via axum/src/routing/tests/mod.rs]"
+      },
+      {
+        "file": "axum-core/src/extract/mod.rs",
+        "locator": "107",
+        "status": "grounded",
+        "reason": "line 107 in axum-core/src/extract/mod.rs (file has 129 lines)"
+      },
+      {
+        "file": "axum/src/routing/into_make_service.rs",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in axum/src/routing/into_make_service.rs (file has 56 lines)"
+      },
+      {
+        "file": "axum/src/routing/mod.rs",
+        "locator": "591",
+        "status": "grounded",
+        "reason": "line 591 in axum/src/routing/mod.rs (file has 840 lines)"
+      },
+      {
+        "file": "extract/connect_info.rs",
+        "locator": "IntoMakeServiceWithConnectInfo",
+        "status": "grounded",
+        "reason": "`IntoMakeServiceWithConnectInfo` found in extract/connect_info.rs [via axum/src/extract/connect_info.rs]"
+      },
+      {
+        "file": "routing/mod.rs",
+        "locator": "599",
+        "status": "grounded",
+        "reason": "line 599 in routing/mod.rs (file has 840 lines) [via axum/src/routing/mod.rs]"
+      },
+      {
+        "file": "routing/mod.rs",
+        "locator": "452",
+        "status": "grounded",
+        "reason": "line 452 in routing/mod.rs (file has 840 lines) [via axum/src/routing/mod.rs]"
+      },
+      {
+        "file": "axum/src/routing/path_router.rs",
+        "locator": "325",
+        "status": "grounded",
+        "reason": "line 325 in axum/src/routing/path_router.rs (file has 477 lines)"
+      },
+      {
+        "file": "axum/src/routing/method_routing.rs",
+        "locator": "1167",
+        "status": "grounded",
+        "reason": "line 1167 in axum/src/routing/method_routing.rs (file has 1723 lines)"
+      },
+      {
+        "file": "service.rs",
+        "locator": "165",
+        "status": "grounded",
+        "reason": "line 165 in service.rs (file has 201 lines) [via axum/src/handler/service.rs]"
+      },
+      {
+        "file": "handler/mod.rs",
+        "locator": "227",
+        "status": "grounded",
+        "reason": "line 227 in handler/mod.rs (file has 447 lines) [via axum/src/handler/mod.rs]"
+      },
+      {
+        "file": "axum-core/src/response/into_response.rs",
+        "locator": "115",
+        "status": "grounded",
+        "reason": "line 115 in axum-core/src/response/into_response.rs (file has 519 lines)"
+      },
+      {
+        "file": "handler/mod.rs",
+        "locator": "255",
+        "status": "grounded",
+        "reason": "line 255 in handler/mod.rs (file has 447 lines) [via axum/src/handler/mod.rs]"
+      },
+      {
+        "file": "service.rs",
+        "locator": "172",
+        "status": "grounded",
+        "reason": "line 172 in service.rs (file has 201 lines) [via axum/src/handler/service.rs]"
+      },
+      {
+        "file": "routing/route.rs",
+        "locator": "108",
+        "status": "grounded",
+        "reason": "line 108 in routing/route.rs (file has 248 lines) [via axum/src/routing/route.rs]"
+      },
+      {
+        "file": "handler/mod.rs",
+        "locator": "189",
+        "status": "grounded",
+        "reason": "line 189 in handler/mod.rs (file has 447 lines) [via axum/src/handler/mod.rs]"
+      },
+      {
+        "file": "routing/mod.rs",
+        "locator": "313",
+        "status": "grounded",
+        "reason": "line 313 in routing/mod.rs (file has 840 lines) [via axum/src/routing/mod.rs]"
+      },
+      {
+        "file": "routing/mod.rs",
+        "locator": "296",
+        "status": "grounded",
+        "reason": "line 296 in routing/mod.rs (file has 840 lines) [via axum/src/routing/mod.rs]"
+      },
+      {
+        "file": "axum/src/extract/matched_path.rs",
+        "locator": "67",
+        "status": "grounded",
+        "reason": "line 67 in axum/src/extract/matched_path.rs (file has 447 lines)"
+      },
+      {
+        "file": "axum/src/extension.rs",
+        "locator": "83",
+        "status": "grounded",
+        "reason": "line 83 in axum/src/extension.rs (file has 246 lines)"
+      },
+      {
+        "file": "matched_path.rs",
+        "locator": "84",
+        "status": "grounded",
+        "reason": "line 84 in matched_path.rs (file has 447 lines) [via axum/src/extract/matched_path.rs]"
+      },
+      {
+        "file": "axum/src/extract/mod.rs",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in axum/src/extract/mod.rs (file has 109 lines)"
+      },
+      {
+        "file": "axum/src/extract/mod.rs",
+        "locator": "53",
+        "status": "grounded",
+        "reason": "line 53 in axum/src/extract/mod.rs (file has 109 lines)"
+      },
+      {
+        "file": "handler/mod.rs",
+        "locator": "208",
+        "status": "grounded",
+        "reason": "line 208 in handler/mod.rs (file has 447 lines) [via axum/src/handler/mod.rs]"
+      },
+      {
+        "file": "method_routing.rs",
+        "locator": "1355",
+        "status": "grounded",
+        "reason": "line 1355 in method_routing.rs (file has 1723 lines) [via axum/src/routing/method_routing.rs]"
+      },
+      {
+        "file": "path_router.rs",
+        "locator": "325",
+        "status": "grounded",
+        "reason": "line 325 in path_router.rs (file has 477 lines) [via axum/src/routing/path_router.rs]"
+      },
+      {
+        "file": "routing/path_router.rs",
+        "locator": "347",
+        "status": "grounded",
+        "reason": "line 347 in routing/path_router.rs (file has 477 lines) [via axum/src/routing/path_router.rs]"
+      },
+      {
+        "file": "matched_path.rs",
+        "locator": "73",
+        "status": "grounded",
+        "reason": "line 73 in matched_path.rs (file has 447 lines) [via axum/src/extract/matched_path.rs]"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Find all Handler trait implementations",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "IntoResponseHandler",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Layered",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 20,
+          "unique_refs": 35,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "all_the_tuples",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "handler/mod.rs",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "HandlerCallWithExtractors",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 3,
+      "total_required": 3,
+      "hits_bonus": 3,
+      "total_bonus": 4,
+      "fairness_hits_required": 3,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 3,
+      "fairness_total_bonus": 3,
+      "score_required": 1.0,
+      "score_bonus": 0.75,
+      "combined_score": 0.9,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace the extractor chain",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "FromRequestParts",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "FromRequest",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "5",
+          "unique_files": 20,
+          "unique_refs": 35,
+          "threshold": 5,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "FromRef",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Extension",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 3,
+      "total_required": 3,
+      "hits_bonus": 2,
+      "total_bonus": 3,
+      "fairness_hits_required": 3,
+      "fairness_total_required": 3,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 0.6667,
+      "combined_score": 0.8889,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace the full serve-to-response lifecycle",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "call_with_state",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 20,
+          "unique_refs": 35,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "PathRouter",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "MethodRouter",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "TowerToHyperService",
+          "layer": "fairness"
+        },
+        {
+          "hit": false,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 3,
+      "total_bonus": 4,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 3,
+      "fairness_total_bonus": 3,
+      "score_required": 1.0,
+      "score_bonus": 0.75,
+      "combined_score": 0.875,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Assess adding a request context layer",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Extension",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Handler",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Router",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "tower",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "MatchedPath",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "word",
+          "value": "route_layer",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 2,
+      "total_required": 2,
+      "hits_bonus": 4,
+      "total_bonus": 4,
+      "fairness_hits_required": 2,
+      "fairness_total_required": 2,
+      "fairness_hits_bonus": 4,
+      "fairness_total_bonus": 4,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [],
+    "post_mcp_misses": [],
+    "has_mcp_tools": false,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 0, post-MCP misses: 0 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 28,
+    "grep_count": 6,
+    "read_count": 18,
+    "mcp_count": 1,
+    "token_input_uncached": 33,
+    "token_output": 11932,
+    "token_cache_read": 1247715,
+    "token_cache_write": 95971,
+    "token_total_billed": 11965,
+    "token_total_all": 1355651,
+    "wall_time_seconds": 192.8,
+    "cost_usd": 1.5233,
+    "efficiency_ceiling": 20000,
+    "time_ceiling_seconds": 480,
+    "token_efficiency": 0.4018,
+    "time_efficiency": 0.5983,
+    "answer_chars": 20243,
+    "audit_chars": 142205
+  }
+}

@@ -1,0 +1,149 @@
+name: Next.js SSR render path tracing and request ID threading
+repo: nextjs
+description: 'Trace the Next.js SSR rendering pipeline from HTTP request entry
+
+  through component loading to HTML generation. Understand the layered
+
+  architecture and assess threading a request ID through the pipeline.
+
+  '
+steps:
+- name: Orient in the Next.js server architecture
+  prompt: "You're an AI coding agent about to extend Next.js's server side.
+    Hand the next agent the map: key server classes with file:line, major
+    subdirectories (app-render, route-modules, response-cache), and the
+    Pages vs App Router split with concrete files. The follow-up agent
+    should need only small, targeted lookups — not a fresh exploration
+    of the monorepo. No Explore agents.
+    "
+  checks:
+  - type: word
+    value: NextNodeServer
+    required: true
+  - type: contains
+    value: base-server
+    required: true
+    description: References the base server file (class is Server, not BaseServer)
+  - type: response_richness
+    value: '4'
+    required: true
+    description: Referenced 4+ files in orientation
+  - type: contains
+    value: app-render
+    required: false
+  - type: contains
+    value: Pages
+    required: false
+  - type: word
+    value: NextCustomServer
+    required: false
+    description: Found the 4th server class in the hierarchy via graph traversal
+- name: Trace the SSR request lifecycle
+  prompt: "You're about to add a render-time hook in Next.js. Trace the
+    full SSR pipeline for the next agent so they can insert at the right
+    layer: request entry, routing, loadComponents, Pages Router
+    renderToHTMLImpl, App Router renderToHTMLOrFlight — with file:line
+    and method calls at each layer. The follow-up agent should need only
+    small, targeted lookups — not a fresh exploration of the monorepo.
+    "
+  checks:
+  - type: word
+    value: handleRequest
+    required: true
+  - type: word
+    value: renderToHTML
+    required: true
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Referenced 6+ files across the SSR pipeline
+  - type: word
+    value: loadComponents
+    required: false
+  - type: word
+    value: findPageComponents
+    required: false
+  - type: word
+    value: render.tsx
+    required: false
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: contains
+    value: router-server
+    required: false
+    description: Named the outermost HTTP entry point before NextNodeServer
+  - type: word
+    value: renderToHTMLOrFlightImpl
+    required: false
+    description: Distinguished the inner implementation from the exported wrapper
+      function
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+    description: Used structural graph query for SSR lifecycle tracing
+- name: Find callers of renderToHTMLOrFlight
+  prompt: "You're about to change the signature of renderToHTMLOrFlight.
+    Hand the next agent every caller — file:line, enclosing function or
+    class, and subdirectory (app-render / route-modules / next-server) —
+    plus the export site that re-exports it. The follow-up agent should
+    need only small, targeted lookups — not a fresh exploration of the
+    monorepo.
+    "
+  checks:
+  - type: contains
+    value: renderToHTMLOrFlight
+    required: true
+  - type: contains
+    value: app-render
+    required: true
+  - type: response_richness
+    value: '3'
+    required: false
+    description: Referenced 3+ files in caller analysis
+  - type: contains
+    value: route-modules
+    required: false
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+    description: Used structural graph for caller analysis of renderToHTMLOrFlight
+- name: Assess where to thread a request ID
+  prompt: "You're about to add an X-Request-Id header to every Next.js
+    response, generated early in the request lifecycle and available
+    throughout rendering. Produce the edit map: where to generate, how
+    to propagate (RequestMeta vs AsyncLocalStorage), how response-cache
+    interacts, which test files need updates — with file:line for every
+    touched site. The follow-up agent should need only small, targeted
+    lookups — not a fresh exploration of the monorepo.
+    "
+  checks:
+  - type: contains
+    value: RequestMeta
+    required: true
+  - type: word
+    value: handleRequest
+    required: true
+  - type: response_richness
+    value: '5'
+    required: false
+    description: Referenced 5+ files in request-ID assessment
+  - type: contains
+    value: cache
+    required: false
+  - type: word
+    value: NEXT_REQUEST_ID_HEADER
+    required: true
+    description: Found the existing request ID header constant — changes the implementation plan
+  - type: mcp_tool_used
+    value: sense_search
+    required: false
+    layer: adoption
+    description: Used semantic search to find existing request ID infrastructure
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30

@@ -1,0 +1,334 @@
+{
+  "scenario": "dolt work session - audit what retains access into the core database object before a lifecycle rework",
+  "repo": "dolt",
+  "judge": {
+    "model": "claude-opus-4-7",
+    "prompt_version": "v2-rel",
+    "rubric_path": "dolt.rubric.yaml"
+  },
+  "scenario_quality": 0.8261,
+  "relationship_audit": {
+    "total": 12,
+    "covered": 7,
+    "related": 7,
+    "contradicted": 0,
+    "covered_recall": 0.5833,
+    "related_recall": 0.5833,
+    "grounded_precision": 1.0,
+    "missed_covered": [
+      "remotesrv-cache",
+      "metrics-cluster",
+      "cluster-dial",
+      "cs-metrics",
+      "pull-hasmanyer"
+    ],
+    "missed_related": [
+      "remotesrv-cache",
+      "metrics-cluster",
+      "cluster-dial",
+      "cs-metrics",
+      "pull-hasmanyer"
+    ],
+    "contradictions": [],
+    "items": [
+      {
+        "id": "dbfactory-file",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "backups-table",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "datas-roottracker",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "prolly-nodestore",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "types-valuestore",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "remotesrv-cache",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "spec-db",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "cli-queryist",
+        "covered": true,
+        "related": true,
+        "contradicted": false
+      },
+      {
+        "id": "metrics-cluster",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "cluster-dial",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "cs-metrics",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      },
+      {
+        "id": "pull-hasmanyer",
+        "covered": false,
+        "related": false,
+        "contradicted": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": "Orient in the codebase",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Clearly names Dolt as a Go versioned SQL database, points to go/cmd/dolt for CLI, go/libraries/doltcore for core, sqle for SQL integration, and go/store for storage \u2014 exactly the map the agent needs. Storage layers (datas/types/prolly tree/nbs) are explicitly enumerated."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every location is given as file:line (e.g. `go/libraries/doltcore/doltdb/doltdb.go:125` for DoltDB, `go/store/nbs/generational_chunk_store.go:40`) rather than vague prose."
+        },
+        "justification": {
+          "score": 0.7,
+          "rationale": "Says it used rg and line-numbered reads and shows field-by-field inspection, but the orientation summary itself doesn't cite the specific inspection that grounded each layer claim beyond the line references."
+        },
+        "uncertainty": {
+          "score": 0.5,
+          "rationale": "The answer asserts confidently throughout; `verification_performed` notes no tests were run, but does not flag any layer or handoff claim as unverified or assumption-laden."
+        },
+        "relationship": {
+          "score": 0.9,
+          "rationale": "Correctly relates core object to storage: DoltDB \u2192 datas.Database \u2192 ValueStore/rootTracker \u2192 ChunkStore, and NodeStore \u2192 ChunkStore, with the nbs generational stack underneath \u2014 the chain is coherent and correct."
+        }
+      },
+      "step_quality": 0.84,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 535,
+        "cache_creation_input_tokens": 30248,
+        "cache_read_input_tokens": 32906
+      }
+    },
+    {
+      "step": "Map the storage lifecycle contract",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "The storage_lifecycle_contract section maps root tracking (rootTracker), root swap (ChunkStore.Commit), chunk-store reachability, cache purge, and working-set updates including per-transaction root points \u2014 the full contract a rework would touch."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every layer is pinned with file:line and a one-phrase role, e.g. 'go/store/datas/database_common.go:50 narrows root access to rootTracker' and 'go/libraries/doltcore/doltdb/doltdb.go:247 ... swap the storage root with ChunkStore.Commit(current,last)'."
+        },
+        "justification": {
+          "score": 0.75,
+          "rationale": "Claims are anchored in specific fields and method sites (unwraps chunks.ChunkStore, rootTracker interface), evidencing inspection rather than name-inference, though not every layer explains what was read."
+        },
+        "uncertainty": {
+          "score": 0.3,
+          "rationale": "The answer asserts the contract with uniform confidence; verification_performed only says 'rg and line-numbered file reads', with no flag on ambiguous or unverified layers."
+        },
+        "relationship": {
+          "score": 0.85,
+          "rationale": "Layer-to-layer relations are explicit and correct: ValueStore implements rootTracker, datas.database embeds ValueStore, ChunkStoreFromDatabase unwraps chunk store, DoltDB.db wraps datas.Database via hooksDatabase \u2014 the wrap/reach chain is stated, not just listed."
+        }
+      },
+      "step_quality": 0.7875,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 575,
+        "cache_creation_input_tokens": 30236,
+        "cache_read_input_tokens": 32906
+      }
+    },
+    {
+      "step": "Trace how query access is handed out",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "The `query_access_handoff` array walks a real end-to-end path from MultiRepoEnv through sqle.Database, DoltDatabaseProvider, engine catalog, DoltSession, and finally CLI QueryistContext caching \u2014 in order and covering construction and handoff."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every hop carries a file:line (e.g. `go/cmd/dolt/commands/engine/sqlengine.go:153`, `go/libraries/doltcore/sqle/database.go:221`, `go/cmd/dolt/cli/cli_context.go:101`), presented sequentially."
+        },
+        "justification": {
+          "score": 0.75,
+          "rationale": "The ordering is implied by the call chain shown (collects \u2192 iterates \u2192 constructs \u2192 passes \u2192 retains \u2192 installs \u2192 creates session), but the answer does not explicitly quote call sites or say \"X calls Y\" for each hop \u2014 reasonable but not adversarial evidence."
+        },
+        "uncertainty": {
+          "score": 0.5,
+          "rationale": "The answer flags interface-vs-runtime type ambiguity for provider (\"only typed as ... but at runtime is normally\"), but does not admit any gaps in the traced hop sequence itself."
+        },
+        "relationship": {
+          "score": 0.9,
+          "rationale": "Hop-to-hop relations are stated concretely: who constructs (ProviderFactory.NewProvider), who receives (dsess.NewDoltSession), who retains (DoltSession.provider, activeContext), including the narrowed-interface handoff to the provider."
+        }
+      },
+      "step_quality": 0.825,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 573,
+        "cache_creation_input_tokens": 30212,
+        "cache_read_input_tokens": 32906
+      }
+    },
+    {
+      "step": "Audit every production holder that retains access into the core database lifecycle",
+      "scores": {
+        "map_quality": {
+          "score": 0.95,
+          "rationale": "Enumerates the full cross-package ring: core/storage, env/sessions, provider/engine, SQL databases/tables, system tables & table functions, indexes/iterators, and background replication/GC/stats/remotesrv \u2014 well beyond in-package DoltDB users."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every holder is transcribed individually with a file:line for its retaining field (e.g. `sqle/dsess/session.go:49`, `dtables/status_table.go:36`, `cluster/commithook.go:50`); no group is collapsed to 'several wrappers'."
+        },
+        "justification": {
+          "score": 0.85,
+          "rationale": "Each inclusion is justified by naming the retaining field and what it holds (e.g. 'DoltTable.db retains dsess.SqlDatabase interface'), not by proximity; a few entries lean on 'embeds' without further evidence but are accurate."
+        },
+        "uncertainty": {
+          "score": 0.4,
+          "rationale": "The audit reads as exhaustive with no explicit acknowledgment that grep-based enumeration could miss holders (e.g. dynamic satisfiers, generated code); only a terse `verification_performed` note appears."
+        },
+        "relationship": {
+          "score": 0.95,
+          "rationale": "The narrowed_interface_routes section explicitly chains each interface-typed field to its concrete satisfier and DoltDB (e.g. DoltSession.provider \u2192 *sqle.DoltDatabaseProvider \u2192 databases map \u2192 sqle.Database \u2192 DoltDB), covering the no-compile-tie holders precisely."
+        }
+      },
+      "step_quality": 0.88,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 597,
+        "cache_creation_input_tokens": 30435,
+        "cache_read_input_tokens": 32906
+      }
+    },
+    {
+      "step": "Trace the narrowed-interface routes",
+      "scores": {
+        "map_quality": {
+          "score": 0.85,
+          "rationale": "The narrowed_interface_routes section traces each interface-typed field mechanically \u2014 field, interface type, and runtime satisfier \u2014 for the DoltSession.provider, DoltDatabaseProvider.databases, DoltTable.db, RootSetter, RootsProvider, datas.Database, rootTracker, and StatsController.pro routes. Covers the main narrowed routes an agent needs."
+        },
+        "specificity": {
+          "score": 0.9,
+          "rationale": "Nearly every hop is pinned to file:line (e.g. 'go/libraries/doltcore/sqle/dsess/session.go:49', 'go/cmd/dolt/commands/engine/sqlengine.go:609', 'go/libraries/doltcore/sqle/database.go:221'). Each route names field, interface, and satisfier locations."
+        },
+        "justification": {
+          "score": 0.75,
+          "rationale": "Satisfier claims are grounded in construction sites (e.g. 'constructed at sqlengine.go:609 from *sqle.DoltDatabaseProvider') and cast sites ('runtime casts to dsess.SqlDatabase at dolt_diff.go:337'), though some assertions rest on the reader trusting the transcribed lines."
+        },
+        "uncertainty": {
+          "score": 0.3,
+          "rationale": "The answer confidently asserts every satisfier chain without flagging any as unverified; only a generic 'used rg and line-numbered file reads' note appears. No route is marked as needing confirmation."
+        },
+        "relationship": {
+          "score": 0.9,
+          "rationale": "Retention semantics are explicit per route: 'DoltSession.provider is dsess.DoltDatabaseProvider; ... underlying provider retains databases ... entries are sqle.Database ... with DoltDB retained at database.go:221' spells out what stays alive because the field holds it, across each interface-typed hop."
+        }
+      },
+      "step_quality": 0.8025,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 678,
+        "cache_creation_input_tokens": 30226,
+        "cache_read_input_tokens": 32906
+      }
+    },
+    {
+      "step": "Assess the blast radius of the lifecycle rework",
+      "scores": {
+        "map_quality": {
+          "score": 0.9,
+          "rationale": "The blast_radius_ranked section covers every area found in the audit (core/storage, sessions/transactions, providers/caches, background GC/stats/cluster/remotesrv, SQL tables/table functions, indexes/iterators) with tiered risk buckets. Ranking is realistic \u2014 critical for root/chunk store and session/transaction stale-DB, high for provider caches and background workers."
+        },
+        "specificity": {
+          "score": 0.95,
+          "rationale": "Every at-risk holder in the ranked lists is pinned to file:line (e.g. `go/libraries/doltcore/sqle/dsess/session.go:49`, `auto_gc.go:302`, `cluster/commithook.go:50`), and the edit_targets and tests_to_update lists also carry file:line."
+        },
+        "justification": {
+          "score": 0.8,
+          "rationale": "Each risk tier has a short 'why' tied to the holder's role and lifetime \u2014 e.g. 'Background GC, stats, standby replication, and remotesrv operate after query construction and are most likely to leak or race stale storage.' Justifications are role/lifetime-based rather than asserted, though brief."
+        },
+        "uncertainty": {
+          "score": 0.5,
+          "rationale": "verification_performed acknowledges audit-only and no tests run, but the ranked risk assessment itself doesn't flag any holder as unknown-risk or needing verification; all are assigned a bucket with confidence."
+        },
+        "relationship": {
+          "score": 0.85,
+          "rationale": "The risk reasoning uses the retention route explicitly for narrowed-interface holders \u2014 e.g. session provider retention behind the `dsess.DoltDatabaseProvider` interface, table functions casting `sql.Database` to `dsess.SqlDatabase`, RootSetter/RootsProvider casts \u2014 leveraging the narrowed_interface_routes section to ground the no-compile-time-tie risks."
+        }
+      },
+      "step_quality": 0.845,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 692,
+        "cache_creation_input_tokens": 30265,
+        "cache_read_input_tokens": 32906
+      }
+    },
+    {
+      "step": "Produce the change + verification map",
+      "scores": {
+        "map_quality": {
+          "score": 0.85,
+          "rationale": "Delivers an actionable landing map: edit_targets, must_review grouped by area, and tests_to_update_or_add covering sessions, transactions, providers, background systems, and iterators. A teammate could act on it, though must_review delegates by reference to the earlier area lists rather than re-transcribing."
+        },
+        "specificity": {
+          "score": 0.85,
+          "rationale": "Edit targets and test targets carry file:line throughout (e.g., 'go/libraries/doltcore/sqle/dsess/session_cache.go:67'). Test items name concrete files, though a few tests are described by domain rather than pointing at existing test file paths."
+        },
+        "justification": {
+          "score": 0.8,
+          "rationale": "Each test item ties back to a specific found holder (e.g., transactions.go:93/:302, cluster/commithook.go:47/:50), and edit_targets mirror the audit's storage and provider anchors. The traceability from audit to review item is explicit."
+        },
+        "uncertainty": {
+          "score": 0.6,
+          "rationale": "verification_performed notes 'no tests run because ... read-only' but does not flag which review items or satisfier chains remain unconfirmed. Uncertainty is admitted at the process level, not per-item."
+        },
+        "relationship": {
+          "score": 0.85,
+          "rationale": "Review items are grouped by the retention-route areas from the audit, and test items name the retaining fields (SqlDatabase, RootSetter, RootsProvider, NodeStore) that connect each holder to the core object, preserving the audited relations."
+        }
+      },
+      "step_quality": 0.8025,
+      "usage": {
+        "input_tokens": 6,
+        "output_tokens": 557,
+        "cache_creation_input_tokens": 30227,
+        "cache_read_input_tokens": 32906
+      }
+    }
+  ]
+}

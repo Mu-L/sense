@@ -1,0 +1,1672 @@
+{
+  "scenario": "Discourse work session - audit the Upload contract before a teardown rework",
+  "repo": "discourse",
+  "adoption_score": 1.0,
+  "keyword_coverage": 1.0,
+  "step_avg_score": 0.9286,
+  "efficiency": 0.2322,
+  "completeness": 1.0,
+  "tool_fluency": 1.0,
+  "discoverability": 1.0,
+  "citation_grounding": {
+    "total": 188,
+    "grounded": 183,
+    "unresolved": 5,
+    "hallucinated": 0,
+    "rate": 0.9734,
+    "examples": {
+      "grounded": [
+        "app/models/upload.rb:5 (line 5 in app/models/upload.rb (file has 736 lines))",
+        "app/models/concerns/has_url.rb:3 (line 3 in app/models/concerns/has_url.rb (file has 74 lines))",
+        "lib/validators/upload_validator.rb:5 (line 5 in lib/validators/upload_validator.rb (file has 230 lines))",
+        "lib/upload_creator.rb:5 (line 5 in lib/upload_creator.rb (file has 695 lines))",
+        "lib/upload_security.rb:27 (line 27 in lib/upload_security.rb (file has 198 lines))"
+      ],
+      "unresolved": [
+        ".../fonts_controller.rb:6 (file not found at .../fonts_controller.rb)",
+        ".../about_controller.rb:7 (file not found at .../about_controller.rb)",
+        ".../check_video_conversion_status.rb:6 (file not found at .../check_video_conversion_status.rb)",
+        "plugins/chat/.../create_message.rb:153 (file not found at plugins/chat/.../create_message.rb)",
+        ".../event.rb:338 (file not found at .../event.rb)"
+      ],
+      "hallucinated": []
+    },
+    "details": [
+      {
+        "file": "app/models/upload.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in app/models/upload.rb (file has 736 lines)"
+      },
+      {
+        "file": "app/models/concerns/has_url.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/concerns/has_url.rb (file has 74 lines)"
+      },
+      {
+        "file": "lib/validators/upload_validator.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in lib/validators/upload_validator.rb (file has 230 lines)"
+      },
+      {
+        "file": "lib/upload_creator.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in lib/upload_creator.rb (file has 695 lines)"
+      },
+      {
+        "file": "lib/upload_security.rb",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in lib/upload_security.rb (file has 198 lines)"
+      },
+      {
+        "file": "app/models/upload.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/models/upload.rb (file has 736 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "app/models/optimized_image.rb",
+        "locator": "4",
+        "status": "grounded",
+        "reason": "line 4 in app/models/optimized_image.rb (file has 398 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "484",
+        "status": "grounded",
+        "reason": "line 484 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "51",
+        "status": "grounded",
+        "reason": "line 51 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "17",
+        "status": "grounded",
+        "reason": "line 17 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "18",
+        "status": "grounded",
+        "reason": "line 18 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "31",
+        "status": "grounded",
+        "reason": "line 31 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "app/models/upload_reference.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/upload_reference.rb (file has 66 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "32",
+        "status": "grounded",
+        "reason": "line 32 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "app/models/user_upload.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/user_upload.rb (file has 21 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "34",
+        "status": "grounded",
+        "reason": "line 34 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "33",
+        "status": "grounded",
+        "reason": "line 33 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "27",
+        "status": "grounded",
+        "reason": "line 27 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "app/models/optimized_image.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/optimized_image.rb (file has 398 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "28",
+        "status": "grounded",
+        "reason": "line 28 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "app/models/optimized_video.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/optimized_video.rb (file has 82 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "26",
+        "status": "grounded",
+        "reason": "line 26 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "53",
+        "status": "grounded",
+        "reason": "line 53 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "60",
+        "status": "grounded",
+        "reason": "line 60 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "212",
+        "status": "grounded",
+        "reason": "line 212 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload_creator.rb",
+        "locator": "170",
+        "status": "grounded",
+        "reason": "line 170 in upload_creator.rb (file has 695 lines) [via lib/upload_creator.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "76",
+        "status": "grounded",
+        "reason": "line 76 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "96",
+        "status": "grounded",
+        "reason": "line 96 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "lib/upload_creator.rb",
+        "locator": "59",
+        "status": "grounded",
+        "reason": "line 59 in lib/upload_creator.rb (file has 695 lines)"
+      },
+      {
+        "file": "upload_creator.rb",
+        "locator": "91",
+        "status": "grounded",
+        "reason": "line 91 in upload_creator.rb (file has 695 lines) [via lib/upload_creator.rb]"
+      },
+      {
+        "file": "lib/file_store/base_store.rb",
+        "locator": "12",
+        "status": "grounded",
+        "reason": "line 12 in lib/file_store/base_store.rb (file has 236 lines)"
+      },
+      {
+        "file": "base_store.rb",
+        "locator": "124",
+        "status": "grounded",
+        "reason": "line 124 in base_store.rb (file has 236 lines) [via lib/file_store/base_store.rb]"
+      },
+      {
+        "file": "app/services/external_upload_manager.rb",
+        "locator": "144",
+        "status": "grounded",
+        "reason": "line 144 in app/services/external_upload_manager.rb (file has 218 lines)"
+      },
+      {
+        "file": "app/models/optimized_image.rb",
+        "locator": "35",
+        "status": "grounded",
+        "reason": "line 35 in app/models/optimized_image.rb (file has 398 lines)"
+      },
+      {
+        "file": "optimized_image.rb",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in optimized_image.rb (file has 398 lines) [via app/models/optimized_image.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "147",
+        "status": "grounded",
+        "reason": "line 147 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "lib/cooked_post_processor.rb",
+        "locator": "143",
+        "status": "grounded",
+        "reason": "line 143 in lib/cooked_post_processor.rb (file has 288 lines)"
+      },
+      {
+        "file": "app/models/concerns/has_post_upload_references.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/models/concerns/has_post_upload_references.rb (file has 148 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "690",
+        "status": "grounded",
+        "reason": "line 690 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "app/jobs/regular/convert_video.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in app/jobs/regular/convert_video.rb (file has 34 lines)"
+      },
+      {
+        "file": "app/jobs/regular/check_video_conversion_status.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/jobs/regular/check_video_conversion_status.rb (file has 40 lines)"
+      },
+      {
+        "file": "app/jobs/regular/pull_hotlinked_images.rb",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in app/jobs/regular/pull_hotlinked_images.rb (file has 255 lines)"
+      },
+      {
+        "file": "app/jobs/scheduled/backfill_dominant_colors.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/jobs/scheduled/backfill_dominant_colors.rb (file has 11 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "492",
+        "status": "grounded",
+        "reason": "line 492 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "lib/cooked_post_processor.rb",
+        "locator": "221",
+        "status": "grounded",
+        "reason": "line 221 in lib/cooked_post_processor.rb (file has 288 lines)"
+      },
+      {
+        "file": "app/models/concerns/has_post_upload_references.rb",
+        "locator": "56",
+        "status": "grounded",
+        "reason": "line 56 in app/models/concerns/has_post_upload_references.rb (file has 148 lines)"
+      },
+      {
+        "file": "app/models/post.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/models/post.rb (file has 1308 lines)"
+      },
+      {
+        "file": "app/models/post.rb",
+        "locator": "588",
+        "status": "grounded",
+        "reason": "line 588 in app/models/post.rb (file has 1308 lines)"
+      },
+      {
+        "file": "app/models/post_localization.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/post_localization.rb (file has 43 lines)"
+      },
+      {
+        "file": "app/services/inline_uploads.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in app/services/inline_uploads.rb (file has 320 lines)"
+      },
+      {
+        "file": "lib/pretty_text/helpers.rb",
+        "locator": "41",
+        "status": "grounded",
+        "reason": "line 41 in lib/pretty_text/helpers.rb (file has 142 lines)"
+      },
+      {
+        "file": "app/models/upload.rb",
+        "locator": "135",
+        "status": "grounded",
+        "reason": "line 135 in app/models/upload.rb (file has 736 lines)"
+      },
+      {
+        "file": "app/models/upload_reference.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/models/upload_reference.rb (file has 66 lines)"
+      },
+      {
+        "file": "app/models/draft.rb",
+        "locator": "19",
+        "status": "grounded",
+        "reason": "line 19 in app/models/draft.rb (file has 367 lines)"
+      },
+      {
+        "file": "lib/file_store/s3_store.rb",
+        "locator": "232",
+        "status": "grounded",
+        "reason": "line 232 in lib/file_store/s3_store.rb (file has 567 lines)"
+      },
+      {
+        "file": "lib/file_store/local_store.rb",
+        "locator": "106",
+        "status": "grounded",
+        "reason": "line 106 in lib/file_store/local_store.rb (file has 152 lines)"
+      },
+      {
+        "file": "app/services/problem_check/s3_cdn.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/services/problem_check/s3_cdn.rb (file has 12 lines)"
+      },
+      {
+        "file": "app/jobs/onceoff/correct_missing_dualstack_urls.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in app/jobs/onceoff/correct_missing_dualstack_urls.rb (file has 28 lines)"
+      },
+      {
+        "file": "app/jobs/onceoff/fix_s3_etags.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in app/jobs/onceoff/fix_s3_etags.rb (file has 13 lines)"
+      },
+      {
+        "file": "app/models/site_setting.rb",
+        "locator": "289",
+        "status": "grounded",
+        "reason": "line 289 in app/models/site_setting.rb (file has 427 lines)"
+      },
+      {
+        "file": "lib/final_destination/ssrf_detector.rb",
+        "locator": "64",
+        "status": "grounded",
+        "reason": "line 64 in lib/final_destination/ssrf_detector.rb (file has 132 lines)"
+      },
+      {
+        "file": "app/jobs/scheduled/clean_up_uploads.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/jobs/scheduled/clean_up_uploads.rb (file has 79 lines)"
+      },
+      {
+        "file": "app/jobs/onceoff/fix_invalid_gravatar_uploads.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in app/jobs/onceoff/fix_invalid_gravatar_uploads.rb (file has 25 lines)"
+      },
+      {
+        "file": "app/jobs/regular/download_profile_background_from_url.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/jobs/regular/download_profile_background_from_url.rb (file has 23 lines)"
+      },
+      {
+        "file": "lib/email/receiver.rb",
+        "locator": "1373",
+        "status": "grounded",
+        "reason": "line 1373 in lib/email/receiver.rb (file has 1682 lines)"
+      },
+      {
+        "file": "lib/email/styles.rb",
+        "locator": "361",
+        "status": "grounded",
+        "reason": "line 361 in lib/email/styles.rb (file has 599 lines)"
+      },
+      {
+        "file": "lib/backup_restore/creator.rb",
+        "locator": "216",
+        "status": "grounded",
+        "reason": "line 216 in lib/backup_restore/creator.rb (file has 555 lines)"
+      },
+      {
+        "file": "lib/backup_restore/creator.rb",
+        "locator": "126",
+        "status": "grounded",
+        "reason": "line 126 in lib/backup_restore/creator.rb (file has 555 lines)"
+      },
+      {
+        "file": "lib/backup_restore/backup_store.rb",
+        "locator": "76",
+        "status": "grounded",
+        "reason": "line 76 in lib/backup_restore/backup_store.rb (file has 108 lines)"
+      },
+      {
+        "file": "app/models/theme_field.rb",
+        "locator": "699",
+        "status": "grounded",
+        "reason": "line 699 in app/models/theme_field.rb (file has 760 lines)"
+      },
+      {
+        "file": "lib/theme_settings_manager/upload.rb",
+        "locator": "30",
+        "status": "grounded",
+        "reason": "line 30 in lib/theme_settings_manager/upload.rb (file has 46 lines)"
+      },
+      {
+        "file": "app/services/site_setting/splash_screen_image_changed.rb",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in app/services/site_setting/splash_screen_image_changed.rb (file has 79 lines)"
+      },
+      {
+        "file": "app/helpers/application_helper.rb",
+        "locator": "576",
+        "status": "grounded",
+        "reason": "line 576 in app/helpers/application_helper.rb (file has 1108 lines)"
+      },
+      {
+        "file": "app/controllers/metadata_controller.rb",
+        "locator": "46",
+        "status": "grounded",
+        "reason": "line 46 in app/controllers/metadata_controller.rb (file has 141 lines)"
+      },
+      {
+        "file": "lib/wizard/step_updater.rb",
+        "locator": "33",
+        "status": "grounded",
+        "reason": "line 33 in lib/wizard/step_updater.rb (file has 60 lines)"
+      },
+      {
+        "file": "lib/site_settings/validations.rb",
+        "locator": "170",
+        "status": "grounded",
+        "reason": "line 170 in lib/site_settings/validations.rb (file has 304 lines)"
+      },
+      {
+        "file": "lib/validators/upload_setting_validator.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in lib/validators/upload_setting_validator.rb (file has 47 lines)"
+      },
+      {
+        "file": "app/controllers/admin/config/logo_controller.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/controllers/admin/config/logo_controller.rb (file has 44 lines)"
+      },
+      {
+        "file": ".../fonts_controller.rb",
+        "locator": "6",
+        "status": "unresolved",
+        "reason": "file not found at .../fonts_controller.rb"
+      },
+      {
+        "file": ".../about_controller.rb",
+        "locator": "7",
+        "status": "unresolved",
+        "reason": "file not found at .../about_controller.rb"
+      },
+      {
+        "file": "app/controllers/admin/site_settings_controller.rb",
+        "locator": "22",
+        "status": "grounded",
+        "reason": "line 22 in app/controllers/admin/site_settings_controller.rb (file has 159 lines)"
+      },
+      {
+        "file": "app/controllers/categories_controller.rb",
+        "locator": "223",
+        "status": "grounded",
+        "reason": "line 223 in app/controllers/categories_controller.rb (file has 770 lines)"
+      },
+      {
+        "file": "app/models/upload.rb",
+        "locator": "53",
+        "status": "grounded",
+        "reason": "line 53 in app/models/upload.rb (file has 736 lines)"
+      },
+      {
+        "file": "app/models/user_profile.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/user_profile.rb (file has 249 lines)"
+      },
+      {
+        "file": "app/models/user_avatar.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/user_avatar.rb (file has 232 lines)"
+      },
+      {
+        "file": "app/models/user.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/user.rb (file has 2375 lines)"
+      },
+      {
+        "file": "app/controllers/user_avatars_controller.rb",
+        "locator": "85",
+        "status": "grounded",
+        "reason": "line 85 in app/controllers/user_avatars_controller.rb (file has 232 lines)"
+      },
+      {
+        "file": "app/models/discourse_connect.rb",
+        "locator": "338",
+        "status": "grounded",
+        "reason": "line 338 in app/models/discourse_connect.rb (file has 450 lines)"
+      },
+      {
+        "file": "app/models/concerns/reports/top_uploads.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/models/concerns/reports/top_uploads.rb (file has 86 lines)"
+      },
+      {
+        "file": "app/jobs/regular/export_user_archive.rb",
+        "locator": "215",
+        "status": "grounded",
+        "reason": "line 215 in app/jobs/regular/export_user_archive.rb (file has 675 lines)"
+      },
+      {
+        "file": "lib/plugin/instance.rb",
+        "locator": "397",
+        "status": "grounded",
+        "reason": "line 397 in lib/plugin/instance.rb (file has 1680 lines)"
+      },
+      {
+        "file": "app/models/upload.rb",
+        "locator": "96",
+        "status": "grounded",
+        "reason": "line 96 in app/models/upload.rb (file has 736 lines)"
+      },
+      {
+        "file": "app/controllers/uploads_controller.rb",
+        "locator": "109",
+        "status": "grounded",
+        "reason": "line 109 in app/controllers/uploads_controller.rb (file has 406 lines)"
+      },
+      {
+        "file": "app/services/video_conversion/aws_media_convert_adapter.rb",
+        "locator": "311",
+        "status": "grounded",
+        "reason": "line 311 in app/services/video_conversion/aws_media_convert_adapter.rb (file has 439 lines)"
+      },
+      {
+        "file": "app/models/badge.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in app/models/badge.rb (file has 374 lines)"
+      },
+      {
+        "file": "plugins/chat/app/services/chat/create_message.rb",
+        "locator": "153",
+        "status": "grounded",
+        "reason": "line 153 in plugins/chat/app/services/chat/create_message.rb (file has 292 lines)"
+      },
+      {
+        "file": "plugins/chat/lib/chat/message_processor.rb",
+        "locator": "94",
+        "status": "grounded",
+        "reason": "line 94 in plugins/chat/lib/chat/message_processor.rb (file has 178 lines)"
+      },
+      {
+        "file": "plugins/discourse-ai/app/models/rag_document_fragment.rb",
+        "locator": "70",
+        "status": "grounded",
+        "reason": "line 70 in plugins/discourse-ai/app/models/rag_document_fragment.rb (file has 182 lines)"
+      },
+      {
+        "file": "plugins/discourse-ai/app/jobs/regular/digest_rag_upload.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in plugins/discourse-ai/app/jobs/regular/digest_rag_upload.rb (file has 204 lines)"
+      },
+      {
+        "file": "plugins/discourse-ai/lib/agents/tools/create_image.rb",
+        "locator": "36",
+        "status": "grounded",
+        "reason": "line 36 in plugins/discourse-ai/lib/agents/tools/create_image.rb (file has 140 lines)"
+      },
+      {
+        "file": "plugins/discourse-ai/lib/agents/tools/edit_image.rb",
+        "locator": "47",
+        "status": "grounded",
+        "reason": "line 47 in plugins/discourse-ai/lib/agents/tools/edit_image.rb (file has 156 lines)"
+      },
+      {
+        "file": "plugins/discourse-ai/lib/completions/upload_encoder.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in plugins/discourse-ai/lib/completions/upload_encoder.rb (file has 144 lines)"
+      },
+      {
+        "file": "plugins/discourse-ai/lib/completions/dialects/dialect.rb",
+        "locator": "189",
+        "status": "grounded",
+        "reason": "line 189 in plugins/discourse-ai/lib/completions/dialects/dialect.rb (file has 381 lines)"
+      },
+      {
+        "file": "plugins/discourse-ai/app/services/discourse_ai/ai_helper/generate_thumbnails.rb",
+        "locator": "87",
+        "status": "grounded",
+        "reason": "line 87 in plugins/discourse-ai/app/services/discourse_ai/ai_helper/generate_thumbnails.rb (file has 102 lines)"
+      },
+      {
+        "file": "plugins/discourse-ai/app/controllers/discourse_ai/ai_helper/assistant_controller.rb",
+        "locator": "224",
+        "status": "grounded",
+        "reason": "line 224 in plugins/discourse-ai/app/controllers/discourse_ai/ai_helper/assistant_controller.rb (file has 312 lines)"
+      },
+      {
+        "file": "plugins/discourse-calendar/app/models/discourse_post_event/event.rb",
+        "locator": "338",
+        "status": "grounded",
+        "reason": "line 338 in plugins/discourse-calendar/app/models/discourse_post_event/event.rb (file has 649 lines)"
+      },
+      {
+        "file": "plugins/discourse-data-explorer/lib/discourse_data_explorer/data_explorer.rb",
+        "locator": "335",
+        "status": "grounded",
+        "reason": "line 335 in plugins/discourse-data-explorer/lib/discourse_data_explorer/data_explorer.rb (file has 581 lines)"
+      },
+      {
+        "file": "script/bulk_import/base.rb",
+        "locator": "2285",
+        "status": "grounded",
+        "reason": "line 2285 in script/bulk_import/base.rb (file has 2403 lines)"
+      },
+      {
+        "file": "migrations/lib/uploader/tasks/fixer.rb",
+        "locator": "44",
+        "status": "grounded",
+        "reason": "line 44 in migrations/lib/uploader/tasks/fixer.rb (file has 88 lines)"
+      },
+      {
+        "file": "migrations/lib/uploader/tasks/optimizer.rb",
+        "locator": "181",
+        "status": "grounded",
+        "reason": "line 181 in migrations/lib/uploader/tasks/optimizer.rb (file has 248 lines)"
+      },
+      {
+        "file": "lib/upload_recovery.rb",
+        "locator": "178",
+        "status": "grounded",
+        "reason": "line 178 in lib/upload_recovery.rb (file has 185 lines)"
+      },
+      {
+        "file": "app/models/upload.rb",
+        "locator": "86",
+        "status": "grounded",
+        "reason": "line 86 in app/models/upload.rb (file has 736 lines)"
+      },
+      {
+        "file": "cooked_post_processor.rb",
+        "locator": "148",
+        "status": "grounded",
+        "reason": "line 148 in cooked_post_processor.rb (file has 288 lines) [via lib/cooked_post_processor.rb]"
+      },
+      {
+        "file": "has_post_upload_references.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in has_post_upload_references.rb (file has 148 lines) [via app/models/concerns/has_post_upload_references.rb]"
+      },
+      {
+        "file": "app/models/concerns/has_url.rb",
+        "locator": "21",
+        "status": "grounded",
+        "reason": "line 21 in app/models/concerns/has_url.rb (file has 74 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "9",
+        "status": "grounded",
+        "reason": "line 9 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "app/models/upload.rb",
+        "locator": "240",
+        "status": "grounded",
+        "reason": "line 240 in app/models/upload.rb (file has 736 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "461",
+        "status": "grounded",
+        "reason": "line 461 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "lib/upload_security.rb",
+        "locator": "75",
+        "status": "grounded",
+        "reason": "line 75 in lib/upload_security.rb (file has 198 lines)"
+      },
+      {
+        "file": "app/models/upload.rb",
+        "locator": "492",
+        "status": "grounded",
+        "reason": "line 492 in app/models/upload.rb (file has 736 lines)"
+      },
+      {
+        "file": "lib/file_store/base_store.rb",
+        "locator": "124",
+        "status": "grounded",
+        "reason": "line 124 in lib/file_store/base_store.rb (file has 236 lines)"
+      },
+      {
+        "file": "base_store.rb",
+        "locator": "142",
+        "status": "grounded",
+        "reason": "line 142 in base_store.rb (file has 236 lines) [via lib/file_store/base_store.rb]"
+      },
+      {
+        "file": "base_store.rb",
+        "locator": "184",
+        "status": "grounded",
+        "reason": "line 184 in base_store.rb (file has 236 lines) [via lib/file_store/base_store.rb]"
+      },
+      {
+        "file": "s3_store.rb",
+        "locator": "213",
+        "status": "grounded",
+        "reason": "line 213 in s3_store.rb (file has 567 lines) [via lib/file_store/s3_store.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "291",
+        "status": "grounded",
+        "reason": "line 291 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "259",
+        "status": "grounded",
+        "reason": "line 259 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "214",
+        "status": "grounded",
+        "reason": "line 214 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "86",
+        "status": "grounded",
+        "reason": "line 86 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "lib/file_store/s3_store.rb",
+        "locator": "218",
+        "status": "grounded",
+        "reason": "line 218 in lib/file_store/s3_store.rb (file has 567 lines)"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "155",
+        "status": "grounded",
+        "reason": "line 155 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": ".../check_video_conversion_status.rb",
+        "locator": "6",
+        "status": "unresolved",
+        "reason": "file not found at .../check_video_conversion_status.rb"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "511",
+        "status": "grounded",
+        "reason": "line 511 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "plugins/chat/.../create_message.rb",
+        "locator": "153",
+        "status": "unresolved",
+        "reason": "file not found at plugins/chat/.../create_message.rb"
+      },
+      {
+        "file": "message_processor.rb",
+        "locator": "94",
+        "status": "grounded",
+        "reason": "line 94 in message_processor.rb (file has 178 lines) [via plugins/chat/lib/chat/message_processor.rb]"
+      },
+      {
+        "file": ".../event.rb",
+        "locator": "338",
+        "status": "unresolved",
+        "reason": "file not found at .../event.rb"
+      },
+      {
+        "file": "correct_missing_dualstack_urls.rb",
+        "locator": "5",
+        "status": "grounded",
+        "reason": "line 5 in correct_missing_dualstack_urls.rb (file has 28 lines) [via app/jobs/onceoff/correct_missing_dualstack_urls.rb]"
+      },
+      {
+        "file": "lib/file_store/s3_store.rb",
+        "locator": "213",
+        "status": "grounded",
+        "reason": "line 213 in lib/file_store/s3_store.rb (file has 567 lines)"
+      },
+      {
+        "file": "cooked_post_processor.rb",
+        "locator": "143",
+        "status": "grounded",
+        "reason": "line 143 in cooked_post_processor.rb (file has 288 lines) [via lib/cooked_post_processor.rb]"
+      },
+      {
+        "file": "has_post_upload_references.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in has_post_upload_references.rb (file has 148 lines) [via app/models/concerns/has_post_upload_references.rb]"
+      },
+      {
+        "file": "inline_uploads.rb",
+        "locator": "10",
+        "status": "grounded",
+        "reason": "line 10 in inline_uploads.rb (file has 320 lines) [via app/services/inline_uploads.rb]"
+      },
+      {
+        "file": "pretty_text/helpers.rb",
+        "locator": "41",
+        "status": "grounded",
+        "reason": "line 41 in pretty_text/helpers.rb (file has 142 lines) [via lib/pretty_text/helpers.rb]"
+      },
+      {
+        "file": "problem_check/s3_cdn.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in problem_check/s3_cdn.rb (file has 12 lines) [via app/services/problem_check/s3_cdn.rb]"
+      },
+      {
+        "file": "clean_up_uploads.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in clean_up_uploads.rb (file has 79 lines) [via app/jobs/scheduled/clean_up_uploads.rb]"
+      },
+      {
+        "file": "convert_video.rb",
+        "locator": "8",
+        "status": "grounded",
+        "reason": "line 8 in convert_video.rb (file has 34 lines) [via app/jobs/regular/convert_video.rb]"
+      },
+      {
+        "file": "pull_hotlinked_images.rb",
+        "locator": "23",
+        "status": "grounded",
+        "reason": "line 23 in pull_hotlinked_images.rb (file has 255 lines) [via app/jobs/regular/pull_hotlinked_images.rb]"
+      },
+      {
+        "file": "backfill_dominant_colors.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in backfill_dominant_colors.rb (file has 11 lines) [via app/jobs/scheduled/backfill_dominant_colors.rb]"
+      },
+      {
+        "file": "receiver.rb",
+        "locator": "1373",
+        "status": "grounded",
+        "reason": "line 1373 in receiver.rb (file has 1682 lines) [via lib/email/receiver.rb]"
+      },
+      {
+        "file": "styles.rb",
+        "locator": "361",
+        "status": "grounded",
+        "reason": "line 361 in styles.rb (file has 599 lines) [via lib/email/styles.rb]"
+      },
+      {
+        "file": "backup_restore/creator.rb",
+        "locator": "216",
+        "status": "grounded",
+        "reason": "line 216 in backup_restore/creator.rb (file has 555 lines) [via lib/backup_restore/creator.rb]"
+      },
+      {
+        "file": "theme_field.rb",
+        "locator": "699",
+        "status": "grounded",
+        "reason": "line 699 in theme_field.rb (file has 760 lines) [via app/models/theme_field.rb]"
+      },
+      {
+        "file": "splash_screen_image_changed.rb",
+        "locator": "16",
+        "status": "grounded",
+        "reason": "line 16 in splash_screen_image_changed.rb (file has 79 lines) [via app/services/site_setting/splash_screen_image_changed.rb]"
+      },
+      {
+        "file": "metadata_controller.rb",
+        "locator": "46",
+        "status": "grounded",
+        "reason": "line 46 in metadata_controller.rb (file has 141 lines) [via app/controllers/metadata_controller.rb]"
+      },
+      {
+        "file": "user_profile.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in user_profile.rb (file has 249 lines) [via app/models/user_profile.rb]"
+      },
+      {
+        "file": "user_avatar.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in user_avatar.rb (file has 232 lines) [via app/models/user_avatar.rb]"
+      },
+      {
+        "file": "user.rb",
+        "locator": "3",
+        "status": "grounded",
+        "reason": "line 3 in user.rb (file has 2375 lines) [via app/models/user.rb]"
+      },
+      {
+        "file": "plugin/instance.rb",
+        "locator": "397",
+        "status": "grounded",
+        "reason": "line 397 in plugin/instance.rb (file has 1680 lines) [via lib/plugin/instance.rb]"
+      },
+      {
+        "file": "uploads_controller.rb",
+        "locator": "109",
+        "status": "grounded",
+        "reason": "line 109 in uploads_controller.rb (file has 406 lines) [via app/controllers/uploads_controller.rb]"
+      },
+      {
+        "file": "app/models/concerns/has_url.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/models/concerns/has_url.rb (file has 74 lines)"
+      },
+      {
+        "file": "lib/file_store/base_store.rb",
+        "locator": "28",
+        "status": "grounded",
+        "reason": "line 28 in lib/file_store/base_store.rb (file has 236 lines)"
+      },
+      {
+        "file": "lib/file_store/s3_store.rb",
+        "locator": "242",
+        "status": "grounded",
+        "reason": "line 242 in lib/file_store/s3_store.rb (file has 567 lines)"
+      },
+      {
+        "file": "app/services/site_setting/splash_screen_image_changed.rb",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in app/services/site_setting/splash_screen_image_changed.rb (file has 79 lines)"
+      },
+      {
+        "file": "app/helpers/application_helper.rb",
+        "locator": "1001",
+        "status": "grounded",
+        "reason": "line 1001 in app/helpers/application_helper.rb (file has 1108 lines)"
+      },
+      {
+        "file": "lib/site_settings/validations.rb",
+        "locator": "260",
+        "status": "grounded",
+        "reason": "line 260 in lib/site_settings/validations.rb (file has 304 lines)"
+      },
+      {
+        "file": "app/controllers/admin/config/fonts_controller.rb",
+        "locator": "6",
+        "status": "grounded",
+        "reason": "line 6 in app/controllers/admin/config/fonts_controller.rb (file has 34 lines)"
+      },
+      {
+        "file": "app/controllers/admin/config/about_controller.rb",
+        "locator": "7",
+        "status": "grounded",
+        "reason": "line 7 in app/controllers/admin/config/about_controller.rb (file has 105 lines)"
+      },
+      {
+        "file": "app/jobs/regular/export_user_archive.rb",
+        "locator": "468",
+        "status": "grounded",
+        "reason": "line 468 in app/jobs/regular/export_user_archive.rb (file has 675 lines)"
+      },
+      {
+        "file": "lib/plugin/instance.rb",
+        "locator": "401",
+        "status": "grounded",
+        "reason": "line 401 in lib/plugin/instance.rb (file has 1680 lines)"
+      },
+      {
+        "file": "app/models/upload.rb",
+        "locator": "108",
+        "status": "grounded",
+        "reason": "line 108 in app/models/upload.rb (file has 736 lines)"
+      },
+      {
+        "file": "app/controllers/uploads_controller.rb",
+        "locator": "176",
+        "status": "grounded",
+        "reason": "line 176 in app/controllers/uploads_controller.rb (file has 406 lines)"
+      },
+      {
+        "file": "app/services/video_conversion/aws_media_convert_adapter.rb",
+        "locator": "362",
+        "status": "grounded",
+        "reason": "line 362 in app/services/video_conversion/aws_media_convert_adapter.rb (file has 439 lines)"
+      },
+      {
+        "file": "plugins/discourse-ai/app/models/rag_document_fragment.rb",
+        "locator": "117",
+        "status": "grounded",
+        "reason": "line 117 in plugins/discourse-ai/app/models/rag_document_fragment.rb (file has 182 lines)"
+      },
+      {
+        "file": "script/bulk_import/base.rb",
+        "locator": "253",
+        "status": "grounded",
+        "reason": "line 253 in script/bulk_import/base.rb (file has 2403 lines)"
+      },
+      {
+        "file": "has_url.rb",
+        "locator": "49",
+        "status": "grounded",
+        "reason": "line 49 in has_url.rb (file has 74 lines) [via app/models/concerns/has_url.rb]"
+      },
+      {
+        "file": "has_url.rb",
+        "locator": "11",
+        "status": "grounded",
+        "reason": "line 11 in has_url.rb (file has 74 lines) [via app/models/concerns/has_url.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "240",
+        "status": "grounded",
+        "reason": "line 240 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "227",
+        "status": "grounded",
+        "reason": "line 227 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "231",
+        "status": "grounded",
+        "reason": "line 231 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      },
+      {
+        "file": "upload_security.rb",
+        "locator": "87",
+        "status": "grounded",
+        "reason": "line 87 in upload_security.rb (file has 198 lines) [via lib/upload_security.rb]"
+      },
+      {
+        "file": "base_store.rb",
+        "locator": "118",
+        "status": "grounded",
+        "reason": "line 118 in base_store.rb (file has 236 lines) [via lib/file_store/base_store.rb]"
+      },
+      {
+        "file": "s3_store.rb",
+        "locator": "218",
+        "status": "grounded",
+        "reason": "line 218 in s3_store.rb (file has 567 lines) [via lib/file_store/s3_store.rb]"
+      },
+      {
+        "file": "s3_store.rb",
+        "locator": "232",
+        "status": "grounded",
+        "reason": "line 232 in s3_store.rb (file has 567 lines) [via lib/file_store/s3_store.rb]"
+      },
+      {
+        "file": "s3_store.rb",
+        "locator": "242",
+        "status": "grounded",
+        "reason": "line 242 in s3_store.rb (file has 567 lines) [via lib/file_store/s3_store.rb]"
+      },
+      {
+        "file": "upload.rb",
+        "locator": "236",
+        "status": "grounded",
+        "reason": "line 236 in upload.rb (file has 736 lines) [via app/models/upload.rb]"
+      }
+    ]
+  },
+  "gold_recall": {
+    "total": 24,
+    "mentioned": 16,
+    "cited": 15,
+    "mention_recall": 0.6667,
+    "cited_recall": 0.625,
+    "groups": {
+      "contract": {
+        "total": 3,
+        "mentioned": 3,
+        "cited": 3,
+        "mention_recall": 1.0,
+        "cited_recall": 1.0
+      },
+      "write-path": {
+        "total": 2,
+        "mentioned": 2,
+        "cited": 2,
+        "mention_recall": 1.0,
+        "cited_recall": 1.0
+      },
+      "dependents": {
+        "total": 16,
+        "mentioned": 10,
+        "cited": 10,
+        "mention_recall": 0.625,
+        "cited_recall": 0.625
+      },
+      "specs": {
+        "total": 3,
+        "mentioned": 1,
+        "cited": 0,
+        "mention_recall": 0.3333,
+        "cited_recall": 0.0
+      }
+    },
+    "missed_mention": [
+      "d:pretty-text",
+      "d:topic-link",
+      "d:s3-inventory",
+      "d:site-icon",
+      "d:user-merger",
+      "d:site-setting-ext",
+      "spec:cooked",
+      "spec:uploads-req"
+    ],
+    "missed_cite": [
+      "d:pretty-text",
+      "d:topic-link",
+      "d:s3-inventory",
+      "d:site-icon",
+      "d:user-merger",
+      "d:site-setting-ext",
+      "spec:upload",
+      "spec:cooked",
+      "spec:uploads-req"
+    ],
+    "details": [
+      {
+        "id": "upload-model",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "c:has-url",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "optimized-image",
+        "group": "contract",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "a:uploads-ctrl",
+        "group": "write-path",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "a:upload-creator",
+        "group": "write-path",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:cooked-post",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:pretty-text",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:topic-link",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:s3-store",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:s3-inventory",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:hotlinked",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:convert-video",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:email-styles",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:backup-creator",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:site-icon",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:app-helper",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:metadata-ctrl",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:user-profile",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:user-merger",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "d:plugin-instance",
+        "group": "dependents",
+        "mentioned": true,
+        "cited": true
+      },
+      {
+        "id": "d:site-setting-ext",
+        "group": "dependents",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "spec:upload",
+        "group": "specs",
+        "mentioned": true,
+        "cited": false
+      },
+      {
+        "id": "spec:cooked",
+        "group": "specs",
+        "mentioned": false,
+        "cited": false
+      },
+      {
+        "id": "spec:uploads-req",
+        "group": "specs",
+        "mentioned": false,
+        "cited": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Orient in the codebase",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "Upload",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 110,
+          "unique_refs": 188,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_search",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_conventions",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 3,
+      "total_bonus": 3,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Map the Upload contract and what it is built on",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "concern",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 110,
+          "unique_refs": 188,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "upload.rb",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 3,
+      "total_bonus": 3,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 2,
+      "fairness_total_bonus": 2,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how an upload is created and processed",
+      "checks": [
+        {
+          "hit": true,
+          "type": "word",
+          "value": "store",
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "4",
+          "unique_files": 110,
+          "unique_refs": 188,
+          "threshold": 4,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Audit every dependent of the Upload contract",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 110,
+          "unique_refs": 188,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "no_grep",
+          "value": "no_grep",
+          "layer": "adoption"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 2,
+      "total_bonus": 2,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Trace how upload identity and storage location are guarded",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "3",
+          "unique_files": 110,
+          "unique_refs": 188,
+          "threshold": 3,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_graph",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 0,
+      "total_required": 0,
+      "hits_bonus": 2,
+      "total_bonus": 2,
+      "fairness_hits_required": 0,
+      "fairness_total_required": 0,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 0.5
+    },
+    {
+      "name": "Assess the blast radius of the contract change",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 110,
+          "unique_refs": 188,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "mcp_tool_used",
+          "value": "sense_blast",
+          "layer": "adoption"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 0,
+      "fairness_total_bonus": 0,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    },
+    {
+      "name": "Produce the change + verification map",
+      "checks": [
+        {
+          "hit": true,
+          "type": "response_richness",
+          "value": "6",
+          "unique_files": 110,
+          "unique_refs": 188,
+          "threshold": 6,
+          "layer": "fairness"
+        },
+        {
+          "hit": true,
+          "type": "contains",
+          "value": "spec",
+          "layer": "fairness"
+        }
+      ],
+      "hits_required": 1,
+      "total_required": 1,
+      "hits_bonus": 1,
+      "total_bonus": 1,
+      "fairness_hits_required": 1,
+      "fairness_total_required": 1,
+      "fairness_hits_bonus": 1,
+      "fairness_total_bonus": 1,
+      "score_required": 1.0,
+      "score_bonus": 1.0,
+      "combined_score": 1.0,
+      "fairness_score": 1.0
+    }
+  ],
+  "misses": {
+    "pre_mcp_misses": [],
+    "post_mcp_verification_reads": [
+      "Read(upload.rb)",
+      "Read(has_url.rb)",
+      "Read(upload_reference.rb)",
+      "Read(optimized_image.rb)",
+      "Read(upload_creator.rb)",
+      "Read(base_store.rb)",
+      "Read(has_post_upload_references.rb)",
+      "Read(s3_store.rb)",
+      "Read(cooked_post_processor.rb)",
+      "Read(upload_security.rb)"
+    ],
+    "post_mcp_misses": [],
+    "has_mcp_tools": true,
+    "detail": "pre-MCP bypasses: 0, post-MCP verification reads: 10, post-MCP misses: 0 (diagnostic only \u2014 grep_count drives fluency)"
+  },
+  "metrics": {
+    "tool_calls": 20,
+    "grep_count": 0,
+    "read_count": 10,
+    "mcp_count": 10,
+    "token_input_uncached": 2933,
+    "token_output": 25437,
+    "token_cache_read": 371877,
+    "token_cache_write": 60251,
+    "token_total_billed": 28370,
+    "token_total_all": 460498,
+    "wall_time_seconds": 283.2,
+    "cost_usd": 1.439,
+    "effective_token_total_billed": 28370,
+    "effective_wall_time_seconds": 283.2,
+    "efficiency_ceiling": 30000,
+    "time_ceiling_seconds": 480,
+    "token_efficiency": 0.0543,
+    "time_efficiency": 0.41,
+    "answer_chars": 39094,
+    "audit_chars": 152098,
+    "overhead": null
+  }
+}

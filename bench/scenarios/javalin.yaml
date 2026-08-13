@@ -1,0 +1,116 @@
+name: Javalin servlet dispatch and custom error handler registration
+repo: javalin
+description: 'Trace the Javalin HTTP request dispatch from JavalinServlet through
+
+  the routing engine to handler execution. Understand how routes are
+
+  configured and then assess adding a custom error handler.
+
+  '
+steps:
+- name: Orient in the Javalin codebase
+  prompt: "You're an AI coding agent about to ship work into Javalin.
+    Hand the next agent the map: what Javalin does, the key classes
+    (Javalin, JavalinServlet, Context, Handler) with file:line, and how
+    a route gets registered and dispatched. The follow-up agent should
+    need only small, targeted lookups — not a fresh exploration of the
+    codebase. No Explore agents.
+    "
+  checks:
+  - type: contains
+    value: JavalinServlet
+    required: true
+  - type: response_richness
+    value: '4'
+    required: true
+    description: Referenced 4+ files in orientation
+  - type: contains
+    value: Handler
+    required: false
+  - type: contains
+    value: Context
+    required: false
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+    description: Used structural graph query for codebase orientation
+- name: Trace HTTP dispatch from JavalinServlet.service
+  prompt: "You're about to insert a request-scoped concern into Javalin's
+    dispatch chain. Trace service() and the full chain for the next
+    agent — request parsing, router matching, before/after filters,
+    handler execution, response production — with file:line at each
+    method. The follow-up agent should need only small, targeted lookups —
+    not a fresh exploration of the codebase.
+    "
+  checks:
+  - type: word
+    value: service
+    required: true
+  - type: contains
+    value: JavalinServlet
+    required: true
+  - type: response_richness
+    value: '5'
+    required: true
+    description: Referenced 5+ files in dispatch trace
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_search
+    required: false
+    layer: adoption
+    description: Used semantic search for dispatch chain tracing
+- name: Trace route registration and find test files
+  prompt: "You're about to change route registration in Javalin. Trace
+    how app.get(\"/hello\", ...) gets registered from Javalin.get()
+    through to the routing table with file:line, and list the test
+    files covering HTTP dispatch and routing with paths and key test
+    method names. The follow-up agent should need only small, targeted
+    lookups — not a fresh exploration of the codebase.
+    "
+  checks:
+  - type: contains
+    value: route
+    required: false
+  - type: contains
+    value: get
+    required: false
+  - type: word
+    value: test
+    required: false
+  - type: response_richness
+    value: '4'
+    required: false
+    description: Referenced 4+ files in route/test analysis
+- name: Assess adding a custom error handler
+  prompt: "You're about to add an error() handler that catches all
+    unhandled exceptions and logs request URL, method, and timestamp
+    before returning JSON. Produce the edit map: where error handling
+    currently happens with file:line, how existing error handlers are
+    structured, which files need modification, whether before/after
+    filters are affected. The follow-up agent should need only small,
+    targeted lookups — not a fresh exploration of the codebase.
+    "
+  checks:
+  - type: contains
+    value: error
+    required: true
+  - type: response_richness
+    value: '4'
+    required: false
+    description: Referenced 4+ files in error handling assessment
+  - type: contains
+    value: exception
+    required: false
+  - type: mcp_tool_used
+    value: sense_search
+    required: false
+    layer: adoption
+    description: Used semantic search for error handling assessment
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
