@@ -118,6 +118,29 @@ if [ "$STATUS" = 1 ]; then
 fi
 if [ "$RESET" = 1 ]; then state_set "$KEY" intake; echo "[$KEY] reset to phase 'intake'"; exit 0; fi
 
+# require_current_bench_tree - the driver reads itself off the CHECKED-OUT tree, and this
+# window checks out a product branch, so a branch cut before a bench change silently runs
+# an old driver. Measured on the first C# window: the branch was rebased minutes before
+# the target-language control was committed, the prove phase ran the pre-control driver,
+# and the run LOOKED clean - seven probes green, three controls held - while the check the
+# rebase existed to add never executed. A missing check reports nothing, which is exactly
+# what a stale driver produces.
+require_current_bench_tree() {
+  local drift
+  drift="$(git -C "$SENSE_ROOT" diff --name-only main HEAD -- improvement-loop/ 2>/dev/null)"
+  [ -z "$drift" ] || {
+    echo ""
+    echo "==================== WINDOW STOPPED ===================="
+    echo "[$KEY] the bench tree on this branch differs from main:"
+    printf '%s\n' "$drift" | sed 's/^/     /'
+    echo ""
+    echo "The driver runs from the checked-out tree, so this window would run a bench"
+    echo "version that is not main's. Rebase the branch onto main and re-run:"
+    echo "     git -C $SENSE_ROOT rebase main"
+    echo "========================================================"
+    exit 1; }
+}
+
 park() { # message... - stop here, leaving the state where it is
   echo ""
   echo "==================== WINDOW STOPPED ===================="
@@ -473,6 +496,10 @@ echo "[$KEY] entering at phase '$PHASE' ($TITLE, lang=$LANG, framework=$FRAMEWOR
 
 while :; do
   NEXT=""
+  # Every phase from `truth` on runs with a product branch checked out.
+  case "$PHASE" in
+    truth|build|prove|review|handoff) require_current_bench_tree ;;
+  esac
   case "$PHASE" in
     intake)   do_intake ;;
     proposal) do_proposal ;;
