@@ -1,0 +1,150 @@
+# csharp-aspnet candidate pool - one `repo-key|git-url|framework?|stars|pushed`
+# per line. stars and pushed come from the search that found the repo, so
+# the maintained and used screens cost ZERO API calls: a 156-candidate pool
+# is thinned to the handful worth cloning for free. A hand-added line may
+# omit them, and then those two screens fall back to one API call for it.
+#
+# WRITTEN BY hunt.py from the declared queries in stacks/csharp-aspnet.conf.
+# Re-running the hunt reproduces it; widening it means editing that conf,
+# or adding a line here by hand, which the hunt will not overwrite without
+# --force.
+#
+# The third field marks a FRAMEWORK-role repo (something others build ON):
+# eligible for the framework slot, never for the big slot, because the
+# pillar rule keeps the framework from being the campaign's sole win.
+# `listed` = named by a `repo:` line: seeded by hand, screened on
+# reachable, maintained and language only, and slotted by SIZE like any
+# other application.
+#
+# stack: Directory.Packages.props:Microsoft.AspNetCore|Microsoft.EntityFrameworkCore|Microsoft.Extensions.DependencyInjection
+#
+# Queries run, and what each contributed:
+#    60 hits,  52 new  --language c# --topic aspnetcore --stars ">500"
+#    60 hits,  49 new  --language c# --size ">40000" --stars ">300"
+#     7 hits,   6 new  --language c# --topic self-hosted --stars ">500"
+#    60 hits,   8 new  aspnetcore --language c# --stars ">1000"
+
+# 123 candidates
+v2rayn|https://github.com/2dust/v2rayN.git||113747|2026-08-10
+jellyfin|https://github.com/jellyfin/jellyfin.git||55730|2026-08-13
+powershell|https://github.com/PowerShell/PowerShell.git||54824|2026-08-12
+files|https://github.com/files-community/Files.git||44609|2026-08-12
+sharex|https://github.com/ShareX/ShareX.git||39120|2026-08-13
+aspnetcore|https://github.com/dotnet/aspnetcore.git|framework|38371|2026-08-13
+devtoys|https://github.com/DevToys-app/DevToys.git||31856|2026-02-25
+avalonia|https://github.com/AvaloniaUI/Avalonia.git||31315|2026-08-13
+semantic-kernel|https://github.com/microsoft/semantic-kernel.git||28445|2026-08-11
+officecli|https://github.com/iOfficeAI/OfficeCLI.git||28125|2026-08-13
+steamtools|https://github.com/BeyondDimension/SteamTools.git||26475|2026-07-17
+ilspy|https://github.com/icsharpcode/ILSpy.git||25853|2026-08-13
+unigetui|https://github.com/Devolutions/UniGetUI.git||25519|2026-08-13
+quicklook|https://github.com/QL-Win/QuickLook.git||24379|2026-07-30
+maui|https://github.com/dotnet/maui.git|framework|23298|2026-08-13
+maaassistantarknights|https://github.com/MaaAssistantArknights/MaaAssistantArknights.git||22511|2026-08-13
+lean|https://github.com/QuantConnect/Lean.git||21190|2026-08-13
+roslyn|https://github.com/dotnet/roslyn.git||20608|2026-08-13
+peass-ng|https://github.com/peass-ng/PEASS-ng.git||20314|2026-08-11
+bitwarden-server|https://github.com/bitwarden/server.git|listed|19827|2026-08-13
+ml-agents|https://github.com/Unity-Technologies/ml-agents.git||19626|2026-08-12
+lively|https://github.com/rocksdanister/lively.git||19384|2026-04-30
+cmwtat_digital_edition|https://github.com/TGSAN/CMWTAT_Digital_Edition.git||19290|2026-08-03
+osu|https://github.com/ppy/osu.git||18858|2026-08-13
+dapper|https://github.com/DapperLib/Dapper.git||18366|2026-05-16
+runtime|https://github.com/dotnet/runtime.git||18210|2026-08-13
+openra|https://github.com/OpenRA/OpenRA.git||17220|2026-08-01
+materialdesigninxamltoolkit|https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit.git||16234|2026-08-03
+jackett|https://github.com/Jackett/Jackett.git||15878|2026-08-13
+flow.launcher|https://github.com/Flow-Launcher/Flow.Launcher.git||15360|2026-08-13
+sonarr|https://github.com/Sonarr/Sonarr.git||15078|2026-08-13
+fileconverter|https://github.com/Tichau/FileConverter.git||15001|2026-02-27
+duplicati|https://github.com/duplicati/duplicati.git||14882|2026-08-13
+efcore|https://github.com/dotnet/efcore.git|framework|14769|2026-08-13
+better-genshin-impact|https://github.com/babalae/better-genshin-impact.git||14708|2026-08-13
+g-helper|https://github.com/seerge/g-helper.git||14666|2026-08-13
+abp|https://github.com/abpframework/abp.git|framework|14399|2026-08-13
+monogame|https://github.com/MonoGame/MonoGame.git||14299|2026-08-13
+polly|https://github.com/App-vNext/Polly.git||14226|2026-08-12
+questpdf|https://github.com/QuestPDF/QuestPDF.git||14155|2026-08-13
+radarr|https://github.com/Radarr/Radarr.git||14149|2026-08-12
+imageglass|https://github.com/d2phap/ImageGlass.git||14021|2026-08-13
+subtitleedit|https://github.com/SubtitleEdit/subtitleedit.git||13815|2026-08-13
+playnite|https://github.com/JosefNemec/Playnite.git||13745|2026-08-13
+archisteamfarm|https://github.com/JustArchiNET/ArchiSteamFarm.git||13617|2026-08-13
+unity-mcp|https://github.com/CoplayDev/unity-mcp.git||13370|2026-08-07
+aspnetcore.docs|https://github.com/dotnet/AspNetCore.Docs.git||13129|2026-08-13
+unitycsreference|https://github.com/Unity-Technologies/UnityCsReference.git||12942|2026-08-13
+pdfpatcher|https://github.com/wmjordan/PDFPatcher.git||12612|2026-07-08
+lky_officetools|https://github.com/OdysseusYuan/LKY_OfficeTools.git||12491|2024-02-22
+aspnetboilerplate|https://github.com/aspnetboilerplate/aspnetboilerplate.git||11999|2026-07-28
+garnet|https://github.com/microsoft/garnet.git||11927|2026-08-13
+choco|https://github.com/chocolatey/choco.git||11484|2026-08-05
+benchmarkdotnet|https://github.com/dotnet/BenchmarkDotNet.git||11472|2026-08-13
+mono|https://github.com/mono/mono.git||11462|2024-08-27
+kavita|https://github.com/Kareadita/Kavita.git||11460|2026-08-13
+dotnetguide|https://github.com/YSGStudyHards/DotNetGuide.git||10774|2026-06-28
+practical-aspnetcore|https://github.com/dodyg/practical-aspnetcore.git||10407|2026-08-13
+nopcommerce|https://github.com/nopSolutions/nopCommerce.git||10121|2026-08-12
+ocelot|https://github.com/ThreeMammals/Ocelot.git||8714|2026-08-13
+aspnetcorediagnosticscenarios|https://github.com/davidfowl/AspNetCoreDiagnosticScenarios.git||8511|2024-05-28
+orchardcore|https://github.com/OrchardCMS/OrchardCore.git|framework|8154|2026-08-13
+nswag|https://github.com/RicoSuter/NSwag.git||7356|2026-06-21
+equinoxproject|https://github.com/EduardoPires/EquinoxProject.git||6777|2026-04-14
+servicestack|https://github.com/ServiceStack/ServiceStack.git|listed|5500|2026-08-13
+swashbuckle.aspnetcore|https://github.com/domaindrivendev/Swashbuckle.AspNetCore.git||5497|2026-08-12
+umbraco-cms|https://github.com/umbraco/Umbraco-CMS.git|listed|5224|2026-08-13
+openiddict-core|https://github.com/openiddict/openiddict-core.git||5222|2026-08-01
+sparkleshare|https://github.com/hbons/SparkleShare.git||4975|2026-07-23
+util|https://github.com/dotnetcore/Util.git||4604|2024-10-14
+simplcommerce|https://github.com/simplcommerce/SimplCommerce.git||4415|2026-06-08
+aspnetcore.diagnostics.healthchecks|https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks.git||4371|2026-06-22
+wtm|https://github.com/dotnetcore/WTM.git||4354|2026-07-05
+architecture|https://github.com/rafaelfgx/Architecture.git||3277|2026-08-06
+run-aspnetcore-microservices|https://github.com/aspnetrun/run-aspnetcore-microservices.git||3254|2026-03-09
+aspnet-api-versioning|https://github.com/dotnet/aspnet-api-versioning.git||3203|2026-08-12
+aspnetcoreratelimit|https://github.com/stefanprodan/AspNetCoreRateLimit.git||3174|2024-07-26
+todoapp|https://github.com/davidfowl/TodoApp.git||3101|2026-02-12
+osharp|https://github.com/dotnetcore/osharp.git||2848|2026-06-16
+yishaadmin|https://github.com/liukuo362573/YiShaAdmin.git||2583|2024-06-30
+aspnet.security.oauth.providers|https://github.com/aspnet-contrib/AspNet.Security.OAuth.Providers.git||2510|2026-08-12
+oqtane.framework|https://github.com/oqtane/oqtane.framework.git||2253|2026-08-12
+easycaching|https://github.com/dotnetcore/EasyCaching.git||2094|2025-03-17
+prometheus-net|https://github.com/prometheus-net/prometheus-net.git||2093|2024-04-11
+aspnetcore-realworld-example-app|https://github.com/realworld-apps/aspnetcore-realworld-example-app.git||2090|2026-08-12
+mytested.aspnetcore.mvc|https://github.com/ivaylokenov/MyTested.AspNetCore.Mvc.git||1711|2025-03-04
+filterlists|https://github.com/collinbarrett/FilterLists.git||1639|2026-08-13
+finbuckle.multitenant|https://github.com/Finbuckle/Finbuckle.MultiTenant.git||1616|2026-08-12
+products|https://github.com/DuendeSoftware/products.git||1612|2026-08-12
+swashbucklerdiary|https://github.com/Yu-Core/SwashbucklerDiary.git||1571|2026-05-31
+aspnetcorespa|https://github.com/fullstackproltd/AspNetCoreSpa.git||1532|2023-11-24
+smartstore|https://github.com/smartstore/Smartstore.git||1511|2026-08-13
+cleanarchitecture.webapi|https://github.com/iammukeshm/CleanArchitecture.WebApi.git||1496|2024-02-15
+active-directory-aspnetcore-webapp-openidconnect-v2|https://github.com/Azure-Samples/active-directory-aspnetcore-webapp-openidconnect-v2.git||1436|2025-10-29
+serilog-aspnetcore|https://github.com/serilog/serilog-aspnetcore.git||1428|2025-11-28
+booking-microservices|https://github.com/meysamhadeli/booking-microservices.git||1385|2026-07-03
+bitplatform|https://github.com/bitfoundation/bitplatform.git||1369|2026-08-13
+clean-architecture-dotnet|https://github.com/thangchung/clean-architecture-dotnet.git||1356|2023-04-27
+csla|https://github.com/MarimerLLC/csla.git||1345|2026-08-01
+grandnode2|https://github.com/grandnode/grandnode2.git||1323|2026-08-13
+sieve|https://github.com/Biarity/Sieve.git||1302|2024-05-27
+abp-samples|https://github.com/abpframework/abp-samples.git||1299|2026-07-27
+awesome-dotnet-tips|https://github.com/meysamhadeli/awesome-dotnet-tips.git||1264|2024-10-09
+asp.net-core-template|https://github.com/NikolayIT/ASP.NET-Core-Template.git||1187|2026-03-14
+magic|https://github.com/polterguy/magic.git||1162|2026-08-13
+food-delivery-microservices|https://github.com/mehdihadeli/food-delivery-microservices.git||1005|2026-07-18
+openbudgeteer|https://github.com/TheAxelander/OpenBudgeteer.git||969|2026-01-10
+efcoresecondlevelcacheinterceptor|https://github.com/VahidN/EFCoreSecondLevelCacheInterceptor.git||964|2026-08-04
+module-shop|https://github.com/trueai-org/module-shop.git||958|2026-01-12
+networkoptimizer|https://github.com/Ozark-Connect/NetworkOptimizer.git||944|2026-08-13
+bing.netcore|https://github.com/bing-framework/Bing.NetCore.git||940|2026-08-12
+onion-architecture-asp.net-core|https://github.com/Amitpnk/Onion-architecture-ASP.NET-Core.git||928|2024-11-18
+gaseous-server|https://github.com/gaseous-project/gaseous-server.git||924|2026-08-09
+aspnetcore-ddd|https://github.com/ntxinh/AspNetCore-DDD.git||881|2025-12-28
+authpermissions.aspnetcore|https://github.com/JonPSmith/AuthPermissions.AspNetCore.git||877|2025-12-23
+weboptimizer|https://github.com/ligershark/WebOptimizer.git||840|2025-09-03
+netdevpack|https://github.com/NetDevPack/NetDevPack.git||825|2026-04-02
+dotvvm|https://github.com/riganti/dotvvm.git||806|2026-08-13
+cs12dotnet8|https://github.com/markjprice/cs12dotnet8.git||793|2026-01-07
+gamevault-app|https://github.com/Phalcode/gamevault-app.git||778|2026-01-06
+devarchitecture|https://github.com/DevArchitecture/DevArchitecture.git||770|2026-06-25
+aspnetcore-webapi-sample|https://github.com/FabianGosebrink/ASPNETCore-WebAPI-Sample.git||718|2025-08-12
+revo|https://github.com/revoframework/Revo.git||715|2026-05-29
