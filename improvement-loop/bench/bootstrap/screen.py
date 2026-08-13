@@ -42,7 +42,31 @@ SIZE_MEDIUM_FLOOR = 1_000
 SIZE_BIG_FLOOR = 4_000
 STARS_FLOOR = 1_000
 
-SRC_EXT = (".php", ".py", ".rb", ".go", ".ts", ".js", ".java", ".rs", ".kt")
+# The union, used only when no language is named. Six queued verticals were
+# missing from it, C# among them: bitwarden/server carries 5,282 .cs files and
+# 24 files this tuple could see, so the size screen classed it small and the
+# repo the C# extractor was proven on was rejected as too small to bench.
+SRC_EXT = (".php", ".py", ".rb", ".go", ".ts", ".js", ".java", ".rs", ".kt",
+           ".cs", ".swift", ".ex", ".exs", ".dart", ".clj", ".cljs", ".cljc",
+           ".hs", ".zig", ".scala")
+
+# Size is a question about the vertical's OWN language. Counting every language
+# reads a monorepo's frontend as backend bulk: umbraco-cms was admitted as an
+# 8,228-file repo on its TypeScript. Keys are the `lang` column of verticals.txt.
+LANG_EXT = {
+    "php": (".php",), "python": (".py",), "ruby": (".rb",), "golang": (".go",),
+    "tsjs": (".ts", ".js"), "java": (".java",), "rust": (".rs",),
+    "kotlin": (".kt",), "csharp": (".cs",), "swift": (".swift",),
+    "elixir": (".ex", ".exs"), "dart": (".dart",),
+    "clojure": (".clj", ".cljs", ".cljc"), "haskell": (".hs",), "zig": (".zig",),
+}
+
+
+def lang_exts(lang):
+    """The extensions a vertical's size gauge counts. An unknown language falls
+    back to the union rather than to zero: a wrong-but-wide count is visible,
+    and a silent zero rejects every repo in the stack."""
+    return LANG_EXT.get((lang or "").strip().lower(), SRC_EXT)
 SKIP_DIRS = {".git", "vendor", "node_modules", "storage", "public", "bootstrap",
              "dist", "build", "tests", "test", "spec", "specs", "testing",
              "__pycache__", ".sense"}
@@ -58,13 +82,13 @@ BANNER_RE = re.compile(
     re.I)
 
 
-def prod_source_files(clone):
+def prod_source_files(clone, exts=SRC_EXT):
     """Source files that are not vendored, generated or tests - the size gauge."""
     n = 0
     for root, dirs, files in os.walk(clone):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
         for f in files:
-            if not f.endswith(SRC_EXT):
+            if not f.endswith(exts):
                 continue
             rel = os.path.relpath(os.path.join(root, f), clone)
             if TEST_FILE.search(rel):
@@ -78,6 +102,7 @@ def size_class(n):
 
 
 DECLARED = {"ok": True, "why": "framework-role, declared in the stack profile"}
+LISTED = {"ok": True, "why": "listed by name in the stack profile"}
 
 
 def screen_in_vertical(clone, stack):
@@ -158,11 +183,12 @@ def screen_used(meta):
             "why": f"{stars} stars (floor {STARS_FLOOR})"}
 
 
-def screen_size(clone):
-    n = prod_source_files(clone)
+def screen_size(clone, exts=SRC_EXT, lang=""):
+    n = prod_source_files(clone, exts)
     cls = size_class(n)
+    of = f" {lang}" if lang else ""
     return {"ok": cls != "small", "prod_files": n, "size": cls,
-            "why": f"{n} prod source files = {cls} (floor {SIZE_MEDIUM_FLOOR})"}
+            "why": f"{n} prod{of} source files = {cls} (floor {SIZE_MEDIUM_FLOOR})"}
 
 
 def scan_banner(clone):
@@ -179,7 +205,31 @@ def scan_banner(clone):
     return hits
 
 
-def screen(clone, key, url, stack, use_api=True):
+def apply_listed(out, lang):
+    """A repo listed by name in the stack profile is admitted unless it is
+    unreachable, unmaintained, or not written in this language.
+
+    The listing is a human saying "bench this one, I know it". So the framework
+    marker and the stars floor are waived outright, and size stops rejecting -
+    it still measures, because the SLOT a repo can fill is a size question and
+    an unslottable repo has to be visible as such rather than absent. What is
+    not waived is language: a listed repo with no source in the vertical's
+    language cannot be benched by a vertical about that language, and that is
+    the one rejection the listing cannot override."""
+    out["in_vertical"] = dict(LISTED)
+    out["used"] = dict(out["used"], ok=True,
+                       why=out["used"].get("why", "") + " - waived, listed")
+    if out["size"]["prod_files"] == 0:
+        out["size"] = dict(out["size"], ok=False,
+                           why=f"no {lang or 'in-language'} source files - listed, "
+                               "but this is not a repo of this language")
+        return out
+    out["size"] = dict(out["size"], ok=True,
+                       why=out["size"]["why"] + " - size floor waived, listed")
+    return out
+
+
+def screen(clone, key, url, stack, use_api=True, lang="", listed=False):
     meta = None
     slug = gh_repo(url)
     if use_api and slug:
@@ -187,9 +237,11 @@ def screen(clone, key, url, stack, use_api=True):
     out = {"repo": key, "url": url, "github": slug,
            "in_vertical": screen_in_vertical(clone, stack),
            "maintained": screen_maintained(meta),
-           "size": screen_size(clone),
+           "size": screen_size(clone, lang_exts(lang), lang),
            "used": screen_used(meta),
            "banner": scan_banner(clone)}
+    if listed:
+        out = apply_listed(out, lang)
     out["size_class"] = out["size"]["size"]
     verdicts = [out[k]["ok"] for k in ("in_vertical", "maintained", "size", "used")]
     if False in verdicts:
@@ -254,9 +306,17 @@ def screen_from_facts(key, url, stars, pushed):
     return out
 
 
-def triage(key, url, stars, pushed, stack, declared=False):
+def triage(key, url, stars, pushed, stack, declared=False, listed=False):
     """Phase 1: everything decidable without a download."""
     r = screen_from_facts(key, url, stars, pushed)
+    if listed:
+        # Waived here too, or a listed repo dies on stars before it is ever
+        # cloned and the clone-stage waiver never gets to run.
+        r["used"] = dict(r["used"], ok=True,
+                         why=r["used"].get("why", "") + " - waived, listed")
+        r["in_vertical"] = dict(LISTED)
+        r["verdict"] = "REJECT" if r["maintained"]["ok"] is False else "CLONE-ME"
+        return r
     if r["verdict"] == "REJECT" or not stack:
         return r
     if declared:
@@ -315,6 +375,14 @@ def main():
     ap.add_argument("--declared", action="store_true",
                     help="this repo is declared framework-role in the stack "
                          "profile, so the in-vertical screen passes by declaration")
+    ap.add_argument("--listed", action="store_true",
+                    help="this repo is listed by name in the stack profile, so "
+                         "the marker and the stars floor are waived and size "
+                         "stops rejecting; language still binds")
+    ap.add_argument("--lang", default="",
+                    help="the vertical's language (verticals.txt column 2). The "
+                         "size gauge counts THIS language, never every language "
+                         "in the tree")
     ap.add_argument("--stars", default="")
     ap.add_argument("--pushed", default="", help="YYYY-MM-DD, from the hunt")
     ap.add_argument("--api-only", action="store_true",
@@ -326,13 +394,14 @@ def main():
     if args.api_only:
         if args.stars and args.pushed:
             r = triage(args.key, args.url, args.stars, args.pushed, args.stack,
-                       declared=args.declared)
+                       declared=args.declared, listed=args.listed)
         else:
             r = screen_api_only(args.key, args.url)
     else:
         if not os.path.isdir(args.clone):
             sys.exit(f"screen: no such clone: {args.clone}")
-        r = screen(args.clone, args.key, args.url, args.stack, use_api=not args.no_api)
+        r = screen(args.clone, args.key, args.url, args.stack,
+                   use_api=not args.no_api, lang=args.lang, listed=args.listed)
         if args.declared:
             r["in_vertical"] = dict(DECLARED)
             if r["verdict"] == "REJECT" and r["size"]["ok"] and r["maintained"]["ok"] \

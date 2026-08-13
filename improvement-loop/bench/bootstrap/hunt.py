@@ -33,7 +33,7 @@ FIELDS = "fullName,stargazersCount,pushedAt,isArchived"
 
 
 def read_conf(path):
-    stack, queries, frameworks = "", [], set()
+    stack, queries, frameworks, listed = "", [], set(), set()
     with open(path, encoding="utf-8") as fh:
         for line in fh:
             line = line.strip()
@@ -47,7 +47,14 @@ def read_conf(path):
                 queries.append(rest)
             elif head == "framework":
                 frameworks.add(rest.lower())
-    return stack, queries, frameworks
+            elif head == "repo":
+                # A repo someone wants benched by name: popular, or already
+                # known to the operator. Seeded like a framework, but WITHOUT
+                # the framework role - the role bars the big slot, and that is
+                # how an 8,228-file application ended up in a medium slot with
+                # the big slot left unfilled.
+                listed.add(rest.lower())
+    return stack, queries, frameworks, listed
 
 
 def run_query(query, limit):
@@ -98,7 +105,7 @@ def key_for(full_name):
 
 
 def hunt(conf_path, limit):
-    stack, queries, frameworks = read_conf(conf_path)
+    stack, queries, frameworks, listed = read_conf(conf_path)
     if not stack:
         sys.exit(f"hunt: {conf_path} has no `stack:` marker")
     if not queries:
@@ -115,6 +122,16 @@ def hunt(conf_path, limit):
             print(f"   seeded declared framework: {fn}", file=sys.stderr)
         else:
             print(f"   DECLARED FRAMEWORK NOT FOUND: {fn}", file=sys.stderr)
+    # Listed repos are seeded the same way and for the same reason: a hunt finds
+    # what its queries describe, and a repo you already know is not something you
+    # want to re-derive from a search.
+    for fn in sorted(listed):
+        meta = fetch_repo(fn)
+        if meta:
+            found[meta["fullName"]] = meta
+            print(f"   seeded listed repo: {fn}", file=sys.stderr)
+        else:
+            print(f"   LISTED REPO NOT FOUND: {fn}", file=sys.stderr)
     for q in queries:
         rows = run_query(q, limit)
         if rows is None:
@@ -131,10 +148,10 @@ def hunt(conf_path, limit):
             found.setdefault(fn, r)
         per_query.append((q, (len(rows), new)))
         print(f"   {len(rows):3d} hits, {new:3d} new   {q}", file=sys.stderr)
-    return stack, found, frameworks, per_query, failed
+    return stack, found, frameworks, listed, per_query, failed
 
 
-def render(key, stack, found, frameworks, per_query):
+def render(key, stack, found, frameworks, listed, per_query):
     L = [f"# {key} candidate pool - one `repo-key|git-url|framework?|stars|pushed`",
          "# per line. stars and pushed come from the search that found the repo, so",
          "# the maintained and used screens cost ZERO API calls: a 156-candidate pool",
@@ -150,6 +167,9 @@ def render(key, stack, found, frameworks, per_query):
          "# The third field marks a FRAMEWORK-role repo (something others build ON):",
          "# eligible for the framework slot, never for the big slot, because the",
          "# pillar rule keeps the framework from being the campaign's sole win.",
+         "# `listed` = named by a `repo:` line: seeded by hand, screened on",
+         "# reachable, maintained and language only, and slotted by SIZE like any",
+         "# other application.",
          "#",
          f"# stack: {stack}",
          "#",
@@ -161,7 +181,8 @@ def render(key, stack, found, frameworks, per_query):
     rows = sorted(found.values(), key=lambda r: -r["stargazersCount"])
     for r in rows:
         fn = r["fullName"]
-        role = "framework" if fn.lower() in frameworks else ""
+        role = ("framework" if fn.lower() in frameworks
+                else "listed" if fn.lower() in listed else "")
         L.append(f"{key_for(fn)}|https://github.com/{fn}.git|{role}"
                  f"|{r['stargazersCount']}|{r['pushedAt'][:10]}")
     return "\n".join(L) + "\n"
@@ -187,13 +208,13 @@ def main():
         print(f"   pool.txt exists, keeping it (pass --force to re-hunt)", file=sys.stderr)
         return 0
 
-    stack, found, frameworks, per_query, failed = hunt(conf, args.limit)
+    stack, found, frameworks, listed, per_query, failed = hunt(conf, args.limit)
     if not found:
         print("hunt: every query returned nothing - check `gh auth status`",
               file=sys.stderr)
         return 1
     with open(out, "w", encoding="utf-8") as fh:
-        fh.write(render(args.key, stack, found, frameworks, per_query))
+        fh.write(render(args.key, stack, found, frameworks, listed, per_query))
     print(f"   wrote {len(found)} candidates to {os.path.relpath(out, root)}"
           + (f" ({failed} query/queries FAILED)" if failed else ""), file=sys.stderr)
     return 0

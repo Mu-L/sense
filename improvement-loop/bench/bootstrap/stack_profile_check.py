@@ -25,7 +25,7 @@ WARN_QUERY_STRING = ("looks like a query string, not gh ARGV: a pure-qualifier "
 
 
 def parse(path):
-    keys = {"stack": [], "hunt": [], "framework": []}
+    keys = {"stack": [], "hunt": [], "framework": [], "repo": []}
     unknown = []
     with open(path, encoding="utf-8") as fh:
         for n, line in enumerate(fh, 1):
@@ -68,7 +68,7 @@ def check(path):
             out.append(f"line {n}: {WARN_QUERY_STRING}")
 
     for n, line in unknown:
-        out.append(f"line {n}: unrecognised, expected stack:/hunt:/framework: - {line[:60]}")
+        out.append(f"line {n}: unrecognised, expected stack:/hunt:/framework:/repo: - {line[:60]}")
     return out
 
 
@@ -89,7 +89,8 @@ def main():
         return 1
     keys, _ = parse(conf)
     print(f"stack profile {args.key}: OK - 1 marker, {len(keys['hunt'])} "
-          f"hunt query/queries, {len(keys['framework'])} framework-role repo(s)")
+          f"hunt query/queries, {len(keys['framework'])} framework-role repo(s), "
+          f"{len(keys['repo'])} listed repo(s)")
     return 0
 
 
