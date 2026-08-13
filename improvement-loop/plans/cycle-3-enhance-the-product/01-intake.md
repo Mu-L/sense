@@ -87,7 +87,7 @@ One verdict.
   failure.
 
 **Scope the worklist to what the corpus can prove.** An idiom you cannot point at in a
-cloned repository cannot be proven in `04-prove`, so it does not go on the worklist however
+cloned repository cannot be proven in `05-prove`, so it does not go on the worklist however
 plausible it is. Two to five rows is a lane; twelve rows is a rewrite and it will not land.
 
 **The corpus is two repositories, not one.** One framework-role repo and one application

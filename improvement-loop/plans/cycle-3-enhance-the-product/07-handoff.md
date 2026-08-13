@@ -1,4 +1,4 @@
-# PLAN 05-handoff
+# PLAN 07-handoff
 
 ## TASK
 
@@ -20,9 +20,20 @@ answers both before it explains anything.
 `$KEY`, `$LANG`, `$FRAMEWORK`, `$TITLE`, `$WDIR`, `$SENSE_ROOT`, `$BRANCH` are exported.
 Work from `improvement-loop/`.
 
-1. The window, in order:
+1. The window, in order, both council rounds included:
 
-       cat "$WDIR/worklist.md" "$WDIR/truth.md" "$WDIR/build.md" "$WDIR/prove.md"
+       cat "$WDIR/worklist.md" "$WDIR/proposal.md" "$WDIR/truth.md" "$WDIR/build.md" \
+           "$WDIR/prove.md" "$WDIR/review.md"
+
+1b. The gates, as the driver ran them:
+
+       cat "$WDIR/gates.txt"
+
+   Three rows: `make ci`, the touched-set 94% floor, and qlty. Every one is the driver's
+   own run, not an agent's report, and the page states them as such. A row reading `UNRUN`
+   is reported as UNRUN and never as a pass - a check that did not run is not evidence
+   about the code, and a reader who assumes three greens where there were two is exactly
+   who this page exists to protect.
 
 2. The diff, as a reviewer will meet it:
 
@@ -49,7 +60,7 @@ measured on two real repositories." Someone skimming for fifteen seconds gets th
 and nothing else, so it has to be the true one.
 
 **State what is not covered, in the same voice.** Every lane has an edge: an idiom dropped
-in `02-truth`, a row left undone in `03-build`, a probe that passed narrowly, a repo where
+in `03-truth`, a row left undone in `04-build`, a probe that passed narrowly, a repo where
 the language sits at a low symbol count. A page that implies completeness costs the next
 person a day finding the hole; a page that names its own edges makes the next window cheap.
 
@@ -73,8 +84,9 @@ Write `$WDIR/handoff.md`, six headings, the plain sentence FIRST and above them 
                           probe that shows it
     # What it does not    dropped rows, undone rows, narrow passes, low corpus reach
     # How it was measured the corpus repos, the probe count, and the control repos that held
-    # Before the PR       git-cliff --bumped-version, the gates that ran green, and the
-                          provenance line to paste into the PR body
+    # Before the PR       git-cliff --bumped-version, the gates row by row from
+                          gates.txt with UNRUN stated as UNRUN, both council verdicts,
+                          and the provenance line to paste into the PR body
     # If you would rather not merge it
                           what to delete and what is lost, in two lines
 
@@ -93,6 +105,7 @@ Then `$WDIR/handoff.verdict.json`:
 - The page opens with one plain sentence naming the outcome.
 - Every worklist row appears under either `# What it resolves` or `# What it does not`.
 - The branch name, the commit subjects, the diffstat and the bumped version are quoted.
+- Every row of `gates.txt` is on the page, verbatim, and both council verdicts are named.
 - `git status --short` is empty in `$SENSE_ROOT`.
 - The provenance line is on the page, ready to paste.
 - The verdict JSON exists and parses.

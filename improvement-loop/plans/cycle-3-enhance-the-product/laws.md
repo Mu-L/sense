@@ -45,6 +45,21 @@ those.
   `internal/resolve/<framework>.go`. Reuse shared helpers; never generalise one language's
   heuristic into a generic detector, and never edit another language's files to make yours
   pass.
+- **A GATE IS A RUN BY THE DRIVER, NEVER A NUMBER IN AN ARTIFACT.** `make ci`, the
+  touched-set 94% floor and qlty are run by `product-window.sh` and recorded in
+  `gates.txt`. A phase agent may quote them; it may not BE them. An agent reading its own
+  coverage out of `go tool cover` and writing "above the floor" is a claim, and the whole
+  split between the driver and the plans exists to stop a claim standing in for a check.
+- **UNRUN IS NOT A PASS.** A gate that could not run is recorded as `UNRUN` and carried
+  onto the handoff page as `UNRUN`. Three rows with one blank is a two-gate branch, and a
+  reader who counts three greens has been misled by omission.
+- **TWO COUNCIL PASSES, AND NEITHER SUBSTITUTES FOR THE OTHER.** The approach is reviewed
+  before any code exists, and the finished diff is reviewed before a human sees it. The
+  first asks "is this the right change?", the second asks "did it introduce what it should
+  and nothing else?". The first is the cheap one: it can redirect a lane for the price of a
+  session, where the second can only send finished work back. Neither ever demotes.
+- **ROLES, NEVER NAMES.** A council artifact names the seat by what it reviews. This is a
+  standing rule of the repository and a linter enforces it on the committed surfaces.
 - **THE PRODUCTION DISCIPLINE APPLIES IN FULL.** `make ci` green, the per-file coverage
   floor, zero complexity suppressions, gofmt and goimports, no side effects in the pure
   core. Decompose the function; you cannot `//nolint` your way out.

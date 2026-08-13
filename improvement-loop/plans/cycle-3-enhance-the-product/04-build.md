@@ -1,8 +1,8 @@
-# PLAN 03-build
+# PLAN 04-build
 
 ## TASK
 
-Write the product code that turns every red test from `02-truth` green, and leave the
+Write the product code that turns every red test from `03-truth` green, and leave the
 repository's own gates green with it.
 
 ## SCOPE
@@ -10,7 +10,7 @@ repository's own gates green with it.
 You write Sense's code. **Out of scope:** editing the tests to fit the implementation,
 touching another language's files, adding a command, an output format, a config knob or a
 tool, refactoring code your rows do not require, `verticals/`, and the real-code proof -
-`04-prove` owns that and it is not yours to pre-empt.
+`05-prove` owns that and it is not yours to pre-empt.
 
 You are on `$BRANCH` in `$SENSE_ROOT`. Stay on it.
 
@@ -39,7 +39,7 @@ You are on `$BRANCH` in `$SENSE_ROOT`. Stay on it.
 
        cd "$SENSE_ROOT" && go test ./internal/... 2>&1 | tail -40
 
-   until every test from `02-truth` passes and nothing else broke.
+   until every test from `03-truth` passes and nothing else broke.
 
 5. The repository's gates, both, quoted in your artifact:
 
@@ -58,15 +58,15 @@ You are on `$BRANCH` in `$SENSE_ROOT`. Stay on it.
 
 One verdict.
 
-- `BUILD` - every test from `02-truth` is green, `make ci` is green, `make smoke` is green,
+- `BUILD` - every test from `03-truth` is green, `make ci` is green, `make smoke` is green,
   and every touched file and function is above 94% line and function coverage.
 - `CANNOT-BUILD` - the lane cannot be written inside the identity. Name what stopped it:
   the idiom needs a knob, or a generic detector, or a fifth tool, or the grammar does not
   expose the node. Say what a future window would need. This is a real ending; a lane
   forced through against the identity is worse than a parked one.
 
-**Do not weaken a test to reach green.** If a test from `02-truth` is wrong, say so in the
-artifact, name the row, and leave it red - `04-prove` reads this file and needs to know.
+**Do not weaken a test to reach green.** If a test from `03-truth` is wrong, say so in the
+artifact, name the row, and leave it red - `05-prove` reads this file and needs to know.
 Editing the assertion to match the output is how a lane ships broken and looks proven.
 
 **Do not lower a floor or grow an exception list.** Cover the gap. The coverage gate is
@@ -98,7 +98,7 @@ Commit the implementation on `$BRANCH` with a conventional subject - a new langu
 
 ## DONE WHEN
 
-- Every test written by `02-truth` passes, or is named in `# Left undone` with its reason.
+- Every test written by `03-truth` passes, or is named in `# Left undone` with its reason.
 - `make ci` and `make smoke` output is quoted in `build.md`.
 - The touched-set coverage figures are quoted, and every one is above 94%.
 - Per-language namespacing holds: no generic file carries this language's heuristic.

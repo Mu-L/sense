@@ -1,4 +1,4 @@
-# PLAN 04-prove
+# PLAN 05-prove
 
 ## TASK
 
@@ -75,7 +75,7 @@ One verdict.
 per-language change that alters another language's index is a different change from the one
 that was reviewed, and the identity of this cycle rests on that boundary.
 
-**Fixture-green is not proof and may not be cited as any part of this verdict.** `03-build`
+**Fixture-green is not proof and may not be cited as any part of this verdict.** `04-build`
 already established the tests pass; this phase exists because that is a statement about
 fixtures. Rule on `$WDIR/probes/` and on nothing else.
 

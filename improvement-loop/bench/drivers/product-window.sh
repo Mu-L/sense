@@ -22,18 +22,28 @@
 # opened, no branch is deleted.
 #
 # Phases (a state file resumes at the next one; re-run to advance):
-#   intake   AGENT 01-intake.md   -> worklist + corpus   [WORKLIST|ALREADY-READY|OUT-OF-SCOPE]
-#   truth    branch, then AGENT 02-truth.md -> red tests + probes, then the RED gate
+#   intake    AGENT 01-intake.md  -> worklist + corpus  [WORKLIST|ALREADY-READY|OUT-OF-SCOPE]
+#   proposal  AGENT 02-proposal.md - the council on the APPROACH, before any code
+#                                                        [PROCEED|REWORK]
+#   truth     branch, then AGENT 03-truth.md -> red tests + probes, then the RED gate
 #                                                        [TRUTH|NO-REPRO]
-#   build    control counts BEFORE, AGENT 03-build.md, then `make ci` as the gate
-#                                                        [BUILD|CANNOT-BUILD]
-#   prove    branch binary, re-index the corpus, RUN every probe over MCP, control counts
-#            AFTER, then AGENT 04-prove.md                [PROVEN|REVERT]
-#   handoff  AGENT 05-handoff.md -> the page a human reads before the PR   [HANDOFF]
+#   build     control counts BEFORE, AGENT 04-build.md, then the THREE machine gates:
+#             `make ci`, the touched-set 94% gate, qlty     [BUILD|CANNOT-BUILD]
+#   prove     branch binary, re-index the corpus, RUN every probe over MCP, control counts
+#             AFTER, then AGENT 05-prove.md                 [PROVEN|REVERT]
+#   review    AGENT 06-review.md - the council on the finished DIFF      [PASS|REWORK]
+#   handoff   AGENT 07-handoff.md -> the page a human reads before the PR    [HANDOFF]
+#
+# THE GATES ARE THE DRIVER'S, NOT THE AGENT'S. `make ci`, the touched-set floor and qlty
+# all ran inside the build agent's own session before this split, and were reported in its
+# artifact. An agent grading its own coverage is the shape this loop exists to remove, so
+# each one now runs here, writes gates.txt, and refuses to advance on a non-zero exit.
+# The council reads gates.txt rather than re-running them: machine checks are not its job.
 #
 # Usage:
 #   bash bench/drivers/product-window.sh <key>              # run from saved phase
 #   bash bench/drivers/product-window.sh <key> --phase build # force one phase
+#   bash bench/drivers/product-window.sh <key> --gates       # re-run the machine gates only
 #   bash bench/drivers/product-window.sh <key> --reset       # back to intake
 #   bash bench/drivers/product-window.sh --status            # every window's phase
 #
@@ -50,16 +60,16 @@ PLANS="$IL_ROOT/plans/cycle-3-enhance-the-product"
 WROOT="$IL_ROOT/product-window"
 STATE="$WROOT/.window-state.json"
 CLONES="${SENSE_CLONES:-$HOME/Developer/luuuc/oss/sense-benchmark/sense}"
-PHASES=(intake truth build prove handoff done)
 
 # ---- args -------------------------------------------------------------------
-KEY=""; FORCE_PHASE=""; STATUS=0; RESET=0
+KEY=""; FORCE_PHASE=""; STATUS=0; RESET=0; GATES=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --phase) FORCE_PHASE="$2"; shift 2 ;;
+    --gates)  GATES=1; shift ;;
     --status) STATUS=1; shift ;;
     --reset)  RESET=1; shift ;;
-    -h|--help) sed -n '2,38p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,50p' "$0"; exit 0 ;;
     -*) echo "unknown flag: $1" >&2; exit 64 ;;
     *)  KEY="$1"; shift ;;
   esac
@@ -133,11 +143,14 @@ headless() { # <cwd> <out.json> <prompt>
   ) > "$out" 2> "${out%.json}.log"
 }
 
-# spawn_plan <plan-file> - hand one plan to a headless agent, laws first. The laws are
-# PREPENDED rather than linked: a plan that ends in "see the laws" is the
+# spawn_plan <plan-file> [cwd] - hand one plan to a headless agent, laws first. The laws
+# are PREPENDED rather than linked: a plan that ends in "see the laws" is the
 # documentation-as-runtime-prompt bug this split exists to remove.
+# The council phases pass SENSE_ROOT as cwd, where the project's own commands live:
+# `/council` is defined at the repository root and does not resolve from
+# improvement-loop/. Everything else runs from IL_ROOT.
 spawn_plan() {
-  local plan="$PLANS/$1" name="$PHASE" prompt
+  local plan="$PLANS/$1" name="$PHASE" cwd="${2:-$IL_ROOT}" prompt
   [ -f "$plan" ] || { echo "[$PHASE] missing plan: $plan" >&2; exit 1; }
   mkdir -p "$WDIR"
   echo "## [$PHASE] spawning the phase agent on ${PLANS#"$IL_ROOT/"}/$1"
@@ -154,12 +167,13 @@ spawn_plan() {
     CLONES     = $CLONES
     BRANCH     = $BRANCH
 
-Work from $IL_ROOT. Write the artifact and the verdict JSON, then stop.
+Work from $cwd. Write the artifact and the verdict JSON, then stop.
 EOF
 )"
-  KEY="$KEY" LANG="$LANG" FRAMEWORK="$FRAMEWORK" TITLE="$TITLE" WDIR="$WDIR" \
-  SENSE_ROOT="$SENSE_ROOT" CLONES="$CLONES" BRANCH="$BRANCH" \
-    headless "$IL_ROOT" "$WDIR/$name.agent.json" "$prompt"
+  (
+    export KEY LANG FRAMEWORK TITLE WDIR SENSE_ROOT CLONES BRANCH
+    headless "$cwd" "$WDIR/$name.agent.json" "$prompt"
+  )
   echo "   agent transcript: $WDIR/$name.agent.json (stderr in $name.agent.log)"
 }
 
@@ -229,7 +243,7 @@ do_intake() {
   case "$VERDICT" in
     WORKLIST)
       [ -s "$WDIR/corpus.txt" ] || { echo "[intake] WORKLIST with no corpus.txt - NOT advancing." >&2; exit 1; }
-      NEXT=truth ;;
+      NEXT=proposal ;;
     *) state_set "$KEY" done
        park "[$KEY] intake ruled $VERDICT. No product code is owed." \
             "Read: product-window/$KEY/worklist.md" ;;
@@ -248,7 +262,7 @@ do_truth() {
     || git -C "$SENSE_ROOT" checkout -b "$BRANCH"
   echo "## [truth] on branch $BRANCH"
 
-  spawn_plan 02-truth.md
+  spawn_plan 03-truth.md
   require_verdict truth "TRUTH,NO-REPRO"
   [ "$VERDICT" = "NO-REPRO" ] && { state_set "$KEY" done
     park "[$KEY] no worklist row could be made to fail." \
@@ -271,21 +285,85 @@ do_build() {
   # BEFORE, with the installed binary: main's behaviour on three other languages, measured
   # while this branch still carries nothing but tests.
   record_control before "${SENSE_BIN:-sense}"
-  spawn_plan 03-build.md
+  spawn_plan 04-build.md
   require_verdict build "BUILD,CANNOT-BUILD"
   [ "$VERDICT" = "CANNOT-BUILD" ] && { state_set "$KEY" done
     park "[$KEY] the lane cannot be built inside the identity." \
          "Read: product-window/$KEY/build.md"; }
 
-  # The repository's own gate, run by the driver and not taken from the agent's report:
-  # build, coverage floor, lint, complexity ledger.
-  echo "## [build] make ci"
-  (cd "$SENSE_ROOT" && make ci > "$WDIR/build.ci.log" 2>&1) || {
-    echo "[build] make ci FAILED on a BUILD verdict - NOT advancing."
-    echo "        Read $WDIR/build.ci.log."
-    exit 1; }
-  echo "   green (log: product-window/$KEY/build.ci.log)"
+  machine_gates
   NEXT=prove
+}
+
+# machine_gates - the three checks the driver owns, in the order they get cheaper to fix.
+# Each writes its result to gates.txt, which 06-review and 07-handoff read: the council
+# does not re-run a machine check, and the page states them as driver-run facts.
+#
+# `make ci` enforces the repository's 92% floor over the whole tree; the window demands
+# above 94% on the files this branch touched, which is a different question and needs its
+# own instrument (lib/touched_coverage.py, known-answer control in its test file).
+machine_gates() {
+  : > "$WDIR/gates.txt"
+  gate_row() { printf '%-28s %s\n' "$1" "$2" >> "$WDIR/gates.txt"; }
+
+  echo "## [build] gate 1 of 3: make ci"
+  (cd "$SENSE_ROOT" && make ci > "$WDIR/build.ci.log" 2>&1) || {
+    gate_row "make ci" "FAIL"
+    echo "[build] make ci FAILED - NOT advancing. Read $WDIR/build.ci.log."; exit 1; }
+  gate_row "make ci" "PASS (build, coverage floor, lint, complexity ledger)"
+  echo "   green (log: product-window/$KEY/build.ci.log)"
+
+  echo "## [build] gate 2 of 3: touched-set coverage, floor 94%"
+  if (cd "$IL_ROOT" && python3 "$LIB/touched_coverage.py" --root "$SENSE_ROOT" \
+        --base main --branch "$BRANCH" --profile coverage.txt) \
+        > "$WDIR/build.touched.log" 2>&1; then
+    gate_row "touched coverage >= 94%" "PASS"
+    sed 's/^/     /' "$WDIR/build.touched.log"
+  else
+    gate_row "touched coverage >= 94%" "FAIL"
+    sed 's/^/     /' "$WDIR/build.touched.log"
+    echo "[build] a touched file is below the 94% floor - NOT advancing."; exit 1
+  fi
+
+  echo "## [build] gate 3 of 3: qlty"
+  if ! command -v qlty >/dev/null 2>&1; then
+    # UNRUN is not a pass. The window continues, because qlty is a workstation tool and
+    # its absence is not evidence about the code, but the page must say so rather than
+    # let a reader assume three green gates.
+    gate_row "qlty" "UNRUN (not on PATH)"
+    echo "   qlty is not installed - recorded UNRUN, not passed"
+  elif (cd "$SENSE_ROOT" && qlty check --upstream=main --no-fix) \
+        > "$WDIR/build.qlty.log" 2>&1; then
+    gate_row "qlty" "PASS"
+    tail -3 "$WDIR/build.qlty.log" | sed 's/^/     /'
+  else
+    gate_row "qlty" "FAIL"
+    tail -20 "$WDIR/build.qlty.log" | sed 's/^/     /'
+    echo "[build] qlty found issues - NOT advancing. Read $WDIR/build.qlty.log."; exit 1
+  fi
+}
+
+# The two council passes. They read a file and write a verdict like every other phase; the
+# only difference is where they run from, because /council is defined at the repository
+# root. The council runs INLINE and never spawns seats, so the Agent ban still holds.
+do_proposal() {
+  spawn_plan 02-proposal.md "$SENSE_ROOT"
+  require_verdict proposal "PROCEED,REWORK"
+  [ "$VERDICT" = "REWORK" ] && { park \
+    "[$KEY] the council sent the APPROACH back, before any code was written." \
+    "Read: product-window/$KEY/proposal.md" \
+    "That is the cheapest outcome this cycle can produce; nothing is owed but a decision."; }
+  NEXT=truth
+}
+
+do_review() {
+  spawn_plan 06-review.md "$SENSE_ROOT"
+  require_verdict review "PASS,REWORK"
+  [ "$VERDICT" = "REWORK" ] && { park \
+    "[$KEY] the council found a defect in the finished diff." \
+    "Read: product-window/$KEY/review.md" \
+    "The branch $BRANCH is left in place with its commits."; }
+  NEXT=handoff
 }
 
 do_prove() {
@@ -336,17 +414,17 @@ PY
       || { cat "$WDIR/control.before"; echo "--"; cat "$WDIR/control.after"; }
   } > "$WDIR/probes/control.txt"
 
-  spawn_plan 04-prove.md
+  spawn_plan 05-prove.md
   require_verdict prove "PROVEN,REVERT"
   [ "$VERDICT" = "REVERT" ] && { state_set "$KEY" done
     park "[$KEY] the lane did not prove on real code." \
          "Read: product-window/$KEY/prove.md" \
          "The branch $BRANCH is left in place; delete it when you have read the page."; }
-  NEXT=handoff
+  NEXT=review
 }
 
 do_handoff() {
-  spawn_plan 05-handoff.md
+  spawn_plan 07-handoff.md
   require_verdict handoff "HANDOFF"
   state_set "$KEY" done
   park "[$KEY] the window is finished and stops before the pull request." \
@@ -357,6 +435,15 @@ do_handoff() {
        "Read the page, then open the PR yourself (/pr). Nothing else is owed."
 }
 
+# --gates re-runs the driver's three machine checks and rewrites gates.txt, spawning
+# nothing. It exists because the gates and the agent that writes the code are separable:
+# re-running them should never cost a session, and a branch whose gates were run by hand
+# needs a way to put that record where 06-review and 07-handoff read it.
+if [ "$GATES" = 1 ]; then
+  PHASE=build; mkdir -p "$WDIR"; machine_gates
+  echo ""; echo "gates.txt:"; sed 's/^/  /' "$WDIR/gates.txt"; exit 0
+fi
+
 # ---- driver: run phases from the current one until a gate stops us ----------
 PHASE="${FORCE_PHASE:-$(state_get "$KEY")}"; [ -z "$PHASE" ] && PHASE=intake
 echo "[$KEY] entering at phase '$PHASE' ($TITLE, lang=$LANG, framework=$FRAMEWORK)"
@@ -364,13 +451,15 @@ echo "[$KEY] entering at phase '$PHASE' ($TITLE, lang=$LANG, framework=$FRAMEWOR
 while :; do
   NEXT=""
   case "$PHASE" in
-    intake)  do_intake ;;
-    truth)   do_truth ;;
-    build)   do_build ;;
-    prove)   do_prove ;;
-    handoff) do_handoff ;;
-    done)    echo "[$KEY] phase 'done' - nothing to do (use --reset to rerun)"; exit 0 ;;
-    *)       echo "unknown phase '$PHASE'" >&2; exit 64 ;;
+    intake)   do_intake ;;
+    proposal) do_proposal ;;
+    truth)    do_truth ;;
+    build)    do_build ;;
+    prove)    do_prove ;;
+    review)   do_review ;;
+    handoff)  do_handoff ;;
+    done)     echo "[$KEY] phase 'done' - nothing to do (use --reset to rerun)"; exit 0 ;;
+    *)        echo "unknown phase '$PHASE'" >&2; exit 64 ;;
   esac
   [ -z "$NEXT" ] && { echo "[$KEY] phase '$PHASE' set no next phase - stopping" >&2; exit 1; }
   state_set "$KEY" "$NEXT"

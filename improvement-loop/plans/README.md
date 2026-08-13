@@ -56,10 +56,12 @@ cannot record a loss, cycle 2 publishes one.
 | File | Phase it runs | Verdicts |
 |---|---|---|
 | `01-intake.md` | measure what Sense misses on real code of the stack, and scope it | `WORKLIST`, `ALREADY-READY`, `OUT-OF-SCOPE` |
-| `02-truth.md` | a failing test per idiom, plus the real-code probes | `TRUTH`, `NO-REPRO` |
-| `03-build.md` | the extractor, model, resolver and detectors, to green through `make ci` | `BUILD`, `CANNOT-BUILD` |
-| `04-prove.md` | read the MCP probes on cloned repos, and the other-language control | `PROVEN`, `REVERT` |
-| `05-handoff.md` | the page a human reads before opening the pull request | `HANDOFF` |
+| `02-proposal.md` | the council on the approach, before any code exists | `PROCEED`, `REWORK` |
+| `03-truth.md` | a failing test per idiom, plus the real-code probes | `TRUTH`, `NO-REPRO` |
+| `04-build.md` | the extractor, model, resolver and detectors, to green | `BUILD`, `CANNOT-BUILD` |
+| `05-prove.md` | read the MCP probes on cloned repos, and the other-language control | `PROVEN`, `REVERT` |
+| `06-review.md` | the council on the finished diff | `PASS`, `REWORK` |
+| `07-handoff.md` | the page a human reads before opening the pull request | `HANDOFF` |
 | `laws.md` | not a plan - prepended to all of them | - |
 
 Cycle 3 is the only cycle that touches Sense's own code, and the only one whose unit is a
@@ -68,7 +70,10 @@ stack has a vertical. It shares no state with cycles 1 and 2 - no `verticals/`, 
 run, no paid token - and that isolation is what lets it run unattended, because the only
 question it asks is a fact: this relationship exists in the source, does Sense return it?
 It runs to a committed local branch and stops. The human gate is the pull request, and it
-is the only one. Driver: `bench/drivers/product-window.sh`; it opens by itself when
+is the only one - which is why the two council passes and the three machine gates are the
+driver's own runs, recorded in `gates.txt`: what a human is handed has already been checked
+by a machine and reviewed by a round, and the page states each as what it is.
+Driver: `bench/drivers/product-window.sh`; it opens by itself when
 `bench/drivers/bootstrap-run.sh` sees bootstrap stop on `EXTRACTOR-NOT-READY`.
 
 Cycle 2 has two plans and not five because most of it is not judgment. Eligibility, the
