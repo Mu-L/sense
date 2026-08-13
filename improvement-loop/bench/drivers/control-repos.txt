@@ -1,0 +1,20 @@
+# The no-regress control for cycle 3. One `name|url` per line.
+#
+# A per-language change cannot alter another language's index, and cycle 3 PROVES that
+# rather than assuming it: each of these is scanned with the installed binary before the
+# build and with the branch binary after it, and the symbol and edge counts must be
+# identical. The precedent is the php holder-composition fix, verified php-only by
+# rescanning a Go, a Ruby and a Python repo and finding identical counts.
+#
+# These are cloned into the WINDOW's own tree, never into SENSE_CLONES: a control scan
+# writes the clone's .sense, and the bench's clones carry indexes cycles 1 and 2 read.
+# Rebuilding one of those with an unmerged binary would corrupt a frozen measurement.
+#
+# Small is the point. The question is "did any edge move", not "is this corpus
+# representative", so a small stable repo per language keeps the control to seconds.
+# Swap any line for another repo of the same language; add a line when a window's change
+# could plausibly reach a fourth.
+
+gin|https://github.com/gin-gonic/gin
+sinatra|https://github.com/sinatra/sinatra
+requests|https://github.com/psf/requests

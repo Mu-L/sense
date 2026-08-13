@@ -133,6 +133,10 @@ improvement-loop/verticals/*/archive/
 # tree - it is run output, so it stays private.
 improvement-loop/bench/results/
 improvement-loop/**/transcripts/
+# Cycle 3's windows: the same policy one cycle up. A window holds agent transcripts,
+# make ci logs, raw MCP probe returns and a built binary - run output, not instructions.
+# What survives a window is the git branch it produced, which is tracked as code.
+improvement-loop/product-window/
 # Working artifacts a driver rewrites as it runs: per-repo phase state and the
 # model-shared variance scratch. Position is read from the results tree, not these.
 improvement-loop/verticals/**/.loop-state.json
