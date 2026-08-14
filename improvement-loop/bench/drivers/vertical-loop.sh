@@ -186,12 +186,16 @@ headless() { # <cwd> <out.json> <prompt> [extra claude args...]
   (
     cd "$cwd" || exit 1
     export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1
-    IS_SANDBOX=1 claude -p "$prompt" \
+    # The prompt goes in on STDIN, never as the value of -p: an agent definition starts
+    # with its `---` frontmatter, and the CLI parser reads a value beginning with a dash
+    # as an option ("error: unknown option '---"). That killed the first win-confirm spawn
+    # before it ran a single check, and reported it as a DoD failure.
+    IS_SANDBOX=1 claude -p \
       --output-format json \
       --permission-mode bypassPermissions \
       --disallowed-tools "Agent" \
       ${PLAN_MODEL:+--model "$PLAN_MODEL"} \
-      "$@"
+      "$@" <<<"$prompt"
   ) > "$out" 2> "${out%.json}.log"
 }
 
