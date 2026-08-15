@@ -8,6 +8,7 @@ package scenario
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -15,10 +16,20 @@ import (
 
 // Scenario is the subset of a scenario file the skeleton uses.
 type Scenario struct {
-	Name        string `yaml:"name"`
-	Repo        string `yaml:"repo"`
-	Description string `yaml:"description"`
-	Steps       []Step `yaml:"steps"`
+	Name        string    `yaml:"name"`
+	Repo        string    `yaml:"repo"`
+	Description string    `yaml:"description"`
+	Steps       []Step    `yaml:"steps"`
+	Gold        []GoldRow `yaml:"gold"`
+}
+
+// GoldRow is one thing a good answer has to find. The corpus keeps the row's
+// authoritative location as the first path:line of its Relation prose, with the
+// reason in English after it.
+type GoldRow struct {
+	ID       string `yaml:"id"`
+	Group    string `yaml:"group"`
+	Relation string `yaml:"relation"`
 }
 
 // Step is one question in the session.
@@ -73,4 +84,46 @@ func (s Scenario) Prompt() string {
 		fmt.Fprintf(&b, "\n## Step %d: %s\n\n%s\n", i+1, step.Name, strings.TrimSpace(step.Prompt))
 	}
 	return b.String()
+}
+
+// leadingCite is the row's authoritative location: the first path:line in its
+// Relation prose, anchored so a location buried in the reason text cannot be
+// mistaken for the row's own.
+//
+// This MUST accept exactly what the scorer's citation pattern accepts on the
+// answer side. A shape gold takes that a citation cannot match would leave the
+// row permanently unmatchable, and the packages do not import each other, so
+// CitePatternMatchesTheScorer in the tests is what holds them together.
+var leadingCite = regexp.MustCompile(`^([A-Za-z0-9._/\-]+\.[A-Za-z][A-Za-z0-9]*:\d+)`)
+
+// Cite returns the row's authoritative path:line, or "" if it has none. A row
+// with no location cannot be scored strictly at all, so callers must refuse it
+// rather than let it become a permanent miss — see Scenario.GoldGroup.
+func (g GoldRow) Cite() string {
+	m := leadingCite.FindStringSubmatch(strings.TrimSpace(g.Relation))
+	if m == nil {
+		return ""
+	}
+	return m[1]
+}
+
+// GoldGroup returns the rows of one gold group, in file order.
+//
+// A row with no parseable location is an error rather than a row. Left alone it
+// becomes a miss nothing can ever satisfy, which silently deflates the score and
+// looks exactly like an arm that failed to find the place — the direction of
+// failure that makes a real result look worse than it was.
+func (s Scenario) GoldGroup(name string) ([]GoldRow, error) {
+	var out []GoldRow
+	for _, g := range s.Gold {
+		if g.Group != name {
+			continue
+		}
+		if g.Cite() == "" {
+			return nil, fmt.Errorf("gold row %q in group %q has no path:line at the front of its relation, "+
+				"so nothing could ever match it", g.ID, name)
+		}
+		out = append(out, g)
+	}
+	return out, nil
 }
