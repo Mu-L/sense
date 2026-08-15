@@ -1,0 +1,10 @@
+{
+  "id": "untreated",
+  "kind": "baseline",
+  "needs_mcp": false,
+  "agents": [
+    "claude-code",
+    "codex",
+    "opencode"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "aspnetcore",
+  "url": "https://github.com/dotnet/aspnetcore.git",
+  "commit": "1f689ce2bede1617d28fd3c76bce99532bb15ba8",
+  "languages": [
+    "csharp"
+  ],
+  "stack": "dotnet"
+}

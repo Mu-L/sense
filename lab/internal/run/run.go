@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -72,6 +73,14 @@ type Meta struct {
 	Command     string   `json:"command"`
 	Args        []string `json:"args"`
 	StartedAt   string   `json:"started_at"`
+	// StdoutBytes is how much the session actually said.
+	//
+	// It is here because of a specific failure: an arm whose model id resolved
+	// to nothing produced zero bytes and exited 1, and that is byte-identical
+	// in shape to a session that ran and legitimately failed. A run with a
+	// real wall and no output is not a result, it is a broken spawn, and this
+	// is what makes the difference visible without reading transcripts.
+	StdoutBytes int64 `json:"stdout_bytes"`
 }
 
 // exitCodeKilled is what Meta records when the process was killed from outside.
@@ -124,8 +133,11 @@ func Session(ctx context.Context, dir string, s Spec) (Meta, error) {
 		return Meta{}, err
 	}
 
+	said, _ := stdout.Seek(0, io.SeekCurrent)
+
 	m := Meta{
 		Outcome:     outcomeOf(code, ended),
+		StdoutBytes: said,
 		ExitCode:    code,
 		WallSeconds: s.Wall.Seconds(),
 		TookSeconds: time.Since(started).Seconds(),

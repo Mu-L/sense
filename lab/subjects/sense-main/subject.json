@@ -1,0 +1,10 @@
+{
+  "id": "sense-main",
+  "kind": "sense",
+  "needs_mcp": true,
+  "agents": [
+    "claude-code",
+    "codex",
+    "opencode"
+  ]
+}

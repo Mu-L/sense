@@ -1,0 +1,11 @@
+{
+  "id": "kimi-for-coding/k3",
+  "provider": "moonshot",
+  "aliases": [],
+  "available_under": [
+    "api_key"
+  ],
+  "agents": [
+    "opencode"
+  ]
+}
