@@ -1,0 +1,289 @@
+name: Bitwarden server work session - audit the plan-pricing contract before a rework
+repo: bitwarden-server
+contract_symbol: IPricingClient
+contract_file: src/Core/Billing/Pricing/IPricingClient.cs
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md), cycle 1,
+# attempt 4 on this repo. RE-QUESTION, routed back from a measured two-arm mini-bench.
+# The ANCHOR MOVES again, and "WHY THE ANCHOR MOVES" below carries the measurement that
+# forced it. Superseded yamls are kept as
+#   `bitwarden-server.yaml.conversion-boundary.bak`  (attempt 1, anchor Permissions)
+#   `bitwarden-server.yaml.declared-shape.bak`       (attempt 2, anchor Permissions)
+#   `bitwarden-server.yaml.expiring-lifetime.bak`    (attempt 3, anchor ExpiringTokenable)
+#
+# ------------------------------------------------------------------------------------
+# TRAJECTORY - every previous cycle, and which side of the window it fell on
+# ------------------------------------------------------------------------------------
+# The window is BOTH conditions at once: plain arm <= 0.50 AND ours >= plain + 0.50.
+#
+#   attempt 1  "the representation-boundary conversion audit"   anchor Permissions
+#     baseline dependents 0.6842 (13/19) | sense 0.8421 (16/19) | delta +0.1579
+#     n = baseline x1, sense x1 (confirm_band SETTLED). SIDE: BASELINE-TOO-HIGH by 0.18.
+#     Killed by ONE alternation over the conversion idioms
+#     (`new Permissions\|GetPermissions()\|SetPermissions(\|LoadClassFromJsonData<Permissions>`).
+#
+#   attempt 2  "the declared-shape holder audit"                anchor Permissions
+#     baseline dependents 0.8333 (10/12) | sense 1.0000 (12/12) | delta +0.1667
+#     n = baseline x1, sense x1 (confirm_band SETTLED). SIDE: BASELINE-TOO-HIGH by 0.33,
+#     FURTHER OUT than attempt 1. Killed by the anchor token in declaration position:
+#     a declared member that carries the set is literally spelled `Permissions`.
+#
+#   attempt 3  "who chooses the lifetime"                       anchor ExpiringTokenable
+#     baseline dependents 1.0000 (12/12) | sense 1.0000 (12/12) | delta +0.0000
+#     n = baseline x1, sense x1 (confirm_band SETTLED). SIDE: BASELINE-TOO-HIGH by 0.50,
+#     the maximum possible margin. Killed by `grep -rn "new [A-Za-z]*Tokenable"` - one
+#     regex that does not contain the anchor's name and printed the entire answer set,
+#     because the thirteen subtypes share a lexical SUFFIX. Twelve calls, 145 seconds.
+#     Second, independent finding from that run: the sense arm never called sense_blast.
+#     It called sense_graph(callers) on a contract with zero call edges, got nothing, and
+#     grepped (`transcript_miss`: grep-fallback in 1/1, 12/12 CITED-NOT-RETURNED).
+#
+#   ALL THREE FELL ON THE SAME SIDE, and monotonically further out: 0.68 -> 0.83 -> 1.00.
+#   This draft corrects from the BASELINE-TOO-HIGH side and intends to move the plain arm
+#   DOWN by at least 0.50, to 0.50 or below. It is not aimed at the opposite failure: the
+#   sense arm has scored 0.84 / 1.00 / 1.00 on this repo and is not the constraint.
+#
+# ------------------------------------------------------------------------------------
+# WHAT THE THREE FAILURES HAVE IN COMMON, AND WHAT THIS DRAFT CHANGES
+# ------------------------------------------------------------------------------------
+# Every one of them asked for a set whose members are reachable from ONE lexical family:
+# the anchor token (attempts 1, 2) or a shared subtype suffix (attempt 3). The correction
+# each time changed WHICH strings the mechanism implied; it never stopped the mechanism
+# from implying a covering string. So this draft does not ask for a set of sites at all.
+#
+# It asks for the SECOND RING: the places that would be holding a live instance of the
+# contract at runtime while naming neither it nor anything lexically related to it,
+# because the one collaborator abstraction they do declare a field for is fronting an
+# implementation that keeps the contract itself. This is the kind measured strongest
+# across the whole bench (+0.58, +0.67, +0.80, +1.00 on four Go cells), it is UNMEASURED
+# in this vertical (see `answer-forms.md`, which is empty), and it is only available where
+# the retention ring is non-empty - which is the reason the anchor had to move again.
+#
+# ------------------------------------------------------------------------------------
+# WHY THE ANCHOR MOVES (measured, quoted, not asserted)
+# ------------------------------------------------------------------------------------
+# `ITERATE ON THE QUESTION, KEEP THE ANCHOR` is spent on both previous anchors, on
+# arithmetic rather than taste:
+#   - ExpiringTokenable: baseline 1.0000, sense-only 0, baseline-only 0. Recall caps at
+#     1.00, so NO re-weighting of that gold can produce a positive delta.
+#   - The kind this draft uses needs a ring, and neither previous anchor has one.
+#     Measured over MCP on the pinned clone, this session, both at defaults:
+#         sense_blast(ExpiringTokenable) -> retained_via_interfaces_count: None (no ring)
+#         sense_blast(Permissions)       -> 2 production ring files, 1 via (IActingUser)
+#     A kind that cannot fire on an anchor is not an option on that anchor.
+# `AXIS-DEAD IS NEVER REPO-DEAD`: all three verdicts rule on their axis, not on this repo.
+#
+# ------------------------------------------------------------------------------------
+# SEAM PROFILE - IPricingClient, and the two candidates profiled against it
+# ------------------------------------------------------------------------------------
+#   seam_hunt.py <clone> IPricingClient --propose
+#     SCATTER (dirs)   : 0   -> {}
+#     GREP-NOISE       : 'IPricingClient' in 57 app files   PRECISION=0.00
+#     HOLDERS (no call): 22 app files compose/inherit/include it
+#     VERDICT          : colocated(0dir) + GREP-NOISY + HELD-NOT-CALLED(22)
+#   seam_hunt.py <clone> IDeviceRepository --propose
+#     GREP-NOISE: 25 app files  PRECISION=0.00   HOLDERS: 17
+#   seam_hunt.py <clone> IStripeAdapter --propose
+#     GREP-NOISE: 58 app files  PRECISION=0.00   HOLDERS: 13
+#
+#   READ PRECISION HONESTLY HERE: 0.00 on all three is DEGENERATE, not a 0.078-grade
+#   signal. The numerator is caller-edge dependents, and a C# interface is HELD, not
+#   called - the call edges land on the concrete implementation. So precision cannot rank
+#   candidates in this stack, and `PRECISION RANKS, IT NEVER KILLS` cuts both ways: it
+#   does not vouch either. Attempt 1's anchor profiled at PRECISION=0.02 and its baseline
+#   came in at 0.6842. The ranking used here instead is RING DIVERSITY, which is the
+#   property `ring_sweep.py`'s own header says explains every Go cell in the campaign.
+#
+# ------------------------------------------------------------------------------------
+# RING PROFILE - the number this anchor was actually chosen on
+# ------------------------------------------------------------------------------------
+# Measured over MCP, `sense_blast(IPricingClient)` at defaults, no min_confidence:
+#     retained_via_interfaces_count : 36   (36 of 36 SHOWN - no paging, retained_next_offset None)
+#     production ring files          : 31  (5 test rows excluded)
+#     distinct vias                  : 9
+#     largest via's share            : 8/31 = 0.26
+#     via histogram (production): IStripePaymentService 8, IOrganizationService 7,
+#       IProviderService 5, ICipherService 4, IRemoveOrganizationFromProviderCommand 2,
+#       IMaxProjectsQuery 2, IUpdateOrganizationUserCommand 1, ISetUpSponsorshipCommand 1,
+#       ISendValidationService 1
+# This is the dolt signature that `ring_sweep.py` documents as the win side (18 files /
+# 20 vias, paid +0.80) and the inverse of its dead side (a ring that saturates on ONE
+# via, one grep away). It was picked over the two runners-up on that number:
+#     IPricingClient    31 ring files,  9 vias, max-share 0.26
+#     IDeviceRepository 14 ring files,  8 vias, max-share 0.29
+#     IStripeAdapter    30 ring files,  6 vias, max-share 0.40
+# The nine vias share no lexical family beyond the `I` prefix every interface in the
+# codebase carries, so there is no `*Tokenable`-style alternation over them.
+#
+# ------------------------------------------------------------------------------------
+# IPROVIDERSERVICE CAVEAT - found by the hand audit, recorded rather than hidden
+# ------------------------------------------------------------------------------------
+# `via_satisfiers` in the shown payload is 1 for seven of the nine vias and 2 for two of
+# them, and the two were checked by hand:
+#   IUpdateOrganizationUserCommand - 2 satisfiers, and BOTH declare IPricingClient
+#     (src/Core/AdminConsole/OrganizationFeatures/OrganizationUsers/UpdateOrganizationUserCommand.cs:32
+#      and .../OrganizationUsers/UpdateUser/v2/UpdateOrganizationUserCommand.cs:30).
+#     The hold is certain whichever one is registered.
+#   IProviderService - 2 satisfiers, and only ONE of them holds the contract:
+#     bitwarden_license/.../ProviderService.cs:65 declares IPricingClient;
+#     src/Core/AdminConsole/Services/NoopImplementations/NoopProviderService.cs:12 does not.
+#     So the three IProviderService gold rows retain the contract on a cloud/commercial
+#     registration and not on a self-hosted one. They are KEPT - the ring is documented in
+#     the payload itself as "may retain, one interface indirection deep", the ask is
+#     phrased as "would be holding" rather than "always holds", and dropping them would
+#     take gold to 13 rows and remove a via. Their `relation` strings say "the cloud
+#     satisfier" rather than "the single satisfier", which is what the audit found.
+#
+# ------------------------------------------------------------------------------------
+# HEADER FACTS A GREP PRINTS - recorded, deciding nothing (`NO GREP SCREEN IS A GATE`)
+# ------------------------------------------------------------------------------------
+#   `grep -rln IPricingClient --include=*.cs src/ bitwarden_license/ util/` -> 62 files.
+#   ZERO of them is a gold `dependents` row; every one of the 16 gold files was checked
+#   individually with `grep -c IPricingClient <file>` and returned 0.
+#   This is recorded, NOT relied on. `TOKEN-DARKNESS IS NOT THE MECHANISM`, and attempt 3
+#   is this bench's own freshest proof: its gold was perfectly dark on its anchor and its
+#   baseline still scored 1.0000, because a different lexical family covered it. What is
+#   claimed here is the ring shape above, and only the run decides it.
+#
+# ------------------------------------------------------------------------------------
+# ANSWER FORM
+# ------------------------------------------------------------------------------------
+# Form used: "what HOLDS X, transitively, without naming it" (retention / second ring).
+# Line in `verticals/csharp-aspnet/answer-forms.md`: NONE - that page is empty, so this
+# form is UNMEASURED in this vertical. It is measured-to-win elsewhere in the bench
+# (+0.58, +0.67, +0.80, +1.00 on four Go cells). The forms this vertical HAS measured are
+# all "find every place that uses X" variants, and all three failed here at 0.68 / 0.83 /
+# 1.00; this draft is not one of them.
+#
+# THE ANSWER IS NOT A LIST OF THE PLACES A NAME APPEARS: the answer is a set of pairs -
+# a holder and the single intermediary abstraction that ties it to the contract - and by
+# construction not one of the 16 gold files contains the contract's name, nor the name of
+# any type in its file, nor any lexical relative of it. Naming the holder without the
+# intermediary is a half answer; the ask says so and the rubric scores it so.
+#
+# ------------------------------------------------------------------------------------
+# MEMORIZATION
+# ------------------------------------------------------------------------------------
+#   memorization_probe.py <clone> IPricingClient --json bitwarden-server.memorization.json
+#     {"ok": true, "ran": true, "applicable": false, "recall": null, "truth_n": 0,
+#      "reason": "only 0 member(s) declared (< 5) - too few to score recitation"}
+#   The probe is INAPPLICABLE, so it clears nothing by itself and is not quoted as if it
+#   did. The gold rows stand on the second leg of the law instead: each credit is a
+#   line-level structural fact - the line number of one dependency-injection field
+#   declaration inside a constructor block of 10-25 injected members - which no model
+#   recites. Per-file churn dates are uninformative on this clone (every gold file reports
+#   the pin date 2026-08-12, i.e. the clone is not carrying real per-file history).
+#
+# ------------------------------------------------------------------------------------
+# GOLD RAILS
+# ------------------------------------------------------------------------------------
+#   - 16 `dependents` rows, ONE FILE EACH, across 12 areas.
+#   - Every one appears in the SHOWN `sense_blast(IPricingClient)` payload over MCP at
+#     defaults (the whole 36-row ring is shown; nothing is behind an offset page).
+#   - Every credit was hand-read in the file: the `grep -n <via> <file>` output for all 16
+#     is in the audit sidecar, and each pin is the private readonly field declaration.
+#   - Every chain was hand-audited at its construction site: for all 9 vias the carrier
+#     class was confirmed to declare `IPricingClient` itself
+#     (`grep -n IPricingClient <carrier>` non-empty for all 9).
+#   - The contract itself, its single implementation and its start-up wiring are the
+#     non-scoring `contract` anchors. No `dependents` row appears in that group.
+
+description: >
+  A billing-platform work session on the Bitwarden server. The team is about to rework how
+  the application obtains plan pricing, and the ticket has two parts: understand the piece
+  itself, then find everything that would be standing in the way when it changes.
+
+system_prompt: >
+  You are working inside a checked-out repository, on a real ticket, with a real budget.
+  Answer from the code in front of you. Every location you give must be an exact
+  file:line - a filename on its own, a directory, or an area word is not an answer.
+
+steps:
+  - name: Map the plan-pricing contract
+    prompt: >
+      Task: orient, and be thorough - the rest of the ticket is built on this. Find where
+      the thing that answers "what does this plan cost and what does it include" is
+      declared as an abstraction, what its one implementation actually does to produce an
+      answer, and how that implementation is wired into the application at start-up -
+      including where it is told to look and what is done to it when the deployment has
+      not been told anywhere to look. Then follow what a caller gets back on a deployment
+      that cannot reach the source at all, and how that differs between the two ways of
+      asking. For each of those give the file:line, the name of the member or routine it
+      lives in, and one phrase on what it contributes. Then say, in a few sentences, what
+      a rework that made this piece fail loudly where it currently answers with nothing
+      would have to preserve. A place named without the routine it lives in does not
+      count, and neither does a routine named without the file:line where it is defined.
+    checks:
+      - type: response_richness
+        value: "3"
+        required: true
+        description: The abstraction, its one implementation, and its start-up wiring, each located
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_search
+        required: false
+        layer: adoption
+
+  - name: Audit every dependent of the plan-pricing contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the
+      first part already cost you. Widen back out from the piece you just mapped. The
+      places that ask it for something directly are not what you owe - they say its name
+      out loud, they are one lookup away, and the ticket does not turn on them. What you
+      owe is the ring behind those: every place that would be holding a live one of these
+      at runtime while never naming it, never importing it, and never naming anything
+      related to it. The tie is made at one remove and it is made by a slot, not by a
+      call: such a place declares a field for exactly one collaborator abstraction, and
+      the single thing standing behind that abstraction is itself built around the piece
+      you mapped - so what carries the dependency is which type sits in that slot, and
+      that fact is stated on no line anywhere in that place's file. The collaborator's own
+      name will not hint at what it is fronting, so you cannot get there by reading names.
+      Find every such place. For each one give the file:line of the declaration that
+      creates the hold, name the type that declaration sits in and the intermediary it
+      declares, say which concrete thing is standing behind that intermediary, and say in
+      one phrase what that place would be exposed to if the piece you mapped started
+      failing or answering differently underneath it. Listing intermediaries by themselves
+      is not the answer - an intermediary only says a hop exists, and the ticket turns on
+      who is left holding the far end. A file:line with nothing named around it does not
+      count, one you cannot state the intermediary and the thing behind it for does not
+      count, and a missed one is an outage nobody predicted.
+    checks:
+      - type: response_richness
+        value: "12"
+        required: true
+        description: Every second-ring holder, pinned to the field declaration that creates the hold
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
+
+gold:
+  # ---- non-scoring anchors: both arms reach these, they do not discriminate ----
+  - {id: contract-class, group: contract, match: ['Billing/Pricing/IPricingClient.cs'], relation: "src/Core/Billing/Pricing/IPricingClient.cs:19 `Task<OrganizationPlan?> GetPlan(PlanType planType);` - the contract itself; the null-returning form beside the throwing GetPlanOrThrow on line 29 is the difference a rework would change"}
+  - {id: c:client-impl, group: contract, match: ['Billing/Pricing/PricingClient.cs'], relation: "src/Core/Billing/Pricing/PricingClient.cs:21 `if (globalSettings.SelfHosted)` inside GetPlan - the one implementation, and the branch that answers with nothing on a self-hosted deployment instead of failing"}
+  - {id: c:startup-wiring, group: contract, match: ['Billing/Pricing/ServiceCollectionExtensions.cs'], relation: "src/Core/Billing/Pricing/ServiceCollectionExtensions.cs:11 `services.AddHttpClient<IPricingClient, PricingClient>(...)` in AddPricingClient - the start-up wiring that binds the abstraction to the one implementation and gives it its address"}
+
+  # ---- the discriminator: 16 second-ring holders, one file each, 12 areas, 9 vias ----
+  - {id: d:commercial-create-provider, group: dependents, match: ['Commercial.Core/AdminConsole/Providers/CreateProviderCommand.cs'], relation: "bitwarden_license/src/Commercial.Core/AdminConsole/Providers/CreateProviderCommand.cs:19 `private readonly IProviderService _providerService;` - holds the plan lookup one interface deep, because the satisfier that runs on cloud, ProviderService, declares IPricingClient itself; the name IProviderService says nothing about pricing (IProviderService has 2 satisfiers - see the IPROVIDERSERVICE CAVEAT in the header)"}
+  - {id: d:sso-account-controller, group: dependents, match: ['Sso/Controllers/AccountController.cs'], relation: "bitwarden_license/src/Sso/Controllers/AccountController.cs:45 `private readonly IOrganizationService _organizationService;` - the SSO sign-in controller retains the plan lookup through OrganizationService, which declares IPricingClient; nothing in this file names it"}
+  - {id: d:admin-provider-orgs, group: dependents, match: ['Admin/AdminConsole/Controllers/ProviderOrganizationsController.cs'], relation: "src/Admin/AdminConsole/Controllers/ProviderOrganizationsController.cs:20 `private readonly IRemoveOrganizationFromProviderCommand _removeOrganizationFromProviderCommand;` - the admin portal holds the lookup via RemoveOrganizationFromProviderCommand, which declares IPricingClient"}
+  - {id: d:admin-users-controller, group: dependents, match: ['Admin/Controllers/UsersController.cs'], relation: "src/Admin/Controllers/UsersController.cs:24 `private readonly IStripePaymentService _paymentService;` - retains the lookup through StripePaymentService, which declares IPricingClient; the slot is typed to the payment abstraction, not to anything priced"}
+  - {id: d:api-collections-controller, group: dependents, match: ['Api/AdminConsole/Controllers/CollectionsController.cs'], relation: "src/Api/AdminConsole/Controllers/CollectionsController.cs:34 `private readonly IProviderService _providerService;` - a collections endpoint that never touches billing still holds a live plan lookup, through the cloud satisfier ProviderService (IProviderService has 2 satisfiers - see the IPROVIDERSERVICE CAVEAT in the header)"}
+  - {id: d:public-members-controller, group: dependents, match: ['AdminConsole/Public/Controllers/MembersController.cs'], relation: "src/Api/AdminConsole/Public/Controllers/MembersController.cs:33 `private readonly IUpdateOrganizationUserCommand _updateOrganizationUserCommand;` - the public members API holds the lookup through UpdateOrganizationUserCommand, which declares IPricingClient"}
+  - {id: d:api-twofactor-controller, group: dependents, match: ['Api/Auth/Controllers/TwoFactorController.cs'], relation: "src/Api/Auth/Controllers/TwoFactorController.cs:35 `private readonly IOrganizationService _organizationService;` - a two-factor endpoint retains the plan lookup through OrganizationService; no billing word appears in this file"}
+  - {id: d:api-sponsorships-controller, group: dependents, match: ['Billing/Controllers/OrganizationSponsorshipsController.cs'], relation: "src/Api/Billing/Controllers/OrganizationSponsorshipsController.cs:37 `private readonly ISetUpSponsorshipCommand _setUpSponsorshipCommand;` - holds the lookup through SetUpSponsorshipCommand, which declares IPricingClient; this file names neither"}
+  - {id: d:sm-projects-controller, group: dependents, match: ['SecretsManager/Controllers/ProjectsController.cs'], relation: "src/Api/SecretsManager/Controllers/ProjectsController.cs:28 `private readonly IMaxProjectsQuery _maxProjectsQuery;` - the project-limit query is where the plan enters; MaxProjectsQuery declares IPricingClient, this controller only names the query"}
+  - {id: d:api-ciphers-controller, group: dependents, match: ['Api/Vault/Controllers/CiphersController.cs'], relation: "src/Api/Vault/Controllers/CiphersController.cs:44 `private readonly ICipherService _cipherService;` - the vault's busiest controller retains the plan lookup through CipherService, which declares IPricingClient"}
+  - {id: d:billing-paypal-controller, group: dependents, match: ['Billing/Controllers/PayPalController.cs'], relation: "src/Billing/Controllers/PayPalController.cs:26 `private readonly IStripePaymentService _paymentService;` - the PayPal webhook endpoint holds the lookup through StripePaymentService"}
+  - {id: d:subscription-deleted-handler, group: dependents, match: ['Billing/Services/Implementations/SubscriptionDeletedHandler.cs'], relation: "src/Billing/Services/Implementations/SubscriptionDeletedHandler.cs:25 `private readonly IProviderService _providerService;` - a Stripe webhook handler that retains the plan lookup through the cloud satisfier ProviderService rather than asking for it (IProviderService has 2 satisfiers - see the IPROVIDERSERVICE CAVEAT in the header)"}
+  - {id: d:org-delete-command, group: dependents, match: ['OrganizationFeatures/Organizations/OrganizationDeleteCommand.cs'], relation: "src/Core/AdminConsole/OrganizationFeatures/Organizations/OrganizationDeleteCommand.cs:22 `private readonly ICipherService _cipherService;` - organization teardown holds the plan lookup through CipherService, one interface deep"}
+  - {id: d:emergency-access-service, group: dependents, match: ['UserFeatures/EmergencyAccess/EmergencyAccessService.cs'], relation: "src/Core/Auth/UserFeatures/EmergencyAccess/EmergencyAccessService.cs:36 `private readonly ICipherService _cipherService;` - emergency access retains the plan lookup through CipherService; the file is about takeover, not billing"}
+  - {id: d:validate-sponsorship, group: dependents, match: ['FamiliesForEnterprise/Cloud/ValidateSponsorshipCommand.cs'], relation: "src/Core/OrganizationFeatures/OrganizationSponsorships/FamiliesForEnterprise/Cloud/ValidateSponsorshipCommand.cs:18 `private readonly IStripePaymentService _paymentService;` - sponsorship validation holds the plan lookup through StripePaymentService"}
+  - {id: d:non-anonymous-send, group: dependents, match: ['SendFeatures/Commands/NonAnonymousSendCommand.cs'], relation: "src/Core/Tools/SendFeatures/Commands/NonAnonymousSendCommand.cs:25 `private readonly ISendValidationService _sendValidationService;` - creating a non-anonymous Send retains the plan lookup through SendValidationService, which declares IPricingClient to decide what the sender's plan allows"}

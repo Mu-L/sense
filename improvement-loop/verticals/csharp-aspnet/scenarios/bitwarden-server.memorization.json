@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "ran": true,
+  "reason": "only 0 member(s) declared (< 5) - too few to score recitation, bar inapplicable",
+  "recall": null,
+  "hits": [],
+  "applicable": false,
+  "truth_n": 0,
+  "samples": [
+    null
+  ],
+  "answer_head": "UNKNOWN\n",
+  "symbol": "IPricingClient",
+  "repo": "bitwarden-server"
+}

@@ -1,0 +1,323 @@
+name: Bitwarden server work session - audit the custom-permission contract before a rework
+repo: bitwarden-server
+contract_symbol: Permissions
+contract_file: src/Core/AdminConsole/Models/Data/Permissions.cs
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md), cycle 1,
+# attempt 2 on this repo. RE-QUESTION, routed back from a measured two-arm mini-bench.
+# The anchor is UNCHANGED (laws.md ITERATE ON THE QUESTION, KEEP THE ANCHOR); the
+# question and the gold group are what moved. The superseded yaml is kept as
+# `bitwarden-server.yaml.conversion-boundary.bak`.
+#
+# ------------------------------------------------------------------------------------
+# TRAJECTORY - every previous cycle, and which side of the window it fell on
+# ------------------------------------------------------------------------------------
+# The window is BOTH conditions at once: plain arm <= 0.50 AND ours >= plain + 0.50.
+#
+#   cycle 1, attempt 1  "the representation-boundary conversion audit"
+#     verdict REQUESTION | baseline dependents 0.6842 (13/19) | sense 0.8421 (16/19)
+#     delta +0.1579 | n = baseline x1, sense x1 (confirm_band: SETTLED, no second pair)
+#     SIDE OF THE WINDOW: the BASELINE-TOO-HIGH side. It failed condition one by 0.18,
+#     and that failure took condition two with it arithmetically - `1.00 - 0.6842 =
+#     +0.3158` caps the delta below the +0.50 bar, so a perfect 19/19 sense arm still
+#     lands 0.18 short. The cell was dead before it ran.
+#
+# THIS DRAFT CORRECTS FROM THE BASELINE-TOO-HIGH SIDE, and it intends to move the
+# BASELINE down rather than the sense arm up. The sense arm was never the problem: it
+# reached 16 of 19 in 183s of a 480s wall, on 3 tool calls, with `tool_use_audit`
+# reporting no misuse flags and `transcript_miss.py` reporting `resolver-sev=0` and no
+# miss rows. What has to move is the 0.6842.
+#
+# HOW FAR IT INTENDS TO MOVE, and the arithmetic under it. Scoring is per-FILE
+# (`bench/lib/gold.py`: `_cited` matches a gold path pinned to ANY line), so re-pinning
+# a file at a different line cannot change what an arm scores - only the FILE LIST can.
+# On the measured pair, of the 12 files in the new group the baseline cited 4 and the
+# sense arm cited 8 of the 10 that existed then (2 are new). That projects baseline
+# 4/12 = 0.333 and sense 0.83-1.00, i.e. delta +0.50 to +0.67. THAT PROJECTION IS A
+# RETRO-FIT ON n=1 PER ARM AND IS NOT A RESULT - the same n that `laws.md` says is too
+# thin to re-gold from (`do not re-gold below ~5 runs per arm`). It is stated so the
+# next phase can check the draft against what it was aiming at, and the mini-bench is
+# what decides. Landing on the far side - baseline near zero because NEITHER arm can
+# answer - is the failure mode this correction has to avoid, and the sense arm's
+# measured 16/19 on ten of these twelve files is the only guard against it.
+#
+# ------------------------------------------------------------------------------------
+# WHAT KILLED THE PREVIOUS QUESTION - quoted from the run, not inferred
+# ------------------------------------------------------------------------------------
+# `bench/lib/baseline_route.py` on the baseline transcript, 15 tool calls, all Bash,
+# 9 of them searches. Call 2/3 produced the candidate file set outright:
+#
+#     grep -rln "Permissions" --include=*.cs src/ | head -60
+#
+# and call 11 closed it in one alternation:
+#
+#     grep -rn "new Permissions\|GetPermissions()\|SetPermissions(\|
+#              LoadClassFromJsonData<Permissions>\|Permissions>(" --include="*.cs" ...
+#
+# The previous axis said a dependent "holds or produces its OWN copy of the same
+# switches in another form, so the work it does is a conversion between two encodings".
+# In this codebase that conversion is spelled with a closed, small set of LITERAL
+# tokens, so describing the mechanism handed over the grep pattern. `LoadClassFromJsonData
+# <Permissions>` alone was 6 of the 19 gold rows - six near-identical constructor lines,
+# a free floor of 0.32 - and the `new Permissions` / `.ToData()` alternation was 5 more.
+# Eleven of the baseline's thirteen rows came from those two strings.
+#
+# The six rows the baseline MISSED share a shape, and the credit table is where that is
+# recorded: `d:acting-user` (a primary-constructor property), `d:base-org-profile` (a
+# member on a shared base), `d:invite-data` (a plain property), `d:invite-business` (a
+# by-reference hand-off), `d:org-user-request` (the encode direction call 11 omitted),
+# `d:security-task-handler` (a nested property pattern). In every one the dependency is
+# a DECLARATION-LEVEL fact - what the type declares, what it inherits, where in a
+# constructor it sits - not a conversion the matched line states by itself.
+#
+# ------------------------------------------------------------------------------------
+# THE AXIS SENTENCE - the mechanism this scenario's whole thesis rests on
+# ------------------------------------------------------------------------------------
+# The rework changes the SHAPE of the set. What a shape change breaks is not the code
+# that copies the set around - that code keeps compiling and is found by one search for
+# the name. It is every OTHER type that has the set written into its own DECLARED SHAPE,
+# so the set is part of what that type promises its own callers and clients. Five
+# declaration-level mechanisms carry it here: a type declares the set as one of its own
+# members; a type inherits that member from a base and never restates it; a type takes
+# the set in a fixed position of its constructor; a type holds an ABSTRACTION whose
+# implementation carries the set, so the set is inside it at one remove and the type's
+# own text never names it; a type names a single switch inside a shape it matches
+# against. A conversion site is not on this list, and that is deliberate - the eleven
+# rows one alternation printed last cycle are conversion sites, and they are out of the
+# scored group.
+#
+# INVENTORY CUT, applied by hand as laws.md THE ASK NAMES THE MECHANISM, NEVER THE
+# INVENTORY requires. The five clauses in step 2 name HOW the set is held (declared
+# member, inherited member, constructor position, abstraction held at one remove,
+# matched shape). None of them names a functional area, a layer, a payload kind or a
+# feature. `scenario.py --prompt` reads TOKENS and would pass a semantic inventory
+# clean, so this cut is hand-applied or not at all.
+#
+# ------------------------------------------------------------------------------------
+# SEAM PROFILE - `python3 bench/lib/seam_hunt.py $CLONE Permissions --propose`, quoted
+# ------------------------------------------------------------------------------------
+#   === Permissions  (lang=csharp, token='Permissions', hops=mcp-default, conf=mcp-default) ===
+#     app caller files : 9   (total incl test/non-app: 38)
+#     SCATTER (dirs)   : 9
+#     GREP-NOISE       : 'Permissions' in 540 app files   PRECISION=0.02  (lower=grep-hostile)
+#     HOLDERS (no call): 15 app files compose/inherit/include it
+#     VERDICT          : SCATTERED + GREP-NOISY
+#
+# PRECISION 0.02 (9 caller files in 540 grep files), SCATTER 9. Unchanged from attempt
+# 1 - the anchor did not move. The profile RANKED this anchor first and it decided
+# nothing: the two-arm run rejected the question, which is the division of labour
+# `laws.md` PRECISION RANKS, IT NEVER KILLS describes. Note for the record that 0.02
+# did NOT predict the baseline's 0.6842; precision orders candidates, it does not
+# forecast a cell.
+#
+# STACK FACT, carried forward from attempt 1 because it still holds: C# dependents HOLD
+# an injected interface rather than calling it, and Sense carries that as a composition
+# edge, so PRECISION is degenerate on every INTERFACE in this repo (`ICurrentContext`
+# reads 0.00 with 0 direct callers and 108 composition rows, for a name one grep prints
+# in 145 files). Read 0.00 on a C# interface as "no call edges exist", never as
+# "grep-hostile". Comparable only within the concrete-class candidates.
+#
+# RETENTION RING - `python3 bench/lib/ring_sweep.py $CLONE --top 12`, quoted:
+#   0 anchor(s) above the ranking threshold. Best rings found:
+#   User rows=68 files=68 vias=1 | IUserService rows=16 files=16 vias=5 |
+#   IOrganizationUserRepository rows=6 files=6 vias=4
+# So the sweep's top-12 ranking is empty at its bar. For THIS anchor, however,
+# `sense_blast Permissions` returns `retained_via_interfaces_count: 3`, and unlike
+# `ICurrentContext` (where 87 retained rows are trimmed OUT with `retained_trimmed:
+# true`) those three rows ARE shown in full:
+#   AutomaticallyConfirmOrganizationUserRequest.cs:10  via IActingUser  chain StandardUser > Permissions
+#   AutomaticallyConfirmOrganizationUserRequest.cs:25  via IActingUser  chain StandardUser > Permissions
+#   PolicyUpdate.cs:13                                 via IActingUser  chain StandardUser > Permissions
+# Two distinct FILES, and both are NEW to gold this cycle (`d:autoconfirm-request`,
+# `d:policy-update`). They are the only rows in the group whose file never writes the
+# anchor token at all. That is a property of these two rows, NOT the selection
+# criterion for the group - laws.md TOKEN-DARKNESS IS NOT THE MECHANISM, and ten of the
+# twelve rows below do write the token on their credit line.
+#
+# ------------------------------------------------------------------------------------
+# ANSWER FORM
+# ------------------------------------------------------------------------------------
+# `verticals/csharp-aspnet/answer-forms.md` is still empty (every section reads "nothing
+# measured yet") - the minibench verdict has not been folded into it yet, so this draft
+# reads it as carrying nothing.
+#
+# The form attempt 1 used was "find every place that depends on X", an occurrence list.
+# It is now MEASURED TO FAIL on this repo: baseline 0.6842, one `grep -rln` for the file
+# set and one alternation for the idioms. This draft does NOT re-buy it.
+#
+# The form this draft uses is "what HOLDS X" - which types have the contract written
+# into their own declared shape. It is UNMEASURED in this stack. It is the strongest
+# measured kind elsewhere in the bench (+0.58, +0.67, +0.80, +1.00 on four Go cells),
+# and `laws.md` gates it on a non-empty retention ring; the ring here is thin (2 files,
+# quoted above) but non-empty and SHOWN, so the kind is on the menu rather than off it.
+# It is being asked here in a wider sense than the pure retained-via surface - held
+# members and inherited members count too - and that widening is what makes twelve rows
+# possible on a two-file ring.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS: it is the set of
+# types whose OWN published shape changes when the set is reshaped - each paired with
+# which of the five declaration mechanisms puts the set inside it. A name-occurrence
+# list gets this wrong in both directions at once. It OVER-shoots: the eleven conversion
+# sites one alternation printed last cycle write the name and their own shape does not
+# change, so they are not answers. It UNDER-shoots: two of the twelve types below never
+# write the name anywhere in their file, because they hold an abstraction whose
+# implementation carries it. There is no search over the name that separates those two
+# errors, because the distinguishing fact - what a type DECLARES versus what it merely
+# touches - is not on the matched line.
+#
+# MEMORIZATION: `memorization_probe.py $CLONE Permissions --json` returned
+# `"applicable": false, "reason": "only 0 member(s) declared (< 5) - too few to score
+# recitation, bar inapplicable"` - the class declares auto-properties and no methods, so
+# the probe cannot score it. The probe is live and does discriminate: run on
+# `CurrentContext` in the same clone it found 35 members and returned
+# `"closed-book recall 0.0 < 0.3 - not recited"`. The clone is depth-1
+# (`git rev-list --count HEAD` = 1) so churn-dating is unavailable; gold is scored at
+# `path:line` in a 5306-file tree, the line-level structural fact the law exempts.
+#
+# Single-prompt session bench (bench/drivers/bench-sense-local.sh): every step is presented
+# in ONE prompt and worked in order. Rendered to the agent: the description + each step's
+# name and prompt ONLY (checks and gold are NEVER shown). Everything rendered is kept
+# NEUTRAL - it states the task, never the answer's shape, file paths, class or method
+# names, counts, or which tool to reach for.
+description: |
+  You are a maintainer about to rework the way this product describes a fine-grained
+  capability grant - the small fixed set of yes/no switches an organization can hand an
+  individual member instead of a whole role. The rework will change the shape of that set:
+  what a switch is called, how many there are, and how the set is written down. Plenty of
+  code copies that set from one carrier to another, and most of that code will keep
+  working. What will not is anything that has baked the set into its own shape, because
+  then the set is part of what that thing promises to whoever uses it, and reshaping the
+  set reshapes their contract too. Before you touch it you have to know two things: how
+  the set is defined, stored and carried to the code that enforces it, and which other
+  things in the codebase now carry the set as part of their own shape. Throughout, an
+  answer that points at a place must say which type, member or routine that place is
+  inside, and give an exact file:line a teammate could jump straight to, plus one phrase
+  on why it matters. A bare filename does not count, a file:line with nothing named
+  around it does not count, and a missed one is a regression shipped.
+steps:
+- name: Map the custom-permission contract
+  prompt: "Task: orient, and be thorough - the rest of the ticket is built on this. Find
+    where the set of capability switches is defined, and then follow the one path the
+    enforcement side leans on: how a member's granted switches are put away with that
+    member's stored record, and how they are read back out and put in front of the code
+    that has to decide whether a request is allowed. Show where the set is declared, where
+    it is turned into the stored form and back again, and where it is rebuilt for the
+    duration of a request from whatever the signed-in caller arrived carrying. For each one
+    give the file:line, the name of the member or routine it lives in, and one phrase on
+    what it contributes to that path. Then say, in a few sentences, what a rework would
+    have to preserve for that path to keep working. A place named without the routine it
+    lives in does not count, and neither does a routine named without the file:line where
+    it is defined.
+    "
+  checks:
+  - type: response_richness
+    value: '3'
+    required: true
+    description: The declaration, the stored form and the per-request rebuild, each located
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_search
+    required: false
+    layer: adoption
+- name: Audit every dependent of the custom-permission contract
+  prompt: "Task: this is the core of the ticket, and you are working it with the budget the
+    first part already cost you. Widen back out from that one path and take the set of
+    switches as a single subject. Code that merely copies the set from one carrier to
+    another is NOT what you are after - that code goes on compiling, and it is not what a
+    reshape breaks. What you owe is every other thing that has made this set part of its
+    OWN shape, so that the set is now inside what it promises to whoever holds it or reads
+    what it produces. It gets in there in several different ways, and each way looks
+    different at the point of declaration: something can declare the set as one of its own
+    members; it can inherit that member from something above it and never mention the set
+    again itself; it can take the set in a fixed position of the thing that constructs it;
+    it can hold on to an abstraction whose real implementation is what carries the set, so
+    the set is inside it at one remove and its own text never says so anywhere; and it can
+    name a single one of the switches inside a shape it tests a value against. Work out
+    which things are in that position, by whichever of those routes. For each one, give the
+    file:line of the declaration that puts the set inside its shape, name the thing that
+    declaration belongs to, say which of those routes put it there, and say in one phrase
+    what its own users would start getting wrong if the set were reshaped underneath it. A
+    file:line with nothing named around it does not count, one you cannot state the
+    consequence for does not count, and a missed one is a regression shipped.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Holders attributed to the declaration that carries the set, with the route named
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
+# Gold. TWO groups.
+#   - `contract` (3, NON-SCORING anchors): the class that declares the switches, the
+#     stored-row entity that serializes them into a text column, and the request-context
+#     object that rebuilds them from token claims. These are step 1's targets. Both arms
+#     reached all 3 on the measured pair and they do NOT score; they are here so step 1's
+#     cost is charged without step 1 handing anything to step 2.
+#   - `dependents` (12, THE DISCRIMINATOR): one row per FILE, across 11 distinct
+#     directories in 4 top-level areas (public API models, internal API request/response
+#     models, core admin-console models and features, and one authorization handler).
+#     Every row is a DECLARATION that puts the set inside another type's shape. Not one
+#     of them is a conversion call, and not one is on the declare/store/rebuild path
+#     step 1 traces. Every row appears in the shown `sense_blast Permissions` payload at
+#     MCP defaults - `direct_callers`, `affected_via_composition`, `affected_subclasses`
+#     or `retained_via_interfaces` - and every line below was opened and read by hand at
+#     its pin (the payload's own `ref` is the enclosing declaration, not the credit line,
+#     for most of them).
+#
+# ROWS CUT FROM THE PREVIOUS GOLD, and the reason. Eight of attempt 1's nineteen
+# dependents are gone. All eight are CONVERSION sites, so all eight fall outside this
+# question's mechanism, and all eight were cited by the baseline in the measured pair:
+#   d:org-profile, d:provider-profile, d:provider-user-response, d:ctx-organization,
+#   d:ctx-provider
+#     - the `LoadClassFromJsonData<Permissions>` block; one grep string, five
+#       near-identical constructor lines among the baseline's 13 rows (the sixth,
+#       `d:org-user-response`, is kept - see below).
+#   d:org-service-invite, d:grant-validation, d:claims-extensions
+#     - the `new Permissions` / `SetPermissions(` alternation and the second decoder.
+# One file from the first block is KEPT: `d:org-user-response`, because under THIS
+# question the file's contribution is not the decode at line 32 but the member declared
+# at line 65 and inherited unrestated by the two subclasses at 71 and 139. It is kept
+# knowing the baseline cited it.
+# Every row the baseline MISSED last cycle is a holder under this mechanism, and every
+# one of those six is kept.
+#
+# THE n UNDER THAT CUT, stated because it is thin. `inverse_frequency.py` over the only
+# results root on disk reports `2 runs: baseline x1, sense x1`, and laws.md says the
+# ordering is noise below ~5 runs per arm and forbids re-golding off it. So the cut was
+# NOT made from that ranking. It was made from the MECHANISM - a conversion site is not
+# a holder, and every cut row is a conversion site - and the citation record is quoted
+# as corroboration, not as the reason.
+#
+# WHAT COULD STILL GO WRONG, named so the next phase reads the run and not this header:
+# the two `IActingUser` rows are the only ones whose file never writes the token, and
+# the sense arm has never been measured on them; if it does not surface
+# `retained_via_interfaces`, the sense ceiling drops to 10/12 = 0.833 and the delta
+# needs the baseline at or under 0.333 to clear the bar. That is the run's question.
+gold:
+- {id: contract-class, group: contract, match: [src/Core/AdminConsole/Models/Data/Permissions.cs], relation: "src/Core/AdminConsole/Models/Data/Permissions.cs:6 `public class Permissions` - the contract under rework; 13 boolean auto-properties, and line 23 `public List<(bool Permission, string ClaimName)> ClaimsMap => new()` is the one place the switches are paired with their claim names"}
+- {id: c:stored-column, group: contract, match: [src/Core/AdminConsole/Entities/OrganizationUser.cs], relation: "src/Core/AdminConsole/Entities/OrganizationUser.cs:157 `Permissions = CoreHelpers.ClassToJsonData(permissions);` inside `OrganizationUser.SetPermissions`, with the read side at line 152 `: CoreHelpers.LoadClassFromJsonData<Permissions>(Permissions);` inside `GetPermissions` (declared line 149) - the obvious write path, where the bag becomes a text column on the stored member row"}
+- {id: c:claims-rebuild, group: contract, match: [src/Core/Context/CurrentContext.cs], relation: "src/Core/Context/CurrentContext.cs:494 `return new Permissions` inside `CurrentContext.SetOrganizationPermissionsFromClaims` (declared line 486) - the per-request rebuild, 13 `hasClaim(\"...\")` lookups turning token claims back into the bag"}
+- {id: d:base-org-profile, group: dependents, match: [src/Api/AdminConsole/Models/Response/BaseProfileOrganizationResponseModel.cs], relation: "src/Api/AdminConsole/Models/Response/BaseProfileOrganizationResponseModel.cs:138 `public Permissions? Permissions { get; set; }` - DECLARED MEMBER on the shared base of both sync payloads; this one declaration is what fixes the wire shape every client parses, and the two subclasses never restate it"}
+- {id: d:provider-org-profile, group: dependents, match: [src/Api/AdminConsole/Models/Response/ProfileProviderOrganizationResponseModel.cs], relation: "src/Api/AdminConsole/Models/Response/ProfileProviderOrganizationResponseModel.cs:11 `public class ProfileProviderOrganizationResponseModel : BaseProfileOrganizationResponseModel` - INHERITED MEMBER; the class never declares the set, it gets the member from the base, and at line 21 fills it with an all-false bag so the empty default is this payload's behaviour"}
+- {id: d:org-user-response, group: dependents, match: [src/Api/AdminConsole/Models/Response/Organizations/OrganizationUserResponseModel.cs], relation: "src/Api/AdminConsole/Models/Response/Organizations/OrganizationUserResponseModel.cs:65 `public Permissions Permissions { get; set; }` - DECLARED MEMBER on the admin-console member payload, inherited unrestated by `OrganizationUserDetailsResponseModel` (line 71) and `OrganizationUserUserDetailsResponseModel` (line 139) in the same file, so one declaration fixes three response shapes"}
+- {id: d:org-user-request, group: dependents, match: [src/Api/AdminConsole/Models/Request/Organizations/OrganizationUserRequestModels.cs], relation: "src/Api/AdminConsole/Models/Request/Organizations/OrganizationUserRequestModels.cs:23 `public Permissions Permissions { get; set; }` on `OrganizationUserInviteRequestModel` - DECLARED MEMBER on the inbound invite body, declared a second time at line 102 on `OrganizationUserUpdateRequestModel`; both are the request shape a client has to send"}
+- {id: d:public-permissions-model, group: dependents, match: [src/Api/AdminConsole/Public/Models/PermissionsModel.cs], relation: "src/Api/AdminConsole/Public/Models/PermissionsModel.cs:15 `public PermissionsModel(Permissions? data)` - CONSTRUCTOR POSITION; the public API declares its own parallel copy of all 13 switches as flat properties (lines 37-49) and this constructor is where the internal set is required to line up with it, so a reshape silently desynchronises the two lists"}
+- {id: d:invite-data, group: dependents, match: [src/Core/AdminConsole/Models/Data/Organizations/OrganizationUsers/OrganizationUserInviteData.cs], relation: "src/Core/AdminConsole/Models/Data/Organizations/OrganizationUsers/OrganizationUserInviteData.cs:15 `public Permissions Permissions { get; set; }` - DECLARED MEMBER on the serialized invite payload, so the set is part of what an invite persists and replays later"}
+- {id: d:invite-business, group: dependents, match: [src/Core/AdminConsole/Models/Business/OrganizationUserInvite.cs], relation: "src/Core/AdminConsole/Models/Business/OrganizationUserInvite.cs:14 `public Permissions Permissions { get; set; }` - DECLARED MEMBER on the core-layer invite, filled by reference at line 27 `Permissions = requestModel.Permissions;` inside the `OrganizationUserInvite(OrganizationUserInviteData)` constructor, so the API-layer shape and this one are the same object"}
+- {id: d:invite-command-model, group: dependents, match: [src/Core/AdminConsole/OrganizationFeatures/OrganizationUsers/InviteUsers/Models/OrganizationUserInviteCommandModel.cs], relation: "src/Core/AdminConsole/OrganizationFeatures/OrganizationUsers/InviteUsers/Models/OrganizationUserInviteCommandModel.cs:15 `public Permissions Permissions { get; private init; }` - DECLARED MEMBER with private init, so it can only be set through the long-form constructor's CONSTRUCTOR POSITION at line 48 `Permissions permissions,` (constructor declared line 44); a reshape moves an argument here, not a property"}
+- {id: d:acting-user, group: dependents, match: [src/Core/AdminConsole/Models/Data/StandardUser.cs], relation: "src/Core/AdminConsole/Models/Data/StandardUser.cs:12 `public Permissions? Permissions { get; } = permissions;` - DECLARED MEMBER fed from the primary-constructor parameter on line 7, on the one `IActingUser` implementation that carries the set; this declaration is the single reason the set reaches anything typed as the abstraction"}
+- {id: d:autoconfirm-request, group: dependents, match: [src/Core/AdminConsole/OrganizationFeatures/OrganizationUsers/AutoConfirmUser/AutomaticallyConfirmOrganizationUserRequest.cs], relation: "src/Core/AdminConsole/OrganizationFeatures/OrganizationUsers/AutoConfirmUser/AutomaticallyConfirmOrganizationUserRequest.cs:16 `public required IActingUser PerformedBy { get; init; }` on `AutomaticallyConfirmOrganizationUserRequest`, with the same hold at line 31 on `AutomaticallyConfirmOrganizationUserValidationRequest` - ABSTRACTION HELD AT ONE REMOVE; the set is inside this request via `StandardUser`, and the file never writes the contract's name anywhere"}
+- {id: d:policy-update, group: dependents, match: [src/Core/AdminConsole/OrganizationFeatures/Policies/Models/PolicyUpdate.cs], relation: "src/Core/AdminConsole/OrganizationFeatures/Policies/Models/PolicyUpdate.cs:21 `public IActingUser? PerformedBy { get; set; }` inside `PolicyUpdate` (declared line 13) - ABSTRACTION HELD AT ONE REMOVE; every policy save carries an actor whose implementation holds the set, and this file never writes the contract's name either"}
+- {id: d:security-task-handler, group: dependents, match: [src/Core/Vault/Authorization/SecurityTasks/SecurityTaskOrganizationAuthorizationHandler.cs], relation: "src/Core/Vault/Authorization/SecurityTasks/SecurityTaskOrganizationAuthorizationHandler.cs:45 `{ Type: OrganizationUserType.Custom, Permissions.AccessReports: true };` inside `CanListAllTasksForOrganization` (declared line 41) - MATCHED SHAPE; a nested property pattern that names ONE switch through a field of the request-context organization, so a renamed switch fails to compile here and nowhere near the contract"}

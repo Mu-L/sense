@@ -1,0 +1,133 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# REWRITTEN for cycle 1 attempt 4, with the anchor. The previous rubric scored a
+# WHO-CHOOSES-THE-LIFETIME axis on an expiring-token base, and its step-2 criteria
+# rewarded the CONSTRUCTION SITE and the deadline it picks - the opposite of what this
+# axis scores, which is a FIELD DECLARATION that creates a hold the file never states.
+#
+# WHY map_quality carries the most weight here: this scenario's axis is WHO IS LEFT
+# HOLDING THE FAR END. The contract is an abstraction that its second-ring holders never
+# name; they name exactly one intermediary abstraction, and the single implementation
+# behind that intermediary is what keeps the contract. A search over the contract's name
+# returns the places that ask it for something - which the step explicitly says are not
+# the answer - and never returns a single second-ring holder, because no second-ring
+# holder's file contains the name. What separates the two arms is not on any matched line:
+# it is which concrete type sits in the slot the holder declares.
+#
+# Step names MUST match scenarios/bitwarden-server.yaml exactly (the judge pairs by name).
+
+audience: |
+  An AI coding agent that will use this answer to safely rework the piece that answers
+  "what does this plan cost and what does it include" - how it is declared, how its one
+  implementation obtains an answer, how it is wired in at start-up, and what a caller gets
+  back on a deployment that cannot reach the source. Score for that agent, not a human
+  reader and not a docs page. A perfect answer leaves the agent able to change that piece
+  knowing two things. First, the abstraction, its single implementation, and its start-up
+  wiring - including where it is told to look, what happens when it has not been told
+  anywhere to look, and the difference between the form that answers with nothing and the
+  form that fails - each hop attributed to the member or routine that performs it. Second,
+  every place that would be holding a live one of these at runtime WITHOUT naming it:
+  pinned to the exact file:line of the field declaration that creates the hold, attributed
+  to the type that declaration sits in, naming the intermediary abstraction it declares
+  AND the concrete implementation standing behind that intermediary, and saying what that
+  place would be exposed to if the piece changed underneath it. The places that ask the
+  piece for something directly are NOT the answer: they say its name out loud and are one
+  lookup away. A weak answer returns those direct askers and stops; lists intermediary
+  abstractions without saying who is left holding the far end; gives file:line with nothing
+  named around it; treats the second ring as though it ran through one intermediary when it
+  runs through many unrelated ones; or collapses a set into a summary such as "the
+  controllers".
+
+steps:
+  - name: Map the plan-pricing contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer trace the piece end to end rather than describing it in general?
+          Does it cover all three hops - where the abstraction is DECLARED and what it
+          offers, what its single IMPLEMENTATION actually does to obtain an answer, and how
+          that implementation is WIRED IN at start-up including where it is told to look
+          and what is done to it when no such address is configured? Does it distinguish
+          the two ways of asking - the one that answers with nothing and the one that fails
+          - and say what a caller gets back on a deployment that cannot reach the source at
+          all? Is each hop attributed to the MEMBER or routine that performs it, not just
+          to a file? Does it say what a rework that made the piece fail loudly would have
+          to preserve? Would the agent be able to start the audit that follows with only
+          small, targeted lookups rather than a fresh exploration?
+      specificity:
+        weight: 0.25
+        question: |
+          Are the cited references exact file:line rather than filenames, directories or
+          area words ("the billing folder", "the pricing client")? Is every hop tied to a
+          real path AND a line AND the name of the member or routine that contains it? Is
+          the line the one that actually performs that hop rather than a class header or a
+          using directive?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain WHY the piece is shaped this way - why the plan catalogue
+          is fetched over the wire rather than held in the process, why one deployment mode
+          is answered with nothing instead of an error, what the start-up wiring is buying
+          - rather than only NAMING the pieces it found?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer flag what it has not verified, or where it is inferring a
+          member's role from its name rather than from its contents, instead of presenting
+          an orientation sweep as complete?
+
+  - name: Audit every dependent of the plan-pricing contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          THIS IS THE CORE STEP, and WHO IS LEFT HOLDING THE FAR END is what it is scored
+          on. How complete is the set of places that would be holding a live one of these
+          at runtime while never naming it - and for how many of them does the answer name
+          the type the declaration sits in AND the intermediary abstraction it declares AND
+          the concrete implementation standing behind that intermediary? Give particular
+          credit for the observations only a hop-by-hop reading produces: that the ring runs
+          through MANY unrelated intermediaries rather than one, so there is no single place
+          to look; that holders sit in areas with nothing to do with billing - a vault
+          endpoint, a two-factor endpoint, a collections endpoint, an emergency-access
+          service, a sign-in controller - and would still be exposed; that one intermediary
+          is fronted by an implementation that keeps the piece only to answer a limit
+          question; and that the same intermediary appears in several unrelated areas at
+          once. Do NOT credit a recitation of the places that ask the piece for something
+          directly - those name it out loud, they are one lookup from the contract, and the
+          step explicitly says they are not the answer; an answer that lists them and stops
+          is answering the wrong question. Penalise an answer that lists file:line locations
+          without saying which type owns each declaration; that names holders but cannot say
+          which intermediary carries the tie or what stands behind it; that assumes one
+          intermediary explains the whole ring; or that collapses a set into a summary such
+          as "the controllers". Would the agent be able to change the piece knowing every
+          place whose behaviour moves with it?
+      specificity:
+        weight: 0.25
+        question: |
+          Is EVERY entry pinned to an exact file:line AND to the name of the type the
+          declaration sits in? A filename with no line number does not count; a file:line
+          with nothing named around it does not count. Is the cited line the DECLARATION
+          THAT CREATES THE HOLD - the field or injected member typed to the intermediary -
+          rather than a using directive, a class header, or a line in the intermediary's own
+          file? Does each entry state the intermediary AND the concrete implementation
+          behind it?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain how the ring was traced and why the set should be believed
+          complete - and does it reason about consequence, distinguishing a change that
+          would fail loudly at compile time from one that would keep compiling and expose a
+          place that never mentions the piece to its new behaviour - rather than only
+          listing what it located?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer state honestly where its enumeration is thin - intermediaries
+          whose holders it did not chase, holders it named without opening, hops it assumed
+          rather than confirmed, budget it ran short of - rather than presenting a partial
+          list as exhaustive?
