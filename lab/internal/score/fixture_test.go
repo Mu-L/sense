@@ -1,6 +1,7 @@
 package score
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"testing"
@@ -131,13 +132,15 @@ func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 	// 182-file answer is far weaker than it reads as, and a longer answer buys
 	// mentions for free.
 	//
-	// 182, where cycle 00 recorded 168. The number moved because the matcher
-	// did: 00 counted only files carrying a path:line, and this one also counts
-	// the files an answer names with no line at all. Those are still files the
-	// answer named, so they belong in the denominator of opportunity — leaving
-	// them out flattered the reach figure by shrinking what it was measured
-	// against.
-	const want = "mentioned  11 of 12 gold files, at any line, out of 182 files named"
+	// 169, where cycle 00 recorded 168. The one extra file is one the answer
+	// named only by eliding its path, which the old matcher could not see.
+	//
+	// The denominator is deliberately files and not citations. An intermediate
+	// version of this matcher read 182, because "a dot and a few lowercase
+	// letters" also describes `account.id` and `Account.new`; counting those as
+	// files inflated the denominator by a tenth. Extensions are a closed set
+	// now, and the audit of what that dropped found no real file among them.
+	const want = "mentioned  11 of 12 gold files, at any line, out of 169 files named"
 	if got := Group("dependents", rows, text(answer), 0.50).String(); !strings.Contains(got, want) {
 		t.Errorf("the report does not carry\n\t%s\ngot:\n%s", want, got)
 	}
@@ -295,5 +298,49 @@ func TestTheFixtureIsARealCaptureCarryingTheAnswer(t *testing.T) {
 	}
 	if !strings.Contains(answer, "Category") {
 		t.Error("the fixture does not mention the scenario's anchor; it is not this run")
+	}
+}
+
+// What resolving elision is actually worth, on a real recorded answer.
+//
+// This is the headline claim for why the scanner is stateful, so it is measured
+// against a checked-in fixture rather than quoted. The figure carried over from
+// cycle 00 was 319, arrived at by counting regex matches; the matcher that got
+// built yields 322, and an inherited estimate repeated as a measurement is how
+// a wrong number survives three documents.
+func TestWhatElisionResolutionIsWorthOnARecordedAnswer(t *testing.T) {
+	_, answer := fixture(t)
+
+	strict := map[string]bool{}
+	for _, c := range Citations(answer) {
+		strict[c] = true
+	}
+	resolved := map[string]bool{}
+	for _, c := range Scan(answer) {
+		if c.Line == 0 {
+			continue
+		}
+		where := c.Path
+		if where == "" {
+			where = c.Established
+		}
+		if where == "" {
+			where = c.Symbol
+		}
+		resolved[fmt.Sprintf("%s:%d", where, c.Line)] = true
+	}
+
+	if len(strict) != 254 {
+		t.Errorf("the strict path:line count is %d, want the recorded 254", len(strict))
+	}
+	if len(resolved) != 331 {
+		t.Errorf("resolution yields %d locations, want 331", len(resolved))
+	}
+	// And it must be a superset: a scanner that gained 68 while quietly losing
+	// some of the original 254 would show the same total and be worse.
+	for c := range strict {
+		if !resolved[c] {
+			t.Errorf("resolution LOST the plain citation %s", c)
+		}
 	}
 }

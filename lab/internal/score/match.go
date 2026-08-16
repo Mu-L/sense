@@ -1,6 +1,9 @@
 package score
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // Matches reports whether a cite names the gold row's location.
 //
@@ -18,21 +21,36 @@ import "strings"
 // `:7` where gold cites line 9, and scoring that as a miss silently discounted
 // the arm for answering in a form the scorer did not expect.
 //
-// This asymmetry is deliberate and it is a KNOWN LOOSENESS, not a subtlety.
+// This asymmetry is deliberate and it is a KNOWN, MEASURED LOOSENESS.
 // Comparing a symbol citation's line against gold needs the symbol's line
 // range, which needs a repository on disk — that is 02-04, and recall must not
-// depend on the state of a disk. Until that range check lands, a symbol
-// citation buys more credit than a path citation of the same place. Nothing in
-// the corpus exploits it, and it is written down here so that the day something
-// does, this is the first place to look.
+// depend on the state of a disk.
+//
+// The corpus DOES exploit it, and the size is on Result.SymbolCited: 144 of the
+// 195 rows credited this way are in the sense arm, and the rule inflates the
+// measured margin by 73%. That is why Result prints the strict number beside
+// the loose one and never a single figure.
 func Matches(c Cite, goldPath, goldLine string) bool {
 	if c.Line == 0 {
 		return false
 	}
 	if c.Path != "" {
-		return itoa(c.Line) == goldLine && samePath(c.Path, goldPath)
+		return strconv.Itoa(c.Line) == goldLine && samePath(c.Path, goldPath)
 	}
-	return c.Symbol != "" && symbolNamesPath(c.Symbol, goldPath)
+	if c.Symbol == "" {
+		return false
+	}
+	// Either door. The established file is a FALLBACK, never a replacement: an
+	// answer that named the path earlier and then wrote the symbol must not
+	// score worse than one that wrote the symbol alone, and it would if the
+	// stricter test replaced the looser one instead of joining it.
+	return matchesEstablished(c, goldPath, goldLine) || symbolNamesPath(c.Symbol, goldPath)
+}
+
+// matchesEstablished is the STRICT way a symbol cite can match: the file the
+// answer had already named, held to the gold line exactly as a path cite is.
+func matchesEstablished(c Cite, goldPath, goldLine string) bool {
+	return c.Established != "" && strconv.Itoa(c.Line) == goldLine && samePath(c.Established, goldPath)
 }
 
 // NamesFile reports whether a cite names the gold row's file at any line, which
@@ -40,6 +58,9 @@ func Matches(c Cite, goldPath, goldLine string) bool {
 func NamesFile(c Cite, goldPath string) bool {
 	if c.Path != "" {
 		return samePath(c.Path, goldPath)
+	}
+	if c.Established != "" && samePath(c.Established, goldPath) {
+		return true
 	}
 	return c.Symbol != "" && symbolNamesPath(c.Symbol, goldPath)
 }
@@ -70,7 +91,23 @@ func symbolNamesPath(symbol, goldPath string) bool {
 		b.WriteString(underscore(part))
 	}
 	derived := b.String() + ".rb"
-	return goldPath == derived || hasPathSuffix(goldPath, derived)
+	if goldPath == derived {
+		return true
+	}
+	if !hasPathSuffix(goldPath, derived) {
+		return false
+	}
+	// What is left over once the constant's own path is removed must be an
+	// AUTOLOAD ROOT, and a root is one or two segments: `lib`, `app/models`,
+	// `app/lib`. Any deeper and a directory that should have been part of the
+	// constant was skipped — `ActionLogsController` does not name
+	// `app/controllers/admin/action_logs_controller.rb`, because with `admin/`
+	// in the path Ruby requires `Admin::ActionLogsController`.
+	//
+	// Without this the symbol door credits what samePath refuses at the front
+	// door: a name matching the tail of a file it does not actually name.
+	root := goldPath[:len(goldPath)-len(derived)-1]
+	return strings.Count(root, "/") < 2
 }
 
 // underscore is Ruby's constant-to-filename rule: ActionLogsController becomes
@@ -92,20 +129,6 @@ func underscore(s string) string {
 }
 
 func isUpper(c byte) bool { return c >= 'A' && c <= 'Z' }
-
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	var d [20]byte
-	i := len(d)
-	for n > 0 {
-		i--
-		d[i] = byte('0' + n%10)
-		n /= 10
-	}
-	return string(d[i:])
-}
 
 // corroborated returns the file an answer has already established, but only
 // when the symbol independently agrees that it is the right file.

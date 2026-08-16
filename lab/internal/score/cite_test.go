@@ -77,7 +77,7 @@ func TestALineOnItsOwnContinuesFromWhatCameBefore(t *testing.T) {
 
 		got := Scan(answer)
 		last := got[len(got)-1]
-		if last.Path != "app/jobs/scheduled/reindex_search.rb" || last.Line != 111 {
+		if last.Established != "app/jobs/scheduled/reindex_search.rb" || last.Line != 111 {
 			t.Errorf("the continued citation resolved to %+v, want that file at 111", last)
 		}
 	})
@@ -130,8 +130,8 @@ func TestASymbolDoesNotInheritAFileItDoesNotAgreeWith(t *testing.T) {
 		"`Admin::ActionLogsController#index` `:7` audits it"
 
 	for _, c := range Scan(answer) {
-		if c.Symbol == "Admin::ActionLogsController#index" && c.Path != "" {
-			t.Errorf("the controller inherited %q, a file its own name does not agree with", c.Path)
+		if c.Symbol == "Admin::ActionLogsController#index" && c.Established != "" {
+			t.Errorf("the controller inherited %q, a file its own name does not agree with", c.Established)
 		}
 	}
 }
@@ -145,8 +145,14 @@ func TestASymbolKeepsTheFileWhenBothSignalsAgree(t *testing.T) {
 
 	got := Scan(answer)
 	last := got[len(got)-1]
-	if last.Path != "app/jobs/scheduled/reindex_search.rb" {
+	if last.Established != "app/jobs/scheduled/reindex_search.rb" {
 		t.Errorf("the corroborated file was dropped: %+v", last)
+	}
+	// And it lands in Established rather than Path, because a symbol cite that
+	// also carries a file must never be judged MORE strictly than the same
+	// symbol cite without one.
+	if last.Path != "" {
+		t.Errorf("the corroborated file was written into Path: %+v", last)
 	}
 }
 
@@ -208,5 +214,184 @@ func TestADotFollowedByACapitalIsNotAFileExtension(t *testing.T) {
 	got := scanOne(t, "`Account.Find` `:12`")
 	if got.Symbol != "Account.Find" || got.Path != "" {
 		t.Errorf("got %+v, want it read as a symbol", got)
+	}
+}
+
+// A `:\d+` in ordinary prose is not a citation. An earlier version let a bare
+// line attach to the last file named at any distance, so a clock time or a port
+// number became a strict location in that file — a fabricated citation, in the
+// one form the scorer treats as authoritative, that could land on a gold line
+// by coincidence.
+func TestANumberInProseIsNotACitation(t *testing.T) {
+	for _, tc := range []struct{ name, answer string }{
+		{"a clock time", "`app/models/user.rb:5` and the job runs at 10:30 every day"},
+		{"a port", "`app/models/user.rb:5`, bound to 1.2.3.4:8080"},
+		{"a bare line far from anything", "`app/models/user.rb:5`. Much later prose, then `:99`."},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, c := range Scan(tc.answer) {
+				if c.Line != 5 {
+					t.Errorf("prose became the citation %+v", c)
+				}
+			}
+		})
+	}
+}
+
+// An elided symbol that resolves to nothing must not leave its line behind for
+// the next thing to pick up. The orphan is worse than the drop: it becomes a
+// strict path citation at a line the answer never attached to that file.
+func TestADroppedElisionDoesNotLeaveItsLineBehind(t *testing.T) {
+	got := Scan("`app/models/user.rb:5` then `…Unrelated::Thing#foo:20`")
+
+	for _, c := range got {
+		if c.Path == "app/models/user.rb" && c.Line == 20 {
+			t.Errorf("the dropped elision donated its line to a file: %+v", got)
+		}
+	}
+}
+
+// A method call is not a file. Reading `Account.new` or `account.id` as a path
+// poisons what later elisions resolve against and inflates the count of files
+// an answer named, which is printed as the denominator of reach.
+func TestAMethodCallIsNeverReadAsAFile(t *testing.T) {
+	for _, tc := range []string{"Struct.new", "account.id", "Net::HTTP.get", "Rails.application"} {
+		t.Run(tc, func(t *testing.T) {
+			for _, c := range Scan(tc + " is called here") {
+				if c.Path != "" {
+					t.Errorf("%q was read as the file %q", tc, c.Path)
+				}
+			}
+		})
+	}
+}
+
+// The full ordered output of one answer carrying five different forms. Written
+// out in full because the pairwise tests above each read only the last cite,
+// so none of them would notice if Scan returned its cites in another order or
+// dropped one from the middle.
+func TestOneAnswerCarryingEveryFormAtOnce(t *testing.T) {
+	answer := "1. `app/models/category.rb:10` — the anchor\n" +
+		"2. `Admin::ActionLogsController#index` `:7` — audits\n" +
+		"3. `#destroy` `:9` — and its sibling\n" +
+		"4. `app/lib/importer/statuses_index_importer.rb` — named, no line\n" +
+		"5. `…_index_importer.rb:74` — truncated"
+
+	want := []Cite{
+		{Path: "app/models/category.rb", Line: 10},
+		{Symbol: "Admin::ActionLogsController#index", Line: 7},
+		{Symbol: "Admin::ActionLogsController#destroy", Line: 9},
+		{Path: "app/lib/importer/statuses_index_importer.rb"},
+		{Path: "app/lib/importer/statuses_index_importer.rb", Line: 74},
+	}
+	got := Scan(answer)
+	if len(got) != len(want) {
+		t.Fatalf("Scan returned %d cites, want %d:\n%+v", len(got), len(want), got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("cite %d = %+v, want %+v", i, got[i], want[i])
+		}
+	}
+}
+
+// An arm enumerating several lines of one file writes them as a list. Measured
+// across the corpus these carry 4,333 line numbers a matcher without them never
+// reads, and they fall harder on the BASELINE arm (21.0 per transcript against
+// 16.6) — a bias in the opposite direction to the symbol rule, and just as real.
+func TestSeveralLinesOfOneFileWrittenAsAList(t *testing.T) {
+	t.Run("a comma list after a path", func(t *testing.T) {
+		got := Scan("see src/Core/X.cs:24,178 GetAvailablePremiumPlan")
+		want := []Cite{
+			{Path: "src/Core/X.cs", Line: 24},
+			{Path: "src/Core/X.cs", Line: 178},
+		}
+		assertCites(t, got, want)
+	})
+
+	t.Run("a longer list", func(t *testing.T) {
+		got := Scan("`app/models/category.rb:143,171,450`")
+		if len(got) != 3 || got[2].Line != 450 || got[2].Path != "app/models/category.rb" {
+			t.Errorf("got %+v", got)
+		}
+	})
+
+	// A span's ENDS are what the answer named. Its interior is deliberately not
+	// credited: 37 otherwise-missed gold rows sit strictly inside a cited range,
+	// and crediting them would be a tolerance window adopted because it raised a
+	// number.
+	t.Run("a range gives its two ends and not its middle", func(t *testing.T) {
+		got := Scan("`app/models/category.rb:59-60`")
+		assertCites(t, got, []Cite{
+			{Path: "app/models/category.rb", Line: 59},
+			{Path: "app/models/category.rb", Line: 60},
+		})
+	})
+}
+
+// A continuation continues something ADJACENT. Without that rule a thousands
+// separator in prose extends whatever file was named last into a citation.
+func TestAThousandsSeparatorIsNotALineList(t *testing.T) {
+	for _, answer := range []string{
+		"about 1,000 rows in app/models/category.rb:12",
+		"app/models/category.rb:12 and then 1,000 users",
+	} {
+		got := Scan(answer)
+		if len(got) != 1 || got[0].Line != 12 {
+			t.Errorf("Scan(%q) = %+v, want just the one citation", answer, got)
+		}
+	}
+}
+
+func assertCites(t *testing.T, got, want []Cite) {
+	t.Helper()
+	if len(got) != len(want) {
+		t.Fatalf("got %d cites, want %d:\n%+v", len(got), len(want), got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("cite %d = %+v, want %+v", i, got[i], want[i])
+		}
+	}
+}
+
+// The guards on the number parsers are not decorative: the pattern matches any
+// run of digits, and a run long enough to overflow an int is a string the
+// corpus could contain in a hash or an id.
+func TestALineNumberTooLargeToBeALineIsRefused(t *testing.T) {
+	for _, answer := range []string{
+		"`app/models/category.rb` `:99999999999999999999`",
+		"app/models/category.rb:12,99999999999999999999",
+		"app/models/category.rb:99999999999999999999",
+	} {
+		for _, c := range Scan(answer) {
+			if c.Line < 0 {
+				t.Errorf("Scan(%q) produced a negative line: %+v", answer, c)
+			}
+		}
+	}
+}
+
+// A list continuing a citation that has no line of its own has nothing to
+// continue from, so it is dropped rather than becoming the file's first line.
+func TestAListAfterAFileWithNoLineIsDropped(t *testing.T) {
+	got := Scan("app/models/category.rb,5 items in total")
+	if len(got) != 1 || got[0].Line != 0 {
+		t.Errorf("got %+v, want the bare file mention alone", got)
+	}
+}
+
+// trimEllipsis removes the ellipsis and nothing else, so a token that never had
+// one comes back whole. Trimming a rune SET would eat leading dots.
+func TestTrimmingAnEllipsisLeavesEverythingElse(t *testing.T) {
+	for _, tc := range [][2]string{
+		{"…_measure.rb", "_measure.rb"},
+		{"..._measure.rb", "_measure.rb"},
+		{"_measure.rb", "_measure.rb"},
+		{".hidden.rb", ".hidden.rb"},
+	} {
+		if got := trimEllipsis(tc[0]); got != tc[1] {
+			t.Errorf("trimEllipsis(%q) = %q, want %q", tc[0], got, tc[1])
+		}
 	}
 }

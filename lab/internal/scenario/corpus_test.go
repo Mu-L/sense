@@ -126,3 +126,39 @@ func TestEveryShippedScenarioKeepsItsProvenanceHeader(t *testing.T) {
 		})
 	}
 }
+
+// Which shipped scenarios can actually be SCORED, which is a stronger question
+// than whether they parse.
+//
+// rails cannot: not one of its 25 gold rows carries a path:line, so every row
+// is unmatchable and Gold.Group refuses the whole group rather than returning
+// an empty one. That refusal is the 02-02 guard working — a silent 0 of 25
+// would look exactly like an arm that found nothing — but it means the corpus
+// ships a scenario no run can score, and that has to be visible rather than
+// discovered by a paid run.
+//
+// Quarantining it is 02-05's job. This test records the state so that fixing
+// rails, or quarantining it, has to come past here.
+func TestWhichShippedScenariosCanBeScored(t *testing.T) {
+	dir := filepath.Join(repoRoot(t), "lab", "scenarios")
+	scoreable := map[string]bool{
+		"bitwarden-server": true,
+		"chatwoot":         true,
+		"discourse":        true,
+		"mastodon":         true,
+		"rails":            false, // no path:line on any row; 02-05 quarantines it
+	}
+
+	for name, want := range scoreable {
+		t.Run(name, func(t *testing.T) {
+			s, err := Load(filepath.Join(dir, name), name)
+			if err != nil {
+				t.Fatalf("load: %v", err)
+			}
+			rows, err := s.Gold.Group(s.Gold.Discriminator)
+			if got := err == nil && len(rows) > 0; got != want {
+				t.Errorf("scoreable = %v, want %v (err: %v)", got, want, err)
+			}
+		})
+	}
+}

@@ -13,6 +13,7 @@ package score
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -53,15 +54,25 @@ type Result struct {
 	// SymbolCited is how many of the Hits were credited ONLY by the symbol
 	// rule, whose line is required but not compared.
 	//
-	// It is printed beside the score because on a real transcript it was ALL of
-	// it: the banked mastodon cell scores 8 of 20, and all 8 arrive this way,
-	// with no path citation landing on a gold line at all. A number composed
-	// entirely of line-unchecked matches is a different claim from one composed
-	// of strict ones, and reading them as the same is how an arm that writes
-	// symbols quietly out-scores an arm that writes paths to the same places.
+	// The STRICT recall is Cited-SymbolCited over Total, and both are printed,
+	// because the difference between them is not a detail. Audited over the
+	// corpus, 195 rows are credited this way and only 9 of them (4.6%) land on
+	// the gold line; 112 land in a different routine than the one gold names,
+	// and 65 name a method that is not defined in the gold file at all.
 	//
-	// The range check that closes this needs a repository on disk and is 02-04.
-	// Until then the composition travels with the number.
+	// The effect on the measured margin, over 49 paired model-scenario-repo
+	// cells: sense minus baseline is +0.0593 with the rule and +0.0343 without,
+	// so it inflates the margin by 73%. Per repo it is worse than that average:
+	// the whole mastodon margin is symbol credit (+0.0343 to 0.0000) and
+	// discourse changes SIGN (+0.0117 to -0.0243). bitwarden-server is the
+	// negative control and moves by exactly 0.0000, because the rule is
+	// Ruby-only and a C# symbol never resolves through it.
+	//
+	// The rule stays because the alternative measured worse — it was added
+	// after eight rows on the banked mastodon cell scored zero for an answer
+	// that named them plainly. What it does NOT get is a single unqualified
+	// number. The range check that closes this needs a repository on disk and
+	// is 02-04.
 	SymbolCited int
 	Recall      float64
 	Hits        []string // gold row IDs that were cited
@@ -233,7 +244,12 @@ func howMatched(cites []Cite, gold string) int {
 		if !Matches(c, goldPath, goldLine) {
 			continue
 		}
-		if c.Path != "" && itoa(c.Line) == goldLine {
+		// Strict means the LINE was checked, which is true of a path citation
+		// and of an established file, and false of the symbol rule.
+		if c.Path != "" && strconv.Itoa(c.Line) == goldLine {
+			return matchedPath
+		}
+		if matchesEstablished(c, goldPath, goldLine) {
 			return matchedPath
 		}
 		best = matchedSymbol
@@ -289,7 +305,8 @@ func (r Result) String() string {
 	fmt.Fprintf(&b, "gold group %s\n", r.Group)
 	fmt.Fprintf(&b, "cited      %d of %d\n", r.Cited, r.Total)
 	if r.SymbolCited > 0 {
-		fmt.Fprintf(&b, "           %d of those on a symbol whose line is not checked (see 02-04)\n", r.SymbolCited)
+		fmt.Fprintf(&b, "strict     %d of %d, dropping the %d matched on a symbol whose line is unchecked\n",
+			r.Cited-r.SymbolCited, r.Total, r.SymbolCited)
 	}
 	fmt.Fprintf(&b, "mentioned  %d of %d gold files, at any line, out of %d files named (not a score)\n",
 		r.Reached, r.Total, r.FilesNamed)
@@ -321,7 +338,7 @@ func LinesCitedFor(cites []Cite, gold string) []string {
 	var out []string
 	for _, c := range cites {
 		if c.Line != 0 && NamesFile(c, goldPath) {
-			out = append(out, itoa(c.Line))
+			out = append(out, strconv.Itoa(c.Line))
 		}
 	}
 	return out

@@ -50,7 +50,7 @@ NEVER KILLS · THE AUTHORING CYCLE IS UNATTENDED AND BOUNDED · AN OCCURRENCE-LI
 · "WHAT HOLDS THIS" NEEDS A RING, AND RUBY HAS NONE · AIM AT THE WINDOW, NOT AT THE OPPOSITE OF
 THE LAST FAILURE · A FREE ROW IS A GIFT TO THE BASELINE · ITERATE ON THE QUESTION, KEEP THE
 ANCHOR · TRY HARDER · THE LOOP CANNOT RECORD A LOSS · AXIS-DEAD IS NEVER REPO-DEAD · RUN FIRST,
-EXPLAIN AFTER
+EXPLAIN AFTER · A FORM-DEPENDENT LENIENCY IS AN ARM-DEPENDENT LENIENCY
 
 **Scenario and gold** — THE DISCRIMINATOR IS CITATION COST, NOT DISCOVERY · PUBLISHED GOLD LEAKS
 · A CORRECTNESS ORACLE MUST NOT BE SATISFIABLE BY THE ROUTE · A GOLD ROW MUST BE CITEABLE IN THE
@@ -83,6 +83,50 @@ authoring or correcting gold is *Scenario and gold*.
 ---
 
 # What may be concluded
+
+## A FORM-DEPENDENT LENIENCY IS AN ARM-DEPENDENT LENIENCY — doc, cycle 02
+
+If the matcher holds one citation form to a weaker standard than another, and the two arms write
+those forms at different rates, the leniency is a thumb on the scale for whichever arm writes the
+lenient form. It does not look like a bug. It looks like a margin.
+
+Report the composition of every score: how many hits were earned under the weaker rule, and what
+the number is without them. A number whose composition is not printed cannot be checked, and this
+one has to be checked per repo, because the asymmetry is not uniform.
+
+**Precedent.** Cycle 02 (02-03) added a symbol rule so that `Admin::ActionLogsController#index`
+`:7` would stop scoring as a miss — it had cost eight rows on the banked mastodon cell. The rule
+matches on the symbol and does NOT compare the line, because comparing it needs a repository on
+disk. Measured afterwards over the recorded transcripts, averaging within model-scenario-repo
+cells before differencing so the unequal run counts cannot drive it (28 paired cells, shipped
+matcher):
+
+| | with the rule | without it |
+|---|---|---|
+| sense minus baseline, `dependents` | **+0.0528** | **+0.0330** |
+
+**The rule inflates the measured margin by 60%.** The arms write the form at different rates
+(symbol-only-with-line: sense 3.25% of cites, baseline 1.38%), so a leniency attached to the form
+attaches to the arm.
+
+And the credit is mostly not earned. Audited on the pre-fix matcher against the checkouts, of the
+195 rows it credited, **9 landed on the gold line**. 112 landed in a different routine than the
+one gold names, and 65 named a method not defined in the gold file at all; 19 pointed past the
+end of that file.
+
+Per repo, worse than the average: mastodon's ENTIRE margin is symbol credit (+0.0364 to 0.0000)
+and discourse falls to nothing (+0.0413 to +0.0032). bitwarden-server is the negative control and
+moves by exactly 0.0000, because the rule is Ruby-only and a C# constant never resolves through
+it — a real mechanism predicts exactly that, and it is why the finding is not a fishing result.
+
+**The counterpart, in the other direction.** The same audit found the matcher was dropping comma
+lists (`X.cs:24,178`) and ranges, worth 4,333 and 2,789 line numbers, and those fell harder on
+the BASELINE arm. Reading them cut the inflation from 73% to the 60% above. A matcher can be
+biased both ways at once, and hunting one bias is how the other survives.
+
+**Mechanism.** doc. The range check that closes the symbol half needs a repository checkout and
+is 02-04. Until then `score.Result` prints the strict number beside the loose one and never a
+single figure.
 
 ## RUN vs DECIDE — doc *(inherited)*
 

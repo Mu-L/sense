@@ -94,7 +94,7 @@ func TestTheReportSaysHowManyHitsSkippedTheLineCheck(t *testing.T) {
 	if r.SymbolCited != r.Cited {
 		t.Errorf("SymbolCited = %d, want all %d of the hits", r.SymbolCited, r.Cited)
 	}
-	const want = "on a symbol whose line is not checked"
+	const want = "strict     0 of 8, dropping the 8 matched on a symbol whose line is unchecked"
 	if got := r.String(); !strings.Contains(got, want) {
 		t.Errorf("the report hides how the number was earned:\n%s", got)
 	}
@@ -109,7 +109,7 @@ func TestTheReportStaysSilentWhenEveryHitWasStrict(t *testing.T) {
 	if r.SymbolCited != 0 {
 		t.Errorf("SymbolCited = %d on an all-strict run", r.SymbolCited)
 	}
-	if strings.Contains(r.String(), "line is not checked") {
+	if strings.Contains(r.String(), "whose line is unchecked") {
 		t.Errorf("a caveat appeared on a run that did not earn it:\n%s", r.String())
 	}
 }
