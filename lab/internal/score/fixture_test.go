@@ -60,8 +60,23 @@ func fixture(t *testing.T) (rows []Row, answer string) {
 	return rows, answer
 }
 
-// The score, as the strict rule computes it.
-func TestTheRecordedRunScoresTwoOfTwelve(t *testing.T) {
+// The score, as the rule computes it.
+//
+// Cycle 00 recorded 2 of 12 and this is 4 of 12. The number moved because the
+// matcher had a defect, found by the rescore proof and fixed: the winning
+// question here asks the arm to "name the routine the dependency is inside,
+// give its file:line", and the answer to it is one item in two tokens —
+// `ImportScripts::Base#create_category` — `script/import_scripts/base.rb:465`.
+// Read as two citations the routine is lost, so the symbol carried no line and
+// could never match.
+//
+// Both rows added are hits by the gold rows' OWN words: d:import-scripts-base
+// says the location is "inside ImportScripts::Base#create_category" and the
+// answer named exactly that routine; d:bulk-import-merger says
+// "inside BulkImport::DiscourseMerger#category_exists" and so did the answer.
+// Each pins the routine's definition line where gold cites a use inside it,
+// which is the recorded ruling's case exactly.
+func TestTheRecordedRunScoresFourOfTwelve(t *testing.T) {
 	rows, answer := fixture(t)
 
 	got := Group("dependents", rows, text(answer), 0.50)
@@ -69,17 +84,23 @@ func TestTheRecordedRunScoresTwoOfTwelve(t *testing.T) {
 	if got.Total != 12 {
 		t.Fatalf("gold group has %d rows, want the 12 that were audited", got.Total)
 	}
-	if got.Cited != 2 {
-		t.Errorf("cited = %d, want 2 exact path:line hits", got.Cited)
+	if got.Cited != 4 {
+		t.Errorf("cited = %d, want 4", got.Cited)
 	}
 	if got.Verdict != BelowFloor {
 		t.Errorf("verdict = %q, want %q at recall %.2f against a 0.50 floor",
 			got.Verdict, BelowFloor, got.Recall)
 	}
 
-	// Named, not counted. A count that stayed at 2 while the identities changed
+	// Named, not counted. A count that stayed at 4 while the identities changed
 	// would mean the matcher had started crediting something else.
-	want := map[string]bool{"d:migrations-optimizer": true, "d:data-explorer-parameter": true}
+	want := map[string]bool{
+		"d:migrations-optimizer":    true,
+		"d:data-explorer-parameter": true,
+		// Added by the routine-attribution fix, and hits by gold's own prose.
+		"d:bulk-import-merger":  true,
+		"d:import-scripts-base": true,
+	}
 	for _, id := range got.Hits {
 		if !want[id] {
 			t.Errorf("credited %s, which the audit scored as a miss", id)
@@ -119,8 +140,8 @@ func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 		t.Errorf("the agent reached %d of 12 gold files, want 11 — the audit found only "+
 			"lib/tasks/search.rake never named", reached)
 	}
-	if wrongLine != 9 {
-		t.Errorf("%d rows were the right file at the wrong line, want 9", wrongLine)
+	if wrongLine != 7 {
+		t.Errorf("%d rows were the right file at the wrong line, want 7", wrongLine)
 	}
 
 	// Asserted on the RENDERED report, because the line's only job is to stop
@@ -173,9 +194,14 @@ func TestTheRecordedRunMissesAreLinesTheGoldRowItselfNames(t *testing.T) {
 		gold     string // the call site gold records
 		agentHit string // the line the agent chose instead
 	}{
+		// SIX rows, where cycle 00 recorded eight. Two were recovered by the
+		// routine-attribution fix; the rest are still the right file at a line
+		// gold does not name, which is the gap the metric is measuring.
 		{"d:migrations-importer-categories", "migrations/lib/importer/steps/categories/categories.rb:124", "123"},
-		{"d:bulk-import-merger", "script/bulk_import/discourse_merger.rb:230", "226"},
-		{"d:import-scripts-base", "script/import_scripts/base.rb:467", "465"},
+		// d:bulk-import-merger and d:import-scripts-base used to be here and are
+		// now HITS. Both gold rows name the routine the location sits inside,
+		// the answer named that routine, and the routine-attribution fix reads
+		// the pairing. They are the two rows the rescore proof recovered.
 		{"d:templates-rake", "plugins/discourse-templates/lib/tasks/discourse-templates.rake:113", "100"},
 		{"d:slack-migration", "plugins/discourse-chat-integration/app/jobs/onceoff/migrate_from_slack_official.rb:52", "35"},
 		{"d:semantic-categorizer", "plugins/discourse-ai/lib/ai_helper/semantic_categorizer.rb:25", "13"},
