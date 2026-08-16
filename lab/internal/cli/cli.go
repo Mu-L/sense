@@ -86,6 +86,11 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 		return runSession(ctx, args[1:], stdout, stderr)
+	case "tee":
+		// Deliberately absent from the usage text. It is what a run's
+		// .mcp.json points at instead of the Sense server, not a verb a person
+		// types.
+		return teeServer(args[1:], os.Stdin, stdout, stderr)
 	case "catalog":
 		return catalogCmd(args[1:], stdout, stderr)
 	case "score":
