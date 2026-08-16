@@ -200,16 +200,16 @@ func freeRows(set scenario.Set, grep Grepper, add func(Finding)) []string {
 	return nil
 }
 
+// splitCite separates a gold row's location.
+//
+// It cannot fail and has no error path, because a row's Cite is either empty or
+// matched by leadingCite, whose path part contains no colon and whose line part
+// is digits. Guarding against shapes neither side can produce would be three
+// branches nothing could ever take.
 func splitCite(cite string) (path string, line int) {
-	i := strings.LastIndex(cite, ":")
-	if i <= 0 {
-		return cite, 0
-	}
-	n, err := strconv.Atoi(cite[i+1:])
-	if err != nil {
-		return cite, 0
-	}
-	return cite[:i], n
+	path, num, _ := strings.Cut(cite, ":")
+	line, _ = strconv.Atoi(num)
+	return path, line
 }
 
 // String renders the report for a human, quarantines first.

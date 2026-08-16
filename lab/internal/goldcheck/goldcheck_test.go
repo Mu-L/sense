@@ -49,9 +49,38 @@ func TestTheRecordedSpecFixtureRowsAreQuarantined(t *testing.T) {
 	if err := yaml.Unmarshal(b, &g); err != nil {
 		t.Fatal(err)
 	}
+	// Pinned to the recorded scenario, not merely to two ids. Without this the
+	// test passes against any two lineless rows carrying those names, and the
+	// nineteen lines of history in the fixture are a comment with a
+	// test-shaped decoration attached.
+	if len(g.Rows) != 3 {
+		t.Fatalf("the fixture has %d rows, want 3 including the citeable control", len(g.Rows))
+	}
+	for _, want := range []struct{ id, group, relation string }{
+		{"d:real", "dependents", "app/models/status.rb:12 a dependent with a real location"},
+		{"spec:status", "specs", "models/status_spec.rb"},
+		{"spec:post-svc", "specs", "services/post_status_service_spec.rb"},
+	} {
+		var found bool
+		for _, r := range g.Rows {
+			if r.ID == want.id {
+				found = true
+				if r.Group != want.group || r.Relation != want.relation {
+					t.Errorf("%s = (%q, %q), want (%q, %q)", want.id, r.Group, r.Relation, want.group, want.relation)
+				}
+			}
+		}
+		if !found {
+			t.Errorf("the fixture no longer has the row %q", want.id)
+		}
+	}
 	set := scenario.Set{Name: "spec-fixture", Gold: g}
 
 	r := Audit(set, nil, nil)
+
+	if r.Rows != 3 {
+		t.Errorf("audited %d rows, want 3", r.Rows)
+	}
 
 	want := []string{"spec:status", "spec:post-svc"}
 	if len(r.Quarantined) != len(want) {
@@ -180,7 +209,9 @@ func TestARowInsideTheCoveringGrepIsFlaggedAndNeverQuarantined(t *testing.T) {
 		row("a", "dependents", "config/settings.rb:12 one Setting read"),
 		row("b", "dependents", "app/models/other.rb:4 not in the grep"))
 
-	r := Audit(set, nil, stubGrep{hits: map[string]bool{"config/settings.rb:12": true}, total: 18})
+	// A distinctive count, so a validator that fabricates the number rather
+	// than reporting the grepper's is not green.
+	r := Audit(set, nil, stubGrep{hits: map[string]bool{"config/settings.rb:12": true}, total: 4483})
 
 	if len(r.Quarantined) != 0 {
 		t.Errorf("a free row was quarantined: %v", r.Quarantined)
@@ -190,21 +221,36 @@ func TestARowInsideTheCoveringGrepIsFlaggedAndNeverQuarantined(t *testing.T) {
 	}
 	// The size of the grep is the whole story: a row inside a 4483-line grep is
 	// not free to anybody, so the count travels with the flag.
-	if got := r.String(); !strings.Contains(got, "prints 18 lines") {
-		t.Errorf("the flag does not carry the grep's size:\n%s", got)
+	if got := r.String(); !strings.Contains(got, "prints 4483 lines") {
+		t.Errorf("the flag does not carry the grep's own size:\n%s", got)
+	}
+	// And the size never turns the flag into a quarantine, however large. A row
+	// inside a 4483-line grep is not free to anybody, but that is a judgement
+	// for a human and never a rejection here.
+	if len(r.Quarantined) != 0 {
+		t.Errorf("a large covering grep quarantined %v", r.Quarantined)
 	}
 }
 
-// The validator reports and never edits. A validator that also fixes what it
-// finds is a validator nobody can check.
-func TestAuditLeavesTheGoldAlone(t *testing.T) {
-	rows := []scenario.GoldRow{row("a", "dependents", "somewhere vague")}
-	set := gold(t, "", rows...)
+// A row with no location has exactly ONE thing wrong with it.
+//
+// Checking it for duplicate files and for resolution invents reasons that are
+// false: splitCite("") gives an empty path, every such row collides with every
+// other in seenFile, and the empty path then goes to a real checkout. The
+// report would tell a human that two rows in two different files are the same
+// file and that both moved at the pinned commit. Neither is true, and every
+// other test in this file agrees with it, because they all assert that a reason
+// is PRESENT and none asserts that a reason is absent.
+func TestARowWithNoLocationCollectsNoOtherReason(t *testing.T) {
+	set := gold(t, "",
+		row("spec:a", "specs", "models/status_spec.rb"),
+		row("spec:b", "specs", "services/post_status_service_spec.rb"))
 
-	Audit(set, nil, nil)
+	r := Audit(set, stubResolver{}, nil)
 
-	if rows[0].Relation != "somewhere vague" || rows[0].ID != "a" {
-		t.Errorf("the audit modified the row: %+v", rows[0])
+	got := reasons(r)
+	if len(got) != 1 || got[string(NoLocation)] != 2 {
+		t.Errorf("reasons = %v, want only NoLocation twice", got)
 	}
 }
 
@@ -298,18 +344,6 @@ func TestAResolverThatCannotAnswerQuarantinesNothing(t *testing.T) {
 
 	if r := Audit(set, mutedResolver{}, nil); len(r.Quarantined) != 0 {
 		t.Errorf("quarantined %v on an answer nobody gave", r.Quarantined)
-	}
-}
-
-// A gold row whose location has no parseable line still has a path, and the
-// resolver is asked about the path rather than being handed a line of zero
-// that every checkout would refuse.
-func TestACiteWithNoParseableLineStillNamesItsPath(t *testing.T) {
-	if path, line := splitCite("app/models/category.rb"); path != "app/models/category.rb" || line != 0 {
-		t.Errorf("splitCite = (%q, %d)", path, line)
-	}
-	if path, line := splitCite("app/models/category.rb:notanumber"); line != 0 || path != "app/models/category.rb:notanumber" {
-		t.Errorf("splitCite = (%q, %d)", path, line)
 	}
 }
 

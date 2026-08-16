@@ -27,6 +27,10 @@ func TestValidateQuarantinesTheShippedRailsGold(t *testing.T) {
 
 // A scenario whose gold is sound exits clean, or the command is just "always
 // complain" and nobody would read its output twice.
+//
+// This depends on the SHIPPED discourse gold staying sound. If it fails after
+// someone edits that scenario, the validator is probably right and the edit is
+// what to look at.
 func TestValidateAcceptsGoldThatIsSound(t *testing.T) {
 	code, stdout, stderr := dispatch(t, "validate",
 		"-scenario", filepath.Join(repoRoot(t), "lab", "scenarios", "discourse", "discourse.yaml"))
