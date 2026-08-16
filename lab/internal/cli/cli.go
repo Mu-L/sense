@@ -34,6 +34,7 @@ Commands:
   score     Score a recorded run against a scenario's gold
   validate  Audit a scenario's gold and report what would be quarantined
   rescore   Recompute every recorded score and name the cause of each difference
+  status    Show where a campaign stands, derived from its run tree
   gate      Read a pay decision on stdin and refuse it, or not
   version   Print version
 `
@@ -99,6 +100,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return teeServer(args[1:], os.Stdin, stdout, stderr)
 	case "gate":
 		return gateCmd(args[1:], os.Stdin, stdout, stderr)
+	case "status":
+		return statusCmd(args[1:], stdout, stderr)
 	case "catalog":
 		return catalogCmd(args[1:], stdout, stderr)
 	case "score":
