@@ -68,8 +68,12 @@ type Spec struct {
 	// to content hash. Empty for the baseline arm, which is the point.
 	SenseSetup map[string]string
 	// Wall is how long the process may take. It is part of run identity and is
-	// never raised to rescue a stalled arm.
+	// never raised to rescue a stalled arm: a wall that can be lifted at the
+	// moment of frustration is not a measurement.
 	Wall time.Duration
+	// Grace is how long a session gets to stop on its own after being asked,
+	// before it is killed. Zero means defaultGrace.
+	Grace time.Duration
 }
 
 // Meta is the self-describing record left in every run directory. It is what a
@@ -77,13 +81,22 @@ type Spec struct {
 // time actually taken: a run at 481 seconds against a 480 second wall reads
 // very differently from one that finished in 30.
 type Meta struct {
-	Outcome     Outcome  `json:"outcome"`
-	ExitCode    int      `json:"exit_code"`
-	WallSeconds float64  `json:"wall_seconds"`
-	TookSeconds float64  `json:"took_seconds"`
-	Command     string   `json:"command"`
-	Args        []string `json:"args"`
-	StartedAt   string   `json:"started_at"`
+	Outcome     Outcome `json:"outcome"`
+	ExitCode    int     `json:"exit_code"`
+	WallSeconds float64 `json:"wall_seconds"`
+	// WallStartsAt is the point the wall is counted from, recorded because it is
+	// a property of the measurement rather than of the code.
+	//
+	// The sense arm pays for MCP server startup, which is slow to first output.
+	// A wall counted from first streamed event would charge that to the sense
+	// arm alone, and the two arms would have different effective budgets while
+	// appearing to share one. It is spawn, for both arms, and it is written down
+	// so a later reader does not have to take that on trust.
+	WallStartsAt string   `json:"wall_starts_at"`
+	TookSeconds  float64  `json:"took_seconds"`
+	Command      string   `json:"command"`
+	Args         []string `json:"args"`
+	StartedAt    string   `json:"started_at"`
 	// StdoutBytes is how much the session actually said.
 	//
 	// It is here because of a specific failure: an arm whose model id resolved
@@ -128,10 +141,25 @@ func envValue(env []string, key string) string {
 	return value
 }
 
+// defaultGrace is how long a session gets to stop on its own. An agent CLI
+// traps its first signal and spends seconds flushing, and ten seconds of
+// graceful cleanup is normal behaviour for the thing being measured.
+const defaultGrace = 10 * time.Second
+
+func (s Spec) grace() time.Duration {
+	if s.Grace <= 0 {
+		return defaultGrace
+	}
+	return s.Grace
+}
+
 // exitCodeKilled is what Meta records when the process was killed from outside.
 // Its real code is meaningless once we sent the signal, and 124 is what
 // timeout(1) uses.
 const exitCodeKilled = 124
+
+// wallStartsAtSpawn is the one wall start point, for both arms.
+const wallStartsAtSpawn = "spawn"
 
 // metaFile is the run's self-describing record. Its presence marks a directory
 // as holding a run that already happened.
@@ -181,18 +209,19 @@ func Session(ctx context.Context, dir string, s Spec) (Meta, error) {
 	said, _ := stdout.Seek(0, io.SeekCurrent)
 
 	m := Meta{
-		Outcome:     outcomeOf(code, ended),
-		StdoutBytes: said,
-		ExitCode:    code,
-		WallSeconds: s.Wall.Seconds(),
-		TookSeconds: time.Since(started).Seconds(),
-		Command:     s.Name,
-		Args:        s.Args,
-		StartedAt:   started.UTC().Format(time.RFC3339),
-		Arm:         s.Arm,
-		SenseSetup:  s.SenseSetup,
-		Home:        envValue(s.Env, "HOME"),
-		Path:        envValue(s.Env, "PATH"),
+		Outcome:      outcomeOf(code, ended),
+		StdoutBytes:  said,
+		ExitCode:     code,
+		WallSeconds:  s.Wall.Seconds(),
+		WallStartsAt: wallStartsAtSpawn,
+		TookSeconds:  time.Since(started).Seconds(),
+		Command:      s.Name,
+		Args:         s.Args,
+		StartedAt:    started.UTC().Format(time.RFC3339),
+		Arm:          s.Arm,
+		SenseSetup:   s.SenseSetup,
+		Home:         envValue(s.Env, "HOME"),
+		Path:         envValue(s.Env, "PATH"),
 	}
 	if err := writeMeta(dir, m); err != nil {
 		return Meta{}, err
@@ -274,7 +303,7 @@ func spawn(ctx context.Context, s Spec, stdout, stderr *os.File) (code int, ende
 	// and Cancel fires on the parent's cancellation as well as the wall, so an
 	// interrupted campaign does not leave agents running and spending.
 	setProcessGroup(cmd)
-	cmd.Cancel = func() error { return killGroup(cmd) }
+	cmd.Cancel = func() error { return stopGroup(cmd, s.grace()) }
 
 	runErr := cmd.Run()
 
