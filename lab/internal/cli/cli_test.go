@@ -10,9 +10,9 @@ import (
 	"testing"
 )
 
-// run is a test helper: it calls Run with fresh buffers and returns the code
+// dispatch is a test helper: it calls Run with fresh buffers and returns the code
 // plus what landed on each stream.
-func run(t *testing.T, args ...string) (code int, stdout, stderr string) {
+func dispatch(t *testing.T, args ...string) (code int, stdout, stderr string) {
 	t.Helper()
 	var out, errb bytes.Buffer
 	code = Run(args, &out, &errb)
@@ -24,7 +24,7 @@ func TestVersionPrintsTheBuildStampToStdout(t *testing.T) {
 	t.Cleanup(func() { Version = old })
 	Version = "1.2.3-dev+gdeadbee"
 
-	code, stdout, stderr := run(t, "version")
+	code, stdout, stderr := dispatch(t, "version")
 
 	if code != 0 {
 		t.Errorf("exit = %d, want 0", code)
@@ -41,7 +41,7 @@ func TestVersionPrintsTheBuildStampToStdout(t *testing.T) {
 // must not pollute stdout: a caller piping `sense-lab version` into another
 // command would otherwise consume the usage text as data.
 func TestUnknownCommandIsAUsageErrorOnStderr(t *testing.T) {
-	code, stdout, stderr := run(t, "measure")
+	code, stdout, stderr := dispatch(t, "measure")
 
 	if code != 2 {
 		t.Errorf("exit = %d, want 2", code)
@@ -58,7 +58,7 @@ func TestUnknownCommandIsAUsageErrorOnStderr(t *testing.T) {
 }
 
 func TestNoArgsIsAUsageErrorOnStderr(t *testing.T) {
-	code, stdout, stderr := run(t)
+	code, stdout, stderr := dispatch(t)
 
 	if code != 2 {
 		t.Errorf("exit = %d, want 2", code)
@@ -76,7 +76,7 @@ func TestNoArgsIsAUsageErrorOnStderr(t *testing.T) {
 func TestHelpSucceedsOnStdout(t *testing.T) {
 	for _, arg := range []string{"help", "-h", "--help"} {
 		t.Run(arg, func(t *testing.T) {
-			code, stdout, stderr := run(t, arg)
+			code, stdout, stderr := dispatch(t, arg)
 
 			if code != 0 {
 				t.Errorf("exit = %d, want 0", code)
@@ -95,7 +95,7 @@ func TestHelpSucceedsOnStdout(t *testing.T) {
 // dispatcher's: an extra argument must not turn a known command into a usage
 // error.
 func TestTrailingArgumentsDoNotBreakDispatch(t *testing.T) {
-	code, _, stderr := run(t, "version", "--json")
+	code, _, stderr := dispatch(t, "version", "--json")
 
 	if code != 0 {
 		t.Errorf("exit = %d, want 0 (stderr: %q)", code, stderr)

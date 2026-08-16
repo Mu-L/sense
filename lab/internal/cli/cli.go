@@ -9,8 +9,12 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 // Version is set at build time via ldflags. The symbol is sense-lab's own,
@@ -21,18 +25,27 @@ var Version = "0.0.0-dev"
 
 const usage = `sense-lab — the bench instrument for Sense
 
-Usage: sense-lab <command>
+Usage: sense-lab <command> [flags]
 
 Commands:
+  run       Run one scenario against one repository
   version   Print version
 `
 
 // Exit codes. sense-lab keeps its own table rather than sense's: it is a
 // separate binary with a separate surface, and sense already spends 2 on a
 // symbol issue.
+//
+// A run that failed or could not finish inside its budget exits 1: it is a
+// result, and reporting it as success would let a stalled arm pass unnoticed.
 const (
 	exitOK    = 0
+	exitError = 1
 	exitUsage = 2
+	// exitCannotFinish is its own code so a caller can tell a bankable result
+	// from a broken binary without parsing JSON: a run that hit its wall left a
+	// record on disk, a run that exited 1 may not have.
+	exitCannotFinish = 3
 )
 
 // Run dispatches args to a subcommand and returns the process exit code.
@@ -44,6 +57,16 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 	switch args[0] {
+	case "run":
+		// A run must die with the binary. Without this the cancel path the
+		// runner carefully distinguishes can never fire in production:
+		// interrupting a campaign would leave the agent running, unattended,
+		// unowned and still spending, with no record on disk — and because the
+		// session is in its own process group, a second Ctrl-C cannot reach it
+		// either.
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+		return runSession(ctx, args[1:], stdout, stderr)
 	case "version":
 		_, _ = fmt.Fprintln(stdout, Version)
 		return exitOK

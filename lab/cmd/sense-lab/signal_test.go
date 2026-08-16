@@ -1,0 +1,123 @@
+package main
+
+import (
+	"encoding/json"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"testing"
+	"time"
+)
+
+// Installing a signal handler and attaching the run to it are two different
+// things, and getting only the first is silent: the handler fires, the session
+// is not attached to it, and an interrupted campaign leaves the agent running,
+// unowned and still spending, with no record on disk. Because the session sits
+// in its own process group, a second Ctrl-C cannot reach it either.
+//
+// This drives the real binary rather than the cli package, because signalling
+// the test process would pollute handler state for every other test in it, and
+// the production path is the thing worth testing.
+func TestSIGTERMRecordsTheRunAndKillsTheAgentTree(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds and spawns the binary")
+	}
+
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "sense-lab")
+	build := exec.Command("go", "build", "-o", bin, ".")
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build sense-lab: %v\n%s", err, out)
+	}
+
+	marker := filepath.Join(dir, "grandchild-still-running")
+	agent := filepath.Join(dir, "fake-agent")
+	// Reads the prompt, backgrounds a grandchild that would fire well after the
+	// signal, then waits. Killing only the direct child leaves the grandchild.
+	script := "#!/bin/sh\ncat >/dev/null\necho started\n(sleep 5; touch " + marker + ") &\nwait\n"
+	if err := os.WriteFile(agent, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	scenario := filepath.Join(dir, "scenario.yaml")
+	if err := os.WriteFile(scenario, []byte("name: t\nsteps:\n  - name: s\n    prompt: go\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	out := filepath.Join(dir, "run")
+	lab := exec.Command(bin, "run",
+		"-scenario", scenario, "-repo", dir, "-out", out,
+		"-agent", agent, "-wall", "5m")
+	var labOut strings.Builder
+	lab.Stdout, lab.Stderr = &labOut, &labOut
+	if err := lab.Start(); err != nil {
+		t.Fatalf("start sense-lab: %v", err)
+	}
+
+	// Wait until the agent has actually started before interrupting. A fixed
+	// sleep races the first exec of a freshly built binary, and signalling too
+	// early tests the default handler rather than ours.
+	waitFor(t, func() bool {
+		b, err := os.ReadFile(filepath.Join(out, "raw", "stdout"))
+		return err == nil && strings.Contains(string(b), "started")
+	}, "the agent to start")
+
+	// Interrupt the way a campaign driver would.
+	if err := lab.Process.Signal(syscall.SIGTERM); err != nil {
+		t.Fatalf("signal: %v", err)
+	}
+
+	done := make(chan error, 1)
+	go func() { done <- lab.Wait() }()
+	select {
+	case <-done:
+	case <-time.After(30 * time.Second):
+		_ = lab.Process.Kill()
+		t.Fatal("sense-lab ignored SIGTERM and ran on toward its wall")
+	}
+
+	// 1. The run is recorded. A spent run with no record can never be paired.
+	b, err := os.ReadFile(filepath.Join(out, "run-meta.json"))
+	if err != nil {
+		t.Fatalf("no record left by an interrupted run: %v\nsense-lab said:\n%s", err, labOut.String())
+	}
+	var m struct {
+		Outcome string `json:"outcome"`
+	}
+	if err := json.Unmarshal(b, &m); err != nil {
+		t.Fatalf("decode run-meta.json: %v", err)
+	}
+
+	// 2. It is recorded as an interrupt, not as a budget failure. Conflating
+	//    the two puts a row on disk that reads exactly like a stalled arm.
+	if m.Outcome != "interrupted" {
+		t.Errorf("outcome = %q, want interrupted", m.Outcome)
+	}
+
+	// 3. The agent's own children died with it, rather than running on and
+	//    spending against a session nobody is waiting for.
+	time.Sleep(6 * time.Second)
+	if _, err := os.Stat(marker); err == nil {
+		t.Error("the agent's grandchild outlived the interrupt and kept running")
+	}
+
+	// The prompt is still on disk, so the interrupted run is readable.
+	if p, err := os.ReadFile(filepath.Join(out, "prompt.txt")); err != nil || !strings.Contains(string(p), "go") {
+		t.Errorf("prompt.txt = %q, %v", p, err)
+	}
+}
+
+// waitFor polls until cond holds, so a test does not race a process it just
+// started. It fails rather than hanging if the condition never arrives.
+func waitFor(t *testing.T, cond func() bool, what string) {
+	t.Helper()
+	deadline := time.Now().Add(20 * time.Second)
+	for time.Now().Before(deadline) {
+		if cond() {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatalf("timed out waiting for %s", what)
+}
