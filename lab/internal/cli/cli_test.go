@@ -154,3 +154,44 @@ func thisPackagePath(t *testing.T) string {
 	}
 	return string(mod[1]) + "/" + filepath.ToSlash(rel)
 }
+
+// The two commands that read stdin are dispatched through Run like any other,
+// so a rename or a missing case is caught here rather than at the moment a run
+// needs one.
+
+func TestTheGateCommandIsReachableThroughTheDispatcher(t *testing.T) {
+	// It reads its decision from stdin, so dispatching it with nothing there is
+	// a usage error — which is exactly what proves the case exists: an unknown
+	// command would print the usage text instead.
+	code, _, stderr := dispatch(t, "gate")
+
+	if code != exitUsage {
+		t.Fatalf("exit = %d, want a usage error from an empty decision", code)
+	}
+	if strings.Contains(stderr, "unknown command") {
+		t.Errorf("gate is not dispatched: %q", stderr)
+	}
+}
+
+func TestTheTeeCommandIsReachableThroughTheDispatcher(t *testing.T) {
+	// It is deliberately absent from the usage text — it is what a run's
+	// .mcp.json points at, not a verb a person types — so nothing else would
+	// notice if the case were dropped.
+	code, _, stderr := dispatch(t, "tee")
+
+	if code != exitUsage {
+		t.Fatalf("exit = %d, want a usage error with no server command", code)
+	}
+	if strings.Contains(stderr, "unknown command") {
+		t.Errorf("tee is not dispatched: %q", stderr)
+	}
+}
+
+func TestTheTeeCommandIsNotOfferedInTheUsageText(t *testing.T) {
+	// A person invoking it by hand has misunderstood what it is for.
+	_, stdout, _ := dispatch(t, "help")
+
+	if strings.Contains(stdout, "tee") {
+		t.Errorf("the usage text offers tee:\n%s", stdout)
+	}
+}
