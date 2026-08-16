@@ -10,6 +10,13 @@
     "--permission-mode",
     "bypassPermissions"
   ],
+  "judge_args": [
+    "-p",
+    "--output-format",
+    "text",
+    "--allowedTools",
+    ""
+  ],
   "env": [
     "IS_SANDBOX=1",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1"

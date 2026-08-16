@@ -74,6 +74,17 @@ type Agent struct {
 	// rather than in code because they are ecosystem facts: they change when
 	// somebody else ships a release, and no two tools spell them alike.
 	HeadlessArgs []string `json:"headless_args"`
+	// JudgeArgs drive the tool TOOL-LESS and single-turn, for grading.
+	//
+	// They are per tool rather than global because no two tools spell it alike,
+	// and because a tool that cannot guarantee tool-less and single-turn falls
+	// back to a direct API call — which is a decision recorded against that
+	// tool, in its README, not one taken once for all of them.
+	//
+	// A judge with tools is a different instrument from one without: it may
+	// verify claims itself, whether it does varies run to run, and which
+	// instrument graded a run would not be visible in the number.
+	JudgeArgs []string `json:"judge_args"`
 	// Env is added to the session environment, as KEY=VALUE. Same reason.
 	Env []string `json:"env"`
 	// SupportsMCP bounds which subjects this tool can carry.

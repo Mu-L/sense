@@ -34,3 +34,20 @@ exception.
 ## Auth
 
 Subscription or API key.
+
+## Judging
+
+`judge_args` drive the tool tool-less and single-turn, for grading. `-p` with
+`--output-format text` is one turn and one reply; `--allowedTools` with an empty
+value leaves the model nothing to call.
+
+Both halves matter and neither is trusted on its own. The grading also runs in
+an empty directory inside a disposable HOME, so there is no repository, no MCP
+registration and no routing guidance to reach even if a tool were enabled. A
+judge that can read the repository may verify claims itself, and whether it
+chooses to varies run to run: that is invisible grading variance, and it changes
+what is measured.
+
+**Last verified:** 2026-08-16, against a stand-in rather than against the CLI.
+The flags are an ecosystem fact and they move; if a release changes them, this
+tool's fallback is a direct API call, decided here rather than globally.
