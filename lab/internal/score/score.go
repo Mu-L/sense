@@ -25,6 +25,11 @@ type Row struct {
 
 // Result is one gold group scored against one transcript.
 type Result struct {
+	// Why says what makes this number provisional, and empty means it is not.
+	// It travels from the transcript because a score that does not carry the
+	// mark is exactly the failure the mark exists to prevent: a truncated
+	// capture read as a weak arm.
+	Why   string
 	Group string
 	Total int
 	Cited int
@@ -51,6 +56,29 @@ type Result struct {
 	Floor      float64
 	Verdict    string
 }
+
+// Source is what a score is taken from. It is an interface so this package does
+// not depend on the transcript package, and so a test can score a string
+// without pretending to be a capture.
+type Source interface {
+	// Answer is everything the agent said.
+	Answer() string
+	// ProvisionalWhy says why the capture is incomplete, or "" when it is not.
+	ProvisionalWhy() string
+}
+
+// text is a Source for prose with no capture behind it.
+//
+// It is UNEXPORTED on purpose. It reports not-provisional unconditionally, so
+// handing it a real capture's answer launders the mark: `text(tr.Answer())`
+// would compile, score clean, and read as deliberate. Group takes a Source
+// precisely so the transcript itself goes in, and an exported always-clean
+// Source is a door in that wall. Tests inside this package use it; nothing
+// outside can.
+type text string
+
+func (t text) Answer() string         { return string(t) }
+func (t text) ProvisionalWhy() string { return "" }
 
 // Verdicts. One comparison against one floor: the verdict vocabulary, the
 // spread rule and the retry rule are cycle 04.
@@ -87,7 +115,14 @@ func Citations(text string) []string {
 	return out
 }
 
-// Group scores one gold group against the citations in text.
+// Provisional means this number came from a transcript known to be incomplete.
+func (r Result) Provisional() bool { return r.Why != "" }
+
+// Group scores one gold group against a transcript.
+//
+// It takes the transcript rather than its text so the provisional mark cannot
+// be dropped on the way in. A mark that every caller has to remember to copy
+// across is an annotation, and an annotation is what this refuses to be.
 //
 // Matching is strict: a citation counts for a row only when it names the same
 // line of the same file. There is no fuzzy matching, no path-only fallback and
@@ -98,9 +133,9 @@ func Citations(text string) []string {
 // directory the repository does not have, so a citation matches when it ends at
 // a path boundary of the gold cite. That is a suffix rule on the PATH only; the
 // line still has to be exactly right.
-func Group(name string, rows []Row, text string, floor float64) Result {
-	cites := Citations(text)
-	r := Result{Group: name, Total: len(rows), Floor: floor}
+func Group(name string, rows []Row, tr Source, floor float64) Result {
+	cites := Citations(tr.Answer())
+	r := Result{Group: name, Total: len(rows), Floor: floor, Why: tr.ProvisionalWhy()}
 
 	for _, row := range rows {
 		if ReachedPath(cites, row.Cite) {
@@ -228,6 +263,10 @@ func hasPathSuffix(long, short string) bool {
 // String renders the result the way the skeleton prints it.
 func (r Result) String() string {
 	var b strings.Builder
+	if r.Provisional() {
+		fmt.Fprintf(&b, "PROVISIONAL  %s\n", r.Why)
+		b.WriteString("             this number is not a result; the capture is incomplete\n")
+	}
 	fmt.Fprintf(&b, "gold group %s\n", r.Group)
 	fmt.Fprintf(&b, "cited      %d of %d\n", r.Cited, r.Total)
 	fmt.Fprintf(&b, "mentioned  %d of %d gold files, at any line, out of %d files named (not a score)\n",

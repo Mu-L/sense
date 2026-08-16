@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+// incomplete is a Source standing in for a capture that is missing part of
+// itself.
+type incomplete string
+
+func (i incomplete) Answer() string         { return "a.rb:1" }
+func (i incomplete) ProvisionalWhy() string { return string(i) }
+
 func rows(cites ...string) []Row {
 	var out []Row
 	for i, c := range cites {
@@ -58,7 +65,7 @@ func TestOnlyAnExactPathAndLineCounts(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got := Group("g", gold, tc.text, 0.5)
+			got := Group("g", gold, text(tc.text), 0.5)
 
 			if cited := got.Cited == 1; cited != tc.want {
 				t.Errorf("cited = %v, want %v (recall %.2f)", cited, tc.want, got.Recall)
@@ -83,7 +90,7 @@ func TestACitationIsFoundHoweverTheAgentDressesIt(t *testing.T) {
 		"./app/models/category.rb:1083",
 	} {
 		t.Run(tc, func(t *testing.T) {
-			if got := Group("g", gold, tc, 0.5); got.Cited != 1 {
+			if got := Group("g", gold, text(tc), 0.5); got.Cited != 1 {
 				t.Errorf("not cited in %q", tc)
 			}
 		})
@@ -114,7 +121,7 @@ func TestPathMatchingStopsAtADirectoryBoundary(t *testing.T) {
 		{"a longer name ending the same way, in a directory", "script/my_base.rb:467", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			if cited := Group("g", gold, tc.text, 0.5).Cited == 1; cited != tc.want {
+			if cited := Group("g", gold, text(tc.text), 0.5).Cited == 1; cited != tc.want {
 				t.Errorf("cited = %v, want %v", cited, tc.want)
 			}
 		})
@@ -133,7 +140,7 @@ func TestACitationShorterThanGoldIsNeverCredited(t *testing.T) {
 		"see models/category.rb:1083",
 	} {
 		t.Run(tc, func(t *testing.T) {
-			if got := Group("g", gold, tc, 0.5); got.Cited != 0 {
+			if got := Group("g", gold, text(tc), 0.5); got.Cited != 0 {
 				t.Error("a citation with less path than gold was credited; " +
 					"discourse has many files called category.rb, so that is a coincidence of line number")
 			}
@@ -144,7 +151,7 @@ func TestACitationShorterThanGoldIsNeverCredited(t *testing.T) {
 // A row with no location cannot be scored strictly, and crediting it would be
 // exactly the path-only matching this scorer refuses.
 func TestAGoldRowWithNoLocationIsAMissNotAFreeHit(t *testing.T) {
-	got := Group("g", []Row{{ID: "no-location", Cite: ""}}, "anything at all.rb:1", 0.5)
+	got := Group("g", []Row{{ID: "no-location", Cite: ""}}, text("anything at all.rb:1"), 0.5)
 
 	if got.Cited != 0 {
 		t.Errorf("cited = %d, want 0", got.Cited)
@@ -169,7 +176,7 @@ func TestRecallAndVerdictAgainstTheFloor(t *testing.T) {
 		{"all four", "a.rb:1 b.rb:2 c.rb:3 d.rb:4", 1.0, AtOrAboveFloor},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got := Group("g", gold, tc.text, 0.5)
+			got := Group("g", gold, text(tc.text), 0.5)
 
 			if got.Recall != tc.wantRecall {
 				t.Errorf("recall = %.2f, want %.2f", got.Recall, tc.wantRecall)
@@ -203,7 +210,7 @@ func TestCitationsAreReportedOnceInFirstAppearanceOrder(t *testing.T) {
 }
 
 func TestAnEmptyGoldGroupScoresZeroWithoutDividingByZero(t *testing.T) {
-	got := Group("g", nil, "a.rb:1", 0.5)
+	got := Group("g", nil, text("a.rb:1"), 0.5)
 
 	if got.Total != 0 || got.Cited != 0 || got.Recall != 0 {
 		t.Errorf("got %+v, want an empty result", got)
@@ -215,7 +222,7 @@ func TestTheResultNamesWhatWasMissed(t *testing.T) {
 
 	// A 0.75 floor, so 1 of 2 lands below it and the verdict line is the
 	// interesting one to read.
-	out := Group("dependents", gold, "a.rb:1", 0.75).String()
+	out := Group("dependents", gold, text("a.rb:1"), 0.75).String()
 
 	// "not a score" is asserted, not decoration: the mention count is
 	// volume-sensitive and the report must never present it as a second metric.
@@ -270,4 +277,28 @@ func TestReachedPathAndLinesCitedForReadAMiss(t *testing.T) {
 			t.Errorf("lines = %v, want none", got)
 		}
 	})
+}
+
+// The provisional mark leads the report, because it changes what every line
+// under it means: the number is not a low result, it is a number taken from a
+// capture that is missing part of itself.
+func TestAProvisionalResultSaysSoBeforeItSaysAnythingElse(t *testing.T) {
+	// Scored from a source that says it is incomplete. The mark cannot be set
+	// after the fact any more: Group takes the source, so nothing has to
+	// remember to copy it.
+	r := Group("dependents", rows("a.rb:1", "b.rb:2"), incomplete("3 unreadable lines"), 0.5)
+
+	out := r.String()
+
+	if !strings.HasPrefix(out, "PROVISIONAL  3 unreadable lines") {
+		t.Errorf("report = %q, want the mark and its reason first", out)
+	}
+	if !strings.Contains(out, "this number is not a result") {
+		t.Errorf("report does not say what the mark means:\n%s", out)
+	}
+	// The number is still there: a provisional result is worth reading, it is
+	// just not worth banking.
+	if !strings.Contains(out, "cited      1 of 2") {
+		t.Errorf("report dropped the number:\n%s", out)
+	}
 }
