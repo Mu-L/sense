@@ -358,3 +358,61 @@ func TestTheRestOfTheSchemaIsChecked(t *testing.T) {
 		})
 	}
 }
+
+// Cycle 00 scored one hardcoded group. The corpus carries five, and a scorer
+// that can only see one of them cannot say whether a margin is broad or sits
+// entirely in one place.
+func TestTheGoldGroupsAreListedInTheOrderTheRowsNameThem(t *testing.T) {
+	g := Gold{Rows: []GoldRow{
+		{ID: "d:1", Group: "dependents"},
+		{ID: "c:1", Group: "contract"},
+		{ID: "d:2", Group: "dependents"}, // a repeat is not a second group
+		{ID: "x:1", Group: ""},           // and a row with no group names none
+		{ID: "w:1", Group: "write-path"},
+	}}
+
+	got := Gold.Groups(g)
+	want := []string{"dependents", "contract", "write-path"}
+	if len(got) != len(want) {
+		t.Fatalf("Groups() = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("Groups()[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+// Every group the shipped corpus actually carries, so a group added to a gold
+// file without the scorer being taught about it is visible here.
+func TestTheShippedCorpusCarriesTheFiveKnownGroups(t *testing.T) {
+	dir := filepath.Join(repoRoot(t), "lab", "scenarios")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := map[string]int{}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		s, err := Load(filepath.Join(dir, e.Name()), e.Name())
+		if err != nil {
+			t.Fatalf("%s: %v", e.Name(), err)
+		}
+		for _, row := range s.Gold.Rows {
+			seen[row.Group]++
+		}
+	}
+	want := map[string]int{
+		"dependents": 70, "contract": 38, "write-path": 20, "guards": 17, "context": 9,
+	}
+	if len(seen) != len(want) {
+		t.Errorf("the corpus carries groups %v, want the five known ones", seen)
+	}
+	for g, n := range want {
+		if seen[g] != n {
+			t.Errorf("group %q has %d rows, want %d", g, seen[g], n)
+		}
+	}
+}

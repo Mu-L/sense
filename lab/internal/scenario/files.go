@@ -70,6 +70,23 @@ func (g Gold) Group(name string) ([]GoldRow, error) {
 	return out, nil
 }
 
+// Groups returns the gold group names, in the order the rows first name them.
+//
+// Cycle 00 scored one hardcoded group. The corpus has five — dependents,
+// contract, write-path, guards and context — and a scorer that can only see one
+// of them cannot say whether a margin is broad or sits entirely in one place.
+func (g Gold) Groups() []string {
+	var out []string
+	seen := map[string]bool{}
+	for _, r := range g.Rows {
+		if r.Group != "" && !seen[r.Group] {
+			seen[r.Group] = true
+			out = append(out, r.Group)
+		}
+	}
+	return out
+}
+
 // Rubric is what the judge grades.
 type Rubric struct {
 	Audience string       `yaml:"audience"`

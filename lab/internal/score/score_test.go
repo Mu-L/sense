@@ -241,7 +241,7 @@ func TestTheResultNamesWhatWasMissed(t *testing.T) {
 // the file and pointed at the wrong line". They are not part of the score, and
 // they are what makes a miss readable rather than merely counted.
 func TestReachedPathAndLinesCitedForReadAMiss(t *testing.T) {
-	cites := Citations("look at app/models/category.rb:12, and again at app/models/category.rb:99")
+	cites := Scan("look at app/models/category.rb:12, and again at app/models/category.rb:99")
 
 	t.Run("the file was reached at the wrong lines", func(t *testing.T) {
 		gold := "app/models/category.rb:1083"

@@ -101,7 +101,7 @@ func TestTheRecordedRunScoresTwoOfTwelve(t *testing.T) {
 // detail of it.
 func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 	rows, answer := fixture(t)
-	cites := Citations(answer)
+	cites := Scan(answer)
 
 	var reached, wrongLine int
 	for _, r := range rows {
@@ -128,9 +128,16 @@ func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 	// checking only the words leaves it free to print `mentioned 2 of 12`.
 	//
 	// The denominator is part of the claim: "11 of 12 gold files" out of a
-	// 168-file answer is far weaker than it reads as, and a longer answer buys
+	// 182-file answer is far weaker than it reads as, and a longer answer buys
 	// mentions for free.
-	const want = "mentioned  11 of 12 gold files, at any line, out of 168 files named"
+	//
+	// 182, where cycle 00 recorded 168. The number moved because the matcher
+	// did: 00 counted only files carrying a path:line, and this one also counts
+	// the files an answer names with no line at all. Those are still files the
+	// answer named, so they belong in the denominator of opportunity — leaving
+	// them out flattered the reach figure by shrinking what it was measured
+	// against.
+	const want = "mentioned  11 of 12 gold files, at any line, out of 182 files named"
 	if got := Group("dependents", rows, text(answer), 0.50).String(); !strings.Contains(got, want) {
 		t.Errorf("the report does not carry\n\t%s\ngot:\n%s", want, got)
 	}
@@ -156,7 +163,7 @@ func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 // has to confront the specific cases rather than a count.
 func TestTheRecordedRunMissesAreLinesTheGoldRowItselfNames(t *testing.T) {
 	_, answer := fixture(t)
-	cites := Citations(answer)
+	cites := Scan(answer)
 
 	for _, tc := range []struct {
 		id       string
@@ -206,7 +213,7 @@ func TestTheRecordedRunMissesAreLinesTheGoldRowItselfNames(t *testing.T) {
 // miss, which was false — see TestTheAnswerElidesRepeatedPaths for how.
 func TestOnlyOneRowIsNeverFoundAtAll(t *testing.T) {
 	rows, answer := fixture(t)
-	cites := Citations(answer)
+	cites := Scan(answer)
 
 	var cite string
 	for _, r := range rows {
