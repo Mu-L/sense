@@ -18,6 +18,7 @@ var levers = []struct {
 }{
 	{phase.Author, phase.NoAnchor, "no group in this repo has a question the anchor could carry"},
 	{phase.Minibench, phase.Requestion, "baseline reached 14 of 18 rows in nine tool calls"},
+	{phase.Expand, phase.Requestion, "gold row d:notifier does not hold at its line"},
 	{phase.Validate, phase.DoNotPay, "credit table: 4 free rows floor the baseline at 0.286"},
 }
 

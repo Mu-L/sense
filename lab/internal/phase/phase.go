@@ -115,7 +115,7 @@ var Graph = []Phase{
 	{Index, "repo.json", "index.json", []Verdict{Auto}},
 	{Author, "slate.md", "scenario.draft.yaml", []Verdict{Draft, NoAnchor}},
 	{Minibench, "scenario.draft.yaml", "minibench.md", []Verdict{Proceed, Requestion, NoAnchor}},
-	{Expand, "minibench.md", "scenario.yaml", []Verdict{Auto}},
+	{Expand, "minibench.md", "scenario.yaml", []Verdict{Auto, Requestion}},
 	{Preflight, "scenario.yaml", "preflight.json", []Verdict{Auto}},
 	{Validate, "scenario.yaml", "pay-call.md", []Verdict{Pay, DoNotPay}},
 	{Bench, "scenario.yaml", "cells.json", []Verdict{Auto}},
@@ -147,8 +147,14 @@ type step struct {
 var reAuthor = map[step]bool{
 	{Author, NoAnchor}:      true,
 	{Minibench, Requestion}: true,
-	{Minibench, NoAnchor}:   true,
-	{Validate, DoNotPay}:    true,
+	// Expansion carries the discriminator step over verbatim. When it cannot —
+	// a gold row that does not hold at its line, or a step that cannot be
+	// written without naming a gold file — the mini-bench number has stopped
+	// describing the scenario, and that is a re-question rather than a phase
+	// that quietly writes nothing and stalls the loop.
+	{Expand, Requestion}:  true,
+	{Minibench, NoAnchor}: true,
+	{Validate, DoNotPay}:  true,
 }
 
 // forward is every transition that is not a re-entry.
@@ -191,6 +197,7 @@ var Levers = []Lever{
 	{"NO-ANCHOR from a draft", Author, NoAnchor, 1, Author},
 	{"REQUESTION from a mini-bench", Minibench, Requestion, 1, Author},
 	{"NO-ANCHOR from a mini-bench", Minibench, NoAnchor, 1, Author},
+	{"REQUESTION from an expansion", Expand, Requestion, 1, Author},
 	{"DO-NOT-PAY from a validation", Validate, DoNotPay, 1, Author},
 	{"the authoring ceiling", Author, NoAnchor, AuthoringCeiling, Handoff},
 	{"DoD FAIL from a harvest", Harvest, DoDFail, 1, Report},
