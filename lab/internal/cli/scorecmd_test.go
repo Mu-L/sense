@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -456,4 +457,149 @@ func TestScoringEveryGroupStaysProvisionalWhenTheCaptureIsTruncated(t *testing.T
 	if code != exitProvisional {
 		t.Errorf("exit code = %d, want %d\n%s", code, exitProvisional, stdout)
 	}
+}
+
+// Scoring without a checkout is a valid result that says grounding was not
+// verified. A scorer that refused to score without one would make the whole
+// pure layer depend on the state of a disk — and three of the four benched
+// repositories are not cloned on this machine today.
+func TestScoringWithoutACheckoutIsValidAndSaysSo(t *testing.T) {
+	run := recordedRun(t, "Found app/models/category.rb:1083 and lib/tasks/search.rake:32.")
+
+	code, stdout, _ := dispatch(t, "score", "-scenario", scoredFile(t), "-run", run)
+
+	if code != exitOK {
+		t.Errorf("exit code = %d, want %d: a missing checkout is not a failure", code, exitOK)
+	}
+	if !strings.Contains(stdout, "NOT VERIFIED") {
+		t.Errorf("the report does not say its citations were unverified:\n%s", stdout)
+	}
+}
+
+// A checkout that cannot be opened is worth a word on stderr, because the
+// operator asked for verification and did not get it — but it still scores.
+func TestAnUnusableCheckoutSaysSoAndStillScores(t *testing.T) {
+	run := recordedRun(t, "Found app/models/category.rb:1083 and lib/tasks/search.rake:32.")
+
+	code, stdout, stderr := dispatch(t, "score", "-scenario", scoredFile(t), "-run", run,
+		"-checkout", t.TempDir(), "-commit", "deadbeef")
+
+	if code != exitOK {
+		t.Errorf("exit code = %d, want %d", code, exitOK)
+	}
+	if !strings.Contains(stderr, "grounding skipped") {
+		t.Errorf("nothing on stderr said grounding was skipped:\n%s", stderr)
+	}
+	if !strings.Contains(stdout, "NOT VERIFIED") {
+		t.Errorf("the report claimed more than it checked:\n%s", stdout)
+	}
+}
+
+// The whole grounding path end to end, against a real checkout.
+//
+// It asserts the REPORT, not the score, because grounding does not change a
+// score: it returns a report and nothing else. An earlier version of this test
+// was named for the score and claimed "the number is smaller for it", which was
+// never true — its fabricated citation matched no gold row, so pruning it could
+// not have moved anything. A test whose name promises more than it checks is
+// worse than no test, because it is where you look and stop looking.
+func TestAFabricatedCitationIsReportedAgainstARealCheckout(t *testing.T) {
+	dir, commit := repoWithGold(t)
+	// The answer cites the gold line, and also a line that file does not have.
+	run := recordedRun(t, "Found app/models/category.rb:1083 and app/models/category.rb:999999.")
+
+	code, stdout, stderr := dispatch(t, "score", "-scenario", scoredFile(t), "-run", run,
+		"-checkout", dir, "-commit", commit)
+
+	if !strings.Contains(stdout, "1 of 2 cited locations do not resolve") {
+		t.Errorf("the fabricated citation was not reported:\n%s\n%s", stdout, stderr)
+	}
+	if strings.Contains(stdout, "NOT VERIFIED") {
+		t.Errorf("a run WITH a usable checkout reported as unverified:\n%s\n%s", stdout, stderr)
+	}
+	if code != exitBelowFloor && code != exitOK {
+		t.Errorf("exit code = %d", code)
+	}
+}
+
+// A checkout that cannot resolve the gold is the WRONG checkout, and that is
+// the dangerous case: a commit that exists in another repository passes every
+// existence check, resolves nothing, and would report as verified.
+func TestACheckoutThatCannotResolveTheGoldIsRefused(t *testing.T) {
+	dir, commit := repoMissingGold(t)
+	run := recordedRun(t, "Found app/models/category.rb:1083.")
+
+	// The scored scenario's gold also names lib/tasks/search.rake, which this
+	// repository does not have.
+	_, stdout, stderr := dispatch(t, "score", "-scenario", scoredFile(t), "-run", run,
+		"-checkout", dir, "-commit", commit)
+
+	if !strings.Contains(stderr, "wrong checkout or the scenario is stale") {
+		t.Errorf("a checkout that cannot resolve the gold was accepted:\n%s", stderr)
+	}
+	if !strings.Contains(stdout, "NOT VERIFIED") {
+		t.Errorf("the report claimed verification it did not have:\n%s", stdout)
+	}
+}
+
+// -checkout without -commit is a typo, not a deferral. Downgrading it to
+// unverified would exit 0 on a stderr line an operator may be piping away.
+func TestACheckoutWithoutACommitIsAUsageError(t *testing.T) {
+	run := recordedRun(t, "Found app/models/category.rb:1083.")
+
+	code, _, stderr := dispatch(t, "score", "-scenario", scoredFile(t), "-run", run,
+		"-checkout", t.TempDir())
+
+	if code != exitUsage {
+		t.Errorf("exit code = %d, want %d", code, exitUsage)
+	}
+	if !strings.Contains(stderr, "-checkout needs -commit") {
+		t.Errorf("the error does not say what is missing:\n%s", stderr)
+	}
+}
+
+// repoWithGold builds a checkout holding every file the scored fixture's gold
+// names, long enough to contain each gold line and no longer.
+func repoWithGold(t *testing.T) (dir, commit string) {
+	t.Helper()
+	return buildRepo(t, map[string]string{
+		"app/models/category.rb": strings.Repeat("line\n", 1100),
+		"lib/tasks/search.rake":  strings.Repeat("line\n", 40),
+	})
+}
+
+// repoMissingGold holds one of the two gold files, so grounding can tell that
+// this is not the repository the scenario was written against.
+func repoMissingGold(t *testing.T) (dir, commit string) {
+	t.Helper()
+	return buildRepo(t, map[string]string{
+		"app/models/category.rb": strings.Repeat("line\n", 1100),
+	})
+}
+
+func buildRepo(t *testing.T, files map[string]string) (dir, commit string) {
+	t.Helper()
+	dir = t.TempDir()
+	for path, body := range files {
+		full := filepath.Join(dir, filepath.FromSlash(path))
+		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(full, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, args := range [][]string{
+		{"init", "-q"}, {"config", "user.email", "t@example.com"}, {"config", "user.name", "t"},
+		{"add", "-A"}, {"commit", "-qm", "fixture"},
+	} {
+		if out, err := exec.Command("git", append([]string{"-C", dir}, args...)...).CombinedOutput(); err != nil {
+			t.Skipf("git is unavailable here: %v: %s", err, out)
+		}
+	}
+	out, err := exec.Command("git", "-C", dir, "rev-parse", "HEAD").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return dir, strings.TrimSpace(string(out))
 }

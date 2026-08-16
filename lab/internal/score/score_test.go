@@ -302,3 +302,26 @@ func TestAProvisionalResultSaysSoBeforeItSaysAnythingElse(t *testing.T) {
 		t.Errorf("report dropped the number:\n%s", out)
 	}
 }
+
+// Grounding is DENY BY DEFAULT on the report.
+//
+// A Result nobody grounded used to print nothing at all, which made it visually
+// identical to a verified one minus a line no reader has been trained to miss.
+// Absence of evidence has to render as absence of evidence: this is the one
+// property the grounding work exists to protect, and leaving it to caller
+// discipline is how it gets lost.
+func TestAnUngroundedResultSaysSoWithoutBeingTold(t *testing.T) {
+	rows := []Row{{ID: "d:one", Cite: "app/models/category.rb:12"}}
+	r := Group("dependents", rows, text("app/models/category.rb:12"), 0.50)
+
+	if !strings.Contains(r.String(), "NOT VERIFIED") {
+		t.Errorf("a number nobody checked printed as though it had been:\n%s", r.String())
+	}
+
+	r.Grounding = "grounding   1 of 4 cited locations do not resolve at the pinned commit\n"
+	if got := r.String(); !strings.Contains(got, "1 of 4 cited locations") {
+		t.Errorf("the grounding line did not reach the report:\n%s", got)
+	} else if strings.Contains(got, "NOT VERIFIED") {
+		t.Errorf("a grounded result also claimed to be unverified:\n%s", got)
+	}
+}
