@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/luuuc/sense/lab/internal/score"
 )
 
 func write(t *testing.T, body string) string {
@@ -157,5 +159,147 @@ func TestThePromptDoesNotInheritTheFilesIncidentalWhitespace(t *testing.T) {
 	}
 	if strings.Contains(got, "\n\n\n") {
 		t.Errorf("prompt has a run of blank lines:\n%s", got)
+	}
+}
+
+// The corpus keeps a gold row's authoritative location as the FIRST path:line
+// of its Relation prose, with the reason in English after it. The Match field
+// carries a path with no line, so scoring against Match is the path-only
+// matching the scorer exists to refuse — Cite is what makes strict matching
+// possible at all.
+func TestCiteTakesTheRowsLocationFromTheFrontOfItsRelation(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		relation string
+		want     string
+	}{
+		{
+			name:     "a real corpus row",
+			relation: "migrations/lib/uploader/tasks/optimizer.rb:43 `@category_id = Category.last.id` inside `#initialize` (def at :40) - the upload optimiser grabs one container up front",
+			want:     "migrations/lib/uploader/tasks/optimizer.rb:43",
+		},
+		{
+			// The prose after the location is full of ":40" style references
+			// to other lines. Only the leading one is the row's own location.
+			name:     "later line references are not the location",
+			relation: "app/models/category.rb:1083 `find_by_slug_path` - see also :1103 and :985",
+			want:     "app/models/category.rb:1083",
+		},
+		{
+			name:     "leading whitespace from a folded scalar",
+			relation: "\n  lib/tasks/search.rake:32 the reindex task\n",
+			want:     "lib/tasks/search.rake:32",
+		},
+		{
+			// The anchor is what makes this the ROW'S location rather than the
+			// first location mentioned anywhere in its reason. Without it, a
+			// row whose prose opens with a few words takes its location from
+			// wherever one happens to appear, which could be the row's
+			// neighbour.
+			name:     "a location buried after prose is not the row's own",
+			relation: "the entry point is app/models/category.rb:1083",
+			want:     "",
+		},
+		{
+			name:     "prose with no location at all",
+			relation: "somewhere in the search code",
+			want:     "",
+		},
+		{
+			// Rakefile, Gemfile and Dockerfile all exist in discourse and none
+			// of them is a citable path under this rule.
+			name:     "an extensionless path is not a location",
+			relation: "Rakefile:12 the task list",
+			want:     "",
+		},
+		{
+			name:     "a path with no line is not a location",
+			relation: "app/models/category.rb is the class under rework",
+			want:     "",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := (GoldRow{Relation: tc.relation}).Cite(); got != tc.want {
+				t.Errorf("Cite() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// Gold rows are grouped, and only one group is the discriminator. Counting the
+// anchor rows into it would inflate every score by the rows both arms reach.
+func TestGoldGroupReturnsOnlyItsOwnRowsInFileOrder(t *testing.T) {
+	s := Scenario{Gold: []GoldRow{
+		{ID: "c:one", Group: "contract", Relation: "a.rb:1 the anchor"},
+		{ID: "d:one", Group: "dependents", Relation: "b.rb:2 the first dependent"},
+		{ID: "c:two", Group: "contract", Relation: "c.rb:3 the other anchor"},
+		{ID: "d:two", Group: "dependents", Relation: "d.rb:4 the second dependent"},
+	}}
+
+	got, err := s.GoldGroup("dependents")
+	if err != nil {
+		t.Fatalf("GoldGroup: %v", err)
+	}
+
+	if len(got) != 2 {
+		t.Fatalf("got %d rows, want 2", len(got))
+	}
+	if got[0].ID != "d:one" || got[1].ID != "d:two" {
+		t.Errorf("got %v, want the dependents rows in file order", got)
+	}
+	none, err := s.GoldGroup("nonesuch")
+	if err != nil || len(none) != 0 {
+		t.Errorf("a group that does not exist returned %v, %v", none, err)
+	}
+}
+
+// A gold row with no location is a row nothing can ever match, and left alone it
+// becomes a permanent miss that looks exactly like an arm failing to find the
+// place. It has to be refused loudly, before a run is scored against it.
+func TestAGoldGroupWithAnUnmatchableRowIsRefused(t *testing.T) {
+	s := Scenario{Gold: []GoldRow{
+		{ID: "d:fine", Group: "dependents", Relation: "app/models/category.rb:1083 the entry point"},
+		{ID: "d:vague", Group: "dependents", Relation: "somewhere in the search code"},
+	}}
+
+	_, err := s.GoldGroup("dependents")
+
+	if err == nil {
+		t.Fatal("a group with an unmatchable row was accepted")
+	}
+	if !strings.Contains(err.Error(), "d:vague") {
+		t.Errorf("error = %q, want it to name the offending row", err)
+	}
+}
+
+// The gold side and the answer side must accept the same shapes. They are in
+// packages that do not import each other, so nothing but this test stops one
+// from drifting: a shape gold takes that a citation cannot match leaves the row
+// permanently unmatchable, and it fails as a low score rather than as an error.
+func TestCitePatternMatchesTheScorer(t *testing.T) {
+	for _, tc := range []struct {
+		text string
+		want bool
+	}{
+		{"app/models/category.rb:1083", true},
+		{"lib/tasks/search.rake:32", true},
+		{"a.js:1", true},
+		{"plugins/discourse-ai/lib/ai_helper/semantic_categorizer.rb:25", true},
+		{"app/models/category.rb", false}, // no line
+		{"Rakefile:12", false},            // no extension
+		{"step 2:12", false},              // prose, not a path
+	} {
+		t.Run(tc.text, func(t *testing.T) {
+			gold := (GoldRow{Relation: tc.text}).Cite() != ""
+			answer := len(score.Citations(tc.text)) > 0
+
+			if gold != answer {
+				t.Errorf("gold accepts=%v but the scorer accepts=%v; the two sides have drifted",
+					gold, answer)
+			}
+			if gold != tc.want {
+				t.Errorf("accepted=%v, want %v", gold, tc.want)
+			}
+		})
 	}
 }

@@ -29,6 +29,7 @@ Usage: sense-lab <command> [flags]
 
 Commands:
   run       Run one scenario against one repository
+  score     Score a recorded run against a scenario's gold
   version   Print version
 `
 
@@ -46,6 +47,10 @@ const (
 	// from a broken binary without parsing JSON: a run that hit its wall left a
 	// record on disk, a run that exited 1 may not have.
 	exitCannotFinish = 3
+	// exitBelowFloor is its own code for the same reason: a run that scored
+	// and came up short is a result, and a caller must be able to tell it from
+	// a typo'd path or an unreadable transcript.
+	exitBelowFloor = 4
 )
 
 // Run dispatches args to a subcommand and returns the process exit code.
@@ -67,6 +72,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 		return runSession(ctx, args[1:], stdout, stderr)
+	case "score":
+		return scoreRun(args[1:], stdout, stderr)
 	case "version":
 		_, _ = fmt.Fprintln(stdout, Version)
 		return exitOK
