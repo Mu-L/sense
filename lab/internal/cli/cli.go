@@ -57,6 +57,10 @@ const (
 	// run. A caller must not proceed on a partial matrix, but "your config is
 	// broken" and "three arms cannot run" are opposite actions.
 	exitIncomplete = 5
+	// exitProvisional: the transcript this was scored from is known incomplete,
+	// so the number is neither a pass nor a failure. Reporting it as either
+	// would be the exact misreading the provisional mark exists to prevent.
+	exitProvisional = 6
 )
 
 // Run dispatches args to a subcommand and returns the process exit code.

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/luuuc/sense/lab/internal/scenario"
+	"github.com/luuuc/sense/lab/internal/transcript"
 )
 
 // The fixture is a real paid run: the two-step probe on discourse at its pinned
@@ -22,11 +23,19 @@ const (
 
 	// The exact shape of the recorded answer, so a fixture that quietly loses
 	// half its events cannot pass as the same run.
-	fixtureAnswerChars = 106791
+	//
+	// These halved when the scorer moved onto the canonical transcript in
+	// 02-01, and the halving is the point: the skeleton's reader also read the
+	// final `result` event, which REPEATS the last assistant message. Across
+	// all 238 recorded transcripts the result event never carries answer the
+	// assistant events lack, so dropping it loses nothing and stops counting
+	// the same words twice. The SCORE is unchanged, because citations were
+	// deduplicated either way.
+	fixtureAnswerChars = 53472
 	fixtureCitations   = 254
 )
 
-func fixture(t *testing.T) (rows []Row, text string) {
+func fixture(t *testing.T) (rows []Row, answer string) {
 	t.Helper()
 	s, err := scenario.Load(fixtureScenario)
 	if err != nil {
@@ -36,21 +45,25 @@ func fixture(t *testing.T) (rows []Row, text string) {
 	if err != nil {
 		t.Fatalf("gold group: %v", err)
 	}
-	text, err = AnswerText(fixtureStream)
+	tr, err := transcript.ReadClaudeCode(fixtureStream)
 	if err != nil {
 		t.Fatalf("read transcript fixture: %v", err)
 	}
+	if tr.Provisional() {
+		t.Fatalf("the fixture reads as provisional: %s", tr.Why)
+	}
+	answer = tr.Answer()
 	for _, g := range gold {
 		rows = append(rows, Row{ID: g.ID, Cite: g.Cite()})
 	}
-	return rows, text
+	return rows, answer
 }
 
 // The score, as the strict rule computes it.
 func TestTheRecordedRunScoresTwoOfTwelve(t *testing.T) {
-	rows, text := fixture(t)
+	rows, answer := fixture(t)
 
-	got := Group("dependents", rows, text, 0.50)
+	got := Group("dependents", rows, text(answer), 0.50)
 
 	if got.Total != 12 {
 		t.Fatalf("gold group has %d rows, want the 12 that were audited", got.Total)
@@ -87,8 +100,8 @@ func TestTheRecordedRunScoresTwoOfTwelve(t *testing.T) {
 // which makes the line rule most of what the number measures rather than a
 // detail of it.
 func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
-	rows, text := fixture(t)
-	cites := Citations(text)
+	rows, answer := fixture(t)
+	cites := Citations(answer)
 
 	var reached, wrongLine int
 	for _, r := range rows {
@@ -118,7 +131,7 @@ func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 	// 168-file answer is far weaker than it reads as, and a longer answer buys
 	// mentions for free.
 	const want = "mentioned  11 of 12 gold files, at any line, out of 168 files named"
-	if got := Group("dependents", rows, text, 0.50).String(); !strings.Contains(got, want) {
+	if got := Group("dependents", rows, text(answer), 0.50).String(); !strings.Contains(got, want) {
 		t.Errorf("the report does not carry\n\t%s\ngot:\n%s", want, got)
 	}
 }
@@ -142,8 +155,8 @@ func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 // Pinned per row with the line the agent actually chose, so a matcher change
 // has to confront the specific cases rather than a count.
 func TestTheRecordedRunMissesAreLinesTheGoldRowItselfNames(t *testing.T) {
-	_, text := fixture(t)
-	cites := Citations(text)
+	_, answer := fixture(t)
+	cites := Citations(answer)
 
 	for _, tc := range []struct {
 		id       string
@@ -192,8 +205,8 @@ func TestTheRecordedRunMissesAreLinesTheGoldRowItselfNames(t *testing.T) {
 // narrower than an earlier claim that d:reindex-search-job was a second genuine
 // miss, which was false — see TestTheAnswerElidesRepeatedPaths for how.
 func TestOnlyOneRowIsNeverFoundAtAll(t *testing.T) {
-	rows, text := fixture(t)
-	cites := Citations(text)
+	rows, answer := fixture(t)
+	cites := Citations(answer)
 
 	var cite string
 	for _, r := range rows {
@@ -211,7 +224,7 @@ func TestOnlyOneRowIsNeverFoundAtAll(t *testing.T) {
 		t.Error("d:search-rake reports as reached; the audit found the file never named")
 	}
 	for _, name := range []string{"search.rake", "search:reindex"} {
-		if strings.Contains(text, name) {
+		if strings.Contains(answer, name) {
 			t.Errorf("the answer does mention %q, so this row is not the miss the audit recorded", name)
 		}
 	}
@@ -239,23 +252,20 @@ func TestOnlyOneRowIsNeverFoundAtAll(t *testing.T) {
 // here. This pins the size of the problem so the decision is made against a
 // measurement.
 func TestTheAnswerElidesRepeatedPaths(t *testing.T) {
-	_, text := fixture(t)
+	_, answer := fixture(t)
 
-	elided := regexp.MustCompile("(?:[^A-Za-z0-9._/\\-]|^)`:(\\d+)`").FindAllString(text, -1)
+	elided := regexp.MustCompile("(?:[^A-Za-z0-9._/\\-]|^)`:(\\d+)`").FindAllString(answer, -1)
 
-	if len(elided) < 100 {
-		t.Errorf("found %d path-elided citations, want the ~160 occurrences the audit measured; "+
-			"if the shape has changed, the blind spot this records may have too", len(elided))
+	// 80 in the answer itself. The audit counted 160 because the duplicated
+	// result event doubled every one of them.
+	if len(elided) < 50 {
+		t.Errorf("found %d path-elided citations, want the ~80 the audit measured once the "+
+			"duplicated result event is excluded; if the shape has changed, the blind spot "+
+			"this records may have too", len(elided))
 	}
 	// The specific one that changed a conclusion.
-	if !strings.Contains(text, "`:111`") {
+	if !strings.Contains(answer, "`:111`") {
 		t.Error("the answer no longer carries the elided `:111` that locates d:reindex-search-job")
-	}
-}
-
-func TestATranscriptThatCannotBeReadIsAnErrorNotAZero(t *testing.T) {
-	if _, err := AnswerText("testdata/no-such-transcript.jsonl"); err == nil {
-		t.Error("reading a transcript that does not exist succeeded")
 	}
 }
 
@@ -263,20 +273,20 @@ func TestATranscriptThatCannotBeReadIsAnErrorNotAZero(t *testing.T) {
 // hand-written that happens to parse. If the reduction ever loses the answer
 // events, every expectation above becomes vacuous.
 func TestTheFixtureIsARealCaptureCarryingTheAnswer(t *testing.T) {
-	_, text := fixture(t)
+	_, answer := fixture(t)
 
-	// Exact, not a threshold. Half this text is the result event repeating the
+	// Exact, not a threshold. Half this answer is the result event repeating the
 	// last assistant message, so a generous lower bound passes with that entire
 	// event deleted — and every expectation in this file would then be
 	// measuring half a run.
-	if len(text) != fixtureAnswerChars {
+	if len(answer) != fixtureAnswerChars {
 		t.Errorf("the fixture answer is %d chars, want exactly %d; the capture has changed",
-			len(text), fixtureAnswerChars)
+			len(answer), fixtureAnswerChars)
 	}
-	if n := len(Citations(text)); n != fixtureCitations {
+	if n := len(Citations(answer)); n != fixtureCitations {
 		t.Errorf("the fixture carries %d citations, want exactly %d", n, fixtureCitations)
 	}
-	if !strings.Contains(text, "Category") {
+	if !strings.Contains(answer, "Category") {
 		t.Error("the fixture does not mention the scenario's anchor; it is not this run")
 	}
 }
