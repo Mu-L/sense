@@ -40,9 +40,16 @@ func TestSIGTERMRecordsTheRunAndKillsTheAgentTree(t *testing.T) {
 	if err := os.WriteFile(agent, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	// A scenario is three files.
 	scenario := filepath.Join(dir, "scenario.yaml")
-	if err := os.WriteFile(scenario, []byte("name: t\nsteps:\n  - name: s\n    prompt: go\n"), 0o644); err != nil {
-		t.Fatal(err)
+	for name, body := range map[string]string{
+		"scenario.yaml":        "name: t\nrepo: r1\nsteps:\n  - name: s\n    prompt: go\n",
+		"scenario.gold.yaml":   "discriminator: dependents\nrows:\n  - id: d:one\n    group: dependents\n    relation: \"a.rb:1 the thing\"\n",
+		"scenario.rubric.yaml": "audience: An agent.\nsteps:\n  - name: s\n    criteria:\n      q:\n        weight: 1.0\n        question: Any good?\n",
+	} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
 	}
 	head := initRepo(t, dir)
 	cfg := writeCatalog(t, dir, agent, head)

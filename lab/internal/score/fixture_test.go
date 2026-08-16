@@ -19,7 +19,7 @@ import (
 // independently before it was written down.
 const (
 	fixtureStream   = "testdata/discourse-probe.stream.jsonl"
-	fixtureScenario = "testdata/discourse-probe.scenario.yaml"
+	fixtureScenario = "testdata/discourse-probe"
 
 	// The exact shape of the recorded answer, so a fixture that quietly loses
 	// half its events cannot pass as the same run.
@@ -37,11 +37,11 @@ const (
 
 func fixture(t *testing.T) (rows []Row, answer string) {
 	t.Helper()
-	s, err := scenario.Load(fixtureScenario)
+	s, err := scenario.Load("testdata", "discourse-probe")
 	if err != nil {
 		t.Fatalf("load scenario fixture: %v", err)
 	}
-	gold, err := s.GoldGroup("dependents")
+	gold, err := s.Gold.Group("dependents")
 	if err != nil {
 		t.Fatalf("gold group: %v", err)
 	}

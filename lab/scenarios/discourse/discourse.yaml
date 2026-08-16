@@ -1,0 +1,480 @@
+# ============================================================================
+# SEVEN-STEP SESSION SCENARIO (plans/03-expand.md), CYCLE 8 on discourse,
+# ATTEMPT 2: THE SAME SESSION SHORTENED TO FIT THE WALL.
+# Expanded from the cycle-8 two-step probe, which is kept byte-for-byte at
+# scenarios/discourse.yaml.probe-2step-cycle8.bak (rubric alongside it).
+# Attempt 1 of this session - identical except for the six non-discriminator step
+# prompts and their richness floors - is kept at
+# scenarios/discourse.yaml.longsession-cycle8.bak (rubric alongside it).
+#
+# WHY THIS ATTEMPT EXISTS: CANNOT-FINISH-AT-BUDGET, AND WHERE THE WALL WENT
+#   The brief on disk (results/loop/discourse/expand.brief.md) is an instruction and it
+#   is quoted:
+#     "CANNOT FINISH AT BUDGET - the sense arm ran out of clock on every attempt, the
+#      retry included. The watchdog is NOT raised: the scenario is shortened and re-run
+#      instead. The anchor, the question and the gold all stay; expand rewrites the seven
+#      steps to ask for less work each. ... fewer places to visit per step, not fewer
+#      steps - seven is a contract this phase is checked against."
+#
+#   Both sense runs of attempt 1, from their run_meta.json:
+#     run-1  wall_time_seconds 481 of 480  claude_exit_code 124  watchdog hard_cap_timeout
+#     run-2  wall_time_seconds 481 of 480  claude_exit_code 124  watchdog hard_cap_timeout
+#
+#   The arm did NOT run out of clock exploring. It ran out writing. From the transcripts
+#   (results/.../validation/077b1225bb1b78e0/sense/discourse/run-*/transcript.json):
+#     run-1  first entry 21:00:05  LAST tool_use 21:03:35  killed 21:08:00
+#            -> 211s of the 480s wall on tools, 269s (56%) writing one final message
+#     run-2  first entry 21:08:06  LAST tool_use 21:11:03  killed 21:16:01
+#            -> 177s on tools, 303s (63%) writing
+#   Both answers are a single final message and both were cut mid-sentence inside step 6.
+#   Neither reached step 7 at all. Section sizes of run-1's 59,819-character answer,
+#   measured by splitting it on its own step headings:
+#     step 1  2,041     step 2  7,887     step 3  7,027     step 4  33,750
+#     step 5  6,019     step 6  3,063 (CUT MID-LINE)        step 7  never written
+#
+#   So the budget is an OUTPUT budget, and step 4 - which may not be touched - is 56% of
+#   it on its own. Every character of relief has to come from the other six steps. The
+#   arithmetic this attempt is built on: run-1 wrote 59,819 characters in 269 seconds,
+#   about 222 characters per second. Steps 2, 3 and 5 together cost 20,933 characters
+#   (~94s); this rewrite aims them at roughly 7,000 (~32s), freeing about 62 seconds, and
+#   steps 6 and 7 are now forbidden from re-listing the audit, which is what made step 6
+#   expensive and step 7 unreachable. Step 4's 33,750 characters are left exactly where
+#   they are.
+#
+# WHAT WAS CHANGED TO GET THERE, AND WHAT WAS NOT TOUCHED
+#   NOT touched: the anchor (`Category`), step 4's name, prompt and checks, and the whole
+#   `dependents` gold group - all still byte-identical to the probe, so the mini-bench
+#   figure below still describes this scenario. No gold row was added, removed or
+#   re-pointed in any group.
+#   Changed, and only this: the prompts of steps 1, 2, 3, 5, 6 and 7, each capped at how
+#   many places it may visit, plus their `response_richness` floors lowered to stay
+#   satisfiable under the caps (step 2 8->4, step 3 4->4 unchanged, step 6 6->4,
+#   step 7 6->4). One sentence was added to `description` making "answer once, refer back,
+#   never re-list" a session-wide rule; it runs FORWARD only, and step 4 is the first step
+#   that enumerates dependents, so nothing above it can be referred back to in its place.
+#   The rubric's map_quality and specificity questions on the six changed steps were
+#   rewritten to stop rewarding the exhaustiveness their prompts now forbid; step 4's four
+#   criteria and the audience paragraph are untouched.
+#
+#   THE RISK THIS SHORTENING CARRIES, NAMED IN ADVANCE. Steps 1, 2, 3 and 5 are what
+#   spends context and wall BEFORE the discriminator, and the standing budget-pressure
+#   hypothesis is that the arriving-tired condition is part of why step 4 discriminates.
+#   Cutting them cuts that pressure, so a baseline that arrives at step 4 fresher may
+#   assemble more of the set than the 1/12 the mini-bench measured. That is not settled
+#   here and it is the first thing to read in the next validation's baseline transcript.
+#   Cutting them was still the only move available: the alternative is a session that
+#   never reaches step 7, and cannot-finish-at-budget is a result, not a wall to raise.
+#
+#   THE SECOND RISK: "DO NOT RE-LIST" READ BACKWARDS. Steps 6 and 7 now forbid repeating
+#   the audit, and an arm that plans the whole answer before writing it could in principle
+#   trim step 4 itself on the grounds that it will not get to reuse the list. Step 4 pushes
+#   the other way and it pushes harder - it demands a closed set, forbids "and a few
+#   similar cases", and charges MORE words for a candidate ruled out than for one kept -
+#   so the expected effect is nil. It is written down because it is the one way this
+#   rewrite could move the discriminator without touching its wording, and the check is
+#   mechanical: step 4's cited count in the next run's sense transcripts against the 12 of
+#   12 the mini-bench measured.
+#
+# THE INVENTORY READ-BACK ON THE SHORTENED PROMPT (done by hand, as the law requires)
+#   Read back step by step, no phrase identifies a single gold row's file. The nearest
+#   thing to a leak is step 7's "the areas the dependents fall into", which tells the arm
+#   the answer HAS areas - but that clause is inherited from cycle 4 and attempt 1 word for
+#   word, it names no area, and step 7 runs AFTER the discriminator, so nothing it says can
+#   reach step 4. Steps 2, 3 and 5 describe jobs and kinds ("where the hierarchy is walked
+#   to disambiguate one level from another", "a reference stored earlier re-checked against
+#   what is actually there"), which is mechanism, and all three feed NON-SCORING groups.
+#   The rendered prompt was also grepped for paths, extensions, class names, tool names and
+#   counts: the only hits are the scenario title and two step names, all of which carry the
+#   word "category" and nothing else.
+#
+# THE MINI-BENCH THAT AUTHORISED THIS EXPANSION
+#   results/loop/discourse/minibench.md, verdict PROCEED, quoted:
+#     baseline `dependents` 1/12 = 0.083   sense 12/12 = 1.000   delta +0.917
+#     baseline wall 317 of 531, exit 0, valid True, watchdog None - it stopped because it
+#     was done searching, not because it ran out of clock, so 0.083 is a real floor.
+#     baseline route: 24 tool calls, 17 of them searches; the last third spent in
+#     frontend/discourse/app on the JavaScript findBySlugPath family, off the gold set.
+#   Step 4 below and its `dependents` gold are the probe's step 2 and its `dependents` gold,
+#   unchanged, so that +0.917 describes this scenario. The one dependent row the baseline
+#   took is `d:data-explorer-parameter`; expect it free here too.
+#
+# The superseded cycle-7 question is kept at
+# scenarios/discourse.yaml.periphery-cycle7.bak (rubric alongside it).
+# The number that killed it: baseline `dependents` 4/12 = 0.3333,
+# sense 9/12 = 0.75, delta +0.4167 - 0.0833 short of the +0.50 bar.
+#
+# THE TRAJECTORY, EVERY CYCLE, AND WHICH SIDE OF THE WINDOW IT FELL ON
+#   The window is BOTH conditions at once: baseline `dependents` <= 0.50 AND
+#   delta >= +0.50. Every number below is copied from the write-up on disk that
+#   is named beside it; none of it is recalled.
+#
+#   cycle 1  seven-step briefed session, 15 rows
+#            MINI-BENCH  base 6/15 = 0.400   sense 14/15 = 0.933  delta +0.533
+#                        side: INSIDE THE WINDOW, so it was expanded (minibench.1.md)
+#            VALIDATION  base 11/15 = 0.733  delta +0.200
+#                        side: BASELINE TOO HIGH (discourse.yaml.briefed-7step.bak)
+#   cycle 2  two-step probe, 22 rows (call sites + declared associations)
+#            base 12/22 = 0.5455  sense 14/22 = 0.6364  delta +0.091
+#            side: BASELINE TOO HIGH (minibench.2.md, discourse.yaml.mixed-22row.bak)
+#   cycle 3  two-step probe, 12 declared links
+#            base 7/12 = 0.583   sense 11/12 = 0.917   delta +0.333
+#            side: BASELINE TOO HIGH; recall caps at 1.00, so 0.583 capped the delta at
+#            +0.417 before the pair ran (minibench.3.md, discourse.yaml.declared-link-12row.bak)
+#   cycle 4  two-step probe, 14 one-touch call sites in 14 areas across 5 trees
+#            MINI-BENCH  base 6/14 = 0.4286  sense 13/14 = 0.9286  delta +0.5000
+#                        side: INSIDE THE WINDOW, on the bar exactly, so it was expanded
+#            VALIDATION  base 8/14 = 0.5714  sense 0.9524  delta +0.3810  DO-NOT-PAY
+#                        side: BASELINE TOO HIGH (minibench.4.md, validate.md,
+#                        discourse.yaml.probe-2step-cycle4.bak / .session-7step-cycle4.bak)
+#   cycle 5  two-step probe, 14 HELD REFERENCES, one per file, nine areas
+#            base 4/14 = 0.2857  sense 6/14 = 0.4286  delta +0.1429
+#            side: SENSE TOO LOW (minibench.5.md). Our arm never called sense_blast;
+#            it ran 47 Bash greps.
+#   cycle 6  the same held-reference target, told to build the widest list first
+#            base 6/14 = 0.4286  sense 6.5/14 = 0.4643  delta +0.036
+#            side: SENSE TOO LOW (results/dryrun/discourse/minibench.6.md). Our arm DID call
+#            sense_blast this time - 76 holders by area - and landed on the same six rows
+#            the baseline's three cheap greps print.
+#   cycle 7  cycle 4's prompts verbatim, gold re-cut to twelve periphery rows
+#            base 4/12 = 0.3333  sense 9/12 = 0.75   delta +0.4167
+#            side: SENSE TOO LOW, but only just - 0.0833 short, the closest this repo has
+#            come other than cycle 4's exact-bar landing (results/loop/discourse/minibench.md,
+#            discourse.yaml.periphery-cycle7.bak)
+#
+# WHICH SIDE THIS DRAFT CORRECTS FROM, AND HOW FAR IT INTENDS TO MOVE
+#   From SENSE TOO LOW, by 0.0833. That is a much smaller correction than cycles 5 and 6
+#   needed, and it is aimed at a single named failure rather than at the shape of the
+#   question, so the move is deliberately SMALL. The baseline half is left alone: at 0.3333
+#   it is comfortably inside the window with 0.6667 of headroom, and every attempt this loop
+#   has made to push it lower (cycles 5, 6) cost our own arm more than it cost the plain arm.
+#
+#   The diagnosis on disk is unusually clean and it is quoted rather than reconstructed
+#   (results/loop/discourse/minibench.md, "What the next question must defeat"):
+#
+#     "The lever here is not the baseline and not the anchor. Both diagnostics that would
+#      normally route a rewrite came back clean: the baseline sits at 0.3333 with a
+#      laborious 18-search route, and `sense_blast` returned every one of the three missed
+#      files. The single failure is that the sense arm was shown
+#      migrations/lib/uploader/tasks/optimizer.rb,
+#      plugins/discourse-templates/lib/tasks/discourse-templates.rake and
+#      plugins/discourse-chat-integration/app/jobs/onceoff/migrate_from_slack_official.rb
+#      in its blast payload and did not carry them into the answer at path:line."
+#
+#   So: the ANCHOR is kept, the GOLD SET is kept unchanged, and STEP 2's closing paragraph
+#   is rewritten. Everything before that paragraph - the mechanism sentence that makes this
+#   the periphery question rather than a call-site question - is cycle 4's and cycle 7's
+#   wording verbatim, because it is the part that measured 0.3333 against the plain arm
+#   twice and must not be disturbed.
+#
+#   What changes: the answer must be CLOSED over the set the arm assembled, not covered
+#   against the contract. The arm assembles its candidates first, works them in the order it
+#   assembled them, pins each before moving on, and reconciles at the end - how many it
+#   assembled against how many it pinned, naming any difference at file:line. A candidate
+#   it rules out still costs a file:line and a clause, so dropping is more expensive than
+#   keeping. Cycle 7's step 2 already carried a per-area anti-summary clause ("treat an area
+#   as finished only when every dependent inside it is listed separately"); it did not fire,
+#   because the three dropped rows were the TAIL of a long payload rather than a
+#   half-finished area. Closure is scored over the whole set, not per area.
+#
+#   Intended landing: baseline unchanged at or near 4/12 = 0.33, ours from 9/12 to 11-12/12,
+#   delta +0.58 to +0.67. The arithmetic of a partial fix is stated too, because it is what
+#   makes this a small correction and not a gamble: recovering ONE of the three dropped rows
+#   gives 10/12 and lands the delta on +0.5000 exactly; TWO gives +0.5833; three gives
+#   +0.6667. Every partial outcome except zero clears the bar.
+#
+# WHICH ROWS THE BASELINE HAS MISSED CONSISTENTLY, AND WHICH IT WAS GIFTED
+#   Two independent rankings, both quoted, both scoped to the headline model.
+#
+#   (a) The cycle-4/validation gold, thirteen runs (baseline x1, sense x12):
+#
+#     python3 bench/lib/inverse_frequency.py discourse \
+#       verticals/ruby-rails/results/claude-opus-5/validation
+#
+#     row                              group        overall  baseline   sense
+#     d:search-rake                    dependents     6/13       0/1     6/12
+#     d:templates-rake                 dependents     6/13       0/1     6/12
+#     d:bulk-import-merger             dependents     8/13       0/1     8/12
+#     d:import-scripts-base            dependents     8/13       0/1     8/12
+#     d:migrations-importer-categories dependents     9/13       0/1     9/12
+#     d:migrations-optimizer           dependents     9/13       0/1     9/12
+#     d:slack-migration                dependents     9/13       1/1     8/12
+#     ... every other row              -             10/13       1/1     9/12
+#     never cited by any arm : 0      cited by every run : 0
+#
+#   (b) THIS gold set, as measured by cycle 7 (baseline x1, sense x1):
+#
+#     python3 bench/lib/inverse_frequency.py discourse "$RDIR"      # sha f4283b9e2d348040
+#
+#     d:migrations-optimizer           dependents     0/2        0/1     0/1
+#     d:slack-migration                dependents     0/2        0/1     0/1
+#     d:templates-rake                 dependents     0/2        0/1     0/1
+#     d:bulk-import-merger             dependents     1/2        0/1     1/1
+#     d:import-scripts-base            dependents     1/2        0/1     1/1
+#     d:migrations-importer-categories dependents     1/2        0/1     1/1
+#     d:search-rake                    dependents     1/2        0/1     1/1
+#     d:templates-topic-query          dependents     1/2        0/1     1/1
+#     d:data-explorer-parameter        dependents     2/2        1/1     1/1
+#     d:narrative-bot                  dependents     2/2        1/1     1/1
+#     d:reindex-search-job             dependents     2/2        1/1     1/1
+#     d:semantic-categorizer           dependents     2/2        1/1     1/1
+#
+#   Read the two together, which is the point of quoting both:
+#   - Eight rows have never been cited by any baseline run on either gold set. They are the
+#     discriminator and they are all kept.
+#   - The three rows sitting at sense 0/1 in (b) are NOT unreachable. Ranking (a) puts them
+#     at sense 6/12, 8/12 and 9/12 on twelve runs of the seven-step form, so they are
+#     material the arm reaches routinely and dropped once here. That is the tail-truncation
+#     this draft's step 2 attacks, and it is why no row is cut for being unreached.
+#   - `d:reindex-search-job` is the one row a baseline has taken on BOTH gold sets (1/1 and
+#     1/1). It is the closest thing here to a free row and it is the first candidate for a
+#     cut - but the plan floors `dependents` at twelve, the shown blast payload holds no
+#     unused file in the trees no baseline route searches (see below), and cutting it would
+#     leave eleven. It stays, and it is named here so the next cycle does not re-derive it.
+#
+#   The n is small and it is stated: one baseline run per gold set, two gold sets, and the
+#   standing law says do not re-gold below ~5 runs per arm. That is exactly why this draft
+#   re-golds NOTHING. Every row is carried on the structural argument written into its
+#   relation, and the tallies above are reported beside them, not used to admit or cut.
+#
+# WHY NO ROW WAS ADDED, WHICH IS A RUN AND NOT AN ASSUMPTION
+#   The shown blast payload (quoted below) carries 60 direct callers over 54 files. Of those,
+#   the files in trees no measured baseline route on this repo has ever searched -
+#   `migrations/`, `script/`, `lib/tasks/*.rake`, plugin rake and plugin onceoff - number
+#   exactly six, and all six are already gold. The payload's remaining out-of-tree files are
+#   eleven JavaScript ones (`frontend/discourse/**`, plugin `assets/javascripts/**`); those
+#   are the Ember-side `Category` model, a different symbol the index links by name, so
+#   golding them would gold a false caller edge. Noted, not acted on - not this phase.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS
+#   Honestly: the SET is an occurrence list, and this header says so rather than dressing it
+#   up. ring_sweep.py --top 12 on this clone returns `Category  class  0 rows  0 files
+#   0 vias  under bar` and 0 candidates above the bar across all twelve anchors, so the
+#   holder kind is not available in this stack, and cycles 5 and 6 are what trying it anyway
+#   looks like. What is NOT an occurrence list is what the ask demands PER element: the
+#   routine that owns the reach, named, and one phrase on what that routine's own job would
+#   start getting wrong. `grep -rn` prints path:line; it does not print the enclosing `def`
+#   and it does not print the consequence. That is the citation cost this cell charges.
+#   This is the banked-mastodon sort of occurrence list and not the five-failure sort for
+#   two measured reasons: on the cycle-4 wording the plain arm scored 0.4286 over 39 tool
+#   calls and two hand-written repo scanners, and on cycle 7's it scored 0.3333 over 24 calls
+#   and 18 distinct searches - not 0.81 and not 1.00, on either run.
+#   Cycle 8 adds one more thing the answer is that a name list is not: it is CLOSED. The set
+#   the arm assembled has to come back whole, with the last element pinned as hard as the
+#   first, and every candidate it discarded named and located. A search prints occurrences;
+#   it does not account for the ones the writer chose to leave out.
+#
+# THE AXIS, IN ONE SENTENCE
+#   Every scored dependent is a SINGLE touch of the contract from inside a routine named
+#   after some other job entirely - optimising uploads mid-migration, appending imported
+#   records in sort order, deciding whether two merged records are the same one, re-feeding
+#   a search index, casting a query parameter, staging a bot tutorial - and they sit as much
+#   in the migration tooling, the import scripts, the maintenance tasks and the bundled
+#   plugins as in the application tree that serves web requests.
+#
+# SEAM PROFILE (bench/lib/seam_hunt.py, quoted)
+#   python3 bench/lib/seam_hunt.py $CLONE Category --propose --file app/models/category.rb
+#     app caller files : 89   (total incl test/non-app: 89)
+#     SCATTER (dirs)   : 47
+#     GREP-NOISE       : 'Category' in 109 app files   PRECISION=0.82  (lower=grep-hostile)
+#     VERDICT          : SCATTERED + grep-clean
+#   Re-run in this session against the current clone; the figures are unchanged from cycle 7.
+#   PRECISION 0.82 is high and it ranks this anchor poorly - nearer the 0.78 of a deliberate
+#   control tie than the 0.078 that preceded a +1.00 cell. It is recorded, it does not kill,
+#   and the re-question law keeps the anchor: cycle 4 measured base 0.4286 on the probe at
+#   this precision. Note also what seam_hunt's own window is - it counts 89 APP caller
+#   files. Ten of the twelve scored rows below are outside the app tree entirely
+#   (migrations/, script/, lib/tasks/*.rake and plugin rake/onceoff trees), so the 0.82 is
+#   measured over a tree this gold set mostly does not live in.
+#
+# EVERY SCORED ROW IS IN THE SHOWN BLAST PAYLOAD (RUN, NOT ASSUMED)
+#   python3 bench/lib/mcp_probe.py $CLONE \
+#     '[{"name":"sense_blast","arguments":{"symbol":"Category","file":"app/models/category.rb"}}]'
+#   Bare `symbol: Category` comes back `"ambiguous": true` over 5 matches, so the file is
+#   passed. Re-run in this session: the shown payload carries 60 direct_callers over 54
+#   files, `truncated: true`, and all twelve dependent rows and all four anchors below
+#   appear in it by file and by symbol. No min_confidence was passed.
+#
+# MEMORIZATION (bench/lib/memorization_probe.py, quoted, re-run this session)
+#   {"ok": true, "ran": true, "recall": 0.2,
+#    "reason": "closed-book recall 0.2 < 0.3 - not recited", "truth_n": 230, "said_n": 157}
+#   What it did recite is contract-centre method names (`find_by_slug_path`, `ensure_slug`,
+#   `SLUG_REF_SEPARATOR`) - all of them anchors here, none of them scored. No dependent
+#   row's file or line is in the recited set.
+#
+# THE RISK THIS DRAFT CARRIES, NAMED IN ADVANCE
+#   The whole move is one paragraph of step 2, so if closure discipline is not what the arm
+#   was missing, this cycle buys nothing and lands at +0.42 again. Two ways that happens.
+#   First, the arm may comply by padding: reconciling a long candidate list costs output
+#   budget, and an arm that spends it accounting for near-misses may pin fewer real rows than
+#   cycle 7's did. Second, the reconciliation clause is new wording in a prompt whose earlier
+#   paragraphs are measured, so it could shift how the plain arm answers too and lift the
+#   0.3333 floor. Both are visible in the next run's transcripts; neither is settled here.
+#
+# WHAT THE EXPANSION ADDED, AND WHAT IT WAS FORBIDDEN TO TOUCH
+#   Step 4 is the probe's step 2 byte-identical, and the `dependents` group is unchanged -
+#   twelve rows, same ids, same lines. Nothing was added to it: gold added here has never
+#   faced a baseline, and putting it in the scored group would dilute a measured number with
+#   untested rows.
+#   Steps 1, 3, 5, 6 and 7 are cycle 4's seven-step session wording verbatim
+#   (discourse.yaml.session-7step-cycle4.bak), and step 2 is the probe's step 1 verbatim, so
+#   the only new prose in this file is this header. That matters for the measurement: by the
+#   time step 4 runs, both arms have spent three steps of wall and context, which is the
+#   session pressure the banked mastodon cell's step-4 ask sits under.
+#   New gold, both groups NON-SCORING and both carried from the cycle-4 session:
+#     `write-path` (4 rows) - step 3's answer.
+#     `guards`     (3 rows) - step 5's answer.
+#   Every one of those seven lines was re-opened against this clone in this session and is
+#   quoted in its relation. Cycle 4's fourth guard row was on
+#   plugins/discourse-data-explorer/lib/discourse_data_explorer/parameter.rb, which is
+#   already the file behind the scoring row `d:data-explorer-parameter`; two gold rows on
+#   one file breaks the one-item-per-FILE rail and would let a step-5 citation feed a scored
+#   group, so it was dropped rather than re-pointed.
+#   No `specs` group was added. The standing law measured spec rows on the banked Status
+#   control at "mentioned 2/2 in 8 of 10 runs, cited 0/2 in 10 of 10": step 7 asks for specs
+#   that must be updated OR ADDED, and an added file has no line to cite, so such a row can
+#   never score at path:line. Step 7 still asks for them; gold does not pretend to grade it.
+# ============================================================================
+
+name: Discourse work session - audit the category contract before a rework
+repo: discourse
+contract_symbol: Category
+contract_file: app/models/category.rb
+description: |
+  You are a maintainer about to rework the class that represents one of this forum's
+  top-level containers - the thing topics are filed under, that carries its own
+  permissions, settings and hierarchy, and that half the product reaches for whenever it
+  needs to know where something belongs or who is allowed to see it. The rework will change
+  what that class hands back to the code that asks it questions, and it will change the
+  shape of what it stores. Work the ticket end to end in one session: orient, map the
+  contract and the path every incoming request leans on, trace how one of these records is
+  built up and taken apart, audit everywhere else in the codebase that would have to be
+  reviewed or changed with it, trace the guards that confirm a real and current record,
+  rank the blast radius, and finish with the map a teammate could land the change from.
+  Throughout, an answer that points at a place must give an exact file:line a teammate
+  could jump straight to, plus one phrase on why it matters. A bare filename does not
+  count, a set of names offered together with one shared reason and no location on any of
+  them does not count, and a missed dependent is a regression shipped. Answer each step
+  once and move on: a later step refers back to a place an earlier one already located,
+  by name, and never re-lists it. You are being read by a teammate who has your whole
+  answer in front of them, so restating a list you have already written is wasted budget
+  that a later step needs.
+steps:
+  - name: Orient in the codebase
+    prompt: >
+      Task: orient yourself, briefly. In a short paragraph plus a handful of file:line references, what is this project, how is the code organized, and where does the class that stands for the container topics are filed under sit - the one the rest of the system keeps having to ask about - along with the shared pieces its behaviour is assembled from? Name only the places the later steps will actually need: this is a map, not a survey, and a tour of the tree costs budget the ticket needs. Hand the next agent a map so they can act with small, targeted lookups, not a fresh exploration of the codebase. No Explore agents.
+
+    checks:
+      - type: response_richness
+        value: "3"
+        required: true
+        description: Project shape and the contract's home located at file:line
+      - type: mcp_tool_used
+        value: sense_search
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_conventions
+        required: false
+        layer: adoption
+  - name: Map the category contract
+    prompt: >
+      Task: map the shape of the contract, tightly. Start with the one part of this class's job that every incoming request leans on: getting hold of one of these records when all the system has is the human-readable path the visitor typed, which may name a parent and a child, may be an old path that has since been retired, and may not name one of these at all. Trace that one path end to end, and give the single clearest place that does each job along it: where such a path is turned into one of these records, where the hierarchy is walked to disambiguate one level from another, where the stored path is kept in step when the record is renamed, and where a path that turns out to point somewhere else is redirected or refused. One place per job, one line each: the file:line, the name of the routine it lives in, and one phrase on what it contributes to that path. Do not enumerate every caller of any of them - the ticket's enumeration comes later, and this step is only the map it starts from. A place named without the routine it lives in does not count, and neither does a routine named without the file:line where it is defined.
+
+    checks:
+      - type: response_richness
+        value: "4"
+        required: true
+        description: Resolution path traced through the routines that make it up, each located
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+  - name: Trace how one of these records is built up and taken apart
+    prompt: >
+      Task: trace the lifecycle, briefly. Follow one of these records from being brought into existence to being taken apart again, and say what runs around those two moments. Give the places one of these is created, the place one is destroyed, and the work that runs around them - a few representative places, correctly marked, is the whole answer here, not a catalogue. One line each: the file:line, the name of the routine it lives in, and whether it runs inline, in the request or task that triggered it, or is handed off to run once that call has finished. Where something is handed off, say what it is handed - the record itself, or something it can be looked up from again - because that is what a rework of the contract has to keep working. Do not recite the declarations that register this work; show the code that picks it up.
+
+    checks:
+      - type: response_richness
+        value: "4"
+        required: true
+        description: Creation and teardown layers located, each marked inline or handed off
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+  - name: Audit every dependent of the category contract
+    prompt: >
+      Task: this is the core of the ticket, and you are working it with the budget the first part already cost you. Widen back out from that one path to the class as a whole, as a single subject, and find EVERY place in the codebase that would have to be reviewed or changed with it, so the rework cannot silently break one. Most of what you are looking for is not doing this class's job at all: it is in the middle of some other job entirely, it reaches for this class exactly once to settle a question that other job needs answered, and the routine it does that from is named after the other job and never after this one. So the answer you owe is not where the dependency sits but WHOSE behaviour changes: for every dependent, name the routine the dependency is inside, give its file:line, and say in one phrase what that routine would start getting wrong if the class stopped handing back what it hands back today. Work it as a closed set, and that is the part being marked. Assemble your candidates first, all of them, before you write any of them up; then go through that list in the order you assembled it and finish each one - routine, file:line, consequence - before you look at the next. The candidate you turned up last is worth exactly what the first one was worth, so do not order the write-up by how interesting or how certain a place is, and do not let the end of the list turn into prose: "and a few similar cases", "other places follow the same pattern", or a closing paragraph that gestures at a remainder is the same as leaving those places out. If you examine a candidate and decide it is not really a dependent, it still gets its file:line and one clause saying why you ruled it out - discarding a place costs you more words than keeping it, on purpose. Finish by reconciling: say how many candidates you assembled and how many you wrote up individually above, and if those two numbers are not the same, list every candidate that is missing, each at its file:line. A file:line with no routine named around it does not count, a routine you cannot state the consequence for does not count, and a missed dependent is a regression shipped.
+
+    checks:
+      - type: response_richness
+        value: "6"
+        required: true
+        description: Every dependent located at file:line with its own consequence named
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+  - name: Trace the guards that confirm a real, current record
+    prompt: >
+      Task: work runs against one of these records all over the codebase, and some of what that work is handed is not one at all, or names one that is no longer there. Show how the code satisfies itself, before it acts, that what it holds really is one of these and that it really still exists. There are three kinds of guard to cover and ONE example of each is enough - a second example of a kind you have already shown is worth nothing here: an incoming thing checked for being the right kind of thing at all; a name or an identifier that resolves to nothing turned into a refusal at the boundary rather than an error further down; and a reference that was stored earlier re-checked against what is actually there before it is trusted. One line each: the file:line, the enclosing routine, and one phrase on what it protects the caller from.
+
+    checks:
+      - type: response_richness
+        value: "3"
+        required: true
+        description: Each guard located at file:line with the routine and what it protects
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_graph
+        required: false
+        layer: adoption
+  - name: Assess the blast radius of the contract change
+    prompt: >
+      Task: you are about to change what this class hands back. Rank the risk. Do NOT re-list what you have already located above - a ranking that repeats the audit back is not a ranking and it costs budget the last step needs. Name only the places most likely to break, in risk order, one line each, and say what puts each where it is: separate the ones that would fail loudly and immediately from the ones that would keep running and quietly return something different, which are the expensive ones. Use file:line and name the routine that carries each risk, not just the file it is in. Then say in a sentence or two what must be re-verified afterwards. A missed high-risk dependent is the one that pages someone.
+
+    checks:
+      - type: response_richness
+        value: "4"
+        required: true
+        description: Dependents ranked by risk, each located at file:line with its routine
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+  - name: Produce the change + verification map
+    prompt: >
+      Task: finish with the map for landing this safely, and again do not repeat the audit back. Three things only: the pieces of the contract itself you will edit, each at its file:line and the routine it lives in; then the areas the dependents fall into, and for each area how many you found there and the one in it you would review first, at its file:line - the area line stands in for the rest, which you have already written out; then the tests that would have to be updated or added to cover the behaviour that moves. A teammate reading this map together with what you have already written should be able to land the change without re-exploring the codebase.
+
+    checks:
+      - type: response_richness
+        value: "4"
+        required: true
+        description: Edit list, dependents by area and the tests that move, all located
+      - type: no_grep
+        value: no_grep
+        required: false
+        layer: adoption
+      - type: mcp_tool_used
+        value: sense_blast
+        required: false
+        layer: adoption
+scoring:
+  weights:
+    correctness: 0.7
+    efficiency: 0.3
