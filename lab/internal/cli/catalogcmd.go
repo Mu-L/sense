@@ -14,7 +14,7 @@ import (
 const defaultConfigDir = "lab"
 
 func configFlag(fs *flag.FlagSet, into *string) {
-	fs.StringVar(into, "config", defaultConfigDir, "directory holding subjects/, agents/, models/ and repos/")
+	fs.StringVar(into, "config", defaultConfigDir, "directory holding subjects/, agents/, models/, repos/ and executors/")
 }
 
 // catalogCmd loads the config and prints what it found. It is the smallest
@@ -46,6 +46,9 @@ func catalogCmd(args []string, stdout, stderr io.Writer) int {
 	}
 	for _, r := range catalog.IDs(c.Repos) {
 		_, _ = fmt.Fprintf(stdout, "repo     %-14s %s @ %.8s\n", r, c.Repos[r].Stack, c.Repos[r].Commit)
+	}
+	for _, e := range catalog.IDs(c.Executors) {
+		_, _ = fmt.Fprintf(stdout, "executor %-14s preserves %v\n", e, c.Executors[e].PreservesAuth)
 	}
 	return exitOK
 }

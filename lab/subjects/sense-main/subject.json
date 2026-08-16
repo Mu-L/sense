@@ -2,6 +2,8 @@
   "id": "sense-main",
   "kind": "sense",
   "needs_mcp": true,
+  "needs_isolated_config": true,
+  "executor": "isolated-home",
   "agents": [
     "claude-code",
     "codex",

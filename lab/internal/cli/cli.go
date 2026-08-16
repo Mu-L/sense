@@ -28,7 +28,8 @@ const usage = `sense-lab — the bench instrument for Sense
 Usage: sense-lab <command> [flags]
 
 Commands:
-  catalog   Show the subjects, agents, models and repositories in the config
+  catalog   Show the subjects, agents, models, repositories and executors in the config
+  plan      Show what a campaign would run, and every rejection with its reason
   run       Run one scenario against one repository
   score     Score a recorded run against a scenario's gold
   version   Print version
@@ -52,6 +53,10 @@ const (
 	// and came up short is a result, and a caller must be able to tell it from
 	// a typo'd path or an unreadable transcript.
 	exitBelowFloor = 4
+	// exitIncomplete: the campaign is well-formed and part of its matrix cannot
+	// run. A caller must not proceed on a partial matrix, but "your config is
+	// broken" and "three arms cannot run" are opposite actions.
+	exitIncomplete = 5
 )
 
 // Run dispatches args to a subcommand and returns the process exit code.
@@ -63,6 +68,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 	switch args[0] {
+	case "plan":
+		return planCmd(args[1:], stdout, stderr)
 	case "run":
 		// A run must die with the binary. Without this the cancel path the
 		// runner carefully distinguishes can never fire in production:

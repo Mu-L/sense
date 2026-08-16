@@ -52,6 +52,11 @@ type Subject struct {
 	// NeedsMCP says this treatment reaches the agent through an MCP server, so
 	// it can only be driven by a tool that speaks one.
 	NeedsMCP bool `json:"needs_mcp"`
+	// NeedsIsolatedConfig says this treatment writes agent configuration, so it
+	// may only run somewhere that configuration cannot escape onto the host.
+	NeedsIsolatedConfig bool `json:"needs_isolated_config"`
+	// Executor is where this subject runs.
+	Executor string `json:"executor"`
 	// Agents are the agent tool ids this subject can be driven through.
 	Agents []string `json:"agents"`
 }
@@ -90,6 +95,30 @@ type Model struct {
 	Agents []string `json:"agents"`
 }
 
+// Executor is where and how a run happens. Two facts about it matter before
+// anything spawns, and both are load-bearing:
+//
+//   - which auth modes survive into the session. A container that never
+//     receives credentials cannot reach a model that needs them, and that is a
+//     planning-time fact rather than a run-time surprise
+//   - whether it isolates global config, which is what a subject that writes
+//     agent configuration depends on
+//
+// Cycle 03 implements isolated-home and cycle 08 the container. Declaring them
+// as data now is what lets the planner refuse an impossible combination before
+// either exists.
+// Nothing validates an executor beyond its id, which is claimed at decode time.
+// An executor preserving no auth mode at all is legal and deliberate: the
+// container never receives credentials.
+type Executor struct {
+	ID string `json:"id"`
+	// PreservesAuth lists the auth modes that reach a session run this way.
+	PreservesAuth []string `json:"preserves_auth"`
+	// IsolatesGlobalConfig says the session gets its own agent configuration
+	// rather than the host's.
+	IsolatesGlobalConfig bool `json:"isolates_global_config"`
+}
+
 // Repo is the code under study, at a pinned commit.
 //
 // A vertical is a query over this metadata rather than a directory tree, which
@@ -120,8 +149,9 @@ type Catalog struct {
 	// model that does not exist and makes the validator report one fault twice.
 	Models map[string]Model
 	// byName resolves a model by its id OR any of its aliases.
-	byName map[string]Model
-	Repos  map[string]Repo
+	byName    map[string]Model
+	Repos     map[string]Repo
+	Executors map[string]Executor
 }
 
 // Load reads a config directory and validates it.
@@ -135,12 +165,13 @@ func Load(dir string) (*Catalog, error) {
 		return nil, fmt.Errorf("%w: %w", ErrNoConfig, err)
 	}
 	c := &Catalog{
-		claimed:  map[string]string{},
-		Subjects: map[string]Subject{},
-		Agents:   map[string]Agent{},
-		Models:   map[string]Model{},
-		byName:   map[string]Model{},
-		Repos:    map[string]Repo{},
+		claimed:   map[string]string{},
+		Subjects:  map[string]Subject{},
+		Agents:    map[string]Agent{},
+		Models:    map[string]Model{},
+		byName:    map[string]Model{},
+		Repos:     map[string]Repo{},
+		Executors: map[string]Executor{},
 	}
 	if err := loadInto(dir, c); err != nil {
 		return nil, err
@@ -164,7 +195,10 @@ func loadInto(dir string, c *Catalog) error {
 	if err := readFlat(filepath.Join(dir, "models"), c.addModel); err != nil {
 		return err
 	}
-	return readFlat(filepath.Join(dir, "repos"), c.addRepo)
+	if err := readFlat(filepath.Join(dir, "repos"), c.addRepo); err != nil {
+		return err
+	}
+	return readFlat(filepath.Join(dir, "executors"), c.addExecutor)
 }
 
 func (c *Catalog) addSubject(path string, b []byte) error {
@@ -222,8 +256,15 @@ func (c *Catalog) addModel(path string, b []byte) error {
 // model called one way and offered another. It is a separate index rather than
 // extra entries in Models, so the catalog never lists a model twice and the
 // validator never reports one fault once per alias.
+// It consults the set as well as the index, so a Catalog built as a literal —
+// which every caller outside this package does in its tests — resolves ids even
+// though it has no alias index. A method that silently finds nothing on a
+// hand-built value is a trap.
 func (c *Catalog) Model(name string) (Model, bool) {
-	m, ok := c.byName[name]
+	if m, ok := c.byName[name]; ok {
+		return m, true
+	}
+	m, ok := c.Models[name]
 	return m, ok
 }
 
@@ -236,6 +277,18 @@ func (c *Catalog) addRepo(path string, b []byte) error {
 		return err
 	}
 	c.Repos[r.ID] = r
+	return nil
+}
+
+func (c *Catalog) addExecutor(path string, b []byte) error {
+	var e Executor
+	if err := decode(path, b, &e); err != nil {
+		return err
+	}
+	if err := c.claim(path, "executor", e.ID); err != nil {
+		return err
+	}
+	c.Executors[e.ID] = e
 	return nil
 }
 

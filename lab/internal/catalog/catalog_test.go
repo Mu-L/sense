@@ -13,9 +13,11 @@ import (
 func good(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	writeSubject(t, dir, "baseline", Subject{
-		ID: "baseline", Kind: Baseline, Agents: []string{"tool"},
+	writeSubject(t, dir, "untreated", Subject{
+		ID: "untreated", Kind: Baseline, Executor: "isolated-home", Agents: []string{"tool"},
 	})
+	writeExecutor(t, dir, Executor{ID: "isolated-home",
+		PreservesAuth: []string{"api_key"}, IsolatesGlobalConfig: true})
 	writeAgent(t, dir, "tool", Agent{
 		ID: "tool", Binary: "toolbin", ModelFlag: "--model",
 		HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"},
@@ -56,6 +58,9 @@ func writeModel(t *testing.T, dir string, m Model) {
 func writeRepo(t *testing.T, dir string, r Repo) {
 	writeJSON(t, filepath.Join(dir, "repos", r.ID+".json"), r)
 }
+func writeExecutor(t *testing.T, dir string, e Executor) {
+	writeJSON(t, filepath.Join(dir, "executors", e.ID+".json"), e)
+}
 
 func loadErr(t *testing.T, dir string) string {
 	t.Helper()
@@ -72,8 +77,8 @@ func TestAWellFormedCatalogLoads(t *testing.T) {
 		t.Fatalf("Load: %v", err)
 	}
 
-	if c.Subjects["baseline"].Kind != Baseline {
-		t.Errorf("subject kind = %q", c.Subjects["baseline"].Kind)
+	if c.Subjects["untreated"].Kind != Baseline {
+		t.Errorf("subject kind = %q", c.Subjects["untreated"].Kind)
 	}
 	if c.Agents["tool"].Binary != "toolbin" {
 		t.Errorf("agent binary = %q", c.Agents["tool"].Binary)
@@ -97,7 +102,7 @@ func TestAMalformedCatalogIsRefusedAtLoadTime(t *testing.T) {
 		{
 			name: "a subject naming an agent that does not exist",
 			breaks: func(t *testing.T, dir string) {
-				writeSubject(t, dir, "baseline", Subject{ID: "baseline", Kind: Baseline, Agents: []string{"ghost"}})
+				writeSubject(t, dir, "untreated", Subject{ID: "untreated", Kind: Baseline, Executor: "isolated-home", Agents: []string{"ghost"}})
 			},
 			want: `names agent "ghost", which no agent file declares`,
 		},
@@ -111,14 +116,14 @@ func TestAMalformedCatalogIsRefusedAtLoadTime(t *testing.T) {
 		{
 			name: "a subject with a kind that is not one of the three",
 			breaks: func(t *testing.T, dir string) {
-				writeSubject(t, dir, "baseline", Subject{ID: "baseline", Kind: "helper", Agents: []string{"tool"}})
+				writeSubject(t, dir, "untreated", Subject{ID: "untreated", Kind: "helper", Executor: "isolated-home", Agents: []string{"tool"}})
 			},
 			want: `kind "helper" is not baseline, sense or competitor`,
 		},
 		{
 			name: "a subject nothing can drive",
 			breaks: func(t *testing.T, dir string) {
-				writeSubject(t, dir, "baseline", Subject{ID: "baseline", Kind: Baseline})
+				writeSubject(t, dir, "untreated", Subject{ID: "untreated", Kind: Baseline, Executor: "isolated-home"})
 			},
 			want: "names no agent tools",
 		},
@@ -201,7 +206,7 @@ func TestAModelNoAgentCanReachIsRefused(t *testing.T) {
 func TestASubjectNeedingMCPCannotUseAToolWithoutIt(t *testing.T) {
 	dir := good(t)
 	writeSubject(t, dir, "sense", Subject{
-		ID: "sense", Kind: Sense, Agents: []string{"tool"},
+		ID: "sense", Kind: Sense, Executor: "isolated-home", Agents: []string{"tool"},
 		NeedsMCP: true,
 	})
 	writeAgent(t, dir, "tool", Agent{
@@ -395,7 +400,7 @@ func TestAgentAndModelFieldsThatWouldStopARunAreRequired(t *testing.T) {
 			writeRepo(t, dir, Repo{ID: "r1", URL: "u", Commit: "c"})
 		}, "no languages"},
 		{"a subject with no kind", func(t *testing.T, dir string) {
-			writeSubject(t, dir, "baseline", Subject{ID: "baseline", Agents: []string{"tool"}})
+			writeSubject(t, dir, "untreated", Subject{ID: "untreated", Executor: "isolated-home", Agents: []string{"tool"}})
 		}, "no kind"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -413,7 +418,7 @@ func TestAgentAndModelFieldsThatWouldStopARunAreRequired(t *testing.T) {
 // get a test. Each kind has its own decode path, so each needs its own case.
 func TestMalformedJSONIsRefusedForEveryKind(t *testing.T) {
 	for _, tc := range []struct{ name, path string }{
-		{"subject", filepath.Join("subjects", "baseline", "subject.json")},
+		{"subject", filepath.Join("subjects", "untreated", "subject.json")},
 		{"agent", filepath.Join("agents", "tool", "agent.json")},
 		{"model", filepath.Join("models", "m1.json")},
 		{"repo", filepath.Join("repos", "r1.json")},
@@ -485,8 +490,8 @@ func TestTwoFilesClaimingOneIDAreRefused(t *testing.T) {
 				Repo{ID: "r1", URL: "u", Commit: "c", Languages: []string{"go"}})
 		}, `repo id "r1" is already claimed by`},
 		{"two subjects", func(t *testing.T, dir string) {
-			writeSubject(t, dir, "shadow", Subject{ID: "baseline", Kind: Baseline, Agents: []string{"tool"}})
-		}, `subject id "baseline" is already claimed by`},
+			writeSubject(t, dir, "shadow", Subject{ID: "untreated", Kind: Baseline, Executor: "isolated-home", Agents: []string{"tool"}})
+		}, `subject id "untreated" is already claimed by`},
 		{"two agents", func(t *testing.T, dir string) {
 			writeAgent(t, dir, "shadow", Agent{ID: "tool", Binary: "b", ModelFlag: "-m",
 				HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"}})
@@ -588,5 +593,80 @@ func TestAnAgentWithoutMCPMayStillCarryASubjectThatDoesNotNeedIt(t *testing.T) {
 
 	if _, err := Load(dir); err != nil {
 		t.Errorf("a baseline subject was refused an agent with no MCP: %v", err)
+	}
+}
+
+// A subject with no executor has nowhere to run, and one naming an executor
+// that does not exist is a typo that would otherwise surface as a job with an
+// empty executor field.
+func TestASubjectWithoutAValidExecutorIsRefused(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		write func(t *testing.T, dir string)
+		want  string
+	}{
+		{"no executor at all", func(t *testing.T, dir string) {
+			writeSubject(t, dir, "untreated", Subject{ID: "untreated", Kind: Baseline, Agents: []string{"tool"}})
+		}, "names no executor, so there is nowhere to run it"},
+		{"an executor no file declares", func(t *testing.T, dir string) {
+			writeSubject(t, dir, "untreated", Subject{ID: "untreated", Kind: Baseline,
+				Executor: "ghost", Agents: []string{"tool"}})
+		}, `names executor "ghost"`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := good(t)
+			tc.write(t, dir)
+
+			if got := loadErr(t, dir); !strings.Contains(got, tc.want) {
+				t.Errorf("error = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// Executors are config like everything else: malformed, duplicated or
+// unreadable ones are caught at load.
+func TestExecutorFilesAreValidatedLikeTheRest(t *testing.T) {
+	t.Run("malformed", func(t *testing.T) {
+		dir := good(t)
+		if err := os.WriteFile(filepath.Join(dir, "executors", "isolated-home.json"),
+			[]byte(`{"id": }`), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if got := loadErr(t, dir); !strings.Contains(got, "isolated-home.json") {
+			t.Errorf("error = %q", got)
+		}
+	})
+
+	t.Run("duplicate", func(t *testing.T) {
+		dir := good(t)
+		writeJSON(t, filepath.Join(dir, "executors", "shadow.json"),
+			Executor{ID: "isolated-home", PreservesAuth: []string{"api_key"}})
+		if got := loadErr(t, dir); !strings.Contains(got, `executor id "isolated-home" is already claimed by`) {
+			t.Errorf("error = %q", got)
+		}
+	})
+
+	t.Run("an executor that preserves nothing is legal", func(t *testing.T) {
+		// The container deliberately never receives credentials.
+		dir := good(t)
+		writeExecutor(t, dir, Executor{ID: "container", IsolatesGlobalConfig: true})
+		if _, err := Load(dir); err != nil {
+			t.Errorf("a credential-free executor was refused: %v", err)
+		}
+	})
+}
+
+// Model resolves against a Catalog built as a literal, which is what every
+// caller outside this package does in its own tests. A method that silently
+// finds nothing on a hand-built value is a trap.
+func TestModelResolvesOnACatalogBuiltAsALiteral(t *testing.T) {
+	c := &Catalog{Models: map[string]Model{"m1": {ID: "m1"}}}
+
+	if _, ok := c.Model("m1"); !ok {
+		t.Error("a model in the set does not resolve without the alias index")
+	}
+	if _, ok := c.Model("nope"); ok {
+		t.Error("a model that does not exist resolved")
 	}
 }

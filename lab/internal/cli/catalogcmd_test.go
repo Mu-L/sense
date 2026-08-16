@@ -166,7 +166,7 @@ func TestCatalogPrintsEveryKindWithWhatIdentifiesIt(t *testing.T) {
 	// another of the same kind. An id-only listing would not tell two models
 	// apart.
 	for _, want := range []string{
-		"subject  baseline", "baseline\n", // id and kind
+		"subject  untreated", "baseline\n", // id and kind
 		"agent    tool", "/bin/true\n", // id and binary
 		"model    m1", "acme\n", // id and provider
 		"repo     r1", "abc123\n", // id and pinned commit
