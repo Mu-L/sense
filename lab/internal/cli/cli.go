@@ -28,6 +28,7 @@ const usage = `sense-lab — the bench instrument for Sense
 Usage: sense-lab <command> [flags]
 
 Commands:
+  catalog   Show the subjects, agents, models and repositories in the config
   run       Run one scenario against one repository
   score     Score a recorded run against a scenario's gold
   version   Print version
@@ -72,6 +73,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 		return runSession(ctx, args[1:], stdout, stderr)
+	case "catalog":
+		return catalogCmd(args[1:], stdout, stderr)
 	case "score":
 		return scoreRun(args[1:], stdout, stderr)
 	case "version":

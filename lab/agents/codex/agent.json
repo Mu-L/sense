@@ -1,0 +1,16 @@
+{
+  "id": "codex",
+  "binary": "codex",
+  "model_flag": "--model",
+  "headless_args": [
+    "exec",
+    "--json",
+    "--full-auto"
+  ],
+  "env": [],
+  "supports_mcp": true,
+  "auth_modes": [
+    "subscription",
+    "api_key"
+  ]
+}

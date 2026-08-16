@@ -1,0 +1,14 @@
+{
+  "id": "opencode",
+  "binary": "opencode",
+  "model_flag": "--model",
+  "headless_args": [
+    "run",
+    "--print-logs"
+  ],
+  "env": [],
+  "supports_mcp": true,
+  "auth_modes": [
+    "api_key"
+  ]
+}

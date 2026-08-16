@@ -478,3 +478,41 @@ func TestOutcomeOfPrefersWhatEndedTheSessionOverTheExitCode(t *testing.T) {
 		t.Errorf("outcomeOf(0, endedByCancel) = %q, want %q", got, Interrupted)
 	}
 }
+
+// A session that produced nothing is not the same as a session that ran and
+// failed, but on disk they look identical: same outcome, same exit code. The
+// measured case is an arm whose model id resolved to nothing — zero bytes,
+// exit 1, and a campaign before anyone noticed. The byte count is what makes a
+// broken spawn legible without reading transcripts.
+func TestTheRecordSaysHowMuchTheSessionActuallySaid(t *testing.T) {
+	t.Run("a session that said something", func(t *testing.T) {
+		dir := t.TempDir()
+		m, err := Session(context.Background(), dir, Spec{
+			Name: "sh", Args: []string{"-c", "echo hello there"}, Wall: 10 * time.Second,
+		})
+		if err != nil {
+			t.Fatalf("Session: %v", err)
+		}
+		if m.StdoutBytes != int64(len("hello there\n")) {
+			t.Errorf("stdout_bytes = %d, want %d", m.StdoutBytes, len("hello there\n"))
+		}
+	})
+
+	t.Run("a session that said nothing and failed", func(t *testing.T) {
+		dir := t.TempDir()
+		m, err := Session(context.Background(), dir, Spec{
+			Name: "sh", Args: []string{"-c", "exit 1"}, Wall: 10 * time.Second,
+		})
+		if err != nil {
+			t.Fatalf("Session: %v", err)
+		}
+		if m.Outcome != Failed {
+			t.Fatalf("outcome = %q, want %q", m.Outcome, Failed)
+		}
+		// Zero, and recorded rather than absent: this is the shape that has to
+		// be distinguishable from a real failure afterwards.
+		if m.StdoutBytes != 0 {
+			t.Errorf("stdout_bytes = %d, want 0", m.StdoutBytes)
+		}
+	})
+}

@@ -44,11 +44,13 @@ func TestSIGTERMRecordsTheRunAndKillsTheAgentTree(t *testing.T) {
 	if err := os.WriteFile(scenario, []byte("name: t\nsteps:\n  - name: s\n    prompt: go\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	head := initRepo(t, dir)
+	cfg := writeCatalog(t, dir, agent, head)
 
 	out := filepath.Join(dir, "run")
-	lab := exec.Command(bin, "run",
-		"-scenario", scenario, "-repo", dir, "-out", out,
-		"-agent", agent, "-wall", "5m")
+	lab := exec.Command(bin, "run", "-config", cfg,
+		"-scenario", scenario, "-repo", "r1", "-checkout", dir, "-out", out,
+		"-agent", "tool", "-model", "m1", "-wall", "5m")
 	var labOut strings.Builder
 	lab.Stdout, lab.Stderr = &labOut, &labOut
 	if err := lab.Start(); err != nil {
@@ -106,6 +108,47 @@ func TestSIGTERMRecordsTheRunAndKillsTheAgentTree(t *testing.T) {
 	if p, err := os.ReadFile(filepath.Join(out, "prompt.txt")); err != nil || !strings.Contains(string(p), "go") {
 		t.Errorf("prompt.txt = %q, %v", p, err)
 	}
+}
+
+// writeCatalog writes the smallest config directory that can drive bin.
+// initRepo makes dir a one-commit git repository and returns its HEAD, so the
+// run's checkout matches the commit the catalog pins.
+func initRepo(t *testing.T, dir string) string {
+	t.Helper()
+	for _, args := range [][]string{
+		{"init", "-q"},
+		{"-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init"},
+	} {
+		if out, err := exec.Command("git", append([]string{"-C", dir}, args...)...).CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	out, err := exec.Command("git", "-C", dir, "rev-parse", "HEAD").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return strings.TrimSpace(string(out))
+}
+
+func writeCatalog(t *testing.T, dir, bin, pin string) string {
+	t.Helper()
+	cfg := filepath.Join(dir, "config")
+	for path, body := range map[string]string{
+		"agents/tool/agent.json": `{"id":"tool","binary":"` + bin + `","model_flag":"--model",
+		  "headless_args":["-p"],"env":[],"supports_mcp":false,"auth_modes":["api_key"]}`,
+		"subjects/baseline/subject.json": `{"id":"baseline","kind":"baseline","agents":["tool"]}`,
+		"models/m1.json":                 `{"id":"m1","provider":"acme","available_under":["api_key"],"agents":["tool"]}`,
+		"repos/r1.json":                  `{"id":"r1","url":"https://example.test/r1.git","commit":"` + pin + `","languages":["go"]}`,
+	} {
+		full := filepath.Join(cfg, path)
+		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(full, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return cfg
 }
 
 // waitFor polls until cond holds, so a test does not race a process it just

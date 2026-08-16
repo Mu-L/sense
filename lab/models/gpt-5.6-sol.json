@@ -1,0 +1,12 @@
+{
+  "id": "gpt-5.6-sol",
+  "provider": "openai",
+  "aliases": [],
+  "available_under": [
+    "subscription",
+    "api_key"
+  ],
+  "agents": [
+    "codex"
+  ]
+}

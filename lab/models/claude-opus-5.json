@@ -1,0 +1,12 @@
+{
+  "id": "claude-opus-5",
+  "provider": "anthropic",
+  "aliases": [],
+  "available_under": [
+    "subscription",
+    "api_key"
+  ],
+  "agents": [
+    "claude-code"
+  ]
+}
