@@ -34,6 +34,7 @@ Commands:
   score     Score a recorded run against a scenario's gold
   validate  Audit a scenario's gold and report what would be quarantined
   rescore   Recompute every recorded score and name the cause of each difference
+  gate      Read a pay decision on stdin and refuse it, or not
   version   Print version
 `
 
@@ -59,6 +60,11 @@ const (
 	// run. A caller must not proceed on a partial matrix, but "your config is
 	// broken" and "three arms cannot run" are opposite actions.
 	exitIncomplete = 5
+	// exitRefused: a gate refused. It is its own code because "a gate says no"
+	// and "the binary broke" are opposite situations for whoever is reading:
+	// one is the instrument working, and it is the answer to the question that
+	// was asked.
+	exitRefused = 7
 	// exitProvisional: the transcript this was scored from is known incomplete,
 	// so the number is neither a pass nor a failure. Reporting it as either
 	// would be the exact misreading the provisional mark exists to prevent.
@@ -91,6 +97,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		// .mcp.json points at instead of the Sense server, not a verb a person
 		// types.
 		return teeServer(args[1:], os.Stdin, stdout, stderr)
+	case "gate":
+		return gateCmd(args[1:], os.Stdin, stdout, stderr)
 	case "catalog":
 		return catalogCmd(args[1:], stdout, stderr)
 	case "score":
