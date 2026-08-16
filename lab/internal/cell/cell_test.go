@@ -15,15 +15,17 @@ import (
 
 // arms is a cell of two sessions, each running the script it is given.
 func arms(senseScript, baselineScript string) []cell.Arm {
-	spec := func(name, script string) run.Spec {
-		return run.Spec{
-			Name: "/bin/sh", Args: []string{"-c", script}, Arm: name,
-			Wall: 30 * time.Second, Grace: 100 * time.Millisecond,
+	session := func(name, script string) func(context.Context, string) (run.Meta, error) {
+		return func(ctx context.Context, dir string) (run.Meta, error) {
+			return run.Session(ctx, dir, run.Spec{
+				Name: "/bin/sh", Args: []string{"-c", script}, Arm: name,
+				Wall: 30 * time.Second, Grace: 100 * time.Millisecond,
+			})
 		}
 	}
 	return []cell.Arm{
-		{Name: "sense", Spec: spec("sense", senseScript)},
-		{Name: "baseline", Spec: spec("baseline", baselineScript)},
+		{Name: "sense", Run: session("sense", senseScript)},
+		{Name: "baseline", Run: session("baseline", baselineScript)},
 	}
 }
 

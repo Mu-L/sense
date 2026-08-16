@@ -34,7 +34,7 @@ type Entry struct {
 //
 // PATH is deliberately absent. It is not a shared default but one entry with
 // two arm-specific values, and treating it as common is how the baseline arm
-// silently acquires a CLI fallback. PathFor builds it instead.
+// silently acquires a CLI fallback. ShadowBin builds it instead.
 //
 // HOME and the XDG variables are absent for a different reason: they are facts
 // about the disposable directory rather than about the host, so inheriting them
@@ -94,35 +94,6 @@ func (l Layout) dirs() []string {
 		d = append(d, filepath.Join(l.Home, sub))
 	}
 	return d
-}
-
-// PathFor builds an arm's PATH from the host's.
-//
-// The Sense arm gets the directory holding the Sense binary at the front. The
-// baseline arm gets the same PATH with that directory removed, and that removal
-// is the part a reasonable implementation misses: prepending for one arm leaves
-// the other with whatever the host already had, and on a machine where Sense is
-// installed that is a CLI fallback the baseline never earned.
-//
-// senseBinDir is therefore expected to hold the Sense binary and little else. A
-// directory shared with the agent tool would take the agent tool off the
-// baseline's PATH with it, which fails loudly rather than silently.
-func PathFor(arm Arm, hostPath, senseBinDir string) string {
-	sense := ""
-	if senseBinDir != "" {
-		sense = filepath.Clean(senseBinDir)
-	}
-	var keep []string
-	for _, dir := range filepath.SplitList(hostPath) {
-		if dir == "" || (sense != "" && filepath.Clean(dir) == sense) {
-			continue
-		}
-		keep = append(keep, dir)
-	}
-	if arm == Sense && sense != "" {
-		keep = append([]string{sense}, keep...)
-	}
-	return strings.Join(keep, string(filepath.ListSeparator))
 }
 
 // Environ builds the complete environment a session runs with: the disposable

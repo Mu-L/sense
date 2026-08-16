@@ -21,10 +21,15 @@ import (
 	"github.com/luuuc/sense/lab/internal/run"
 )
 
-// Arm is one side of a cell: a name and the session to run.
+// Arm is one side of a cell: a name, and what running it does.
+//
+// The work is a function rather than a session spec because supervision is all
+// this package knows about. What an arm has to do to produce a run — prepare an
+// environment, take a worktree, configure a subject — belongs to whoever is
+// running the cell.
 type Arm struct {
 	Name string
-	Spec run.Spec
+	Run  func(ctx context.Context, dir string) (run.Meta, error)
 }
 
 // Record is the cell's own metadata, written whether or not the cell finished.
@@ -73,7 +78,14 @@ func Run(ctx context.Context, dir string, arms []Arm) (Record, error) {
 		}
 		at := filepath.Join(dir, arm.Name)
 
-		m, err := run.Session(ctx, at, arm.Spec)
+		m, err := arm.Run(ctx, at)
+		if ctx.Err() != nil {
+			// The arm was cut short. It failed BECAUSE the cell was stopped,
+			// so it is an interruption to be recorded rather than an error to
+			// be reported: without the record nothing on disk names the arms
+			// that finished, and a later pass would pair one of them.
+			return incomplete(dir, rec, arms[i:])
+		}
 		if err != nil {
 			return Record{}, fmt.Errorf("cell arm %s: %w", arm.Name, err)
 		}
