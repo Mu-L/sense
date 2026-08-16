@@ -16,6 +16,7 @@ import (
 type fakeGit struct {
 	commit string
 	files  map[string]string
+	grep   []string // "path:line" entries a covering grep would print
 	calls  int
 }
 
@@ -29,6 +30,16 @@ func (f *fakeGit) run(_ string, args ...string) ([]byte, error) {
 			return nil, nil
 		}
 		return nil, errors.New("not a commit")
+	case "grep":
+		// <commit>:<path>:<line>:<text>, which is what `git grep -n <rev>` emits.
+		if len(f.grep) == 0 {
+			return nil, errors.New("no matches")
+		}
+		var b strings.Builder
+		for _, hit := range f.grep {
+			b.WriteString(f.commit + ":" + hit + ":the line\n")
+		}
+		return []byte(b.String()), nil
 	case "show":
 		_, path, _ := strings.Cut(args[1], ":")
 		if body, ok := f.files[path]; ok {
@@ -397,4 +408,97 @@ func TestItReadsThePinnedCommitAndNotTheCurrentOne(t *testing.T) {
 		t.Error("a line that only exists at HEAD resolved against the pinned commit")
 	}
 
+}
+
+// Resolves is the gold validator's view of the same question grounding already
+// answers: is this location there at the pinned commit?
+func TestResolvesAnswersForTheValidator(t *testing.T) {
+	c, _ := repo(t)
+
+	for _, tc := range []struct {
+		name       string
+		path       string
+		line       int
+		ok, checkd bool
+	}{
+		{"a real line", "app/models/category.rb", 3, true, true},
+		{"past the end", "app/models/category.rb", 4, false, true},
+		{"line zero is not a line", "app/models/category.rb", 0, false, true},
+		{"a file that is not there", "app/models/nope.rb", 1, false, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ok, checked := c.Resolves(tc.path, tc.line)
+			if ok != tc.ok || checked != tc.checkd {
+				t.Errorf("Resolves = (%v, %v), want (%v, %v)", ok, checked, tc.ok, tc.checkd)
+			}
+		})
+	}
+
+	var absent *Checkout
+	if _, checked := absent.Resolves("app/models/category.rb", 1); checked {
+		t.Error("a nil checkout claimed to have checked something")
+	}
+}
+
+// Covering is what the baseline gets for free, and the SIZE is the whole story:
+// a row inside a 4483-line grep is not free to anybody.
+func TestCoveringReportsTheGrepAndItsSize(t *testing.T) {
+	g := &fakeGit{
+		commit: "abc123",
+		grep:   []string{"app/models/category.rb:12", "app/models/other.rb:4"},
+	}
+	c, err := open("/repo", "abc123", g.run)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hits, total, checked := c.Covering("Category")
+	if !checked {
+		t.Fatal("Covering reported it could not check")
+	}
+	if total != 2 {
+		t.Errorf("total = %d, want 2", total)
+	}
+	if !hits["app/models/category.rb:12"] || hits["app/models/nowhere.rb:1"] {
+		t.Errorf("hits = %v", hits)
+	}
+
+	t.Run("an anchor that appears nowhere is a real answer", func(t *testing.T) {
+		empty := &fakeGit{commit: "abc123"}
+		c, _ := open("/repo", "abc123", empty.run)
+		hits, total, checked := c.Covering("Nowhere")
+		if !checked || total != 0 || len(hits) != 0 {
+			t.Errorf("got (%v, %d, %v), want an empty but checked answer", hits, total, checked)
+		}
+	})
+
+	t.Run("nothing to grep for", func(t *testing.T) {
+		if _, _, checked := c.Covering(""); checked {
+			t.Error("Covering claimed to check an empty anchor")
+		}
+		var absent *Checkout
+		if _, _, checked := absent.Covering("Category"); checked {
+			t.Error("a nil checkout claimed to have grepped")
+		}
+	})
+}
+
+// git grep output that is not the shape this expects is skipped rather than
+// half-parsed into a location nobody cited.
+func TestCoveringIgnoresLinesThatAreNotHits(t *testing.T) {
+	g := &fakeGit{commit: "abc123"}
+	c, _ := open("/repo", "abc123", func(dir string, args ...string) ([]byte, error) {
+		if args[0] == "grep" {
+			return []byte("abc123:app/models/category.rb:12:real\n" +
+				"some binary file matches\n" +
+				"abc123:app/models/x.rb:notanumber:nope\n" +
+				"abc123:justapath\n"), nil
+		}
+		return g.run(dir, args...)
+	})
+
+	hits, total, _ := c.Covering("Category")
+	if total != 1 || !hits["app/models/category.rb:12"] {
+		t.Errorf("got %v (total %d), want only the well-formed hit", hits, total)
+	}
 }

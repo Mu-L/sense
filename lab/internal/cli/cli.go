@@ -32,6 +32,7 @@ Commands:
   plan      Show what a campaign would run, and every rejection with its reason
   run       Run one scenario against one repository
   score     Score a recorded run against a scenario's gold
+  validate  Audit a scenario's gold and report what would be quarantined
   version   Print version
 `
 
@@ -88,6 +89,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return catalogCmd(args[1:], stdout, stderr)
 	case "score":
 		return scoreRun(args[1:], stdout, stderr)
+	case "validate":
+		return validateGold(args[1:], stdout, stderr)
 	case "version":
 		_, _ = fmt.Fprintln(stdout, Version)
 		return exitOK

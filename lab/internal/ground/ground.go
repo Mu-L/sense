@@ -245,3 +245,52 @@ func (r Report) String() string {
 	return fmt.Sprintf("grounding   %d of %d cited locations do not resolve at the pinned commit\n",
 		len(r.Ungrounded), r.Checked)
 }
+
+// Resolves reports whether path has that line at the pinned commit. It is the
+// gold validator's Resolver: a row pointing at a line that moved is not gold,
+// it is history, and that is the same question grounding already answers.
+func (c *Checkout) Resolves(path string, line int) (ok, checked bool) {
+	if c == nil {
+		return false, false
+	}
+	n, exists := c.lineCount(path)
+	return exists && line <= n && line > 0, true
+}
+
+// Covering returns the locations a plain grep for the anchor prints, and how
+// many lines that is.
+//
+// This is what the baseline gets for free. A gold row inside this output floors
+// the baseline and shrinks the achievable margin before either arm runs, which
+// is worth knowing and is never worth killing a scenario over — run as a
+// per-row census it once killed four shapes on a repository that banks +0.53.
+func (c *Checkout) Covering(symbol string) (hits map[string]bool, total int, checked bool) {
+	if c == nil || symbol == "" {
+		return nil, 0, false
+	}
+	out, err := c.git(c.dir, "grep", "-n", "--fixed-strings", symbol, c.commit)
+	if err != nil {
+		// git grep exits 1 on no match, which is a real answer rather than a
+		// failure: nothing is free if the anchor appears nowhere.
+		return map[string]bool{}, 0, true
+	}
+	hits = map[string]bool{}
+	for _, line := range strings.Split(strings.TrimRight(string(out), "\n"), "\n") {
+		// <commit>:<path>:<line>:<text>
+		rest, ok := strings.CutPrefix(line, c.commit+":")
+		if !ok {
+			continue
+		}
+		path, after, ok := strings.Cut(rest, ":")
+		if !ok {
+			continue
+		}
+		num, _, _ := strings.Cut(after, ":")
+		if _, err := strconv.Atoi(num); err != nil {
+			continue
+		}
+		hits[path+":"+num] = true
+		total++
+	}
+	return hits, total, true
+}
