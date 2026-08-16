@@ -64,6 +64,31 @@ linters:
         # server, because that is the channel the benched agent actually had.
         # Querying the index directly would measure a channel no agent has, and
         # nothing about that failure would be visible in a result.
+        # The lab's pure core. Scoring takes bytes and returns numbers, and it
+        # must keep doing so: the moment recall can fail because a checkout is
+        # missing, every number the instrument produces depends on the state of
+        # a disk. Grounding is the one piece needing a repository, and it lives
+        # in lab/internal/ground, at the edge.
+        #
+        # score and plan ONLY. transcript and scenario read files by design, so
+        # listing them here would describe an aspiration rather than a fact, and
+        # a rule that is already false where it points will not be believed when
+        # it matters. `os` is denied as well as `os/exec`, because the property
+        # is "does not touch a disk", and a rule that stopped only the shell
+        # would not hold it.
+        lab-pure:
+          files:
+            - "**/lab/internal/score/**"
+            - "**/lab/internal/plan/**"
+          deny:
+            - pkg: os
+              desc: "the lab's pure core must not read a disk; recall may not depend on the state of one"
+            - pkg: os/exec
+              desc: "the lab's pure core must not shell out; grounding lives in lab/internal/ground"
+            - pkg: net
+              desc: "the lab's pure core must not touch the network"
+            - pkg: syscall
+              desc: "the lab's pure core must not call syscalls directly"
         lab-boundary:
           files:
             - "**/lab/**"
@@ -86,6 +111,12 @@ linters:
       # claims it. Shrink this list as each package is brought into scope.
       - linters: [gocyclo, gocognit]
         path: (cmd/sense|internal/(benchmark|cli|freshen|hook|ignore|mcpio|summary))/
+      # depguard/lab-pure: the property is about the PRODUCTION core, which must
+      # not depend on the state of a disk. Its tests legitimately read checked-in
+      # fixtures, and forbidding that would only push the reads into a helper
+      # package and prove nothing.
+      - linters: [depguard]
+        path: lab/internal/(score|plan)/.*_test\.go
       # dupword: SQL NULL repetitions and embedded Ruby/test fixtures are fine
       - linters: [dupword]
         path: _test\.go

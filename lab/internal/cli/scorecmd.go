@@ -2,12 +2,14 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/luuuc/sense/lab/internal/ground"
 	"github.com/luuuc/sense/lab/internal/run"
 	"github.com/luuuc/sense/lab/internal/scenario"
 	"github.com/luuuc/sense/lab/internal/score"
@@ -32,6 +34,8 @@ type scoreFlags struct {
 	run      string
 	group    string
 	floor    float64
+	checkout string
+	commit   string
 }
 
 func parseScoreFlags(args []string, stderr io.Writer) (scoreFlags, error) {
@@ -42,6 +46,8 @@ func parseScoreFlags(args []string, stderr io.Writer) (scoreFlags, error) {
 	fs.StringVar(&f.run, "run", "", "path to the run directory to score (required)")
 	fs.StringVar(&f.group, "group", "", "gold group to score, or \"all\" (default: the scenario's discriminator)")
 	fs.Float64Var(&f.floor, "floor", defaultFloor, "recall at or above which the run passes")
+	fs.StringVar(&f.checkout, "checkout", "", "repository checkout to verify citations against")
+	fs.StringVar(&f.commit, "commit", "", "commit the checkout is pinned at (required with -checkout)")
 	if err := fs.Parse(args); err != nil {
 		return f, err
 	}
@@ -52,6 +58,13 @@ func parseScoreFlags(args []string, stderr io.Writer) (scoreFlags, error) {
 		if required.value == "" {
 			return f, fmt.Errorf("%s is required", required.name)
 		}
+	}
+	// A missing checkout is a deferral. A checkout given WITHOUT its commit is
+	// a typo, and downgrading it to unverified would exit 0 on a stderr line
+	// the operator may well be piping away.
+	if f.checkout != "" && f.commit == "" {
+		return f, errors.New("-checkout needs -commit: grounding against an unpinned tree would " +
+			"check citations against whatever happens to be checked out")
 	}
 	return f, nil
 }
@@ -83,7 +96,7 @@ func scoreRun(args []string, stdout, stderr io.Writer) int {
 	_, _ = fmt.Fprintf(stdout, "repo       %s\nscenario   %s\n", set.Scenario.Repo, set.Scenario.Name)
 
 	if f.group == allGroups {
-		return scoreEveryGroup(set, src, f.floor, stdout, stderr)
+		return scoreEveryGroup(set, src, f, stdout, stderr)
 	}
 
 	group := f.group
@@ -102,7 +115,8 @@ func scoreRun(args []string, stdout, stderr io.Writer) int {
 
 	// The transcript goes in, not its text, so the provisional mark travels
 	// with the number rather than depending on this caller to copy it.
-	result := score.Group(group, rows, src, f.floor)
+	result := score.GroupCites(group, rows, score.Scan(src.Answer()), src.ProvisionalWhy(), f.floor)
+	result.Grounding = groundReport(src.Answer(), f, rows, stderr).String()
 	_, _ = fmt.Fprint(stdout, result)
 
 	// A provisional number is not a verdict either way, so it never reports as
@@ -178,15 +192,18 @@ func goldRows(set scenario.Set, group string) ([]score.Row, error) {
 // one group and a margin spread across all of them are different results, and
 // reporting only the discriminator cannot tell them apart. The exit code is the
 // discriminator's, because that is still the number the floor applies to.
-func scoreEveryGroup(set scenario.Set, src score.Source, floor float64, stdout, stderr io.Writer) int {
+func scoreEveryGroup(set scenario.Set, src score.Source, f scoreFlags, stdout, stderr io.Writer) int {
 	code := exitError
+	cites := score.Scan(src.Answer())
+	report := groundReport(src.Answer(), f, allRows(set), stderr)
 	for _, group := range set.Gold.Groups() {
 		rows, err := goldRows(set, group)
 		if err != nil {
 			_, _ = fmt.Fprintf(stderr, "sense-lab score: %v\n", err)
 			return exitError
 		}
-		result := score.Group(group, rows, src, floor)
+		result := score.GroupCites(group, rows, cites, src.ProvisionalWhy(), f.floor)
+		result.Grounding = report.String()
 		_, _ = fmt.Fprint(stdout, result)
 		if group != set.Gold.Discriminator {
 			continue
@@ -201,4 +218,54 @@ func scoreEveryGroup(set scenario.Set, src score.Source, floor float64, stdout, 
 		}
 	}
 	return code
+}
+
+// groundReport verifies the answer's citations against a checkout when one is
+// given.
+//
+// No checkout is not an error. It downgrades the result to unverified and says
+// so: a scorer that refused to score without a git checkout would make the
+// whole pure layer depend on the state of a disk, and three of the four benched
+// repositories are not cloned on this machine today.
+//
+// A checkout that is the WRONG one is different, and it is the dangerous case:
+// a commit that exists in another repository passes every existence check and
+// then resolves nothing, so every citation reads as fabricated and the report
+// says verified. The gold rows are the detector — they have known locations at
+// the pinned commit — and grounding refuses rather than publishing that.
+func groundReport(answer string, f scoreFlags, rows []score.Row, stderr io.Writer) ground.Report {
+	if f.checkout == "" {
+		return ground.Check(nil, nil)
+	}
+	c, err := ground.Open(f.checkout, f.commit)
+	if err == nil {
+		err = ground.CheckGold(locations(rows), c)
+	}
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "sense-lab score: grounding skipped: %v\n", err)
+		return ground.Check(nil, nil)
+	}
+	return ground.Check(score.Scan(answer), c)
+}
+
+func locations(rows []score.Row) []string {
+	out := make([]string, 0, len(rows))
+	for _, r := range rows {
+		if r.Cite != "" {
+			out = append(out, r.Cite)
+		}
+	}
+	return out
+}
+
+// allRows is every gold row in the set, used to verify the checkout when all
+// groups are scored at once.
+func allRows(set scenario.Set) []score.Row {
+	var out []score.Row
+	for _, g := range set.Gold.Rows {
+		if c := g.Cite(); c != "" {
+			out = append(out, score.Row{ID: g.ID, Cite: c})
+		}
+	}
+	return out
 }

@@ -26,6 +26,11 @@ type Row struct {
 
 // Result is one gold group scored against one transcript.
 type Result struct {
+	// Grounding is what checking the citations against the repository found,
+	// rendered. It is empty when nothing checked them, and empty RENDERS as not
+	// verified — a number that does not say whether its citations were checked
+	// reads as though they were.
+	Grounding string
 	// Why says what makes this number provisional, and empty means it is not.
 	// It travels from the transcript because a score that does not carry the
 	// mark is exactly the failure the mark exists to prevent: a truncated
@@ -158,8 +163,16 @@ func (r Result) Provisional() bool { return r.Why != "" }
 // a path boundary of the gold cite. That is a suffix rule on the PATH only; the
 // line still has to be exactly right.
 func Group(name string, rows []Row, tr Source, floor float64) Result {
-	cites := Scan(tr.Answer())
-	r := Result{Group: name, Total: len(rows), Floor: floor, Why: tr.ProvisionalWhy()}
+	return GroupCites(name, rows, Scan(tr.Answer()), tr.ProvisionalWhy(), floor)
+}
+
+// GroupCites scores an already-scanned set of citations.
+//
+// It exists so grounding can remove the citations that do not exist before the
+// number is taken, without this package needing a repository on disk. Group is
+// the same function with the scan done for you.
+func GroupCites(name string, rows []Row, cites []Cite, why string, floor float64) Result {
+	r := Result{Group: name, Total: len(rows), Floor: floor, Why: why}
 
 	for _, row := range rows {
 		p, _, ok := split(row.Cite)
@@ -313,6 +326,14 @@ func (r Result) String() string {
 	fmt.Fprintf(&b, "recall     %.2f\n", r.Recall)
 	fmt.Fprintf(&b, "floor      %.2f\n", r.Floor)
 	fmt.Fprintf(&b, "verdict    %s\n", r.Verdict)
+	// Deny by default. An empty Grounding is a number nobody checked, and
+	// printing nothing would make it visually identical to a verified one minus
+	// a line no reader has been trained to miss.
+	if r.Grounding == "" {
+		b.WriteString("grounding   NOT VERIFIED: nothing checked these citations\n")
+	} else {
+		b.WriteString(r.Grounding)
+	}
 	if len(r.Misses) > 0 {
 		fmt.Fprintf(&b, "missed     %s\n", strings.Join(r.Misses, ", "))
 	}

@@ -50,7 +50,8 @@ NEVER KILLS · THE AUTHORING CYCLE IS UNATTENDED AND BOUNDED · AN OCCURRENCE-LI
 · "WHAT HOLDS THIS" NEEDS A RING, AND RUBY HAS NONE · AIM AT THE WINDOW, NOT AT THE OPPOSITE OF
 THE LAST FAILURE · A FREE ROW IS A GIFT TO THE BASELINE · ITERATE ON THE QUESTION, KEEP THE
 ANCHOR · TRY HARDER · THE LOOP CANNOT RECORD A LOSS · AXIS-DEAD IS NEVER REPO-DEAD · RUN FIRST,
-EXPLAIN AFTER · A FORM-DEPENDENT LENIENCY IS AN ARM-DEPENDENT LENIENCY
+EXPLAIN AFTER · A FORM-DEPENDENT LENIENCY IS AN ARM-DEPENDENT LENIENCY · AN UNGROUNDED RATE IS A
+FORM ARTIFACT UNTIL DECOMPOSED
 
 **Scenario and gold** — THE DISCRIMINATOR IS CITATION COST, NOT DISCOVERY · PUBLISHED GOLD LEAKS
 · A CORRECTNESS ORACLE MUST NOT BE SATISFIABLE BY THE ROUTE · A GOLD ROW MUST BE CITEABLE IN THE
@@ -127,6 +128,27 @@ biased both ways at once, and hunting one bias is how the other survives.
 **Mechanism.** doc. The range check that closes the symbol half needs a repository checkout and
 is 02-04. Until then `score.Result` prints the strict number beside the loose one and never a
 single figure.
+
+## AN UNGROUNDED RATE IS A FORM ARTIFACT UNTIL DECOMPOSED — doc, cycle 02
+
+The share of an arm's citations that fail to resolve is not its fabrication rate. Decompose it
+before quoting it: a path written without its directory does not resolve either, and it is a
+habit rather than an invention. Report the parts, per arm, per model.
+
+**Precedent.** Cycle 02 (02-04) grounded the 57 recorded discourse runs against the checkout at
+its pinned commit. The aggregate said sense 10.33% ungrounded against baseline 2.61%, which reads
+as one arm inventing four times as much.
+
+Decomposed it says the opposite. A real file cited past its end — the only shape that is
+unambiguously made up — occurs **3 times in each arm**. 70% of the remainder is a bare basename.
+And the whole gap is a single model-arm cell: 815 of the 823 sense failures are claude-opus-5,
+while the same arm is 0.35% on kimi and 0.00% on gpt-5.6.
+
+Quoted undecomposed, that aggregate would have published "sense fabricates four times as often"
+from a difference in how one model writes paths.
+
+**Mechanism.** doc. `ground.Report` keeps the failures as a list of locations rather than a rate,
+so the decomposition is always available and a bare rate has to be computed on purpose.
 
 ## RUN vs DECIDE — doc *(inherited)*
 
