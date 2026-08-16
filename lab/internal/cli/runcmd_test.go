@@ -47,8 +47,10 @@ func testCatalogPinned(t *testing.T, bin, pin string) string {
 	  "model_flag":"--model","headless_args":["-p","--permission-mode","bypassPermissions"],
 	  "env":["IS_SANDBOX=1","CLAUDE_CODE_DISABLE_AUTO_MEMORY=1"],
 	  "supports_mcp":true,"auth_modes":["api_key"]}`)
-	write(filepath.Join(dir, "subjects", "baseline", "subject.json"),
-		`{"id":"baseline","kind":"baseline","agents":["tool"]}`)
+	write(filepath.Join(dir, "subjects", "untreated", "subject.json"),
+		`{"id":"untreated","kind":"baseline","executor":"isolated-home","agents":["tool"]}`)
+	write(filepath.Join(dir, "executors", "isolated-home.json"),
+		`{"id":"isolated-home","preserves_auth":["api_key"],"isolates_global_config":true}`)
 	write(filepath.Join(dir, "models", "m1.json"),
 		`{"id":"m1","provider":"acme","available_under":["api_key"],"agents":["tool"]}`)
 	write(filepath.Join(dir, "repos", "r1.json"),

@@ -49,6 +49,11 @@ func (c *Catalog) checkSubject(s Subject) []string {
 	if len(s.Agents) == 0 {
 		p = append(p, fmt.Sprintf("subject %s: names no agent tools, so nothing can drive it", s.ID))
 	}
+	if s.Executor == "" {
+		p = append(p, fmt.Sprintf("subject %s: names no executor, so there is nowhere to run it", s.ID))
+	} else if _, ok := c.Executors[s.Executor]; !ok {
+		p = append(p, fmt.Sprintf("subject %s: names executor %q, which no executor file declares", s.ID, s.Executor))
+	}
 	for _, a := range s.Agents {
 		if _, ok := c.Agents[a]; !ok {
 			p = append(p, fmt.Sprintf("subject %s: names agent %q, which no agent file declares", s.ID, a))

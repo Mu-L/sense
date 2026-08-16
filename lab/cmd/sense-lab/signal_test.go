@@ -136,9 +136,10 @@ func writeCatalog(t *testing.T, dir, bin, pin string) string {
 	for path, body := range map[string]string{
 		"agents/tool/agent.json": `{"id":"tool","binary":"` + bin + `","model_flag":"--model",
 		  "headless_args":["-p"],"env":[],"supports_mcp":false,"auth_modes":["api_key"]}`,
-		"subjects/baseline/subject.json": `{"id":"baseline","kind":"baseline","agents":["tool"]}`,
-		"models/m1.json":                 `{"id":"m1","provider":"acme","available_under":["api_key"],"agents":["tool"]}`,
-		"repos/r1.json":                  `{"id":"r1","url":"https://example.test/r1.git","commit":"` + pin + `","languages":["go"]}`,
+		"subjects/untreated/subject.json": `{"id":"untreated","kind":"baseline","executor":"isolated-home","agents":["tool"]}`,
+		"executors/isolated-home.json":    `{"id":"isolated-home","preserves_auth":["api_key"],"isolates_global_config":true}`,
+		"models/m1.json":                  `{"id":"m1","provider":"acme","available_under":["api_key"],"agents":["tool"]}`,
+		"repos/r1.json":                   `{"id":"r1","url":"https://example.test/r1.git","commit":"` + pin + `","languages":["go"]}`,
 	} {
 		full := filepath.Join(cfg, path)
 		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {

@@ -2,6 +2,8 @@
   "id": "untreated",
   "kind": "baseline",
   "needs_mcp": false,
+  "needs_isolated_config": false,
+  "executor": "isolated-home",
   "agents": [
     "claude-code",
     "codex",
