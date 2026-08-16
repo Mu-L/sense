@@ -154,7 +154,7 @@ func runSession(ctx context.Context, args []string, stdout, stderr io.Writer) in
 		return exitError
 	}
 
-	s, err := scenario.Load(f.scenario)
+	set, err := scenario.LoadPath(f.scenario)
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "sense-lab run: %v\n", err)
 		return exitError
@@ -175,13 +175,13 @@ func runSession(ctx context.Context, args []string, stdout, stderr io.Writer) in
 	}
 
 	_, _ = fmt.Fprintf(stdout, "scenario: %s\nrepo:     %s @ %.8s\nagent:    %s\nmodel:    %s\nwall:     %s\n\n",
-		s.Name, j.repo.ID, j.repo.Commit, j.agent.ID, j.model.ID, f.wall)
+		set.Scenario.Name, j.repo.ID, j.repo.Commit, j.agent.ID, j.model.ID, f.wall)
 
 	m, err := run.Session(ctx, f.out, run.Spec{
 		Dir:   checkout,
 		Name:  j.agent.Binary,
 		Args:  append(slices.Clone(j.agent.HeadlessArgs), j.agent.ModelFlag, j.model.ID),
-		Stdin: s.Prompt(),
+		Stdin: set.Scenario.Prompt(),
 		Env:   j.agent.Env,
 		Wall:  f.wall,
 	})

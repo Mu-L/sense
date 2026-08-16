@@ -13,7 +13,12 @@ repo: discourse
 steps:
   - name: Map the contract
     prompt: Trace the resolution path.
-gold:
+`
+
+// The gold is its own file now, which is the whole point of the split: a
+// corrected row costs a rescore rather than a re-run.
+const scoredGold = `discriminator: dependents
+rows:
   - id: d:one
     group: dependents
     relation: "app/models/category.rb:1083 the entry point every lookup bottoms out in"
@@ -25,17 +30,32 @@ gold:
     relation: "app/models/category.rb:1 the class itself"
 `
 
-const uncitableScenario = `
-name: vague
-repo: discourse
+const scoredRubric = `audience: An AI coding agent about to rework this class.
 steps:
-  - name: Only
-    prompt: Find it.
-gold:
+  - name: Map the contract
+    criteria:
+      quality:
+        weight: 1.0
+        question: Is the path traced?
+`
+
+// scoredFile writes the scored scenario as a three-file set.
+func scoredFile(t *testing.T) string {
+	t.Helper()
+	return scenarioSet(t, scoredScenario, scoredGold, scoredRubric)
+}
+
+// A gold row nothing could ever match: it becomes a permanent miss that looks
+// exactly like an arm failing to find the place.
+func uncitableFile(t *testing.T) string {
+	t.Helper()
+	return scenarioSet(t, scoredScenario, `discriminator: dependents
+rows:
   - id: d:vague
     group: dependents
     relation: "somewhere in the search code"
-`
+`, scoredRubric)
+}
 
 // recordedRun writes a run directory the way `sense-lab run` leaves one, with
 // the given assistant text as the captured stream.
@@ -60,7 +80,7 @@ func TestScoreReportsTheNumberAndPassesAtTheFloor(t *testing.T) {
 	run := recordedRun(t, "Found app/models/category.rb:1083 and lib/tasks/search.rake:32.")
 
 	code, stdout, stderr := dispatch(t, "score",
-		"-scenario", scenarioFile(t, scoredScenario), "-run", run)
+		"-scenario", scoredFile(t), "-run", run)
 
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0 (stderr: %s)", code, stderr)
@@ -80,7 +100,7 @@ func TestScoreExitsNonZeroBelowTheFloor(t *testing.T) {
 	// 1 of 2 is exactly 0.50, which passes a 0.50 floor: the floor is
 	// inclusive. Raise it so this run is genuinely below.
 	code, stdout, _ := dispatch(t, "score",
-		"-scenario", scenarioFile(t, scoredScenario), "-run", run, "-floor", "0.75")
+		"-scenario", scoredFile(t), "-run", run, "-floor", "0.75")
 
 	// Its own code, distinct from "could not run at all": a run that scored and
 	// came up short is a result a campaign can bank.
@@ -101,7 +121,7 @@ func TestScoreCountsOnlyTheNamedGroup(t *testing.T) {
 	run := recordedRun(t, "Found app/models/category.rb:1083 and app/models/category.rb:1 too.")
 
 	_, stdout, _ := dispatch(t, "score",
-		"-scenario", scenarioFile(t, scoredScenario), "-run", run)
+		"-scenario", scoredFile(t), "-run", run)
 
 	if !strings.Contains(stdout, "cited      1 of 2") {
 		t.Errorf("the dependents group should have 2 rows and 1 hit:\n%s", stdout)
@@ -128,7 +148,7 @@ func TestATruncatedCaptureScoresProvisionalNotFailed(t *testing.T) {
 	// default floor this run passes, and the two orderings are
 	// indistinguishable — which is how the ordering went untested.
 	code, stdout, _ := dispatch(t, "score",
-		"-scenario", scenarioFile(t, scoredScenario), "-run", dir, "-floor", "0.75")
+		"-scenario", scoredFile(t), "-run", dir, "-floor", "0.75")
 
 	// The mark wins. Reported as a clean below-floor failure it is a claim
 	// about the agent, when the truth is a claim about the capture — which is
@@ -160,7 +180,7 @@ func TestACompleteCaptureCarriesNoProvisionalMark(t *testing.T) {
 	run := recordedRun(t, "Found app/models/category.rb:1083 and lib/tasks/search.rake:32.")
 
 	code, stdout, _ := dispatch(t, "score",
-		"-scenario", scenarioFile(t, scoredScenario), "-run", run)
+		"-scenario", scoredFile(t), "-run", run)
 
 	if code != 0 {
 		t.Errorf("exit = %d, want 0", code)
@@ -195,7 +215,7 @@ func TestTheRunnersOwnRecordMakesAScoreProvisional(t *testing.T) {
 			}
 
 			code, stdout, _ := dispatch(t, "score",
-				"-scenario", scenarioFile(t, scoredScenario), "-run", run)
+				"-scenario", scoredFile(t), "-run", run)
 
 			if code != tc.code {
 				t.Errorf("exit = %d, want %d", code, tc.code)
@@ -219,7 +239,7 @@ func TestNoRunRecordIsNotEvidenceOfAnything(t *testing.T) {
 	run := recordedRun(t, "Found app/models/category.rb:1083 and lib/tasks/search.rake:32.")
 
 	code, stdout, _ := dispatch(t, "score",
-		"-scenario", scenarioFile(t, scoredScenario), "-run", run)
+		"-scenario", scoredFile(t), "-run", run)
 
 	if code != 0 || strings.Contains(stdout, "PROVISIONAL") {
 		t.Errorf("exit = %d, output:\n%s", code, stdout)
@@ -235,7 +255,7 @@ func TestAnUnreadableRunRecordIsItselfProvisional(t *testing.T) {
 	}
 
 	code, stdout, _ := dispatch(t, "score",
-		"-scenario", scenarioFile(t, scoredScenario), "-run", run)
+		"-scenario", scoredFile(t), "-run", run)
 
 	if code != 6 {
 		t.Errorf("exit = %d, want 6", code)
@@ -246,7 +266,7 @@ func TestAnUnreadableRunRecordIsItselfProvisional(t *testing.T) {
 }
 
 func TestScoreRejectsWhatItCannotScore(t *testing.T) {
-	good := scenarioFile(t, scoredScenario)
+	good := scoredFile(t)
 	run := recordedRun(t, "nothing")
 
 	for _, tc := range []struct {
@@ -288,7 +308,7 @@ func TestScoreRejectsWhatItCannotScore(t *testing.T) {
 			// permanent miss, deflating the score in the direction that makes
 			// a real arm look weak.
 			name: "a gold row with no location", wantCode: 1,
-			args: []string{"-scenario", scenarioFile(t, uncitableScenario), "-run", run},
+			args: []string{"-scenario", uncitableFile(t), "-run", run},
 			want: "nothing could ever match it",
 		},
 	} {
@@ -310,5 +330,42 @@ func TestScoreHelpIsNotReportedAsAnError(t *testing.T) {
 
 	if strings.Contains(stderr, "sense-lab score:") {
 		t.Errorf("asking for help produced an error message:\n%s", stderr)
+	}
+}
+
+// The discriminator decides the headline number, so it has to decide which
+// group is scored. It was declared, validated and then ignored: -group
+// defaulted to a hardcoded "dependents", so a gold file naming a different
+// discriminator was silently scored on the wrong rows — the exact failure the
+// field was added to end, with a YAML key in front of it.
+func TestTheScoredGroupComesFromTheGoldFilesOwnDiscriminator(t *testing.T) {
+	// Same rows, but the gold declares CONTRACT as the discriminator. The
+	// contract group has one row and the answer cites it, so scoring the
+	// declared group gives 1 of 1 and scoring the hardcoded one gives 1 of 2.
+	set := scenarioSet(t, scoredScenario,
+		strings.Replace(scoredGold, "discriminator: dependents", "discriminator: contract", 1),
+		scoredRubric)
+	run := recordedRun(t, "Found app/models/category.rb:1083 and app/models/category.rb:1 too.")
+
+	_, stdout, _ := dispatch(t, "score", "-scenario", set, "-run", run)
+
+	if !strings.Contains(stdout, "cited      1 of 1") {
+		t.Errorf("the declared discriminator was not the group scored:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "contract") {
+		t.Errorf("the report does not name the group it scored:\n%s", stdout)
+	}
+}
+
+// And the flag still wins, because a rescore of one group is how a gold
+// correction is checked without touching the file.
+func TestNamingAGroupExplicitlyOverridesTheDiscriminator(t *testing.T) {
+	run := recordedRun(t, "Found app/models/category.rb:1 only.")
+
+	_, stdout, _ := dispatch(t, "score",
+		"-scenario", scoredFile(t), "-run", run, "-group", "contract")
+
+	if !strings.Contains(stdout, "cited      1 of 1") {
+		t.Errorf("-group did not override the discriminator:\n%s", stdout)
 	}
 }

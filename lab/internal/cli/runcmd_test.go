@@ -113,13 +113,48 @@ func fakeAgent(t *testing.T, exitCode string, extra string) string {
 	return path
 }
 
+// scenarioFile writes a scenario AND the gold and rubric it needs, and returns
+// the scenario's path. A scenario is three files now; a test that wrote one
+// would be testing a set that cannot exist.
 func scenarioFile(t *testing.T, body string) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "scenario.yaml")
-	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
-		t.Fatal(err)
+	return scenarioSet(t, body, defaultGold, defaultRubric)
+}
+
+const defaultGold = `discriminator: dependents
+rows:
+  - id: d:one
+    group: dependents
+    relation: "app/models/category.rb:1083 the entry point"
+`
+
+const defaultRubric = `audience: An AI coding agent about to rework this class.
+steps:
+  - name: one
+    criteria:
+      quality:
+        weight: 1.0
+        question: Is it any good?
+  - name: two
+    criteria:
+      quality:
+        weight: 1.0
+        question: Is it any good?
+`
+
+func scenarioSet(t *testing.T, scenario, gold, rubric string) string {
+	t.Helper()
+	dir := t.TempDir()
+	for name, body := range map[string]string{
+		"scenario.yaml":        scenario,
+		"scenario.gold.yaml":   gold,
+		"scenario.rubric.yaml": rubric,
+	} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
 	}
-	return path
+	return filepath.Join(dir, "scenario.yaml")
 }
 
 func TestRunDrivesTheAgentAndLeavesARunDirectory(t *testing.T) {

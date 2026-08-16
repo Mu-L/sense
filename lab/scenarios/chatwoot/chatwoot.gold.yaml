@@ -1,0 +1,140 @@
+# The gold group carrying the margin: its delta is the headline number.
+# Named explicitly here because it used to be a convention held in prose.
+discriminator: dependents
+rows:
+  # Gold is the must-find audit of what depends on the conversation record. FOUR groups, of
+  # which only `dependents` is the discriminator; `contract`, `write-path` and `guards` are
+  # what BOTH arms are expected to reach - they dilute, they do not decide.
+  # TWO groups CARRIED BYTE-IDENTICAL FROM THE MINI-BENCH (do not touch either):
+  #   - `contract` (14, NON-SCORING anchors): the class file; the eight files of the
+  #     inbound-mail matching path (step 1's targets); and the five LINKS the thirteen
+  #     dependents' chains run through. The links are the obvious ring by construction -
+  #     they are what a name search returns - and they must NOT score, because scoring them
+  #     scores the search. Cycle 5 carried 18 contract rows including four association
+  #     declarations that one grep returns in a single command; those four are dropped, per
+  #     the cycle-5 read's own point that the contract half was burning wall in both arms
+  #     for nothing.
+  #   - `dependents` (13, THE DISCRIMINATOR): one row per FILE, across TWELVE distinct
+  #     directories in two trees (`app`, `enterprise`). Not one is on the matching path step
+  #     1 traces, and not one appears in the `contract` group.
+  #
+  # TWO groups ADDED BY THE EXPANSION, both NON-SCORING, neither ever faced by a baseline:
+  #   - `write-path` (6, step 3): the inline creation point, the two routes the record's
+  #     appearance and change hooks fan out along, one listener on each route, and the
+  #     teardown. One row per FILE and no file shared with any other group. Five of the six
+  #     are NOT in the shown `sense_blast` payload; their reachability was probed separately
+  #     and is recorded in the header. They are non-scoring precisely because that asymmetry
+  #     would otherwise be untested gold.
+  #   - `guards` (5, step 5): identifier-to-record-or-refusal on a dashboard route and on a
+  #     public one, the may-this-caller-see-it decision, the reply-window check, and the
+  #     re-read of state by a background job that has been holding a record. One row per
+  #     FILE, none shared.
+  #   EVERY ONE OF THE ELEVEN was opened in the clone this cycle and its line quoted back
+  #   with the `def` it sits inside - `create_new_conversation`, `dispatch`, `dispatch`,
+  #   `conversation_created`, `conversation_created`, `perform`, `conversation`, `show?`,
+  #   `set_conversation`, `can_reply?`, `conversation_pending?`. No row is taken from the
+  #   cycle-4 .bak on trust and none from a script tally.
+  #
+  # THE PROPERTY THAT DEFINES THIS GROUP: the pinned line is separated from the record by at
+  # least one further link. Seven rows are `indirect_callers` in the shown payload, carrying
+  # `via` and `hops` (2 to 5). Six are `direct_callers` whose pinned line is a `super` or a
+  # subclass hook - the record's behaviour is extended from a module or a subclass, and the
+  # extension is what the rework moves under.
+  #
+  # HOW THE THIRTEEN WERE CHOSEN - the baseline's own record, not one run:
+  #   Rows the BASELINE has never cited in ANY cycle where they were gold, quoted from the
+  #   credit tables in results/loop/chatwoot/validate.md and the archived minibench reads:
+  #     d:contact-identify           neither in cycle 3, neither in cycle 4
+  #     d:contact-merge-api          neither in cycle 3, neither in cycle 4
+  #     d:facebook-builder           sense-only c4, neither c5
+  #     d:instagram-builder          sense-only c4, neither c5
+  #     d:messenger-scope-override   neither c4, neither c5
+  #     d:enterprise-sla-payload     sense-only c4, neither c5
+  #     d:enterprise-permission-override  neither c5
+  #     d:enterprise-update-params        neither c5
+  #   Those eight are the spine. Five more of the same shape complete the group:
+  #     d:contact-attachments, d:contact-conversations, d:assignment-endpoint - sense-only in
+  #       cycle 4, baseline-cited in cycle 5 off the leaked `.new(...conversation` sweep that
+  #       this draft removes. Kept, and named here as the rows most at risk if the leak is
+  #       not really what took them.
+  #     d:enterprise-record-mixin - same, and the cycle-5 route that took it was the
+  #       `prepend_mod_with|include_mod_with` grep, which cycle 5's ask invited by saying
+  #       "folded in from elsewhere". This draft says nothing about how a link is spelled.
+  #     d:captain-search - NEW this cycle, never benched. A fourth caller of the same access
+  #       link from a third tree.
+  #   SAY WHAT IT COSTS IF THAT JUDGEMENT IS WRONG: if all five behave as they did in cycle
+  #   5 rather than cycle 4, the baseline sits at 5 of 13 = 0.38 - still under the bar's
+  #   ceiling, and ours would need 0.88 to clear +0.50. If they behave as in cycle 4 the
+  #   baseline sits near 0.
+  #
+  # WHAT IT IS NOT: token-darkness. Eleven of these thirteen files write the record's name
+  # somewhere and they are all gold anyway; two (the contact-identify action and the
+  # contact-merge endpoint) do not, and they are gold for their hop distance, not for their
+  # silence. The group is selected for chain length and nothing else. Cycle 3 lost the cell
+  # by wording the ask as if darkness and distance were the same thing.
+  #
+  # WHAT WAS CONSIDERED AND REJECTED, so the next cycle does not re-walk it. Each was opened
+  # and read this cycle:
+  #   app/channels/room_channel.rb:50 - payload says `via Contact, hops 2`. Opened it: the
+  #     file is presence tracking, touches ContactInbox / OnlineStatusTracker, and no chain
+  #     from it reaches the record. FALSE EDGE, not gold.
+  #   app/controllers/api/v1/accounts/agent_bots_controller.rb:6 - payload says `via AgentBot,
+  #     hops 2`. Opened it: CRUD on agent bots, avatar job, nothing conversational.
+  #     FALSE EDGE, not gold.
+  #   app/controllers/api/v1/accounts/inbox_csat_templates_controller.rb:28 - payload says
+  #     `via CsatTemplateUtilityAnalysisService#perform, hops 3`. Opened both: the controller
+  #     hands to CsatTemplateUtilityAnalysisService, which constructs
+  #     Captain::CsatUtilityAnalysisService and touches no conversation. FALSE EDGE, and
+  #     cycle 5 rejected the same edge independently.
+  #   enterprise/lib/captain/tools/update_priority_tool.rb:36 - `[nil] + Conversation.priorities.keys`
+  #     reads the record's own enum head-on. Zero links out; it would be a near row in a
+  #     group built on distance, so it is left out rather than diluting.
+  #   enterprise/app/services/captain/llm/faq_generator_service.rb:30 - opened it: builds an
+  #     LLM system prompt from a Document, no conversation anywhere. FALSE EDGE.
+  #   app/builders/notification_builder.rb:49 `ConversationPolicy.new(...)` - a real hand-off
+  #     and a real chain, but the baseline CITED it in cycle 1 and again in cycle 4
+  #     (`d:notification-gate`, baseline-only). A row the grep route has taken twice is a
+  #     gift, so it is out.
+  #   app/models/concerns/push_data_helper.rb - textbook hand-off on the merits, but the
+  #     payload is cap-limited at 60 of 89 direct callers and this file is one of the ones
+  #     cut (`direct_callers_by_area` reports `app/models/concerns: 3`, two are listed).
+  #     NOT GOLD - a row the payload cannot serve can only ever score zero.
+  # DO NOT TAKE A CREDIT FROM A SCRIPT TALLY: these seven are what a tally would have taken.
+  - {id: contract-model, group: contract, match: [app/models/conversation.rb], relation: "app/models/conversation.rb:54 `class Conversation < ApplicationRecord` - the contract under rework; the lines below it mix in the concerns its behaviour is assembled from"}
+  - {id: 'c:application-mailbox', group: contract, match: [app/mailboxes/application_mailbox.rb], relation: "app/mailboxes/application_mailbox.rb:10 `routing(` - the front door; the lambda it opens decides an arriving mail belongs to this path at all"}
+  - {id: 'c:reply-mailbox', group: contract, match: [app/mailboxes/reply_mailbox.rb], relation: "app/mailboxes/reply_mailbox.rb:24 `@conversation = Mailbox::ConversationFinder.new(mail).find` - inside `ReplyMailbox#find_conversation`, the before_processing hook every inbound reply enters through"}
+  - {id: 'c:finder', group: contract, match: [app/services/mailbox/conversation_finder.rb], relation: "app/services/mailbox/conversation_finder.rb:15 `@strategies.each do |strategy_class|` - inside `Mailbox::ConversationFinder#find`, the piece that runs the candidate matches in the declared order and returns the first that hits"}
+  - {id: 'c:base-strategy', group: contract, match: [app/services/mailbox/conversation_finder_strategies/base_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/base_strategy.rb:12 `def find`, raising NotImplementedError at :13 - the contract every match attempt implements; the comment at :10 declares the return type as the record or nil"}
+  - {id: 'c:receiver-uuid', group: contract, match: [app/services/mailbox/conversation_finder_strategies/receiver_uuid_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/receiver_uuid_strategy.rb:9 `Conversation.find_by(uuid: uuid)` - inside `#find`, the first attempt; it keys off the uuid embedded in the reply-to address"}
+  - {id: 'c:in-reply-to', group: contract, match: [app/services/mailbox/conversation_finder_strategies/in_reply_to_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/in_reply_to_strategy.rb:23 `conversation = Conversation.find_by(uuid: uuid)` - inside `#find`, the second attempt; it keys off the In-Reply-To header and falls back to the record hanging off a matched message"}
+  - {id: 'c:references', group: contract, match: [app/services/mailbox/conversation_finder_strategies/references_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/references_strategy.rb:41 `conversation = Conversation.find_by(uuid: uuid, inbox_id: @channel.inbox.id)` - inside `#find_conversation_from_reference`, the third attempt; it walks the References header and scopes the match to the channel's inbox"}
+  - {id: 'c:new-conversation', group: contract, match: [app/services/mailbox/conversation_finder_strategies/new_conversation_strategy.rb], relation: "app/services/mailbox/conversation_finder_strategies/new_conversation_strategy.rb:57 `@conversation = ::Conversation.new(` - inside `#build_conversation`, the fallback that PREPARES an unsaved record; the reply mailbox is what makes it permanent"}
+  - {id: 'c:link-permission', group: contract, match: [app/services/conversations/permission_filter_service.rb], relation: "app/services/conversations/permission_filter_service.rb:19 `conversations.where(inbox: user.inboxes.where(account_id: account.id))` - inside `Conversations::PermissionFilterService#accessible_conversations`, the LINK four dependents' chains run through; the relation arrives as a constructor argument and this narrows it to the inboxes the agent may see. What a name search returns, so non-scoring"}
+  - {id: 'c:link-assignment', group: contract, match: [app/services/conversations/assignment_service.rb], relation: "app/services/conversations/assignment_service.rb:17 `conversation.assignee = assignee` - inside `Conversations::AssignmentService#assign_agent`, the LINK d:assignment-endpoint's chain runs through; this service is what writes the assignee and saves the record. Non-scoring"}
+  - {id: 'c:link-merge', group: contract, match: [app/actions/contact_merge_action.rb], relation: "app/actions/contact_merge_action.rb:34 `Conversation.where(contact_id: @mergee_contact.id).update(contact_id: @base_contact.id)` - inside `ContactMergeAction#merge_conversations`, the LINK at the far end of both contact-side chains; it is the only line in either chain that names the record. Non-scoring"}
+  - {id: 'c:link-presenter', group: contract, match: [app/presenters/conversations/event_data_presenter.rb], relation: "app/presenters/conversations/event_data_presenter.rb:8 `id: display_id,` - inside `Conversations::EventDataPresenter#push_data`; the class is a SimpleDelegator, so every key of the broadcast payload is a bare method call handed straight through to the wrapped record. The LINK under d:enterprise-sla-payload, and what a token grep returns, so non-scoring"}
+  - {id: 'c:link-update-params', group: contract, match: [app/controllers/api/v1/accounts/conversations_controller.rb], relation: "app/controllers/api/v1/accounts/conversations_controller.rb:47 `@conversation.update!(permitted_update_params)` - inside `#update`, the LINK under d:enterprise-update-params; this is the write the paid-edition module widens from underneath, and it is the loudest conversation file in the tree, so non-scoring"}
+  - {id: 'd:contact-identify', group: dependents, match: [app/actions/contact_identify_action.rb], relation: "app/actions/contact_identify_action.rb:121 `ContactMergeAction.new(` - inside `#merge_contact`, reached from `#process_contact_merge` at :50, itself reached from three sibling guards at :33, :39 and :46; the merge action's `#merge_conversations` is what rewrites the records' contact_id. Payload rows: {hops 3,4,5}. Nothing in this file writes the record's name"}
+  - {id: 'd:contact-merge-api', group: dependents, match: [app/controllers/api/v1/accounts/actions/contact_merges_controller.rb], relation: "app/controllers/api/v1/accounts/actions/contact_merges_controller.rb:6 `contact_merge_action = ContactMergeAction.new(` - inside `#create`, the dashboard endpoint for merging two customers; the record rewrite is two links further down, in the action's `#merge_conversations`. Payload row: {via ContactMergeAction#perform, hops 3}"}
+  - {id: 'd:facebook-builder', group: dependents, match: [app/builders/messages/facebook/message_builder.rb], relation: "app/builders/messages/facebook/message_builder.rb:56 `@conversation ||= set_conversation_based_on_inbox_config` - inside `#conversation`, the memo every inbound message on this channel goes through; the routine it calls at :59 branches on the inbox's single-thread setting and only its branches touch the record. Payload row: {via #set_conversation_based_on_inbox_config, hops 2}"}
+  - {id: 'd:instagram-builder', group: dependents, match: [app/builders/messages/instagram/base_message_builder.rb], relation: "app/builders/messages/instagram/base_message_builder.rb:60 `@conversation ||= set_conversation_based_on_inbox_config` - inside `#conversation`; the chain runs :60 -> `#set_conversation_based_on_inbox_config` at :63 -> `#find_conversation_scope` at :71 or `#build_conversation`, and only the last link queries the record. Payload row: {via #set_conversation_based_on_inbox_config, hops 3}"}
+  - {id: 'd:messenger-scope-override', group: dependents, match: [app/builders/messages/instagram/messenger/message_builder.rb], relation: "app/builders/messages/instagram/messenger/message_builder.rb:25 `def find_conversation_scope` - the subclass hook the parent's `#set_conversation_based_on_inbox_config` calls; the Messenger variant narrows the match to instagram_direct_message threads at :27, so the parent's behaviour changes here without the parent naming this file"}
+  - {id: 'd:contact-attachments', group: dependents, match: [app/controllers/api/v1/accounts/contacts/attachments_controller.rb], relation: "app/controllers/api/v1/accounts/contacts/attachments_controller.rb:5 `conversations = Conversations::PermissionFilterService.new(` - inside `#index`; which of a customer's attachments an agent may see is decided inside the service, and :11 feeds the filtered set into the attachment query. Payload row: {via Conversations::PermissionFilterService, hops 2}"}
+  - {id: 'd:contact-conversations', group: dependents, match: [app/controllers/api/v1/accounts/contacts/conversations_controller.rb], relation: "app/controllers/api/v1/accounts/contacts/conversations_controller.rb:9 `conversations = Conversations::PermissionFilterService.new(` - inside `#index`; the endpoint builds a candidate set at :4 and then delegates the whole access decision, ordering the survivors by the record's last_activity_at at :15. Payload row: {via Conversations::PermissionFilterService, hops 2}"}
+  - {id: 'd:assignment-endpoint', group: dependents, match: [app/controllers/api/v1/accounts/conversations/assignments_controller.rb], relation: "app/controllers/api/v1/accounts/conversations/assignments_controller.rb:16 `resource = Conversations::AssignmentService.new(` - inside `#set_agent`; `@conversation` arrives from a parent controller's before_action and the whole assignment write happens one link down, inside the service. Payload row: {via Conversations::AssignmentService, hops 2}"}
+  - {id: 'd:captain-search', group: dependents, match: [enterprise/app/services/captain/tools/copilot/search_conversations_service.rb], relation: "enterprise/app/services/captain/tools/copilot/search_conversations_service.rb:52 `Conversations::PermissionFilterService.new(` - inside `#permissible_conversations`, the assistant tool's own hand-off to the same access-decision link from a third tree; `#get_conversations` at :35 starts from whatever the service hands back and narrows it further"}
+  - {id: 'd:enterprise-permission-override', group: dependents, match: [enterprise/app/services/enterprise/conversations/permission_filter_service.rb], relation: "enterprise/app/services/enterprise/conversations/permission_filter_service.rb:5 `super` - inside `#perform` of a module folded over the access-decision link; :3 diverts to a custom-role branch and this line hands every other case back down the chain, so which records an agent sees is decided across two files that never call each other by name"}
+  - {id: 'd:enterprise-update-params', group: dependents, match: [enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb], relation: "enterprise/app/controllers/enterprise/api/v1/accounts/conversations_controller.rb:19 `super.merge(params.permit(:sla_policy_id))` - inside `#permitted_update_params` of a module folded into the dashboard controller; the write itself is `super`'s, one link down, and this line widens what may be written without touching the record"}
+  - {id: 'd:enterprise-record-mixin', group: dependents, match: [enterprise/app/models/enterprise/conversation.rb], relation: "enterprise/app/models/enterprise/conversation.rb:19 `super || call_attributes_changed?` - inside `#allowed_keys?` of a module folded into the record itself; with `#list_of_keys` at :13 it OVERRIDES two of the record's own methods through `super`, so the rebroadcast rules are decided by a hand-off back up the ancestor chain"}
+  - {id: 'd:enterprise-sla-payload', group: dependents, match: [enterprise/app/presenters/enterprise/conversations/event_data_presenter.rb], relation: "enterprise/app/presenters/enterprise/conversations/event_data_presenter.rb:4 `super.merge(` - inside `#push_data` of a module folded over the delegating presenter; `super` hands the whole payload out to the delegator, which is itself a delegator onto the record, and three more fields are merged onto the result at :5-:7"}
+  - {id: 'w:builder', group: write-path, match: [app/builders/conversation_builder.rb], relation: "app/builders/conversation_builder.rb:17 `::Conversation.create!(conversation_params)` - inside `ConversationBuilder#create_new_conversation`; the point where the system, having first tried to reuse one at line 5, brings a new record into existence INLINE in the request that triggered it"}
+  - {id: 'w:sync-dispatch', group: write-path, match: [app/dispatchers/sync_dispatcher.rb], relation: "app/dispatchers/sync_dispatcher.rb:4 `publish(event_object.method_name, event_object)` - inside `SyncDispatcher#dispatch`; route ONE of the two the record's creation and update hooks fan out along - it publishes in the caller's own thread, so the listeners named at line 8 run INLINE and are handed the record OBJECT itself"}
+  - {id: 'w:async-dispatch', group: write-path, match: [app/dispatchers/async_dispatcher.rb], relation: "app/dispatchers/async_dispatcher.rb:3 `EventDispatcherJob.perform_later(event_name, timestamp, data)` - inside `AsyncDispatcher#dispatch`; route TWO - the same event is enqueued, so the listeners further down the file run LATER in the background and are handed the record through a serialized job argument, which is what a contract rework has to keep round-trippable"}
+  - {id: 'w:action-cable', group: write-path, match: [app/listeners/action_cable_listener.rb], relation: "app/listeners/action_cable_listener.rb:69 `broadcast(account, tokens, CONVERSATION_CREATED, conversation.push_event_data)` - inside `#conversation_created`; the INLINE (sync-route) listener, which turns the freshly created record into the websocket payload the dashboard renders"}
+  - {id: 'w:webhook', group: write-path, match: [app/listeners/webhook_listener.rb], relation: "app/listeners/webhook_listener.rb:21 `payload = conversation.webhook_data.merge(event: __method__.to_s)` - inside `#conversation_created`; the BACKGROUND (async-route) listener, which re-reads the record for the outbound webhook body before handing it on to be delivered"}
+  - {id: 'w:orphan-teardown', group: write-path, match: [app/services/internal/remove_orphan_conversations_service.rb], relation: "app/services/internal/remove_orphan_conversations_service.rb:15 `Conversation.where(id: conversation_ids).destroy_all` - inside `#perform`; the removal path, run in batches over the query built lower in the file, and `destroy_all` rather than `delete_all` is what still fires the record's own before_destroy and after_destroy_commit hooks"}
+  - {id: 'g:conversation-scope', group: guards, match: [app/controllers/api/v1/accounts/conversations/base_controller.rb], relation: "app/controllers/api/v1/accounts/conversations/base_controller.rb:7 `@conversation ||= Current.account.conversations.find_by!(display_id: params[:conversation_id])` - inside `#conversation`, a before_action; an outside display id becomes a record scoped to the current account or a 404, and the next line authorizes it - this is what stops every nested endpoint acting on another account's record"}
+  - {id: 'g:policy', group: guards, match: [app/policies/conversation_policy.rb], relation: "app/policies/conversation_policy.rb:11 `administrator? || agent_bot? || agent_can_view_conversation?` - inside `ConversationPolicy#show?`; the may-this-caller-see-this-one decision, resolved further down the file from the record's own inbox and team"}
+  - {id: 'g:csat-uuid', group: guards, match: [app/controllers/public/api/v1/csat_survey_controller.rb], relation: "app/controllers/public/api/v1/csat_survey_controller.rb:18 `@conversation = Conversation.find_by!(uuid: params[:id])` - inside `#set_conversation`, a before_action on a PUBLIC controller; a customer-supplied uuid becomes a record or a 404 before anything reaches through it for the survey message"}
+  - {id: 'g:message-window', group: guards, match: [app/services/conversations/message_window_service.rb], relation: "app/services/conversations/message_window_service.rb:10 `return true if messaging_window.blank?` - inside `#can_reply?`; the still-actionable check - whether the channel's reply window has closed on this record - decided from the channel type and the last incoming message further down the file"}
+  - {id: 'g:captain-stale', group: guards, match: [enterprise/app/jobs/captain/conversation/response_builder_job.rb], relation: "enterprise/app/jobs/captain/conversation/response_builder_job.rb:215 `status = Conversation.uncached { Conversation.where(id: @conversation.id).pick(:status) }` - inside `#conversation_pending?`; a background job that has been holding a record re-reads its status straight from the database, bypassing the query cache, because the state may have moved on since it was picked up"}

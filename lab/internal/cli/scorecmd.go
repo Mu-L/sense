@@ -14,13 +14,15 @@ import (
 	"github.com/luuuc/sense/lab/internal/transcript"
 )
 
-// The skeleton scores one gold group against one floor. The group and the floor
-// are constants here for the same reason the run target is: cycle 04 owns the
-// verdict vocabulary, and cycle 02 owns the real matcher.
-const (
-	defaultGroup = "dependents"
-	defaultFloor = 0.50
-)
+// The skeleton scores one gold group against one floor. The floor is a constant
+// here for the same reason the run target is: cycle 04 owns the verdict
+// vocabulary, and cycle 02 owns the real matcher.
+//
+// The GROUP is not a constant. It defaults to the scenario's own declared
+// discriminator, because a hardcoded "dependents" here would mean a gold file
+// naming a different discriminator was silently ignored — the exact failure the
+// field was added to end, with a YAML key in front of it.
+const defaultFloor = 0.50
 
 type scoreFlags struct {
 	scenario string
@@ -35,7 +37,7 @@ func parseScoreFlags(args []string, stderr io.Writer) (scoreFlags, error) {
 	fs.SetOutput(stderr)
 	fs.StringVar(&f.scenario, "scenario", "", "path to the scenario file (required)")
 	fs.StringVar(&f.run, "run", "", "path to the run directory to score (required)")
-	fs.StringVar(&f.group, "group", defaultGroup, "gold group to score")
+	fs.StringVar(&f.group, "group", "", "gold group to score (default: the scenario's discriminator)")
 	fs.Float64Var(&f.floor, "floor", defaultFloor, "recall at or above which the run passes")
 	if err := fs.Parse(args); err != nil {
 		return f, err
@@ -63,19 +65,23 @@ func scoreRun(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 
-	s, err := scenario.Load(f.scenario)
+	set, err := scenario.LoadPath(f.scenario)
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "sense-lab score: %v\n", err)
 		return exitError
 	}
 
-	rows, err := goldRows(s, f.group)
+	group := f.group
+	if group == "" {
+		group = set.Gold.Discriminator
+	}
+	rows, err := goldRows(set, group)
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "sense-lab score: %v\n", err)
 		return exitError
 	}
 	if len(rows) == 0 {
-		_, _ = fmt.Fprintf(stderr, "sense-lab score: the scenario has no gold group %q\n", f.group)
+		_, _ = fmt.Fprintf(stderr, "sense-lab score: the scenario has no gold group %q\n", group)
 		return exitError
 	}
 
@@ -86,10 +92,10 @@ func scoreRun(args []string, stdout, stderr io.Writer) int {
 	}
 	src := scoredRun{tr: tr, why: runWasNotCompleted(f.run)}
 
-	_, _ = fmt.Fprintf(stdout, "repo       %s\nscenario   %s\n", s.Repo, s.Name)
+	_, _ = fmt.Fprintf(stdout, "repo       %s\nscenario   %s\n", set.Scenario.Repo, set.Scenario.Name)
 	// The transcript goes in, not its text, so the provisional mark travels
 	// with the number rather than depending on this caller to copy it.
-	result := score.Group(f.group, rows, src, f.floor)
+	result := score.Group(group, rows, src, f.floor)
 	_, _ = fmt.Fprint(stdout, result)
 
 	// A provisional number is not a verdict either way, so it never reports as
@@ -147,8 +153,8 @@ func runWasNotCompleted(dir string) string {
 }
 
 // goldRows converts one gold group into the scorer's rows.
-func goldRows(s scenario.Scenario, group string) ([]score.Row, error) {
-	gold, err := s.GoldGroup(group)
+func goldRows(set scenario.Set, group string) ([]score.Row, error) {
+	gold, err := set.Gold.Group(group)
 	if err != nil {
 		return nil, err
 	}
