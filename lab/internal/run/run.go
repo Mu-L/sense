@@ -52,10 +52,18 @@ type Spec struct {
 	// their prompt this way; a prompt beginning with a dash is read as an
 	// option when passed as an argument, which has already killed a spawn.
 	Stdin string
-	// Env is added to the parent environment, as KEY=VALUE. There is no
-	// isolation this cycle: the session inherits the host environment and this
-	// only adds to it. Cycle 03 replaces the whole of that.
+	// Env is the session's complete environment, as KEY=VALUE. It is complete
+	// rather than additive: a measured run is handed a scrubbed environment by
+	// lab/internal/isolate and inherits nothing it was not given. A caller that
+	// genuinely wants the host's environment composes it at the call site,
+	// where the decision is visible.
+	//
+	// A nil Env leaves the session with the parent's environment, which is only
+	// ever right for a test.
 	Env []string
+	// Arm is which side of a cell this session is, recorded so a run can say so
+	// without anyone re-deriving it from a directory name.
+	Arm string
 	// Wall is how long the process may take. It is part of run identity and is
 	// never raised to rescue a stalled arm.
 	Wall time.Duration
@@ -81,6 +89,31 @@ type Meta struct {
 	// real wall and no output is not a result, it is a broken spawn, and this
 	// is what makes the difference visible without reading transcripts.
 	StdoutBytes int64 `json:"stdout_bytes"`
+
+	// Arm, Home and Path record the isolation the session actually ran under.
+	//
+	// Path is here because it is one of the six channels Sense reaches an agent
+	// through, and it is the one that differs by arm. Recording it is what makes
+	// "the baseline arm could not reach the Sense binary" a fact on disk rather
+	// than a claim about what the code intended. Home is recorded beside it so
+	// a run says which disposable HOME it saw.
+	//
+	// Nothing else from the environment is recorded: it carries credentials.
+	Arm  string `json:"arm,omitempty"`
+	Home string `json:"home,omitempty"`
+	Path string `json:"path,omitempty"`
+}
+
+// envValue reads one KEY=VALUE out of an environment slice. The last entry
+// wins, which is what exec does with a duplicate.
+func envValue(env []string, key string) string {
+	value := ""
+	for _, kv := range env {
+		if name, v, ok := strings.Cut(kv, "="); ok && name == key {
+			value = v
+		}
+	}
+	return value
 }
 
 // exitCodeKilled is what Meta records when the process was killed from outside.
@@ -144,6 +177,9 @@ func Session(ctx context.Context, dir string, s Spec) (Meta, error) {
 		Command:     s.Name,
 		Args:        s.Args,
 		StartedAt:   started.UTC().Format(time.RFC3339),
+		Arm:         s.Arm,
+		Home:        envValue(s.Env, "HOME"),
+		Path:        envValue(s.Env, "PATH"),
 	}
 	if err := writeMeta(dir, m); err != nil {
 		return Meta{}, err
@@ -213,9 +249,7 @@ func spawn(ctx context.Context, s Spec, stdout, stderr *os.File) (code int, ende
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	cmd.Stdin = strings.NewReader(s.Stdin)
-	if len(s.Env) > 0 {
-		cmd.Env = append(os.Environ(), s.Env...)
-	}
+	cmd.Env = s.Env
 
 	// Kill the whole process group, not just the child. An agent CLI spawns its
 	// own children, and killing only the parent leaves them holding the pipe:
