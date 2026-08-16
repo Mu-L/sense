@@ -182,8 +182,12 @@ func runSession(ctx context.Context, args []string, stdout, stderr io.Writer) in
 		Name:  j.agent.Binary,
 		Args:  append(slices.Clone(j.agent.HeadlessArgs), j.agent.ModelFlag, j.model.ID),
 		Stdin: set.Scenario.Prompt(),
-		Env:   j.agent.Env,
-		Wall:  f.wall,
+		// The host's environment plus the agent's own, composed here rather
+		// than inside run.Session so the inheritance is a visible decision at
+		// the edge. It is still the wrong environment for a measured run, and
+		// 03-04 replaces this call site with a prepared isolate.Env.
+		Env:  append(os.Environ(), j.agent.Env...),
+		Wall: f.wall,
 	})
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "sense-lab run: %v\n", err)
