@@ -64,6 +64,9 @@ type Spec struct {
 	// Arm is which side of a cell this session is, recorded so a run can say so
 	// without anyone re-deriving it from a directory name.
 	Arm string
+	// SenseSetup is what the subject's setup wrote into the repository, as path
+	// to content hash. Empty for the baseline arm, which is the point.
+	SenseSetup map[string]string
 	// Wall is how long the process may take. It is part of run identity and is
 	// never raised to rescue a stalled arm.
 	Wall time.Duration
@@ -102,6 +105,15 @@ type Meta struct {
 	Arm  string `json:"arm,omitempty"`
 	Home string `json:"home,omitempty"`
 	Path string `json:"path,omitempty"`
+
+	// SenseSetup is what the subject's setup wrote into the repository, as path
+	// to content hash.
+	//
+	// A change to `sense setup` changes what the sense arm sees, which changes
+	// the measurement, and nothing about that is visible in a result months
+	// later. Recorded per run, two runs far apart are comparable on what was
+	// installed rather than on an assumption that it was the same.
+	SenseSetup map[string]string `json:"sense_setup,omitempty"`
 }
 
 // envValue reads one KEY=VALUE out of an environment slice. The last entry
@@ -178,6 +190,7 @@ func Session(ctx context.Context, dir string, s Spec) (Meta, error) {
 		Args:        s.Args,
 		StartedAt:   started.UTC().Format(time.RFC3339),
 		Arm:         s.Arm,
+		SenseSetup:  s.SenseSetup,
 		Home:        envValue(s.Env, "HOME"),
 		Path:        envValue(s.Env, "PATH"),
 	}
