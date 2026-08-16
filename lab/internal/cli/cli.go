@@ -33,6 +33,7 @@ Commands:
   run       Run one scenario against one repository
   score     Score a recorded run against a scenario's gold
   validate  Audit a scenario's gold and report what would be quarantined
+  rescore   Recompute every recorded score and name the cause of each difference
   version   Print version
 `
 
@@ -91,6 +92,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return scoreRun(args[1:], stdout, stderr)
 	case "validate":
 		return validateGold(args[1:], stdout, stderr)
+	case "rescore":
+		return rescoreRuns(args[1:], stdout, stderr)
 	case "version":
 		_, _ = fmt.Fprintln(stdout, Version)
 		return exitOK

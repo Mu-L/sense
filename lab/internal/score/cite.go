@@ -156,6 +156,7 @@ func (s *scanner) token(kind, t string) {
 	case "path":
 		body, line := splitLine(t)
 		s.lastPath = body
+		s.pinPrecedingSymbol(body, line)
 		s.out = append(s.out, Cite{Path: body, Line: line})
 	case "sym":
 		body, line := splitLine(t)
@@ -219,6 +220,37 @@ func (s *scanner) elidedPath(t string) {
 	if hasTail(s.lastPath, trimEllipsis(body)) {
 		s.out = append(s.out, Cite{Path: s.lastPath, Line: line})
 	}
+}
+
+// pinPrecedingSymbol gives a line to the symbol this path belongs to.
+//
+// The winning question in this bench asks the agent to "name the routine the
+// dependency is inside, give its file:line", and the answer to it is written as
+// one item in two tokens:
+//
+//	`SeedData::Categories#create_category`, `lib/seed_data/categories.rb:116`
+//
+// Read as two citations the routine is lost: the symbol carries no line, so it
+// can never match, and the path is held to the gold line. Measured against the
+// recorded corpus that cost 18 rows on one run alone, every one of them a case
+// where the arm named the right routine and pinned its definition line while
+// gold cites a use inside it.
+//
+// The pairing is CORROBORATED, exactly as an inherited file is: the symbol has
+// to name this path under Ruby's own rule. An unrelated constant next to an
+// unrelated path stays two citations, so this cannot merge things that merely
+// sit beside each other.
+func (s *scanner) pinPrecedingSymbol(path string, line int) {
+	i := len(s.out) - 1
+	if line == 0 || i < 0 {
+		return
+	}
+	prev := &s.out[i]
+	if prev.Symbol == "" || prev.Line != 0 || !symbolNamesPath(prev.Symbol, path) {
+		return
+	}
+	prev.Line = line
+	prev.Established = path
 }
 
 func (s *scanner) symbol(sym string, line int) {
