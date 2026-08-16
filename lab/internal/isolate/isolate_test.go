@@ -312,3 +312,52 @@ func readFile(t *testing.T, path string) string {
 	}
 	return string(b)
 }
+
+func TestTheSessionCannotSeeTheOperatorsOwnGuidanceFile(t *testing.T) {
+	// The seventh channel, and the one an environment variable does not close:
+	// the operator's ~/.claude/CLAUDE.md is loaded into every session, in both
+	// arms. A personal instruction of the "answer in under six lines" kind
+	// suppresses answer length in both, and answer length is what a richness
+	// floor and a recall count are measured on.
+	//
+	// The session is asked rather than told: it looks in its own HOME and says
+	// what it found. Setting CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 was measured
+	// against a real spawn and does not close this; only a disposable HOME does.
+	hostHome := t.TempDir()
+	guidance := filepath.Join(hostHome, ".claude", "CLAUDE.md")
+	if err := os.MkdirAll(filepath.Dir(guidance), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(guidance, []byte("answer in under six lines"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	env, err := isolate.Prepare(isolate.Spec{
+		Root:     runRoot(t),
+		HostPath: os.Getenv("PATH"),
+		Lookup:   nothingSet,
+	})
+	if err != nil {
+		t.Fatalf("Prepare: %v", err)
+	}
+	out := filepath.Join(t.TempDir(), "out")
+
+	if _, err := run.Session(context.Background(), out, run.Spec{
+		Dir:  env.Root,
+		Name: "/bin/sh",
+		Args: []string{"-c", `cat "$HOME/.claude/CLAUDE.md" 2>/dev/null || echo NOTHING`},
+		Env:  env.Environ,
+		Wall: 30 * time.Second,
+	}); err != nil {
+		t.Fatalf("Session: %v", err)
+	}
+
+	said := strings.TrimSpace(readFile(t, filepath.Join(out, "raw", "stdout")))
+	if said != "NOTHING" {
+		t.Errorf("the session read %q from its HOME; the operator's guidance reached it", said)
+	}
+	// And the guidance is still where the operator left it.
+	if _, err := os.Stat(guidance); err != nil {
+		t.Errorf("the operator's guidance was disturbed: %v", err)
+	}
+}
