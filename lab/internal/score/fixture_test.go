@@ -1,6 +1,7 @@
 package score
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"testing"
@@ -101,7 +102,7 @@ func TestTheRecordedRunScoresTwoOfTwelve(t *testing.T) {
 // detail of it.
 func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 	rows, answer := fixture(t)
-	cites := Citations(answer)
+	cites := Scan(answer)
 
 	var reached, wrongLine int
 	for _, r := range rows {
@@ -128,9 +129,18 @@ func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 	// checking only the words leaves it free to print `mentioned 2 of 12`.
 	//
 	// The denominator is part of the claim: "11 of 12 gold files" out of a
-	// 168-file answer is far weaker than it reads as, and a longer answer buys
+	// 182-file answer is far weaker than it reads as, and a longer answer buys
 	// mentions for free.
-	const want = "mentioned  11 of 12 gold files, at any line, out of 168 files named"
+	//
+	// 169, where cycle 00 recorded 168. The one extra file is one the answer
+	// named only by eliding its path, which the old matcher could not see.
+	//
+	// The denominator is deliberately files and not citations. An intermediate
+	// version of this matcher read 182, because "a dot and a few lowercase
+	// letters" also describes `account.id` and `Account.new`; counting those as
+	// files inflated the denominator by a tenth. Extensions are a closed set
+	// now, and the audit of what that dropped found no real file among them.
+	const want = "mentioned  11 of 12 gold files, at any line, out of 169 files named"
 	if got := Group("dependents", rows, text(answer), 0.50).String(); !strings.Contains(got, want) {
 		t.Errorf("the report does not carry\n\t%s\ngot:\n%s", want, got)
 	}
@@ -156,7 +166,7 @@ func TestTheRecordedRunReachedElevenFilesAndTwoLines(t *testing.T) {
 // has to confront the specific cases rather than a count.
 func TestTheRecordedRunMissesAreLinesTheGoldRowItselfNames(t *testing.T) {
 	_, answer := fixture(t)
-	cites := Citations(answer)
+	cites := Scan(answer)
 
 	for _, tc := range []struct {
 		id       string
@@ -206,7 +216,7 @@ func TestTheRecordedRunMissesAreLinesTheGoldRowItselfNames(t *testing.T) {
 // miss, which was false — see TestTheAnswerElidesRepeatedPaths for how.
 func TestOnlyOneRowIsNeverFoundAtAll(t *testing.T) {
 	rows, answer := fixture(t)
-	cites := Citations(answer)
+	cites := Scan(answer)
 
 	var cite string
 	for _, r := range rows {
@@ -288,5 +298,49 @@ func TestTheFixtureIsARealCaptureCarryingTheAnswer(t *testing.T) {
 	}
 	if !strings.Contains(answer, "Category") {
 		t.Error("the fixture does not mention the scenario's anchor; it is not this run")
+	}
+}
+
+// What resolving elision is actually worth, on a real recorded answer.
+//
+// This is the headline claim for why the scanner is stateful, so it is measured
+// against a checked-in fixture rather than quoted. The figure carried over from
+// cycle 00 was 319, arrived at by counting regex matches; the matcher that got
+// built yields 322, and an inherited estimate repeated as a measurement is how
+// a wrong number survives three documents.
+func TestWhatElisionResolutionIsWorthOnARecordedAnswer(t *testing.T) {
+	_, answer := fixture(t)
+
+	strict := map[string]bool{}
+	for _, c := range Citations(answer) {
+		strict[c] = true
+	}
+	resolved := map[string]bool{}
+	for _, c := range Scan(answer) {
+		if c.Line == 0 {
+			continue
+		}
+		where := c.Path
+		if where == "" {
+			where = c.Established
+		}
+		if where == "" {
+			where = c.Symbol
+		}
+		resolved[fmt.Sprintf("%s:%d", where, c.Line)] = true
+	}
+
+	if len(strict) != 254 {
+		t.Errorf("the strict path:line count is %d, want the recorded 254", len(strict))
+	}
+	if len(resolved) != 331 {
+		t.Errorf("resolution yields %d locations, want 331", len(resolved))
+	}
+	// And it must be a superset: a scanner that gained 68 while quietly losing
+	// some of the original 254 would show the same total and be worse.
+	for c := range strict {
+		if !resolved[c] {
+			t.Errorf("resolution LOST the plain citation %s", c)
+		}
 	}
 }

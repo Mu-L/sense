@@ -24,6 +24,9 @@ import (
 // field was added to end, with a YAML key in front of it.
 const defaultFloor = 0.50
 
+// allGroups is what -group takes to score every gold group instead of one.
+const allGroups = "all"
+
 type scoreFlags struct {
 	scenario string
 	run      string
@@ -37,7 +40,7 @@ func parseScoreFlags(args []string, stderr io.Writer) (scoreFlags, error) {
 	fs.SetOutput(stderr)
 	fs.StringVar(&f.scenario, "scenario", "", "path to the scenario file (required)")
 	fs.StringVar(&f.run, "run", "", "path to the run directory to score (required)")
-	fs.StringVar(&f.group, "group", "", "gold group to score (default: the scenario's discriminator)")
+	fs.StringVar(&f.group, "group", "", "gold group to score, or \"all\" (default: the scenario's discriminator)")
 	fs.Float64Var(&f.floor, "floor", defaultFloor, "recall at or above which the run passes")
 	if err := fs.Parse(args); err != nil {
 		return f, err
@@ -71,6 +74,18 @@ func scoreRun(args []string, stdout, stderr io.Writer) int {
 		return exitError
 	}
 
+	tr, err := transcript.ReadClaudeCode(filepath.Join(f.run, "raw", "stdout"))
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "sense-lab score: %v\n", err)
+		return exitError
+	}
+	src := scoredRun{tr: tr, why: runWasNotCompleted(f.run)}
+	_, _ = fmt.Fprintf(stdout, "repo       %s\nscenario   %s\n", set.Scenario.Repo, set.Scenario.Name)
+
+	if f.group == allGroups {
+		return scoreEveryGroup(set, src, f.floor, stdout, stderr)
+	}
+
 	group := f.group
 	if group == "" {
 		group = set.Gold.Discriminator
@@ -85,14 +100,6 @@ func scoreRun(args []string, stdout, stderr io.Writer) int {
 		return exitError
 	}
 
-	tr, err := transcript.ReadClaudeCode(filepath.Join(f.run, "raw", "stdout"))
-	if err != nil {
-		_, _ = fmt.Fprintf(stderr, "sense-lab score: %v\n", err)
-		return exitError
-	}
-	src := scoredRun{tr: tr, why: runWasNotCompleted(f.run)}
-
-	_, _ = fmt.Fprintf(stdout, "repo       %s\nscenario   %s\n", set.Scenario.Repo, set.Scenario.Name)
 	// The transcript goes in, not its text, so the provisional mark travels
 	// with the number rather than depending on this caller to copy it.
 	result := score.Group(group, rows, src, f.floor)
@@ -163,4 +170,35 @@ func goldRows(set scenario.Set, group string) ([]score.Row, error) {
 		rows = append(rows, score.Row{ID: g.ID, Cite: g.Cite()})
 	}
 	return rows, nil
+}
+
+// scoreEveryGroup scores all five gold groups against one run.
+//
+// The discriminator carries the headline, but a margin that sits entirely in
+// one group and a margin spread across all of them are different results, and
+// reporting only the discriminator cannot tell them apart. The exit code is the
+// discriminator's, because that is still the number the floor applies to.
+func scoreEveryGroup(set scenario.Set, src score.Source, floor float64, stdout, stderr io.Writer) int {
+	code := exitError
+	for _, group := range set.Gold.Groups() {
+		rows, err := goldRows(set, group)
+		if err != nil {
+			_, _ = fmt.Fprintf(stderr, "sense-lab score: %v\n", err)
+			return exitError
+		}
+		result := score.Group(group, rows, src, floor)
+		_, _ = fmt.Fprint(stdout, result)
+		if group != set.Gold.Discriminator {
+			continue
+		}
+		switch {
+		case result.Provisional():
+			code = exitProvisional
+		case result.Verdict != score.AtOrAboveFloor:
+			code = exitBelowFloor
+		default:
+			code = exitOK
+		}
+	}
+	return code
 }

@@ -369,3 +369,91 @@ func TestNamingAGroupExplicitlyOverridesTheDiscriminator(t *testing.T) {
 		t.Errorf("-group did not override the discriminator:\n%s", stdout)
 	}
 }
+
+// Cycle 00 scored one hardcoded group. The corpus carries five — dependents,
+// contract, write-path, guards and context — and a margin sitting entirely in
+// one group is a different result from one spread across all of them. Reporting
+// only the discriminator cannot tell those apart.
+func TestScoringEveryGroupReportsEachOfThem(t *testing.T) {
+	run := recordedRun(t, "Found app/models/category.rb:1083 and app/models/category.rb:1 too.")
+
+	// A floor of 0.75 puts the two groups on OPPOSITE sides of it: dependents,
+	// the discriminator, is 1 of 2, and contract is 1 of 1. So an exit code
+	// taken from the best group, or from all of them together, would differ
+	// from one taken from the discriminator.
+	code, stdout, _ := dispatch(t, "score",
+		"-scenario", scoredFile(t), "-run", run, "-group", "all", "-floor", "0.75")
+
+	for _, want := range []string{"gold group dependents", "gold group contract"} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("the report is missing %q:\n%s", want, stdout)
+		}
+	}
+	if code != exitBelowFloor {
+		t.Errorf("exit code = %d, want the discriminator's below-floor code %d\n%s",
+			code, exitBelowFloor, stdout)
+	}
+}
+
+// And the other direction: a passing discriminator must not be dragged below
+// the floor by a weaker group printed beside it.
+func TestScoringEveryGroupTakesItsVerdictFromTheDiscriminatorAlone(t *testing.T) {
+	run := recordedRun(t, "Found app/models/category.rb:1083 and lib/tasks/search.rake:32.")
+
+	code, stdout, _ := dispatch(t, "score",
+		"-scenario", scoredFile(t), "-run", run, "-group", "all")
+
+	if code != exitOK {
+		t.Errorf("exit code = %d, want %d: dependents is 2 of 2 even though contract is 0 of 1\n%s",
+			code, exitOK, stdout)
+	}
+	if !strings.Contains(stdout, "gold group contract") {
+		t.Errorf("the weaker group was not reported at all:\n%s", stdout)
+	}
+}
+
+// A group whose gold cannot be scored stops the whole report rather than
+// printing the groups that happened to come first. A partial table with a
+// missing row reads as a complete one.
+func TestScoringEveryGroupStopsOnGoldItCannotScore(t *testing.T) {
+	set := scenarioSet(t, scoredScenario, `discriminator: dependents
+rows:
+  - id: d:one
+    group: dependents
+    relation: "app/models/category.rb:1083 the entry point"
+  - id: c:vague
+    group: contract
+    relation: "somewhere in the search code"
+`, scoredRubric)
+	run := recordedRun(t, "Found app/models/category.rb:1083.")
+
+	code, _, stderr := dispatch(t, "score", "-scenario", set, "-run", run, "-group", "all")
+
+	if code != exitError {
+		t.Errorf("exit code = %d, want %d", code, exitError)
+	}
+	if !strings.Contains(stderr, "c:vague") {
+		t.Errorf("the error does not name the unscoreable row:\n%s", stderr)
+	}
+}
+
+// The provisional mark outranks the floor here exactly as it does for a single
+// group: a truncated capture is a claim about the capture, not about the arm.
+func TestScoringEveryGroupStaysProvisionalWhenTheCaptureIsTruncated(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "raw"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	body := `{"type":"assistant","message":{"content":[{"type":"text","text":"app/models/category.rb:1083"}]}}` + "\n" +
+		`{"type":"assistant","message":{"content":[{"type":"text","text":"lib/tasks/sea`
+	if err := os.WriteFile(filepath.Join(dir, "raw", "stdout"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	code, stdout, _ := dispatch(t, "score",
+		"-scenario", scoredFile(t), "-run", dir, "-group", "all")
+
+	if code != exitProvisional {
+		t.Errorf("exit code = %d, want %d\n%s", code, exitProvisional, stdout)
+	}
+}

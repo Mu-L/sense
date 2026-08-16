@@ -13,6 +13,7 @@ package score
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -50,11 +51,34 @@ type Result struct {
 	// FilesNamed is how many distinct files the answer cited anywhere. It is the
 	// denominator of opportunity for Reached, and nothing else.
 	FilesNamed int
-	Recall     float64
-	Hits       []string // gold row IDs that were cited
-	Misses     []string // gold row IDs that were not
-	Floor      float64
-	Verdict    string
+	// SymbolCited is how many of the Hits were credited ONLY by the symbol
+	// rule, whose line is required but not compared.
+	//
+	// The STRICT recall is Cited-SymbolCited over Total, and both are printed,
+	// because the difference between them is not a detail. Audited over the
+	// corpus, 195 rows are credited this way and only 9 of them (4.6%) land on
+	// the gold line; 112 land in a different routine than the one gold names,
+	// and 65 name a method that is not defined in the gold file at all.
+	//
+	// The effect on the measured margin, over 49 paired model-scenario-repo
+	// cells: sense minus baseline is +0.0593 with the rule and +0.0343 without,
+	// so it inflates the margin by 73%. Per repo it is worse than that average:
+	// the whole mastodon margin is symbol credit (+0.0343 to 0.0000) and
+	// discourse changes SIGN (+0.0117 to -0.0243). bitwarden-server is the
+	// negative control and moves by exactly 0.0000, because the rule is
+	// Ruby-only and a C# symbol never resolves through it.
+	//
+	// The rule stays because the alternative measured worse — it was added
+	// after eight rows on the banked mastodon cell scored zero for an answer
+	// that named them plainly. What it does NOT get is a single unqualified
+	// number. The range check that closes this needs a repository on disk and
+	// is 02-04.
+	SymbolCited int
+	Recall      float64
+	Hits        []string // gold row IDs that were cited
+	Misses      []string // gold row IDs that were not
+	Floor       float64
+	Verdict     string
 }
 
 // Source is what a score is taken from. It is an interface so this package does
@@ -134,17 +158,26 @@ func (r Result) Provisional() bool { return r.Why != "" }
 // a path boundary of the gold cite. That is a suffix rule on the PATH only; the
 // line still has to be exactly right.
 func Group(name string, rows []Row, tr Source, floor float64) Result {
-	cites := Citations(tr.Answer())
+	cites := Scan(tr.Answer())
 	r := Result{Group: name, Total: len(rows), Floor: floor, Why: tr.ProvisionalWhy()}
 
 	for _, row := range rows {
-		if ReachedPath(cites, row.Cite) {
+		p, _, ok := split(row.Cite)
+		if !ok {
+			r.Misses = append(r.Misses, row.ID)
+			continue
+		}
+		if anyNames(cites, p) {
 			r.Reached++
 		}
-		if anyMatches(cites, row.Cite) {
-			r.Hits = append(r.Hits, row.ID)
-		} else {
+		switch how := howMatched(cites, row.Cite); how {
+		case matchedNone:
 			r.Misses = append(r.Misses, row.ID)
+		default:
+			r.Hits = append(r.Hits, row.ID)
+			if how == matchedSymbol {
+				r.SymbolCited++
+			}
 		}
 	}
 
@@ -163,63 +196,65 @@ func Group(name string, rows []Row, tr Source, floor float64) Result {
 }
 
 // distinctFiles counts the separate files a set of citations names.
-func distinctFiles(cites []string) int {
+func distinctFiles(cites []Cite) int {
 	seen := map[string]bool{}
 	for _, c := range cites {
-		if p, _, ok := split(c); ok {
-			seen[p] = true
+		if c.Path != "" {
+			seen[c.Path] = true
 		}
 	}
 	return len(seen)
 }
 
-// ReachedPath reports whether any citation names the gold row's FILE, at any
-// line. It is not part of the score — strict matching is — but it separates
-// "never found the place" from "found the file and pointed at the wrong line",
-// and those are different failures needing different fixes.
-func ReachedPath(cites []string, gold string) bool {
-	goldPath, _, ok := split(gold)
-	if !ok {
-		return false
-	}
+// anyNames reports whether any citation names the gold row's FILE, at any line.
+// It is not part of the score — strict matching is — but it separates "never
+// found the place" from "found the file and pointed at the wrong line", and
+// those are different failures needing different fixes.
+func anyNames(cites []Cite, goldPath string) bool {
 	for _, c := range cites {
-		if p, _, ok := split(c); ok && samePath(p, goldPath) {
+		if NamesFile(c, goldPath) {
 			return true
 		}
 	}
 	return false
-}
-
-// LinesCitedFor returns every line the answer attached to the gold row's file,
-// in the order they appear. It exists so a miss can be read rather than merely
-// counted.
-func LinesCitedFor(cites []string, gold string) []string {
-	goldPath, _, ok := split(gold)
-	if !ok {
-		return nil
-	}
-	var out []string
-	for _, c := range cites {
-		if p, l, ok := split(c); ok && samePath(p, goldPath) {
-			out = append(out, l)
-		}
-	}
-	return out
 }
 
 // anyMatches reports whether any citation names the gold row's location.
-func anyMatches(cites []string, gold string) bool {
+func anyMatches(cites []Cite, gold string) bool {
+	return howMatched(cites, gold) != matchedNone
+}
+
+// How a row was matched. The distinction is not cosmetic: a path match is
+// checked against the gold LINE and a symbol match is not.
+const (
+	matchedNone = iota
+	matchedPath
+	matchedSymbol
+)
+
+// howMatched reports the STRONGEST way any citation matches the row, so that a
+// row cited both ways is not counted as a loose one.
+func howMatched(cites []Cite, gold string) int {
 	goldPath, goldLine, ok := split(gold)
 	if !ok {
-		return false
+		return matchedNone
 	}
+	best := matchedNone
 	for _, c := range cites {
-		p, l, ok := split(c)
-		if ok && l == goldLine && samePath(p, goldPath) {
-			return true
+		if !Matches(c, goldPath, goldLine) {
+			continue
 		}
+		// Strict means the LINE was checked, which is true of a path citation
+		// and of an established file, and false of the symbol rule.
+		if c.Path != "" && strconv.Itoa(c.Line) == goldLine {
+			return matchedPath
+		}
+		if matchesEstablished(c, goldPath, goldLine) {
+			return matchedPath
+		}
+		best = matchedSymbol
 	}
-	return false
+	return best
 }
 
 // split separates a path:line into its two halves.
@@ -269,6 +304,10 @@ func (r Result) String() string {
 	}
 	fmt.Fprintf(&b, "gold group %s\n", r.Group)
 	fmt.Fprintf(&b, "cited      %d of %d\n", r.Cited, r.Total)
+	if r.SymbolCited > 0 {
+		fmt.Fprintf(&b, "strict     %d of %d, dropping the %d matched on a symbol whose line is unchecked\n",
+			r.Cited-r.SymbolCited, r.Total, r.SymbolCited)
+	}
 	fmt.Fprintf(&b, "mentioned  %d of %d gold files, at any line, out of %d files named (not a score)\n",
 		r.Reached, r.Total, r.FilesNamed)
 	fmt.Fprintf(&b, "recall     %.2f\n", r.Recall)
@@ -278,4 +317,29 @@ func (r Result) String() string {
 		fmt.Fprintf(&b, "missed     %s\n", strings.Join(r.Misses, ", "))
 	}
 	return b.String()
+}
+
+// ReachedPath reports whether any citation names the gold row's file, at any
+// line.
+func ReachedPath(cites []Cite, gold string) bool {
+	p, _, ok := split(gold)
+	return ok && anyNames(cites, p)
+}
+
+// LinesCitedFor returns every line the answer attached to the gold row's file,
+// in the order they appear. It exists so a miss can be read rather than merely
+// counted: "found the file and pointed at 465 where gold says 467" is a
+// different failure from "never named the file".
+func LinesCitedFor(cites []Cite, gold string) []string {
+	goldPath, _, ok := split(gold)
+	if !ok {
+		return nil
+	}
+	var out []string
+	for _, c := range cites {
+		if c.Line != 0 && NamesFile(c, goldPath) {
+			out = append(out, strconv.Itoa(c.Line))
+		}
+	}
+	return out
 }
