@@ -60,6 +60,16 @@ linters:
               desc: "pure-core must not call syscalls directly; inject the effect at the edge"
             - pkg: github.com/fsnotify/fsnotify
               desc: "pure-core must not watch the filesystem; that is the watch package's job"
+        # The sense-lab boundary. The bench may reach Sense ONLY through the MCP
+        # server, because that is the channel the benched agent actually had.
+        # Querying the index directly would measure a channel no agent has, and
+        # nothing about that failure would be visible in a result.
+        lab-boundary:
+          files:
+            - "**/lab/**"
+          deny:
+            - pkg: github.com/luuuc/sense/internal
+              desc: "sense-lab must reach Sense through the MCP server, never by importing sense/internal"
   exclusions:
     paths:
       - bench/lib/test_fixtures

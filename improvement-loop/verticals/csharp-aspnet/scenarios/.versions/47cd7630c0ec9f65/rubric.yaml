@@ -1,0 +1,131 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# REWRITTEN for cycle 1 attempt 3, with the anchor. The previous rubric scored a
+# DECLARED-SHAPE axis on a permission bag and its step-2 criteria explicitly rewarded
+# "a member declaration standing in for the method that fills it" - the opposite of what
+# this axis scores, which is the CONSTRUCTION SITE and the deadline it chooses.
+#
+# WHY map_quality carries the most weight here: this scenario's axis is WHO CHOOSES THE
+# LIFETIME. The contract is an abstract base nothing invokes by name; a dependent depends
+# on it at one remove, by constructing one concrete kind of these values and handing that
+# kind, as a type argument, to a shared machine. A search over the contract's name returns
+# the base and its subclasses - none of which is an answer - and never returns a single
+# construction site, because no construction site's file contains the name. What separates
+# the two is not on any matched line: it is which end of the relationship sets the number.
+#
+# Step names MUST match scenarios/bitwarden-server.yaml exactly (the judge pairs by name).
+
+audience: |
+  An AI coding agent that will use this answer to safely rework the rule governing
+  short-lived signed values - how a deadline is declared, when it is measured against the
+  clock, and what a value must prove about its contents to be honoured. Score for that
+  agent, not a human reader and not a docs page. A perfect answer leaves the agent able to
+  change that rule knowing two things. First, how one of these values is declared, what
+  each kind must supply for the rule to judge it, and how an instance is sealed into a
+  string for transport and opened back up - each hop attributed to the member or routine
+  that performs it. Second, every place that brings one of these values into existence and
+  fixes how long it will be honoured for, each pinned to the exact file:line of the
+  construction, attributed to the routine that line sits in, stating the deadline that site
+  chooses and where the number comes from - a literal, a configured setting, a default
+  inside the kind, or a clock read through an injected provider - and what would go wrong
+  for someone holding one of these values if the rule changed underneath that site. The
+  sites that matter are not the kinds themselves: a kind only declares that a deadline
+  exists, and it is greppable from the contract in one step. A weak answer recites the
+  kinds and stops; returns the places whose text mentions the subject, which on this
+  contract are exactly the places that are NOT answers; gives file:line with nothing named
+  around it or no deadline stated; treats every site as though it chose the same deadline;
+  or misses that the same kind is constructed at more than one site and that one setting is
+  reused across two unrelated flows.
+
+steps:
+  - name: Map the expiring-token contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer trace the contract end to end rather than describing it in
+          general? Does it cover all three hops - where the deadline rule is DECLARED and
+          what it is composed of, what each concrete kind must SUPPLY for that rule to be
+          able to judge it, and how an instance is SEALED into a string and OPENED back up
+          by the shared machinery, including what that machinery does when handed something
+          it cannot open? Is each hop attributed to the MEMBER or routine that performs it,
+          not just to a file? Does it say what a rework would have to preserve - in
+          particular that the rule is inherited and overridden rather than invoked, so a
+          change to it fails silently rather than at compile time? Would the agent be able
+          to start the audit that follows with only small, targeted lookups rather than a
+          fresh exploration?
+      specificity:
+        weight: 0.25
+        question: |
+          Are the cited references exact file:line rather than filenames, directories or
+          area words ("the tokens folder", "the factory")? Is every hop tied to a real path
+          AND a line AND the name of the member or routine that contains it? Is the line
+          the one that actually performs that hop rather than a class header or a using
+          directive?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain WHY the contract is shaped this way - why the deadline
+          travels inside the value instead of being kept by the server, why validity is
+          split between an expiry check and a contents check, what the sealing step is
+          protecting against - rather than only NAMING the pieces it found?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer flag what it has not verified, or where it is inferring a
+          member's role from its name rather than from its contents, instead of presenting
+          an orientation sweep as complete?
+
+  - name: Audit every dependent of the expiring-token contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          THIS IS THE CORE STEP, and WHO CHOOSES THE LIFETIME is what it is scored on. How
+          complete is the set of sites that bring one of these values into existence and fix
+          how long it will be honoured for, and for how many of them does the answer name
+          the routine the construction sits in AND the deadline that site chooses AND where
+          that number comes from - a literal argument, a configured setting, a default
+          inside the kind, or a clock read through an injected provider? Give particular
+          credit for the observations only a site-by-site reading produces: that one kind is
+          constructed independently at two different sites which must stay in step, that one
+          configured setting is reused by a second, unrelated flow so changing it moves two
+          deadlines at once, that one site sets the deadline by assigning the property
+          outright rather than through a constructor argument, and that one site reads the
+          clock through an injected provider so a change to when the deadline is measured
+          behaves differently there. Do NOT credit a recitation of the kinds themselves -
+          the concrete types that declare a deadline are one step from the contract and the
+          step explicitly says they are not the answer; an answer that lists them and stops
+          is answering the wrong question. Penalise an answer that lists file:line locations
+          without saying which routine owns each construction; that names sites but cannot
+          say what deadline each picks; that assumes every site chooses the same deadline;
+          or that collapses a set into a summary such as "the controllers". Would the agent
+          be able to change the rule knowing every place whose behaviour moves with it?
+      specificity:
+        weight: 0.25
+        question: |
+          Is EVERY entry pinned to an exact file:line AND to the name of the type, member or
+          routine the construction sits in? A filename with no line number does not count; a
+          file:line with nothing named around it does not count. Is the cited line the
+          CONSTRUCTION of the value - the line that brings the instance into existence and
+          carries or is immediately followed by its deadline - rather than a using
+          directive, a field declaration for the shared machinery, an injected constructor
+          parameter, or the declaration of the kind itself in another file? Does each entry
+          state the chosen deadline concretely?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain how these sites were found and why the set should be
+          believed complete - and does it reason about consequence, distinguishing a change
+          that would fail loudly at compile time from one that would keep compiling and
+          silently honour something it should have refused, or refuse something a person is
+          holding - rather than only listing what it located?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer state honestly where its enumeration is thin - kinds whose
+          construction sites it did not chase, sites it named without opening, budget it ran
+          short of - rather than presenting a partial list as exhaustive?

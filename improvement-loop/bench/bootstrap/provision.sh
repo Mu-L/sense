@@ -54,7 +54,14 @@ if [ "${#REPOS[@]}" -eq 0 ]; then
 fi
 
 pj() { python3 -c "import json,sys;d=json.load(open('$PINNED'));print((d.get('$1') or {}).get('$2',''))" 2>/dev/null; }
-pset_commit() { python3 -c "import json;p='$PINNED';d=json.load(open(p));d.setdefault('$1',{})['commit']='$2';json.dump(d,open(p,'w'),indent=2,sort_keys=True);open(p,'a').write('\n')"; }
+# THE PIN KEY IS `sha`. compose.py writes it and slate_check.py reads it; this script
+# read and wrote `commit` instead, so a slate pinned by compose looked UNPINNED here.
+# Measured on csharp-aspnet: provision resolved current HEAD for all four repos,
+# re-cloned both arms there, and left `sha` untouched - every repo then failed
+# slate_check against a pin nothing was sitting on, and three indexes were orphaned.
+# `commit` is still READ so an older vertical's file keeps working.
+pin_sha() { local v; v="$(pj "$1" sha)"; [ -n "$v" ] || v="$(pj "$1" commit)"; printf '%s' "$v"; }
+pset_commit() { python3 -c "import json;p='$PINNED';d=json.load(open(p));d.setdefault('$1',{})['sha']='$2';json.dump(d,open(p,'w'),indent=2,sort_keys=True);open(p,'a').write('\n')"; }
 
 # shallow-fetch <sha> of <url> into <dir>, replacing any non-matching checkout
 fetch_arm() { # url sha dir
@@ -86,7 +93,7 @@ echo "== provisioning '$VERTICAL' - arms: $BASE_ARM + $SENSE_ARM =="
 fail=0
 for repo in "${REPOS[@]}"; do
   url="$(pj "$repo" url)"
-  sha="$(pj "$repo" commit)"
+  sha="$(pin_sha "$repo")"
   if [ -z "$url" ]; then echo "[$repo] no url in PINNED_COMMITS.json - add it first"; fail=1; continue; fi
   if [ -z "$sha" ]; then
     sha="$(GIT_TERMINAL_PROMPT=0 git ls-remote "$url" HEAD 2>/dev/null | awk '{print $1}')"

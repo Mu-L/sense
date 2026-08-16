@@ -1,0 +1,133 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# REWRITTEN for cycle 1 attempt 2. The previous rubric scored a CONVERSION axis, and
+# its step-2 specificity criterion explicitly penalised "a property declaration standing
+# in for the method that fills it" - which is now the credit line of nine of the twelve
+# gold rows. Left as it was it would have marked the correct answer down.
+#
+# WHY map_quality carries the most weight here: this scenario's axis is SHAPE, not
+# enumeration and not conversion. The set of switches is a bag no dependent asks a
+# question of; code that copies it from one carrier to another goes on compiling and is
+# not what a reshape breaks. What breaks is every type that has the set written into its
+# OWN declared shape - as a member it declares, a member it inherits and never restates,
+# a fixed position in what constructs it, an abstraction it holds whose implementation
+# carries the set, or a single switch named inside a shape it tests a value against.
+# A search over the name prints the copying code and misses the types that hold the set
+# at one remove; the fact that separates them - what a type DECLARES versus what it
+# merely touches - is not on the matched line.
+#
+# Step names MUST match scenarios/bitwarden-server.yaml exactly (the judge pairs by name).
+
+audience: |
+  An AI coding agent that will use this answer to safely reshape the small fixed set of
+  yes/no capability switches an organization can grant an individual member. Score for
+  that agent, not a human reader and not a docs page. A perfect answer leaves the agent
+  able to change that set knowing two things. First, how the set is declared, put away
+  with a member's stored record, read back out, and rebuilt for the duration of a request
+  from what the signed-in caller arrived carrying - each hop attributed to the member or
+  routine that performs it. Second, which other types now carry the set as part of their
+  OWN shape, each pinned to the exact file:line of the declaration that puts it there,
+  attributed to the type that declaration belongs to, and paired with a statement of what
+  that type's own users would start getting wrong under a reshape. The dependents that
+  matter are not the ones that copy the set from one carrier to another - that code keeps
+  compiling. They are the ones whose published shape changes with it, and they hold the
+  set by several different routes: declaring it as a member, inheriting that member from
+  a base and never restating it, taking it in a fixed constructor position, holding an
+  abstraction whose implementation carries it so the set is inside them at one remove and
+  their own text never names it, or naming a single switch inside a shape they match a
+  value against. A weak answer returns the places whose text mentions the subject; lists
+  copying code as though it were a holder; collapses a set into "the response models";
+  gives file:line with nothing named around it or no consequence stated; or misses
+  entirely the types that hold the set through an abstraction and never write its name.
+
+steps:
+  - name: Map the custom-permission contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer trace the one enforcement-facing path end to end rather than
+          describing the set in general? Does it cover all three hops - where the set of
+          switches is DECLARED, where a member's granted switches are turned into the form
+          stored with that member's record and read back out of it, and where the set is
+          REBUILT for the duration of a request from what the signed-in caller arrived
+          carrying? Is each hop attributed to the MEMBER or routine that performs it, not
+          just to a file? Does it say what a rework would have to preserve for that path to
+          keep working - in particular that the stored form and the per-request rebuild are
+          two independent encodings of the same switches that must agree? Would the agent
+          be able to start the audit that follows with only small, targeted lookups rather
+          than a fresh exploration?
+      specificity:
+        weight: 0.25
+        question: |
+          Are the cited references exact file:line rather than filenames, directories or
+          area words ("the models", "the context")? Is every hop of the path tied to a real
+          path AND a line AND the name of the member or routine that contains it? Is the
+          line the one that actually performs that hop rather than a class header or a
+          using directive?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain WHY the path is shaped this way - why the switches are
+          persisted in one form and carried to the request in another, what each hop
+          contributes, what the rebuild is protecting against - rather than only NAMING the
+          pieces it found?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer flag what it has not verified, or where it is inferring a
+          member's role from its name rather than from its contents, instead of presenting
+          an orientation sweep as complete?
+
+  - name: Audit every dependent of the custom-permission contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          THIS IS THE CORE STEP, and SHAPE is what it is scored on. How complete is the set
+          of types that have made the switches part of their own declared shape, and for
+          how many of them does the answer name the TYPE the declaration belongs to AND
+          which route put the set inside it - declared as one of its own members; inherited
+          from a base and never restated; taken in a fixed position of what constructs it;
+          held at one remove through an abstraction whose implementation carries the set,
+          so the type's own text never names it; or a single switch named inside a shape
+          the type tests a value against? Give particular credit for the two last kinds,
+          which no search over the name can reach: a type that inherits the member without
+          restating it, and a type that holds only an abstraction and never writes the
+          subject's name anywhere in its file. Do NOT credit code whose only relationship
+          is copying the set from one carrier to another - that code keeps compiling and
+          the step explicitly excludes it; an answer padded with it is answering the wrong
+          question. Penalise an answer that lists file:line locations without saying which
+          type owns each declaration; that names types but cannot say what breaks for their
+          users; that sweeps the places whose names advertise the subject and stops; or
+          that collapses a set into a summary such as "the response models". Would the
+          agent be able to reshape the set knowing every published shape that changes with
+          it?
+      specificity:
+        weight: 0.25
+        question: |
+          Is EVERY entry pinned to an exact file:line AND to the name of the type or member
+          that declaration belongs to? A filename with no line number does not count; a
+          file:line with nothing named around it does not count. Is the cited line the
+          DECLARATION that puts the set inside the type's shape - the member declaration,
+          the base-class clause, the constructor parameter, the held abstraction, the
+          matched pattern - rather than a using directive, or a line that merely assigns or
+          converts the set somewhere else? Does each entry say concretely which of the
+          routes put the set there?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain how these types were found and why the set should be
+          believed complete - and does it reason about consequence, distinguishing a
+          reshape that would fail loudly at compile time from one that would keep compiling
+          and quietly change a published shape or grant the wrong capability - rather than
+          only listing what it located?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer state honestly where its enumeration is thin - routes it did not
+          chase, types it named without opening, budget it ran short of - rather than
+          presenting a partial list as exhaustive?

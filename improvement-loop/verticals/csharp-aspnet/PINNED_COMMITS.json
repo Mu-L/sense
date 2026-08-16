@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "note": "Repo pins for this vertical. Top-level keys are repo keys; _meta is metadata, not a repo. Fill after the repo-selection gate: {\"url\": ..., \"sha\": ...} per repo.",
+    "vertical": "csharp-aspnet"
+  },
+  "abp": {
+    "sha": "7ed43b1931b9df46a50c0c59148a18645641d0df",
+    "url": "https://github.com/abpframework/abp.git"
+  },
+  "aspnetcore": {
+    "sha": "1f689ce2bede1617d28fd3c76bce99532bb15ba8",
+    "url": "https://github.com/dotnet/aspnetcore.git"
+  },
+  "bitwarden-server": {
+    "sha": "e93b962371d80964556f5590c6615f5160a437a1",
+    "url": "https://github.com/bitwarden/server.git"
+  },
+  "files": {
+    "sha": "68c68a58d4d6a5f7197e07c8fff85cfd4279c78b",
+    "url": "https://github.com/files-community/Files.git"
+  },
+  "grandnode2": {
+    "sha": "78ddbed801929366391fcc095eb359632dceee71",
+    "url": "https://github.com/grandnode/grandnode2.git"
+  },
+  "jellyfin": {
+    "sha": "ae8723026d97b6d0f926638803edef338919b794",
+    "url": "https://github.com/jellyfin/jellyfin.git"
+  },
+  "roslyn": {
+    "sha": "29167183fcbdf496333f86c082cb812c23701850",
+    "url": "https://github.com/dotnet/roslyn.git"
+  },
+  "servicestack": {
+    "sha": "34b489286cd0c2ca30fb3ce1353fd1ae36daa028",
+    "url": "https://github.com/ServiceStack/ServiceStack.git"
+  },
+  "umbraco-cms": {
+    "sha": "95499a7ba14063fe61a50e9a8e44cf3de02a3d91",
+    "url": "https://github.com/umbraco/Umbraco-CMS.git"
+  }
+}

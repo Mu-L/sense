@@ -33,7 +33,7 @@ import sys
 LAYOUTS = ({"framework": 1, "big": 1, "medium": 2}, {"big": 2, "medium": 2})
 
 
-def load_cells(cells_dir):
+def load_cells(cells_dir, listed=frozenset()):
     """The screen cells, best first. Size comes from the screen, not an index:
     indexing happens AFTER composition now, on the admitted 8 only."""
     out = []
@@ -49,8 +49,15 @@ def load_cells(cells_dir):
             "repo": d["repo"], "url": d.get("url", ""),
             "size": d["size_class"], "prod_files": d["size"]["prod_files"],
             "stars": d["used"].get("stars", 0),
+            "listed": d["repo"] in listed,
             "banner": bool(d.get("banner"))})
-    out.sort(key=lambda c: -c["stars"])
+    # LISTED FIRST, then by stars. A `repo:` line is someone saying "bench this
+    # one", and ordering decides slots: on the first C# pass the three listed
+    # repos lost every slot to the pool's famous non-web C# projects - a
+    # compiler took the big slot and a desktop file browser took a medium one,
+    # while the listed applications sat as backups. A listing that cannot win
+    # its own slot is a listing that did nothing.
+    out.sort(key=lambda c: (not c["listed"], -c["stars"]))
     return out
 
 
@@ -105,6 +112,9 @@ def main():
             "~/Developer/luuuc/oss/sense-benchmark/sense")))
     ap.add_argument("--frameworks", default="",
                     help="comma-separated repo keys that are frameworks (slot hint)")
+    ap.add_argument("--listed", default="",
+                    help="comma-separated repo keys declared by a `repo:` line; "
+                         "they rank ahead of hunt-found candidates for a slot")
     ap.add_argument("--write", action="store_true")
     args = ap.parse_args()
 
@@ -112,13 +122,15 @@ def main():
         os.path.dirname(os.path.abspath(__file__)), "..", "..",
         "verticals", args.vertical))
     fw = {x for x in args.frameworks.split(",") if x}
-    cells = load_cells(args.cells)
+    listed = {x for x in args.listed.split(",") if x}
+    cells = load_cells(args.cells, listed)
     slate, backups = pick(cells, fw)
 
     print(f"### Compose - {args.vertical} ({len(cells)} ADMIT repos)")
     for repo, s in slate.items():
         b = backups.get(repo)
-        print(f"- {s['slot']:9} `{repo}` {s['prod_files']} files, {s['stars']} stars"
+        mark = " (listed)" if s.get("listed") else ""
+        print(f"- {s['slot']:9} `{repo}`{mark} {s['prod_files']} files, {s['stars']} stars"
               + (" [BANNER: strip both arms]" if s["banner"] else "")
               + (f" | backup `{b['repo']}` ({b['stars']} stars)" if b else " | backup MISSING"))
     counts = {}

@@ -228,7 +228,7 @@ else:
 import json,sys
 d=json.load(open(sys.argv[1]))
 sys.exit(0 if [k for k,v in d.items() if '#' not in k and v!='done'] else 1)" "$st" 2>/dev/null; then
-    echo "Resume: \`VERTICAL=${KEY} bash bench/drivers/cycle2-board.sh <repo>\`"
+    echo "Resume: \`VERTICAL=${KEY} bash bench/drivers/cycle2-board.sh <repo>\`  (repo keys above)"
   else
     echo "Start:  \`VERTICAL=${KEY} bash bench/drivers/cycle2-board.sh --eligible\`, then"
     echo "\`VERTICAL=${KEY} bash bench/drivers/cycle2-board.sh <repo>\` for one of them."
@@ -311,8 +311,9 @@ for k in sorted(parked):
     print()
 live=[k for k in sorted(p) if k not in parked]
 if live:
-    print('Resume (%s): \`VERTICAL=$KEY bash bench/drivers/vertical-loop.sh <repo>\`'
-          % ', '.join(live))
+    print('Resume - run the line for the repo you are taking:')
+    for k in live:
+        print('- \`VERTICAL=$KEY bash bench/drivers/vertical-loop.sh %s\`' % k)
 else:
     print('_No repo is resumable: every repo above is parked on a human decision._')
 " "$st" "$RESULTS/loop" "$IL_ROOT" "$RESULTS" "$KEY"

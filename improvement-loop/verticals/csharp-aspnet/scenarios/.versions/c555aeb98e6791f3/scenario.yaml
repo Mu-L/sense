@@ -1,0 +1,239 @@
+name: Bitwarden server work session - audit the custom-permission contract before a rework
+repo: bitwarden-server
+contract_symbol: Permissions
+contract_file: src/Core/AdminConsole/Models/Data/Permissions.cs
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md), cycle 1,
+# attempt 1 on this repo. FIRST scenario in the csharp-aspnet vertical: no cycles.jsonl,
+# no minibench.md, no prior arms on this repo, so there is no trajectory to correct from
+# and no RE-QUESTION section applies. The previous author attempt wrote no yaml - it
+# returned BLOCKED on seam_hunt.py having no csharp row, which commit 38c55ca fixed.
+#
+# ------------------------------------------------------------------------------------
+# SEAM PROFILE - `python3 bench/lib/seam_hunt.py $CLONE Permissions --propose`, quoted
+# ------------------------------------------------------------------------------------
+#   === Permissions  (lang=csharp, token='Permissions', hops=mcp-default, conf=mcp-default) ===
+#     app caller files : 9   (total incl test/non-app: 38)
+#     SCATTER (dirs)   : 9
+#     GREP-NOISE       : 'Permissions' in 540 app files   PRECISION=0.02  (lower=grep-hostile)
+#     HOLDERS (no call): 15 app files compose/inherit/include it
+#     VERDICT          : SCATTERED + GREP-NOISY
+#
+# PRECISION 0.02 is the lowest of every candidate profiled on this repo and sits just
+# under the 0.078 of the banked +1.00 cell. It RANKS this anchor first; it decides
+# nothing (laws.md, PRECISION RANKS, IT NEVER KILLS), and the two-arm mini-bench is what
+# rejects. Candidates profiled, precision then callers/holders:
+#   Permissions       0.02   9 callers / 15 holders / 540 grep files   <== chosen
+#   User              0.02  24 callers / 54 holders / 1059 grep files
+#   Organization      0.01  10 callers / 59 holders / 1043 grep files
+#   ICurrentContext   0.00   0 callers / 99 holders / 145 grep files
+#   IUserService      0.00   0 callers / 69 holders / 103 grep files
+#   ITableObject      0.00   0 callers / 52 holders /  56 grep files
+#   CoreHelpers       0.55 111 callers /  0 holders / 203 grep files
+# User and Organization profile as low but their dependent set is the whole codebase -
+# 12 gold rows out of hundreds of true dependents would score sampling noise, not recall.
+#
+# STACK FACT, and it is why PRECISION is degenerate on every INTERFACE in this repo:
+# C# dependents HOLD an injected interface, they do not call it, and Sense carries that
+# as a composition edge. `sense_blast ICurrentContext` returns
+# `"risk_factors":["109 direct callers"]` with `"direct_callers":[]` and 108
+# `affected_via_composition` rows, so callers/hits is 0/145 = 0.00 - the BEST value the
+# ranking law knows - for an anchor whose name a single grep prints in 145 files. Read
+# 0.00 on a C# interface as "no call edges exist", never as "grep-hostile". Concrete
+# CLASSES do get call edges (CoreHelpers 111, User 24, Permissions 9), so the number is
+# only comparable within the class candidates. Recorded for answer-forms.md.
+#
+# RETENTION RING - `python3 bench/lib/ring_sweep.py $CLONE --top 12`, quoted:
+#   0 anchor(s) above the ranking threshold. Best rings found:
+#   User rows=68 files=68 vias=1 | IUserService rows=16 files=16 vias=5 |
+#   IOrganizationUserRepository rows=6 files=6 vias=4
+# So the strongest measured kind ("what HOLDS X") is thin here on the retained_via
+# surface. For THIS anchor `sense_blast` returns retained_via_interfaces_count=3, and on
+# ICurrentContext the 87 retained rows are trimmed OUT of the shown payload entirely
+# (`retained_trimmed: true`, no list) - a row the arm is never shown can only score zero,
+# so no gold row below comes from that surface. Every gold row comes from
+# `direct_callers`, `affected_via_composition` or `affected_subclasses` of the shown
+# payload.
+#
+# ------------------------------------------------------------------------------------
+# THE AXIS SENTENCE - the mechanism this scenario's whole thesis rests on
+# ------------------------------------------------------------------------------------
+# This contract is never invoked; it is COPIED. It is a bag of boolean capability
+# switches that no dependent asks a question of - each dependent instead holds a second
+# representation of the same switches and converts between encodings: a serialized text
+# column on a stored row, a set of individual identity claims on a signed token, a flat
+# request or response payload with one field per switch, a constructor argument threaded
+# through an invitation, a pattern match on one switch of a field of a field. So a
+# dependent is a REPRESENTATION BOUNDARY, and it hides as a conversion that mentions the
+# contract only as a type argument, a property type or a serializer generic.
+#
+# INVENTORY CUT, applied after the first draft passed every gate. Step 2 originally
+# illustrated "some other job entirely" with four examples - accepting an invitation,
+# answering a profile request, deciding one unrelated authorization question, handing an
+# actor to a validator. Those four categories between them name the job of 14 of the 19
+# gold rows (5 invite, 6 profile/member-list, 1 authorization, 2 acting-user), which is
+# laws.md THE ASK NAMES THE MECHANISM, NEVER THE INVENTORY - and `scenario.py --prompt`
+# passes it clean, because the neutrality gate reads TOKENS and a semantic inventory
+# carries none. Caught by hand, cut by hand. The mechanism sentence that remains ("it
+# holds or produces its OWN copy of the same switches in another form, so the work it
+# does is a conversion between two encodings") says HOW a dependent hides and not WHERE
+# it lives, which is the whole distinction.
+#
+# ANSWER FORM: "find every place that depends on X". `verticals/csharp-aspnet/answer-forms.md`
+# is EMPTY - every section reads "nothing measured yet" - so this form is UNMEASURED in
+# this stack, neither measured-to-win nor measured-to-fail here, and this draft owes no
+# what-is-different sentence. It is on the record as winning in Ruby (+0.53, +0.775) and
+# failing in PHP across 36 attempts, and the csharp-aspnet page exists precisely because
+# nobody knows yet which way this stack falls. This run is the first observation.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS: it is the set of
+# points where the thirteen capability switches cross into or out of a DIFFERENT encoding,
+# each one paired with the encoding it converts to and from. Two of the nineteen decode
+# the same token-claim encoding in two different libraries and must be changed together;
+# five decode the same stored text column into five different payloads. A name-occurrence
+# list cannot tell a crossing from the other ~520 files that mention permissions, and it
+# says nothing about which two are duplicates of each other.
+#
+# STATED PLAINLY so no later cycle rediscovers it: the literal token `Permissions` appears
+# on the pinned line of every gold row below. That is forced - plan step 3 requires gold
+# to come from the shown blast payload and the payload is an occurrence set - and laws.md
+# (TOKEN-DARKNESS IS NOT THE MECHANISM) records that curating for darkness inverts the
+# result. What one `grep -rn Permissions` does NOT give is which 19 of 540 files are
+# crossings and which line inside each does the converting: the blast payload's own ref is
+# the enclosing declaration, not the credit line, in 9 of 19 rows.
+#
+# MEMORIZATION: `memorization_probe.py $CLONE Permissions` returned
+# `"reason": "only 0 member(s) declared (< 5) - too few to score recitation, bar
+# inapplicable"` - the class declares auto-properties and no methods, so the probe cannot
+# score it. The probe itself is live and does discriminate: run on `CurrentContext` in the
+# same clone it found 35 members and returned `"closed-book recall 0.0 < 0.3 - not
+# recited"`. The clone is depth-1 (`git rev-list --count HEAD` = 1), so churn-dating a row
+# is not available here; gold is scored at `path:line` in a 5306-file tree, which is the
+# line-level structural fact the law exempts.
+#
+# Single-prompt session bench (bench/drivers/bench-sense-local.sh): every step is presented
+# in ONE prompt and worked in order. Rendered to the agent: the description + each step's
+# name and prompt ONLY (checks and gold are NEVER shown). Everything rendered is kept
+# NEUTRAL - it states the task, never the answer's shape, file paths, class or method
+# names, counts, or which tool to reach for.
+description: |
+  You are a maintainer about to rework the way this product describes a fine-grained
+  capability grant - the small fixed set of yes/no switches an organization can hand an
+  individual member instead of a whole role. The rework will change the shape of that set:
+  what a switch is called, how many there are, and how the set is written down. Nothing in
+  the codebase asks that set a question; everything that touches it keeps its own copy of
+  the same switches in some other form and converts between the two, which is exactly what
+  a reshape breaks. Before you touch it you have to know two things: how the set is
+  defined, stored and carried to the code that enforces it, and everywhere else in the
+  codebase that would have to change with it. Throughout, an answer that points at a place
+  must say which member or routine that place is inside, and give an exact file:line a
+  teammate could jump straight to, plus one phrase on why it matters. A bare filename does
+  not count, a file:line with no routine named around it does not count, and a missed
+  dependent is a regression shipped.
+steps:
+- name: Map the custom-permission contract
+  prompt: "Task: orient, and be thorough - the rest of the ticket is built on this. Find
+    where the set of capability switches is defined, and then follow the one path the
+    enforcement side leans on: how a member's granted switches are put away with that
+    member's stored record, and how they are read back out and put in front of the code
+    that has to decide whether a request is allowed. Show where the set is declared, where
+    it is turned into the stored form and back again, and where it is rebuilt for the
+    duration of a request from whatever the signed-in caller arrived carrying. For each one
+    give the file:line, the name of the member or routine it lives in, and one phrase on
+    what it contributes to that path. Then say, in a few sentences, what a rework would
+    have to preserve for that path to keep working. A place named without the routine it
+    lives in does not count, and neither does a routine named without the file:line where
+    it is defined.
+    "
+  checks:
+  - type: response_richness
+    value: '3'
+    required: true
+    description: The declaration, the stored form and the per-request rebuild, each located
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_search
+    required: false
+    layer: adoption
+- name: Audit every dependent of the custom-permission contract
+  prompt: "Task: this is the core of the ticket, and you are working it with the budget the
+    first part already cost you. Widen back out from that one path to the set of switches
+    as a whole, as a single subject, and find EVERY place in the codebase that would have
+    to change with it, so the reshape cannot silently break one. Be exhaustive and group
+    them by area. Almost none of what you are looking for is doing this set's job: each one
+    is in the middle of some other job entirely, named after that other job, and while
+    doing it it holds or produces its OWN copy of the same switches in another form,
+    so the work it does is a conversion between two encodings of the same thing. Some of
+    those conversions are duplicates of each other in different parts of the tree and would
+    drift apart if only one were updated. So the answer you owe is not where the name
+    appears but WHOSE behaviour changes: for every dependent, name the member or routine
+    the dependency is inside, give its file:line, and say in one phrase what encoding it
+    converts to or from and what it would start getting wrong if the set were reshaped
+    under it. A file:line with no routine named around it does not count, a routine you
+    cannot state the consequence for does not count, and a missed dependent is a regression
+    shipped.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Dependents attributed to the enclosing member, with the conversion named
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
+# Gold is the must-find audit of what depends on the capability-switch bag. TWO groups.
+#   - `contract` (3, NON-SCORING anchors): the class that declares the switches, the
+#     stored-row entity that serializes them into a text column, and the request-context
+#     object that rebuilds them from token claims. These are step 1's targets. Both arms
+#     reach them and they do NOT score; they are here so step 1's cost is charged without
+#     step 1 handing anything to step 2, and so no file step 1 leads to can be cashed in
+#     the scored group.
+#   - `dependents` (19, THE DISCRIMINATOR): one row per FILE, across 15 distinct
+#     directories, in 4 top-level areas (public API models, internal API models, core
+#     admin-console models and services, and two authorization libraries). Not one of them
+#     is on the declare/store/rebuild path step 1 traces. Every row appears in the shown
+#     `sense_blast Permissions` payload at MCP defaults - `direct_callers` (9),
+#     `affected_via_composition` (17) or `affected_subclasses` (6) - and every line below
+#     was opened and read by hand at its pin. The blast payload's own `ref` is the
+#     ENCLOSING declaration and not the credit line for 9 of the 19; those nine are pinned
+#     to the line that actually converts.
+# Rows dropped, and why: 5 test files and 2 `util/Seeder` files were in the payload and are
+# not production dependents; `test/Core.Test/AdminConsole/Helpers/PermissionsHelpers.cs`
+# likewise. No free/unreachable-row cut was applied to the rest, because
+# `inverse_frequency.py` cannot run - `verticals/csharp-aspnet/results/` holds only
+# `dryrun/` and `loop/`, there is no headline-model results root, and n=0 runs on this
+# repo. That cut is available to the FIRST re-question, not to this draft.
+gold:
+- {id: contract-class, group: contract, match: [src/Core/AdminConsole/Models/Data/Permissions.cs], relation: "src/Core/AdminConsole/Models/Data/Permissions.cs:6 `public class Permissions` - the contract under rework; 13 boolean auto-properties, and line 23 `public List<(bool Permission, string ClaimName)> ClaimsMap => new()` is the one place the switches are paired with their claim names"}
+- {id: c:stored-column, group: contract, match: [src/Core/AdminConsole/Entities/OrganizationUser.cs], relation: "src/Core/AdminConsole/Entities/OrganizationUser.cs:157 `Permissions = CoreHelpers.ClassToJsonData(permissions);` inside `OrganizationUser.SetPermissions`, with the read side at line 152 `: CoreHelpers.LoadClassFromJsonData<Permissions>(Permissions);` inside `GetPermissions` (declared line 149) - the obvious write path, where the bag becomes a text column on the stored member row"}
+- {id: c:claims-rebuild, group: contract, match: [src/Core/Context/CurrentContext.cs], relation: "src/Core/Context/CurrentContext.cs:494 `return new Permissions` inside `CurrentContext.SetOrganizationPermissionsFromClaims` (declared line 486) - the per-request rebuild, 13 `hasClaim(\"...\")` lookups turning token claims back into the bag"}
+- {id: d:public-permissions-model, group: dependents, match: [src/Api/AdminConsole/Public/Models/PermissionsModel.cs], relation: "src/Api/AdminConsole/Public/Models/PermissionsModel.cs:53 `return new Permissions` inside `PermissionsModel.ToData` (declared line 51) - the public API keeps its OWN 13 flat boolean properties and this method copies them across one by one; a reshape leaves the two lists silently out of step"}
+- {id: d:public-member-create, group: dependents, match: [src/Api/AdminConsole/Public/Models/Request/MemberCreateRequestModel.cs], relation: "src/Api/AdminConsole/Public/Models/Request/MemberCreateRequestModel.cs:38 `? Permissions.ToData()` inside `MemberCreateRequestModel.ToInviteRequest` (declared line 30), falling back to `new Permissions()` on line 39 - the public invite endpoint decides whether the caller's copy is used at all, based on the member's role"}
+- {id: d:provider-org-profile, group: dependents, match: [src/Api/AdminConsole/Models/Response/ProfileProviderOrganizationResponseModel.cs], relation: "src/Api/AdminConsole/Models/Response/ProfileProviderOrganizationResponseModel.cs:21 `Permissions = new Permissions();` inside the `ProfileProviderOrganizationResponseModel(ProviderUserOrganizationDetails)` constructor (declared line 13) - a provider acting on an organization is handed an all-false bag rather than a decoded one, so the empty default IS the behaviour here"}
+- {id: d:org-profile, group: dependents, match: [src/Api/AdminConsole/Models/Response/ProfileOrganizationResponseModel.cs], relation: "src/Api/AdminConsole/Models/Response/ProfileOrganizationResponseModel.cs:24 `Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(organizationDetails.Permissions);` inside the `ProfileOrganizationResponseModel(...)` constructor - the member's own sync payload decodes the stored text column back into the bag"}
+- {id: d:base-org-profile, group: dependents, match: [src/Api/AdminConsole/Models/Response/BaseProfileOrganizationResponseModel.cs], relation: "src/Api/AdminConsole/Models/Response/BaseProfileOrganizationResponseModel.cs:138 `public Permissions? Permissions { get; set; }` - the shared base of both profile payloads declares the bag as a serialized response field, which is what fixes the wire shape every client parses"}
+- {id: d:org-user-response, group: dependents, match: [src/Api/AdminConsole/Models/Response/Organizations/OrganizationUserResponseModel.cs], relation: "src/Api/AdminConsole/Models/Response/Organizations/OrganizationUserResponseModel.cs:32 `Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(organizationUser.Permissions);` inside the `OrganizationUserResponseModel(OrganizationUser, ...)` constructor, repeated at line 52 in the details-carrying constructor - the admin console's member list decodes the column per row"}
+- {id: d:provider-profile, group: dependents, match: [src/Api/AdminConsole/Models/Response/Providers/ProfileProviderResponseModel.cs], relation: "src/Api/AdminConsole/Models/Response/Providers/ProfileProviderResponseModel.cs:21 `Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(provider.Permissions);` inside the `ProfileProviderResponseModel(ProviderUserProviderDetails)` constructor - the same bag is reused for the provider hierarchy, decoded off a different stored row"}
+- {id: d:provider-user-response, group: dependents, match: [src/Api/AdminConsole/Models/Response/Providers/ProviderUserResponseModel.cs], relation: "src/Api/AdminConsole/Models/Response/Providers/ProviderUserResponseModel.cs:24 `Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(providerUser.Permissions);` inside the `ProviderUserResponseModel(ProviderUser, ...)` constructor, repeated at line 39 in the user-details constructor - the provider member list, a second decode of a second stored column"}
+- {id: d:org-user-request, group: dependents, match: [src/Api/AdminConsole/Models/Request/Organizations/OrganizationUserRequestModels.cs], relation: "src/Api/AdminConsole/Models/Request/Organizations/OrganizationUserRequestModels.cs:120 `existingUser.Permissions = CoreHelpers.ClassToJsonData(Permissions);` inside `OrganizationUserUpdateRequestModel.ToOrganizationUser` - the inbound edit path, encoding the bag back into the stored text column; the request model declares its own copy at line 102"}
+- {id: d:ctx-organization, group: dependents, match: [src/Core/AdminConsole/Context/CurrentContextOrganization.cs], relation: "src/Core/AdminConsole/Context/CurrentContextOrganization.cs:20 `Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(orgUser.Permissions);` inside the `CurrentContextOrganization(OrganizationUserOrganizationDetails)` constructor, with the field defaulted at line 27 `= new()` - the database-backed alternative to the claims rebuild, so the two must agree flag for flag"}
+- {id: d:ctx-provider, group: dependents, match: [src/Core/AdminConsole/Context/CurrentContextProvider.cs], relation: "src/Core/AdminConsole/Context/CurrentContextProvider.cs:19 `Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(providerUser.Permissions);` inside the `CurrentContextProvider(ProviderUser)` constructor - the provider-side request context decodes the same bag, and unlike the organization one it has no default"}
+- {id: d:invite-business, group: dependents, match: [src/Core/AdminConsole/Models/Business/OrganizationUserInvite.cs], relation: "src/Core/AdminConsole/Models/Business/OrganizationUserInvite.cs:27 `Permissions = requestModel.Permissions;` inside the `OrganizationUserInvite(OrganizationUserInviteRequestModel)` constructor, held on the field declared at line 14 - the invite carries the bag by reference from the request model into the core layer"}
+- {id: d:invite-data, group: dependents, match: [src/Core/AdminConsole/Models/Data/Organizations/OrganizationUsers/OrganizationUserInviteData.cs], relation: "src/Core/AdminConsole/Models/Data/Organizations/OrganizationUsers/OrganizationUserInviteData.cs:15 `public Permissions Permissions { get; set; }` - the serialized invite payload, a second invite-shaped carrier of the bag alongside the business model above"}
+- {id: d:acting-user, group: dependents, match: [src/Core/AdminConsole/Models/Data/StandardUser.cs], relation: "src/Core/AdminConsole/Models/Data/StandardUser.cs:12 `public Permissions? Permissions { get; } = permissions;` on the `StandardUser` primary constructor (parameter declared line 7) - the acting-user abstraction the authorization checks are handed, so the bag reaches policy code through an interface implementation rather than through the request context"}
+- {id: d:invite-command-model, group: dependents, match: [src/Core/AdminConsole/OrganizationFeatures/OrganizationUsers/InviteUsers/Models/OrganizationUserInviteCommandModel.cs], relation: "src/Core/AdminConsole/OrganizationFeatures/OrganizationUsers/InviteUsers/Models/OrganizationUserInviteCommandModel.cs:48 `Permissions permissions,` in the long-form `OrganizationUserInviteCommandModel` constructor (declared line 44) - the newer invite command takes the bag as a positional constructor argument, so a reshape moves an argument rather than a property"}
+- {id: d:grant-validation, group: dependents, match: [src/Core/AdminConsole/OrganizationFeatures/OrganizationUsers/OrganizationUserAction/OrganizationUserValidationService.cs], relation: "src/Core/AdminConsole/OrganizationFeatures/OrganizationUsers/OrganizationUserAction/OrganizationUserValidationService.cs:73 `var actorClaims = (actingUser.GetPermissions() ?? new Permissions()).ClaimsMap.ToDictionary(c => c.ClaimName, c => c.Permission);` inside `ValidateCustomPermissionsGrant` (declared line 60) - the only dependent that consumes the claim-name pairing itself, to stop a custom member granting a switch it does not hold"}
+- {id: d:org-service-invite, group: dependents, match: [src/Core/AdminConsole/Services/Implementations/OrganizationService.cs], relation: "src/Core/AdminConsole/Services/Implementations/OrganizationService.cs:587 `orgUser.SetPermissions(invite.Permissions ?? new Permissions());` inside `SaveUsersSendInvitesAsync` (name on line 494, its wrapped signature opening at line 492), guarded on line 585 by `if (invite.Type == OrganizationUserType.Custom)` - the legacy invite path, the point where an invite's copy becomes the stored column"}
+- {id: d:claims-extensions, group: dependents, match: [src/Libraries/OrganizationAuthorization/Organizations/OrganizationClaimsExtensions.cs], relation: "src/Libraries/OrganizationAuthorization/Organizations/OrganizationClaimsExtensions.cs:102 `private static Permissions GetPermissionsFromClaims(Func<string, bool> hasClaim)` returning `new()` with 13 `hasClaim(Claims.CustomPermissions.*)` initialisers - a SECOND, independent claims-to-bag decoder in a separate library, called from line 38; it and the request-context rebuild drift apart if only one is updated"}
+- {id: d:security-task-handler, group: dependents, match: [src/Core/Vault/Authorization/SecurityTasks/SecurityTaskOrganizationAuthorizationHandler.cs], relation: "src/Core/Vault/Authorization/SecurityTasks/SecurityTaskOrganizationAuthorizationHandler.cs:45 `{ Type: OrganizationUserType.Custom, Permissions.AccessReports: true };` inside `CanListAllTasksForOrganization` (declared line 41) - a nested property pattern that reads ONE switch off a field of the request-context organization, so a renamed switch fails to compile here and nowhere near the contract"}

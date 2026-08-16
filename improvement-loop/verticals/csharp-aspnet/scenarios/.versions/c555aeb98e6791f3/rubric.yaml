@@ -1,0 +1,118 @@
+# Per-scenario rubric for the LLM judge layer.
+#
+# Four criteria per step, weights summing to 1.0: map_quality 0.40 / specificity 0.25
+# / justification 0.20 / uncertainty 0.15.
+#
+# WHY map_quality carries the most weight here: this scenario's axis is CONVERSION, not
+# enumeration. The contract is a bag of boolean capability switches that no dependent
+# asks a question of - each dependent holds a SECOND representation of the same switches
+# and converts between encodings. A search prints the files whose text mentions the bag;
+# it never says which of them is a representation boundary, which line does the
+# converting, or which two boundaries are duplicates of each other that would drift apart
+# if only one were updated. The answer that matters names the enclosing member, the
+# encoding it crosses, and what it would start getting wrong under a reshape.
+#
+# Step names MUST match scenarios/bitwarden-server.yaml exactly (the judge pairs by name).
+
+audience: |
+  An AI coding agent that will use this answer to safely reshape the small fixed set of
+  yes/no capability switches an organization can grant an individual member. Score for
+  that agent, not a human reader and not a docs page. A perfect answer leaves the agent
+  able to change that set knowing two things: how the set is declared, put away with a
+  member's stored record, read back out, and rebuilt for the duration of a request from
+  what the signed-in caller arrived carrying - each hop attributed to the member or
+  routine that performs it - and every other place in the tree that would have to change
+  with it, each one pinned to an exact file:line, attributed to the member it sits inside,
+  and paired with the encoding that place converts the switches to or from. The dependents
+  that matter are not the ones whose job is this set; they are the ones in the middle of
+  some unrelated job - accepting an invitation, answering a profile request, deciding one
+  authorization question, handing an actor to a validator - that keep their own copy of
+  the same switches in another form. A weak answer lists files rather than conversions;
+  names the places whose filenames advertise the subject and stops; collapses a set into
+  "the response models"; gives file:line with no member named around it or no consequence
+  stated; or misses that two of the conversions decode the same thing in two different
+  libraries and must be changed together.
+
+steps:
+  - name: Map the custom-permission contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          Does the answer trace the one enforcement-facing path end to end rather than
+          describing the set in general? Does it cover all three hops - where the set of
+          switches is DECLARED, where a member's granted switches are turned into the form
+          stored with that member's record and read back out of it, and where the set is
+          REBUILT for the duration of a request from what the signed-in caller arrived
+          carrying? Is each hop attributed to the MEMBER or routine that performs it, not
+          just to a file? Does it say what a rework would have to preserve for that path to
+          keep working - in particular that the stored form and the per-request rebuild are
+          two independent encodings of the same switches that must agree? Would the agent
+          be able to start the audit that follows with only small, targeted lookups rather
+          than a fresh exploration?
+      specificity:
+        weight: 0.25
+        question: |
+          Are the cited references exact file:line rather than filenames, directories or
+          area words ("the models", "the context")? Is every hop of the path tied to a real
+          path AND a line AND the name of the member or routine that contains it? Is the
+          line the one that actually performs the conversion rather than a class header or
+          a property declaration?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain WHY the path is shaped this way - why the switches are
+          persisted in one form and carried to the request in another, what each hop
+          contributes, what the rebuild is protecting against - rather than only NAMING the
+          pieces it found?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer flag what it has not verified, or where it is inferring a
+          member's role from its name rather than from its contents, instead of presenting
+          an orientation sweep as complete?
+
+  - name: Audit every dependent of the custom-permission contract
+    criteria:
+      map_quality:
+        weight: 0.40
+        question: |
+          THIS IS THE CORE STEP, and conversion is what it is scored on. How complete is
+          the dependent set, and for how many of them does the answer name the MEMBER the
+          dependency sits inside AND the encoding that member converts the switches to or
+          from - a serialized text column on a stored row, a set of individual identity
+          claims on a signed token, a flat request or response payload with one field per
+          switch, a constructor argument threaded through an invitation, a pattern match on
+          one switch reached through a field of a field? Credit dependents that sit in an
+          area whose job is something other than this set and that convert it once in the
+          middle of that other job. Give particular credit for spotting that two
+          conversions decode the SAME encoding in two different places and would drift
+          apart if only one were updated. Penalise an answer that lists file:line locations
+          without saying which member owns each line; that names members but cannot say
+          what breaks in them; that sweeps the places whose names advertise the subject and
+          stops; or that collapses a set into a summary such as "the response models".
+          Would the agent be able to reshape the set without silently breaking a conversion
+          it was never shown the owner of?
+      specificity:
+        weight: 0.25
+        question: |
+          Is EVERY dependent pinned to an exact file:line AND to the name of the enclosing
+          member or routine? A filename with no line number does not count; a file:line
+          with no member named around it does not count. Is the line the one that actually
+          does the converting rather than a class header, a using directive, or a property
+          declaration standing in for the method that fills it? Does each entry say
+          concretely which encoding that member crosses?
+      justification:
+        weight: 0.20
+        question: |
+          Does the answer explain how these dependents were found and why the set should be
+          believed complete - and does it reason about consequence, distinguishing a
+          conversion that would fail loudly at compile time from one that would keep
+          compiling and quietly grant or withhold the wrong capability - rather than only
+          listing what it located?
+      uncertainty:
+        weight: 0.15
+        question: |
+          Does the answer state honestly where its enumeration is thin - areas it did not
+          sweep, members it named without opening, budget it ran short of - rather than
+          presenting a partial list as exhaustive?

@@ -1,0 +1,5 @@
+# csharp-aspnet vertical - the repo list. One repo key per line.
+bitwarden-server
+servicestack
+umbraco-cms
+aspnetcore

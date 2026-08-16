@@ -21,4 +21,8 @@ confirmation  claude-fable-5          2
 confirmation  gpt-5.6-sol             2
 confirmation  kimi-for-coding/k3      2
 confirmation  glm-5.2:cloud           2
-confirmation  mistral-large-3:cloud   2
+# Written in provider/model form: opencode-run.sh maps a bare `<id>:cloud` to
+# `ollama-cloud/<id>`, which eats the SIZE TAG this model needs - the provider offers
+# only `mistral-large-3:675b`, so `mistral-large-3:cloud` resolved to a nonexistent id
+# and every run came back empty (0 tokens, exit 1). provider/model form passes through.
+confirmation  ollama-cloud/mistral-large-3:675b  2

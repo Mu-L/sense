@@ -9,7 +9,7 @@ It is not generated, on purpose. The queries are the search that a later "the po
 claim rests on, and the framework roles are a judgment about the ecosystem. Both belong in a file
 someone reviewed and committed, not in whatever a session improvised.
 
-## The three keys
+## The four keys
 
 ### `stack:` - required, exactly one
 
@@ -70,6 +70,30 @@ Anything the hunt finds that is not listed here is screened as an application.
 This is declared because it is **not derivable**, and that was measured rather than assumed:
 `composer.json` `type` is unset for laravel/framework, filament, statamic and flarum, and `project`
 for october and winter. The manifest does not separate a framework from an application.
+
+### `repo:` - optional, one per line
+
+    repo: <owner>/<name>
+
+A repo you want benched **by name**: one you already know, or one whose popularity makes its
+absence from the slate indefensible. Seeded into the pool by declaration, exactly like a
+framework, because a hunt finds what its queries describe and a repo you already have in mind is
+not something to re-derive from a search.
+
+What a listing waives, and what it does not:
+
+| screen | listed repo |
+|---|---|
+| in-vertical manifest marker | **waived** - the listing is the assertion |
+| stars floor | **waived** - popularity was your call to make |
+| size floor | **waived** as a reject; the class is still measured, because the SLOT a repo can fill is a size question |
+| maintained | binds - archived or long-untouched still rejects |
+| language | binds - a repo with no source in the vertical's language cannot be benched by a vertical about that language |
+
+**It is not `framework:`.** A framework-role repo is barred from the big slot by the pillar rule,
+so declaring an application framework-role to get it into the pool silently costs the big slot:
+that is how an 8,228-file app landed in a medium slot with the big slot unfilled. Use `repo:` when
+you want the repo screened as the application it is and slotted by its size.
 
 ## Check it
 

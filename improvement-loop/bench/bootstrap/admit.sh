@@ -45,6 +45,10 @@ while [ $# -gt 0 ]; do
 done
 
 VDIR="$IL_ROOT/verticals/$VERTICAL"
+# The vertical's own language, from the queue: the size screen counts THIS
+# language's files. Counting every extension read umbraco-cms as an 8,228-file
+# repo on its TypeScript, and read bitwarden/server - 5,282 .cs files - as 24.
+LANG="$(grep "^$VERTICAL|" "$IL_ROOT/verticals.txt" 2>/dev/null | head -1 | cut -d'|' -f2)"
 POOL="$VDIR/pool.txt"
 CELLS="$VDIR/.screen-cells"
 CLONES="${SENSE_CLONES:-$HOME/Developer/luuuc/oss/sense-benchmark/sense}"
@@ -69,21 +73,28 @@ echo "## [pool] $POOL  (stack marker: $STACK_MARKER)"
 # manifest over the API. A MISSING manifest rejects, a MATCHING one passes, and a
 # present-but-non-matching one is UNDECIDED and falls through to the clone -
 # never a reject, because a monorepo declares nothing at its root.
-frameworks=""; SURVIVORS=""
+frameworks=""; listed_repos=""; SURVIVORS=""
 echo "## [screen 1/2] maintained + used, no clone needed"
 while IFS='|' read -r key url isfw stars pushed; do
   case "$key" in ''|\#*) continue ;; esac
   url="${url%%#*}"; url="${url// /}"
   isfw="${isfw%%#*}"; isfw="${isfw// /}"
   facts=""; [ -n "${stars:-}" ] && [ -n "${pushed:-}" ] && facts="--stars ${stars// /} --pushed ${pushed// /}"
-  [ "$isfw" = "framework" ] && facts="$facts --declared"
-  [ -n "${isfw:-}" ] && frameworks="$frameworks,$key"
+  # The role column carries TWO declarations and they are not the same thing.
+  # `framework` bypasses the marker AND takes the framework slot role, which is
+  # barred from the big slot. `listed` bypasses the marker and the stars floor
+  # and stays an ordinary application, so its slot follows its SIZE. Conflating
+  # them put an 8,228-file app in a medium slot and left the big slot unfilled.
+  case "$isfw" in
+    framework) facts="$facts --declared"; frameworks="$frameworks,$key" ;;
+    listed)    facts="$facts --listed"; listed_repos="$listed_repos,$key" ;;
+  esac
   if [ -n "${NO_API:-}" ]; then
     SURVIVORS="$SURVIVORS $key|$url"; continue
   fi
   # shellcheck disable=SC2086
   v=$(python3 bench/bootstrap/screen.py /dev/null --key "$key" --url "$url" \
-        --api-only $facts --stack "$STACK_MARKER" --json "$CELLS/$key.json" 2>&1 |
+        --api-only $facts --stack "$STACK_MARKER" --lang "$LANG" --json "$CELLS/$key.json" 2>&1 |
       grep -oE 'SCREEN: [A-Z-]+')
   case "$v" in
     "SCREEN: CLONE-ME") SURVIVORS="$SURVIVORS $key|$url" ;;
@@ -110,11 +121,13 @@ ADMITTED=""
 for pair in $SURVIVORS; do
   key="${pair%%|*}"; url="${pair#*|}"
   [ -d "$CLONES/$key" ] || continue
-  decl=""; case ",$frameworks," in *",$key,"*) decl="--declared" ;; esac
+  decl=""
+  case ",$frameworks," in *",$key,"*) decl="--declared" ;; esac
+  case ",$listed_repos," in *",$key,"*) decl="--listed" ;; esac
   # shellcheck disable=SC2086
   # shellcheck disable=SC2086
   v=$(python3 bench/bootstrap/screen.py "$CLONES/$key" --key "$key" --url "$url" \
-        --stack "$STACK_MARKER" --json "$CELLS/$key.json" $api_flag $decl 2>&1 |
+        --stack "$STACK_MARKER" --lang "$LANG" --json "$CELLS/$key.json" $api_flag $decl 2>&1 |
       grep -oE 'SCREEN: [A-Z]+')
   printf '   %-22s %s\n' "$key" "${v:-SCREEN FAILED}"
   [ "$v" = "SCREEN: ADMIT" ] && ADMITTED="$ADMITTED $key"
@@ -123,7 +136,7 @@ done
 
 echo "## [compose]"
 python3 bench/bootstrap/compose.py "$VERTICAL" --cells "$CELLS" --clones "$CLONES" \
-        --frameworks "${frameworks#,}" $WRITE
+        --frameworks "${frameworks#,}" --listed "${listed_repos#,}" $WRITE
 rc=$?
 
 if [ -n "$WRITE" ] && [ $rc -eq 0 ]; then

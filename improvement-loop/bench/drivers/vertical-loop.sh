@@ -186,12 +186,16 @@ headless() { # <cwd> <out.json> <prompt> [extra claude args...]
   (
     cd "$cwd" || exit 1
     export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1
-    IS_SANDBOX=1 claude -p "$prompt" \
+    # The prompt goes in on STDIN, never as the value of -p: an agent definition starts
+    # with its `---` frontmatter, and the CLI parser reads a value beginning with a dash
+    # as an option ("error: unknown option '---"). That killed the first win-confirm spawn
+    # before it ran a single check, and reported it as a DoD failure.
+    IS_SANDBOX=1 claude -p \
       --output-format json \
       --permission-mode bypassPermissions \
       --disallowed-tools "Agent" \
       ${PLAN_MODEL:+--model "$PLAN_MODEL"} \
-      "$@"
+      "$@" <<<"$prompt"
   ) > "$out" 2> "${out%.json}.log"
 }
 
@@ -1162,6 +1166,12 @@ do_board() {
 # ---- driver: run phases from the current one until a gate stops us ----------
 PHASE="${FORCE_PHASE:-$(state_get "$REPO")}"; [ -z "$PHASE" ] && PHASE=index
 echo "[$VERTICAL/$REPO] entering at phase '$PHASE' (models='$MODELS' runs=$RUNS)"
+# Render on ENTRY as well as on each transition. The page only ever re-rendered when
+# a phase CHANGED, so a phase that fails and retries in place - a rejected verdict, a
+# re-spawn - left it frozen at the moment before the failure, which is exactly when
+# someone opens it. Measured on csharp-aspnet: it read "no results tree yet" while an
+# author transcript and a rejected verdict sat in that tree. $0, read-only, never fatal.
+bash "$LIB/render-status.sh" "$VERTICAL" >/dev/null 2>&1 || true
 
 while :; do
   NEXT=""

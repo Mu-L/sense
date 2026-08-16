@@ -1,0 +1,349 @@
+name: Bitwarden server work session - audit the expiring-token contract before a rework
+repo: bitwarden-server
+contract_symbol: ExpiringTokenable
+contract_file: src/Core/Tokens/ExpiringTokenable.cs
+# TWO-STEP PROBE SCENARIO (plans/cycle-1-craft-the-scenario/01-author.md), cycle 1,
+# attempt 3 on this repo. RE-QUESTION, routed back from a measured two-arm mini-bench.
+# The ANCHOR MOVES this cycle, and the paragraph "WHY THE ANCHOR MOVES" below carries the
+# arithmetic that forced it. Superseded yamls are kept as
+# `bitwarden-server.yaml.conversion-boundary.bak` (attempt 1) and
+# `bitwarden-server.yaml.declared-shape.bak` (attempt 2).
+#
+# ------------------------------------------------------------------------------------
+# TRAJECTORY - every previous cycle, and which side of the window it fell on
+# ------------------------------------------------------------------------------------
+# The window is BOTH conditions at once: plain arm <= 0.50 AND ours >= plain + 0.50.
+#
+#   cycle 1, attempt 1  "the representation-boundary conversion audit"  anchor Permissions
+#     verdict REQUESTION | baseline dependents 0.6842 (13/19) | sense 0.8421 (16/19)
+#     delta +0.1579 | n = baseline x1, sense x1 (confirm_band: SETTLED, no second pair)
+#     SIDE OF THE WINDOW: BASELINE-TOO-HIGH, by 0.18. Killed by one alternation over the
+#     conversion idioms (`new Permissions\|GetPermissions()\|SetPermissions(\|
+#     LoadClassFromJsonData<Permissions>\|Permissions>(`), which printed 11 of its 13 rows.
+#
+#   cycle 1, attempt 2  "the declared-shape holder audit"              anchor Permissions
+#     verdict REQUESTION | baseline dependents 0.8333 (10/12) | sense 1.0000 (12/12)
+#     delta +0.1667 | n = baseline x1, sense x1 (confirm_band: SETTLED, no second pair)
+#     SIDE OF THE WINDOW: BASELINE-TOO-HIGH again, and FURTHER OUT than attempt 1 -
+#     0.6842 -> 0.8333. The correction moved the baseline the wrong way. Killed by
+#     "grep the anchor token in declaration position", plus the switch names, plus the
+#     injected interface names: call 7's `grep -rn "Permiss..."` for declared members,
+#     call 8's `is { Manage... / { ManageUsers:` alternation for the matched shapes, and
+#     call 10's `IActingUser \|IOrganizationUserRole ` filtered to `{ get\|record`.
+#
+# BOTH cycles fell on the SAME side, and THIS DRAFT CORRECTS FROM THE BASELINE-TOO-HIGH
+# SIDE. How far it intends to move: from a baseline in the 0.68-0.83 band to at or below
+# 0.50, by removing the property both failures shared - that every gold file wrote the
+# anchor's own name, so ONE search over the anchor printed the file list. On this anchor
+# the twelve gold files contain the anchor's name ZERO times; `grep -rl ExpiringTokenable`
+# over the whole tree returns 16 files and NOT ONE of them is a gold row (recorded in the
+# SEAM PROFILE below, where a grep result is allowed to be recorded and is not allowed to
+# decide). The far side - both arms near zero because nothing can answer - is what this
+# has to avoid, and the guard is that all twelve rows are SHOWN in the blast payload at
+# MCP defaults, quoted below, so the sense arm is being asked for something it is handed.
+#
+# ------------------------------------------------------------------------------------
+# WHY THE ANCHOR MOVES - the one law this draft argues with, and the number under it
+# ------------------------------------------------------------------------------------
+# `laws.md` ITERATE ON THE QUESTION, KEEP THE ANCHOR. It has been spent twice on
+# `Permissions`, with two different questions, and the baseline moved AWAY from the window
+# both times. What is left on that anchor is arithmetic, not preference: attempt 2's
+# credit table records `baseline-only 0` and `sense-only 3`, of which two are in the
+# scoring group (`d:policy-update`, `d:security-task-handler`). Two rows the baseline has
+# ever missed is a ceiling of +0.1667 however the group is re-weighted, and THE BAR IS
+# +0.50 ON A GOLD GROUP with recall capped at 1.00. A third question on `Permissions`
+# would be a cell that is dead before it runs, which is exactly what the arithmetic killer
+# exists to catch. The minibench verdict that routed this cycle names the alternative
+# itself: "If the pool is re-widened, rank the concrete-class candidates on something
+# other than precision alone." AXIS-DEAD IS NEVER REPO-DEAD - this rules on the anchor,
+# not on bitwarden-server, and the repo is unchanged.
+#
+# ------------------------------------------------------------------------------------
+# THE AXIS SENTENCE - the mechanism this scenario's whole thesis rests on
+# ------------------------------------------------------------------------------------
+# The contract is an abstract base for short-lived signed values. NOTHING calls it. The
+# code that depends on it depends on it at ONE REMOVE and by TYPE ARGUMENT: a dependent
+# constructs ONE concrete kind of these values, chooses that instance's lifetime at the
+# construction site, and hands the instance to a single shared generic machine that turns
+# it into a string and back. The base is what decides that a value with a lifetime is
+# valid; the dependent is what decides what that lifetime IS. So the dependency is
+# established by the generic parameter of the machine and by the constructor argument that
+# sets the deadline - and the dependent's file never contains the base's name, never
+# mentions it in a using directive, and never states the relationship on any line.
+#
+# WHAT THE ANSWER IS, THAT IS NOT A LIST OF THE PLACES A NAME APPEARS: it is the set of
+# sites that CHOOSE a lifetime for one of these values, each paired with the deadline it
+# picks and where that number comes from. The places the name appears and the answer are
+# disjoint sets here, and that is measurable rather than argued: the sixteen files whose
+# text contains `ExpiringTokenable` are the base, its thirteen subclasses and two test
+# helpers, and every one of them is EXCLUDED from gold; the twelve answers are twelve
+# files none of which contains the string. A name-occurrence list on this anchor returns
+# sixteen rows and scores zero.
+#
+# THIS IS NOT GOLD CURATED FOR TOKEN-DARKNESS, and the distinction matters because
+# `laws.md` TOKEN-DARKNESS IS NOT THE MECHANISM bans exactly that. The selection criterion
+# is the two-hop retention structure - a site that constructs a subtype and sets its
+# deadline - and the darkness is a CONSEQUENCE of that structure, not the filter. The
+# proof that it is the consequence and not the criterion: the criterion admits the four
+# test files that construct these values too (they are in the shown payload), and they are
+# dark as well; they were cut for being tests, not for being dark. No row was chosen, kept
+# or dropped by asking whether a grep prints it.
+#
+# ------------------------------------------------------------------------------------
+# ANSWER FORM
+# ------------------------------------------------------------------------------------
+# `verticals/csharp-aspnet/answer-forms.md` still reads "nothing measured yet" in all four
+# sections - the two minibench verdicts on this repo have not been folded into it - so this
+# draft treats it as carrying nothing and records what it would say.
+#
+# The form used here is "what HOLDS X, and what breaks at one remove", asked as: which
+# sites keep one of these values alive long enough to decide its lifetime. It is
+# UNMEASURED in this stack. Elsewhere in the bench it is the strongest measured kind
+# (+0.58, +0.67, +0.80, +1.00 on four Go cells). `laws.md` gates it on a non-empty
+# retention ring, and `ring_sweep.py --top 12` prints `0 anchor(s) above the ranking
+# threshold` on this clone - but the sweep ranks anchors reached through an interface-typed
+# FIELD, and this anchor is reached through a GENERIC TYPE ARGUMENT, which is why it is
+# absent from the sweep and present in the blast payload with 20 indirect-caller rows at
+# hops=2. The ring for THIS anchor is quoted from `sense_blast` below, and it is non-empty.
+#
+# The form MEASURED TO FAIL on this repo is "find every place that uses X" over an anchor
+# whose dependents write X's name - twice, at baseline 0.6842 and 0.8333. This draft does
+# not re-buy it: it is the same grammatical shape and the opposite lexical situation, and
+# the sentence that says what is different is the one above about the sixteen files being
+# disjoint from the twelve.
+#
+# ------------------------------------------------------------------------------------
+# SEAM PROFILE - `python3 bench/lib/seam_hunt.py $CLONE ExpiringTokenable --propose`
+# ------------------------------------------------------------------------------------
+#     app caller files : 0
+#     SCATTER (dirs)   : 0
+#     GREP-NOISE       : 'ExpiringTokenable' in 13 app files   PRECISION=0.00
+#     HOLDERS (no call): 12 app files compose/inherit/include it
+#     VERDICT          : colocated(0dir) + GREP-NOISY + HELD-NOT-CALLED(12)
+#
+# PRECISION 0.00, SCATTER 0. Both figures are DEGENERATE on this anchor and neither ranks
+# it, for a reason that is a stack fact rather than a property of the seam: `seam_hunt`
+# divides CALLER files by grep hits, this contract has zero call edges by construction (it
+# is an abstract base whose members are overridden, never invoked by name), and its
+# SCATTER is computed over those same zero callers. The thirteen subclasses do sit in
+# three directories, so "colocated(0dir)" is measuring the empty set. `laws.md` PRECISION
+# RANKS, IT NEVER KILLS - and the corollary the previous cycle wrote down applies here in
+# the other direction: 0.02 ranked `Permissions` first and preceded 0.6842 and 0.8333, so
+# the figure neither kills nor vouches, and this anchor is chosen on the shown payload
+# instead.
+#
+# GREP FACTS, recorded because `laws.md` says to record what a grep prints in the header
+# and never to let it decide. Over `src/ util/ bitwarden_license/ test/`, `*.cs`:
+#     ExpiringTokenable          16 app files   <- the base, 13 subclasses, 2 test helpers
+#     IDataProtectorTokenFactory 75 app files   <- the shared machine; the cheapest cover
+#     Tokenable                  112 app files  <- the suffix convention; over-collects
+# The twelve gold files are in the 75 and in the 112 and in NEITHER of those sets alone
+# would they be separable from the rest by reading grep's own output: a hit on the machine
+# says a file handles some signed value, not that the value has a lifetime, and roughly
+# half the concrete kinds in this tree derive from the non-expiring base instead. This is
+# recorded, it is not a claim about what the baseline will do, and the two-arm run decides.
+#
+# ------------------------------------------------------------------------------------
+# WHAT THE ARM IS SHOWN - `mcp_probe.py $CLONE '[{"name":"sense_blast",
+#   "arguments":{"symbol":"ExpiringTokenable"}}]'`, no min_confidence, MCP defaults
+# ------------------------------------------------------------------------------------
+#   risk high | direct_callers 0 | indirect_callers 20 | affected_subclasses 13
+#   affected_symbols 243 | graph_edges_traversed 307 | completeness partial (resolved 20)
+# The 20 indirect-caller rows are at hops=2, each carrying its `via` - the concrete kind
+# that links the site to the base. They cover 16 files; the 12 production files among them
+# are exactly the `dependents` group below, one row per file, and the 4 test files are cut
+# (see the gold note). Every dependents row therefore appears in the shown payload, which
+# is the GOLD RAILS requirement. The 13 `affected_subclasses` rows are the ANCHOR set and
+# none of them is gold.
+#
+# MEMORIZATION: `memorization_probe.py $CLONE ExpiringTokenable --json` returned
+# `"applicable": false, "reason": "only 1 member(s) declared (< 5) - too few to score
+# recitation, bar inapplicable"`. The probe is live and does discriminate on this clone -
+# run on `CurrentContext` it found 35 members and returned "not recited". Gold here is
+# twelve construction lines with their deadline arguments in a 5306-file tree, the
+# line-level structural fact the law exempts.
+#
+# Single-prompt session bench (bench/drivers/bench-sense-local.sh): every step is presented
+# in ONE prompt and worked in order. Rendered to the agent: the description + each step's
+# name and prompt ONLY (checks and gold are NEVER shown). Everything rendered is kept
+# NEUTRAL - it states the task, never the answer's shape, file paths, class or method
+# names, counts, or which tool to reach for.
+description: |
+  You are a maintainer about to rework how this product issues short-lived signed values.
+  These are the small self-describing blobs it hands out when something has been started
+  but not yet finished, so that whoever comes back later can be trusted without the server
+  keeping any record of what it promised. Each one carries its own deadline inside it, and
+  a shared rule decides that such a value is worth honouring only while its deadline has
+  not passed and its contents still make sense. The rework changes that rule: how a
+  deadline is declared, when it is measured, and what a value must do to prove its contents
+  are still sound. Nothing in the codebase invokes that rule by name - it is inherited and
+  overridden - so nothing will fail to compile, and every place that gets the deadline
+  wrong will fail silently, either by honouring something it should have refused or by
+  refusing something a person is holding in their inbox. Before you touch it you have to
+  know two things: how one of these values is declared, sealed into a string and opened
+  back up, and every place that decides how long one of them lives. Throughout, an answer
+  that points at a place must say which type, member or routine that place is inside, and
+  give an exact file:line a teammate could jump straight to, plus one phrase on why it
+  matters. A bare filename does not count, a file:line with nothing named around it does
+  not count, and a missed one is a regression shipped.
+steps:
+- name: Map the expiring-token contract
+  prompt: "Task: orient, and be thorough - the rest of the ticket is built on this. Find
+    where the rule about deadlines is declared, what a value has to supply for that rule to
+    be able to judge it, and how the general form it sits on top of turns an instance into
+    a string and opens one back up. Then follow the one path that carries such a value out
+    of the process and back into it: the shared piece of machinery that seals a value for
+    transport, and what it does when it is handed something it cannot open. For each one
+    give the file:line, the name of the member or routine it lives in, and one phrase on
+    what it contributes to that path. Then say, in a few sentences, what a rework of the
+    deadline rule would have to preserve for that path to keep working. A place named
+    without the routine it lives in does not count, and neither does a routine named
+    without the file:line where it is defined.
+    "
+  checks:
+  - type: response_richness
+    value: '3'
+    required: true
+    description: The deadline rule, what a value must supply to it, and the seal/open path, each located
+  - type: mcp_tool_used
+    value: sense_graph
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_search
+    required: false
+    layer: adoption
+- name: Audit every dependent of the expiring-token contract
+  prompt: "Task: this is the core of the ticket, and you are working it with the budget the
+    first part already cost you. Widen back out from that one path. Nothing in this
+    codebase names the rule you just mapped when it depends on it: a place that depends on
+    it does so at one remove, by building one particular kind of these values and handing
+    that kind, as a type it names in passing, to the shared machinery - so the tie is made
+    by a type standing in a slot and by the argument that sets the deadline, and it is
+    stated on no line anywhere in that place's file. What you owe is every place that makes
+    that decision: every site that brings one of these values into existence and fixes how
+    long it will be honoured for. Reciting the kinds themselves is not the answer - a kind
+    only says a deadline exists, and the ticket turns on who chooses it. For each site give
+    the file:line of the line that constructs the value, name the type, member or routine
+    that line sits in, say what deadline that site chooses and where the number comes from,
+    and say in one phrase what would go wrong for the people holding one of these if the
+    rule changed underneath that site. A file:line with nothing named around it does not
+    count, one you cannot state the chosen deadline for does not count, and a missed one is
+    a regression shipped.
+    "
+  checks:
+  - type: response_richness
+    value: '6'
+    required: true
+    description: Construction sites attributed to the routine that chooses the deadline, with the deadline named
+  - type: no_grep
+    value: no_grep
+    required: false
+    layer: adoption
+  - type: mcp_tool_used
+    value: sense_blast
+    required: false
+    layer: adoption
+scoring:
+  weights:
+    correctness: 0.70
+    efficiency: 0.30
+# Gold. TWO groups.
+#   - `contract` (3, NON-SCORING anchors): the abstract base that declares the deadline
+#     rule, the general base it sits on that does the string round-trip, and the shared
+#     generic machine that seals and opens an instance. These are step 1's targets. They
+#     do NOT score; they are here so step 1's cost is charged without step 1 handing
+#     anything to step 2. All three write the contract's own name and both arms should
+#     reach them.
+#   - `dependents` (12, THE DISCRIMINATOR): one row per FILE, across 10 distinct
+#     directories in 6 top-level areas (the public API's auth controllers, the identity
+#     server's controllers and request validators, core admin-console org features, core
+#     auth user features, core billing, and the commercial licence tree's provider and SSO
+#     code). Every row is a CONSTRUCTION SITE that chooses a lifetime. Not one of them is
+#     a subclass declaration, and not one is on the declare/seal/open path step 1 traces.
+#     Every row appears in the shown `sense_blast ExpiringTokenable` payload at MCP
+#     defaults, in `indirect_callers` at hops=2 with its `via`. Every line below was opened
+#     and read by hand at its pin: the payload's `ref` is the ENCLOSING METHOD's first
+#     line for all twenty rows (e.g. it gives ProviderService.cs:680, the `public async
+#     Task InitiateDeleteAsync` signature; the credit is at 699), so not one credit here
+#     is taken from the payload.
+#
+# ROWS CUT, and the reason. FOUR files in the shown payload are cut, all of them tests:
+#     test/Api.IntegrationTest/.../OrganizationUsersControllerAcceptInitTests.cs:193
+#     test/Api.IntegrationTest/.../OrganizationsControllerPerformanceTests.cs:107
+#     bitwarden_license/test/Commercial.Core.Test/.../ProviderServiceTests.cs:1340
+#     bitwarden_license/test/SSO.Test/Controllers/AccountControllerTest.cs:825
+# They are real dependents by the axis - each constructs a kind and sets a deadline - and
+# they were cut on the judgement that an ask which does not say "and the tests" leaves them
+# reachable by neither arm, which is the 0/N-on-both class the plan says only dilutes a
+# group; the ask is not going to say it, because naming where to look is an inventory.
+# THIRTEEN subclass files are cut as ANCHORS rather than gold: they are what
+# `grep ExpiringTokenable` returns, and golding them would hand the baseline a floor of
+# 13/25 before it read anything - the `LoadClassFromJsonData` mistake of attempt 1 in a
+# different costume.
+#
+# NO ROW WAS CUT FROM A CITATION RANKING. `inverse_frequency.py` has 2 runs on disk for
+# this repo (baseline x1, sense x1), both against a DIFFERENT anchor's gold, so it says
+# nothing about these twelve rows; `laws.md` forbids re-golding below ~5 runs per arm and
+# nothing here was.
+gold:
+- id: contract-class
+  group: contract
+  match: [Tokens/ExpiringTokenable.cs]
+  relation: "src/Core/Tokens/ExpiringTokenable.cs:15 `public override bool Valid => !IsExpired && TokenIsValid();` - the deadline rule itself, composing the expiry check with the abstract contents check every kind must implement"
+- id: c:tokenable-base
+  group: contract
+  match: [Tokens/Tokenable.cs]
+  relation: "src/Core/Tokens/Tokenable.cs:10 `public abstract bool Valid { get; }` - the general base the deadline rule overrides, and the file that does the string round-trip in ToToken/FromToken"
+- id: c:protector-factory
+  group: contract
+  match: [Tokens/DataProtectorTokenFactory.cs]
+  relation: "src/Core/Tokens/DataProtectorTokenFactory.cs:9 `public class DataProtectorTokenFactory<T> : IDataProtectorTokenFactory<T> where T : Tokenable` - the single shared machine every dependent hands its instance to; the generic slot is what ties a dependent to the contract"
+- id: d:provider-delete
+  group: dependents
+  match: [Commercial.Core/AdminConsole/Services/ProviderService.cs]
+  relation: "bitwarden_license/src/Commercial.Core/AdminConsole/Services/ProviderService.cs:699 `var token = _providerDeleteTokenDataFactory.Protect(new ProviderDeleteTokenable(provider, 1));` - in InitiateDeleteAsync; constructs the provider-delete kind and fixes its life at 1 hour by the second constructor argument"
+- id: d:sso-prevalidate
+  group: dependents
+  match: [Sso/Controllers/AccountController.cs]
+  relation: "bitwarden_license/src/Sso/Controllers/AccountController.cs:148 `var tokenable = new SsoTokenable(organization, _globalSettings.Sso.SsoTokenLifetimeInSeconds);` - in PreValidateAsync; the only site whose deadline comes from a configured setting rather than a literal"
+- id: d:two-factor-authenticator
+  group: dependents
+  match: [Auth/Controllers/TwoFactorController.cs]
+  relation: "src/Api/Auth/Controllers/TwoFactorController.cs:125 `var tokenable = new TwoFactorAuthenticatorUserVerificationTokenable(user, data.Key);` - in GetAuthenticator; the deadline is defaulted inside the kind and the site binds the value to a secret it must match on redemption at 137 and 172"
+- id: d:webauthn-attestation
+  group: dependents
+  match: [Auth/Controllers/WebAuthnController.cs]
+  relation: "src/Api/Auth/Controllers/WebAuthnController.cs:74 `var tokenable = new WebAuthnCredentialCreateOptionsTokenable(user, options);` - in AttestationOptions; mints the credential-creation options value whose deadline bounds a browser passkey ceremony"
+- id: d:org-initiate-delete
+  group: dependents
+  match: [Organizations/OrganizationInitiateDeleteCommand.cs]
+  relation: "src/Core/AdminConsole/OrganizationFeatures/Organizations/OrganizationInitiateDeleteCommand.cs:46 `var token = _orgDeleteTokenDataFactory.Protect(new OrgDeleteTokenable(organization, 1));` - in InitiateDeleteAsync; fixes the org-delete confirmation at 1 hour, the emailed counterpart of the provider one"
+- id: d:org-user-invite-factory
+  group: dependents
+  match: [Tokenables/OrgUserInviteTokenableFactory.cs]
+  relation: "src/Core/Auth/Models/Business/Tokenables/OrgUserInviteTokenableFactory.cs:17-19 `var token = new OrgUserInviteTokenable(orgUser) { ExpirationDate = DateTime.UtcNow.Add(TimeSpan.FromHours(_globalSettings.OrganizationInviteExpirationHours)) };` - in CreateToken; sets the deadline by assigning the property outright instead of through a constructor argument"
+- id: d:sales-assisted-factory
+  group: dependents
+  match: [Tokenables/SalesAssistedRegistrationTokenableFactory.cs]
+  relation: "src/Core/Auth/Models/Business/Tokenables/SalesAssistedRegistrationTokenableFactory.cs:18-21 `var token = new SalesAssistedRegistrationTokenable(email, name) { ExpirationDate = _timeProvider.GetUtcNow().UtcDateTime.AddDays(_globalSettings.SalesAssistedRegistrationTokenLifetimeDays) };` - in CreateToken; the only site that reads the clock from an injected time provider rather than DateTime.UtcNow, so it is the one a change to when the deadline is measured behaves differently in"
+- id: d:emergency-access-invite
+  group: dependents
+  match: [EmergencyAccess/EmergencyAccessService.cs]
+  relation: "src/Core/Auth/UserFeatures/EmergencyAccess/EmergencyAccessService.cs:520 `var token = _dataProtectorTokenizer.Protect(new EmergencyAccessInviteTokenable(emergencyAccess, _globalSettings.OrganizationInviteExpirationHours));` - in SendInviteAsync; reuses the organization invite expiry setting for an unrelated flow, so one setting change moves two deadlines"
+- id: d:registration-email-verify
+  group: dependents
+  match: [Implementations/SendVerificationEmailForRegistrationCommand.cs]
+  relation: "src/Core/Auth/UserFeatures/Registration/Implementations/SendVerificationEmailForRegistrationCommand.cs:119 `var registrationEmailVerificationTokenable = new RegistrationEmailVerificationTokenable(email, name, receiveMarketingEmails);` - in GenerateToken; constructs the email-verification kind with no explicit deadline, taking whatever the kind defaults to"
+- id: d:trial-initiation-email
+  group: dependents
+  match: [Implementations/SendTrialInitiationEmailForRegistrationCommand.cs]
+  relation: "src/Core/Billing/TrialInitiation/Registration/Implementations/SendTrialInitiationEmailForRegistrationCommand.cs:63 `var tokenable = new RegistrationEmailVerificationTokenable(email, name, receiveMarketingEmails);` - in GenerateToken; a second, independently maintained copy of the same construction in the billing tree, so a change has to be made twice"
+- id: d:webauthn-assertion-identity
+  group: dependents
+  match: [Identity/Controllers/AccountsController.cs]
+  relation: "src/Identity/Controllers/AccountsController.cs:269 `var tokenable = new WebAuthnLoginAssertionOptionsTokenable(WebAuthnLoginAssertionOptionsScope.Authentication, options);` - in GetWebAuthnLoginAssertionOptions; the same kind the API controller mints for a different scope, so the two sites must stay in step"
+- id: d:sso-email-2fa-session
+  group: dependents
+  match: [RequestValidators/TwoFactorAuthenticationValidator.cs]
+  relation: "src/Identity/IdentityServer/RequestValidators/TwoFactorAuthenticationValidator.cs:112 `_ssoEmail2faSessionTokeFactory.Protect(new SsoEmail2faSessionTokenable(user)));` - in BuildTwoFactorResultAsync; constructs the session hand-off value inline inside a dictionary literal returned to the client, with the deadline defaulted by the kind"

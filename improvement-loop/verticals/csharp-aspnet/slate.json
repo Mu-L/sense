@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "vertical": "csharp-aspnet",
+    "note": "Written by compose.py; verified by slate_check.py."
+  },
+  "bitwarden-server": {
+    "slot": "big",
+    "size": "big",
+    "prod_files": 4044,
+    "stars": 19827,
+    "banner": false,
+    "backup": {
+      "repo": "roslyn",
+      "size": "big",
+      "prod_files": 13915,
+      "stars": 20609
+    }
+  },
+  "servicestack": {
+    "slot": "medium",
+    "size": "medium",
+    "prod_files": 2386,
+    "stars": 5500,
+    "banner": false,
+    "backup": {
+      "repo": "jellyfin",
+      "size": "medium",
+      "prod_files": 1915,
+      "stars": 55730
+    }
+  },
+  "umbraco-cms": {
+    "slot": "medium",
+    "size": "big",
+    "prod_files": 5991,
+    "stars": 5224,
+    "banner": false,
+    "backup": {
+      "repo": "files",
+      "size": "medium",
+      "prod_files": 1115,
+      "stars": 44609
+    }
+  },
+  "aspnetcore": {
+    "slot": "framework",
+    "size": "big",
+    "prod_files": 6552,
+    "stars": 38372,
+    "banner": false,
+    "backup": {
+      "repo": "maui",
+      "size": "big",
+      "prod_files": 5600,
+      "stars": 23299
+    }
+  }
+}
