@@ -34,10 +34,6 @@ func envMap(t *testing.T, env []string) map[string]string {
 	return m
 }
 
-func joinPath(dirs ...string) string {
-	return strings.Join(dirs, string(filepath.ListSeparator))
-}
-
 func TestSessionSeesTheDisposableHomeAndXDGDirectories(t *testing.T) {
 	l := LayoutFor("/runs/r1")
 
@@ -107,7 +103,7 @@ func TestPathIsNotInheritedFromTheHostAllowlist(t *testing.T) {
 	// allowlist entry: an entry would give both arms the host's PATH and the
 	// baseline arm a CLI fallback with it.
 	if slices.ContainsFunc(allowed, func(e Entry) bool { return e.Name == "PATH" }) {
-		t.Fatal("PATH is on the environment allowlist; it must be built per arm by PathFor")
+		t.Fatal("PATH is on the environment allowlist; it must be built per arm by ShadowBin")
 	}
 
 	host := hostWith(map[string]string{"PATH": "/host/bin"})
@@ -128,60 +124,6 @@ func TestTheAgentToolsOwnEnvironmentWinsOverADefault(t *testing.T) {
 	}
 	if got["TERM"] != "dumb" {
 		t.Errorf("TERM = %q, want the agent tool's dumb to win over the host's xterm", got["TERM"])
-	}
-}
-
-func TestTheSenseArmGetsTheSenseBinaryFirstOnPath(t *testing.T) {
-	got := PathFor(Sense, joinPath("/usr/bin", "/bin"), "/lab/bin")
-
-	if want := joinPath("/lab/bin", "/usr/bin", "/bin"); got != want {
-		t.Errorf("PathFor(sense) = %q, want %q", got, want)
-	}
-}
-
-func TestTheBaselineArmLosesTheSenseDirectoryTheHostAlreadyHad(t *testing.T) {
-	// The failure this exists to catch: prepending for the Sense arm only, on a
-	// machine where the Sense binary's directory is already on the host PATH.
-	// The baseline arm then keeps a CLI fallback it never earned.
-	host := joinPath("/usr/bin", "/lab/bin", "/bin")
-
-	got := PathFor(Baseline, host, "/lab/bin")
-
-	if strings.Contains(got, "/lab/bin") {
-		t.Fatalf("PathFor(baseline) = %q, which still reaches the Sense binary", got)
-	}
-	if want := joinPath("/usr/bin", "/bin"); got != want {
-		t.Errorf("PathFor(baseline) = %q, want %q", got, want)
-	}
-}
-
-func TestTheSenseDirectoryIsNotListedTwiceForTheSenseArm(t *testing.T) {
-	got := PathFor(Sense, joinPath("/usr/bin", "/lab/bin/"), "/lab/bin")
-
-	if want := joinPath("/lab/bin", "/usr/bin"); got != want {
-		t.Errorf("PathFor(sense) = %q, want %q; an unclean spelling of the same directory should match", got, want)
-	}
-}
-
-func TestAnEmptyPathElementIsDroppedRatherThanMeaningTheWorkingDirectory(t *testing.T) {
-	// An empty element means "the current directory" to execvp, which in a run
-	// is the repository under study. A scenario that writes an executable named
-	// after a tool would then be running it.
-	got := PathFor(Baseline, joinPath("/usr/bin", "", "/bin"), "")
-
-	if want := joinPath("/usr/bin", "/bin"); got != want {
-		t.Errorf("PathFor = %q, want %q", got, want)
-	}
-}
-
-func TestWithNoSenseDirectoryBothArmsGetTheSamePath(t *testing.T) {
-	host := joinPath("/usr/bin", "/bin")
-
-	if got := PathFor(Sense, host, ""); got != host {
-		t.Errorf("PathFor(sense) = %q, want %q", got, host)
-	}
-	if got := PathFor(Baseline, host, ""); got != host {
-		t.Errorf("PathFor(baseline) = %q, want %q", got, host)
 	}
 }
 

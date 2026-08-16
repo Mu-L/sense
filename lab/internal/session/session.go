@@ -55,16 +55,6 @@ type Result struct {
 	Meta run.Meta
 }
 
-// senseBinDir is the directory holding the Sense binary, and "" when there is
-// no binary. Passing filepath.Dir("") would hand both arms "." as the directory
-// to add and remove, which is the working directory: the repository under study.
-func senseBinDir(bin string) string {
-	if bin == "" {
-		return ""
-	}
-	return filepath.Dir(bin)
-}
-
 // captureLog is the MCP capture, relative to the run's artifacts directory.
 const captureLog = "sense-io.jsonl"
 
@@ -73,11 +63,11 @@ const captureLog = "sense-io.jsonl"
 // is about to be diagnosed must survive the process that made it.
 func Run(ctx context.Context, s Spec) (Result, error) {
 	env, err := isolate.Prepare(isolate.Spec{
-		Root:        s.Root,
-		Arm:         s.Arm,
-		SenseBinDir: senseBinDir(s.SenseBin),
-		HostPath:    s.HostPath,
-		AgentEnv:    s.AgentEnv,
+		Root:     s.Root,
+		Arm:      s.Arm,
+		SenseBin: s.SenseBin,
+		HostPath: s.HostPath,
+		AgentEnv: s.AgentEnv,
 	})
 	if err != nil {
 		return Result{}, err

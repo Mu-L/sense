@@ -26,9 +26,9 @@ type Spec struct {
 	Root string
 	// Arm decides the PATH, and nothing else here.
 	Arm Arm
-	// SenseBinDir holds the Sense binary. The Sense arm gets it at the front of
-	// PATH and the baseline arm gets it removed.
-	SenseBinDir string
+	// SenseBin is the Sense binary under test. The sense arm reaches it and the
+	// baseline arm reaches no binary of that name at all.
+	SenseBin string
 	// HostPath is the PATH both arms derive from, usually the host's.
 	HostPath string
 	// AgentEnv is what the agent tool declares in agent.json, as KEY=VALUE.
@@ -75,6 +75,14 @@ func Prepare(s Spec) (Env, error) {
 		}
 	}
 
+	// The arm's PATH is one directory of symlinks rather than the host's own
+	// list, because "the baseline arm cannot reach Sense" has to hold against a
+	// machine where Sense is installed the way a user installs it.
+	bin, err := ShadowBin(filepath.Join(root, "bin"), s.HostPath, s.SenseBin, s.Arm)
+	if err != nil {
+		return Env{}, err
+	}
+
 	lookup := s.Lookup
 	if lookup == nil {
 		lookup = os.LookupEnv
@@ -82,7 +90,7 @@ func Prepare(s Spec) (Env, error) {
 	return Env{
 		Layout:  l,
 		Arm:     s.Arm,
-		Environ: Environ(l, PathFor(s.Arm, s.HostPath, s.SenseBinDir), lookup, s.AgentEnv),
+		Environ: Environ(l, bin, lookup, s.AgentEnv),
 	}, nil
 }
 

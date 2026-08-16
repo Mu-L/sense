@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -249,17 +250,25 @@ func TestTheProcessDoesNotSeeTheHostsHome(t *testing.T) {
 }
 
 func TestBothArmsRecordTheirPathAndOnlyOneReachesSense(t *testing.T) {
-	senseBin := t.TempDir()
-	hostPath := strings.Join([]string{senseBin, "/usr/bin", "/bin"}, string(filepath.ListSeparator))
+	// The host is a machine where Sense is already installed the way a user
+	// installs it, in a directory holding other tools too. Removing that
+	// directory would take the other tools with it, and leaving it hands the
+	// baseline arm a CLI fallback it never earned.
+	hostBin := t.TempDir()
+	writeExecutable(t, filepath.Join(hostBin, "sense"), "#!/bin/sh\necho host sense\n")
+	writeExecutable(t, filepath.Join(hostBin, "git"), "#!/bin/sh\necho git\n")
+	senseBin := filepath.Join(t.TempDir(), "sense")
+	writeExecutable(t, senseBin, "#!/bin/sh\necho the build under test\n")
+	hostPath := strings.Join([]string{hostBin, "/usr/bin", "/bin"}, string(filepath.ListSeparator))
 
 	paths := map[isolate.Arm]string{}
 	for _, arm := range []isolate.Arm{isolate.Sense, isolate.Baseline} {
 		env, err := isolate.Prepare(isolate.Spec{
-			Root:        filepath.Join(t.TempDir(), "run-"+string(arm)),
-			Arm:         arm,
-			SenseBinDir: senseBin,
-			HostPath:    hostPath,
-			Lookup:      nothingSet,
+			Root:     filepath.Join(t.TempDir(), "run-"+string(arm)),
+			Arm:      arm,
+			SenseBin: senseBin,
+			HostPath: hostPath,
+			Lookup:   nothingSet,
 		})
 		if err != nil {
 			t.Fatalf("Prepare(%s): %v", arm, err)
@@ -292,11 +301,56 @@ func TestBothArmsRecordTheirPathAndOnlyOneReachesSense(t *testing.T) {
 		paths[arm] = meta.Path
 	}
 
-	if !strings.Contains(paths[isolate.Sense], senseBin) {
-		t.Errorf("the sense arm's recorded PATH %q does not reach the Sense binary", paths[isolate.Sense])
+	if !reaches(t, paths[isolate.Sense], "sense") {
+		t.Errorf("the sense arm's PATH %q does not reach a sense binary", paths[isolate.Sense])
 	}
-	if strings.Contains(paths[isolate.Baseline], senseBin) {
-		t.Errorf("the baseline arm's recorded PATH %q reaches the Sense binary", paths[isolate.Baseline])
+	if reaches(t, paths[isolate.Baseline], "sense") {
+		t.Errorf("the baseline arm's PATH %q reaches a sense binary", paths[isolate.Baseline])
+	}
+	// And the tools that shared the directory with it are still there, for both
+	// arms. Dropping the directory would have taken them along.
+	for arm, path := range paths {
+		if !reaches(t, path, "git") {
+			t.Errorf("the %s arm lost git along with the sense binary: %q", arm, path)
+		}
+	}
+	if got := senseVersionOn(t, paths[isolate.Sense]); !strings.Contains(got, "the build under test") {
+		t.Errorf("the sense arm reached %q, want the build under test rather than the host's install", got)
+	}
+}
+
+// reaches reports whether the named binary is executable on the given PATH.
+func reaches(t *testing.T, pathValue, name string) bool {
+	t.Helper()
+	for _, dir := range filepath.SplitList(pathValue) {
+		info, err := os.Stat(filepath.Join(dir, name))
+		if err == nil && !info.IsDir() && info.Mode()&0o111 != 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// senseVersionOn runs whatever `sense` the PATH resolves to.
+func senseVersionOn(t *testing.T, pathValue string) string {
+	t.Helper()
+	for _, dir := range filepath.SplitList(pathValue) {
+		candidate := filepath.Join(dir, "sense")
+		if _, err := os.Stat(candidate); err == nil {
+			out, err := exec.Command(candidate).CombinedOutput()
+			if err != nil {
+				t.Fatalf("run %s: %v", candidate, err)
+			}
+			return string(out)
+		}
+	}
+	return ""
+}
+
+func writeExecutable(t *testing.T, path, script string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
 	}
 }
 
