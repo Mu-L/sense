@@ -16,10 +16,15 @@ import (
 
 // Scenario is the subset of a scenario file the skeleton uses.
 type Scenario struct {
-	Name        string `yaml:"name"`
-	Repo        string `yaml:"repo"`
-	Description string `yaml:"description"`
-	Steps       []Step `yaml:"steps"`
+	Name string `yaml:"name"`
+	Repo string `yaml:"repo"`
+	// ContractSymbol is the anchor the session is about. The gold validator
+	// needs it: what a covering grep for the anchor prints is what the baseline
+	// gets for free, and a row inside that output shrinks the achievable margin
+	// before either arm runs.
+	ContractSymbol string `yaml:"contract_symbol"`
+	Description    string `yaml:"description"`
+	Steps          []Step `yaml:"steps"`
 }
 
 // GoldRow is one thing a good answer has to find. The corpus keeps the row's
