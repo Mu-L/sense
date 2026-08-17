@@ -30,6 +30,17 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    groups:
+      # codeql-action/init and codeql-action/analyze are one action in two
+      # halves, pinned to the same SHA in codeql.yml. CodeQL refuses to run when
+      # they disagree, so a PR that bumps only one of them fails with
+      # "CodeQL job status was configuration error" and cannot be merged on its
+      # own — and merging it anyway would break the analysis on main until its
+      # sibling landed. Measured 2026-08-17 on two such PRs, both red.
+      # One group, one PR, both halves moving together.
+      codeql:
+        patterns:
+          - "github/codeql-action*"
     commit-message:
       prefix: "ci(deps)"
     open-pull-requests-limit: 5
