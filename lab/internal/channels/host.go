@@ -32,6 +32,34 @@ func HostWatch(home string, configDirs []string, repo string) []string {
 	return out
 }
 
+// entryDigest is what identifies one entry: its contents for a regular file,
+// and what it IS for anything else.
+//
+// A symlink is recorded by its target rather than followed. Following one fails
+// outright on a broken link — mastodon ships `public/500.html` pointing at an
+// asset that only exists after a build, and it stopped subject preparation
+// before either arm spawned — and on a link inside the tree it would hash the
+// same bytes twice. The target is kept rather than skipped, because a run that
+// rewires a link has changed the tree and a skipped entry would hide it.
+//
+// Anything else irregular is recorded by its mode and NOT opened. Reading a
+// fifo blocks until somebody writes to it, which would hang the walk with no
+// output and no wall to stop it: this walk runs before the session, so nothing
+// is counting.
+func entryDigest(path string, d fs.DirEntry) (string, error) {
+	switch mode := d.Type(); {
+	case mode&fs.ModeSymlink != 0:
+		target, err := os.Readlink(path)
+		if err != nil {
+			return "", err
+		}
+		return "symlink:" + target, nil
+	case !mode.IsRegular():
+		return "irregular:" + mode.String(), nil
+	}
+	return fileDigest(path)
+}
+
 // absent is the digest of a path that is not there. It is a value rather than a
 // missing key, so a path that appears during a run is a change rather than a
 // silently ignored one.
@@ -145,11 +173,11 @@ func Tree(root string, skip ...string) (map[string]string, error) {
 		if err != nil {
 			return err
 		}
-		h, err := fileDigest(path)
+		digest, err := entryDigest(path, d)
 		if err != nil {
 			return err
 		}
-		tree[rel] = h
+		tree[rel] = digest
 		return nil
 	})
 	if err != nil {

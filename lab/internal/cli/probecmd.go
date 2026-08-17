@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/luuuc/sense/lab/internal/catalog"
+	"github.com/luuuc/sense/lab/internal/isolate"
 	"github.com/luuuc/sense/lab/internal/probe"
 	"github.com/luuuc/sense/lab/internal/scenario"
 )
@@ -116,6 +117,30 @@ func probeCell(ctx context.Context, args []string, stdout, stderr io.Writer) int
 // would have, and it costs a full wall per arm to discover.
 var labBinary = os.Executable
 
+// credentialPresent refuses a cell whose session could not authenticate.
+//
+// It asks whether a credential is REACHABLE, not what the executor claims to
+// preserve. preserves_auth says what CAN survive isolation; this is whether
+// there is anything to survive, and the difference is two empty arms.
+//
+// Only the environment is checked, and that is a limitation rather than a
+// design. A seat lives in the platform credential store, which a disposable
+// HOME cannot reach non-interactively: macOS locates the login keychain through
+// HOME, and its ACL denies a session with no GUI context. Measured 2026-08-17,
+// linking the store in worked twice and then failed ten times with the control
+// passing throughout. Cycle 03-06 owns the fix; until it lands, an isolated
+// cell authenticates by key.
+func credentialPresent() error {
+	for _, name := range isolate.Credentials() {
+		if v, ok := os.LookupEnv(name); ok && v != "" {
+			return nil
+		}
+	}
+	return fmt.Errorf("no credential in the environment: the disposable HOME carries none of its own and a "+
+		"seat cannot be reached from one until 03-06 lands, so both arms would reach no model and produce "+
+		"empty runs. Set one of %v", isolate.Credentials())
+}
+
 // probeJob is what the catalog resolved, kept beside the spec so the header can
 // print what was run without reading it back off the spec.
 type probeJob struct {
@@ -143,6 +168,19 @@ func probeSpec(f probeFlags) (probe.Spec, probeJob, error) {
 		return probe.Spec{}, probeJob{}, fmt.Errorf("checkout: %w", err)
 	}
 	if err := checkoutIsAtPin(checkout, j.repo.Commit); err != nil {
+		return probe.Spec{}, probeJob{}, err
+	}
+
+	// A credential the session can actually reach, checked before anything
+	// spawns.
+	//
+	// The executor's preserves_auth says what a mode CAN survive isolation, not
+	// that a credential is there today. Measured 2026-08-17: both arms of a cell
+	// exited in about a second with "Not logged in", zero tokens, because the
+	// disposable HOME carries no credential of its own and none was in the
+	// environment to pass through. That is two arms produced and a cell wasted,
+	// and it is exactly the kind of thing this command exists to refuse first.
+	if err := credentialPresent(); err != nil {
 		return probe.Spec{}, probeJob{}, err
 	}
 

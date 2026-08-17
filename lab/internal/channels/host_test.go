@@ -2,9 +2,11 @@ package channels_test
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/luuuc/sense/lab/internal/channels"
 )
@@ -230,5 +232,85 @@ func TestATreeSkipsTheDirectoriesItIsToldTo(t *testing.T) {
 
 	if got := channels.Sorted(tree); len(got) != 1 || got[0] != "app.go" {
 		t.Errorf("Tree = %v, want only app.go", got)
+	}
+}
+
+// mastodon ships public/500.html pointing at an asset that only exists after a
+// build. Following it stopped subject preparation before either arm spawned,
+// which is a repository the instrument simply could not measure.
+func TestABrokenSymlinkDoesNotStopTheWalk(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "app.rb"), "class Account; end")
+	if err := os.Symlink("assets/500.html", filepath.Join(root, "500.html")); err != nil {
+		t.Fatal(err)
+	}
+
+	tree, err := channels.Tree(root)
+	if err != nil {
+		t.Fatalf("a broken symlink stopped the walk: %v", err)
+	}
+	if _, ok := tree["app.rb"]; !ok {
+		t.Error("the real file was lost")
+	}
+	if got := tree["500.html"]; got != "symlink:assets/500.html" {
+		t.Errorf("the link is recorded as %q, want its target", got)
+	}
+}
+
+// Recorded rather than skipped: a run that rewires a link has changed the tree,
+// and a skipped entry would hide it.
+func TestARewiredSymlinkIsAChange(t *testing.T) {
+	root := t.TempDir()
+	link := filepath.Join(root, "config.yml")
+	if err := os.Symlink("config/production.yml", link); err != nil {
+		t.Fatal(err)
+	}
+	before, err := channels.Tree(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.Remove(link); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("config/staging.yml", link); err != nil {
+		t.Fatal(err)
+	}
+	after, err := channels.Tree(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if before["config.yml"] == after["config.yml"] {
+		t.Errorf("a link pointing somewhere else reads as unchanged: %q", after["config.yml"])
+	}
+}
+
+// Reading a fifo blocks until somebody writes to it. This walk runs before the
+// session, so nothing is counting and it would hang with no output.
+func TestAnIrregularFileIsRecordedWithoutBeingOpened(t *testing.T) {
+	root := t.TempDir()
+	fifo := filepath.Join(root, "pipe")
+	if out, err := exec.Command("mkfifo", fifo).CombinedOutput(); err != nil {
+		t.Skipf("mkfifo unavailable: %v: %s", err, out)
+	}
+	write(t, filepath.Join(root, "app.rb"), "class Account; end")
+
+	done := make(chan struct{})
+	var tree map[string]string
+	var err error
+	go func() {
+		tree, err = channels.Tree(root)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		t.Fatal("the walk hung on a fifo")
+	}
+	if err != nil {
+		t.Fatalf("an irregular file stopped the walk: %v", err)
+	}
+	if !strings.HasPrefix(tree["pipe"], "irregular:") {
+		t.Errorf("the fifo is recorded as %q", tree["pipe"])
 	}
 }

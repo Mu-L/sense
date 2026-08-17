@@ -96,6 +96,23 @@ func (l Layout) dirs() []string {
 	return d
 }
 
+// Credentials are the allowlisted variables that carry authentication. A
+// session that reaches none of them cannot reach a model, and the arm it
+// produces is empty rather than failed.
+//
+// It is derived from the allowlist rather than written out again: a credential
+// added there and forgotten here would be a variable the session carries and
+// nothing counts as authentication.
+func Credentials() []string {
+	var out []string
+	for _, e := range allowed {
+		if strings.Contains(e.Why, "authentication") {
+			out = append(out, e.Name)
+		}
+	}
+	return out
+}
+
 // Environ builds the complete environment a session runs with: the disposable
 // directories, the arm's PATH, the allowlist as far as the host actually sets
 // it, and whatever the agent tool declares.

@@ -9,6 +9,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/luuuc/sense/lab/internal/isolate"
 )
 
 // The stand-ins are the ones lab/internal/probe is tested with: a Sense that
@@ -141,6 +143,11 @@ func newProbeWorld(t *testing.T) probeWorld {
 		t.Skip("the stand-ins are shell scripts")
 	}
 	buildLabBinary(t)
+	// A credential the session could reach. The stand-in agent never uses it;
+	// what it satisfies is the check that refuses a cell whose arms could not
+	// authenticate, and without it every probe test would exercise that refusal
+	// instead of the thing it is named for.
+	t.Setenv("ANTHROPIC_API_KEY", "a-test-key")
 	root := t.TempDir()
 	checkout, commit := parentRepo(t)
 
@@ -487,5 +494,48 @@ func TestProbeRejectsAFlagItDoesNotHave(t *testing.T) {
 	w := newProbeWorld(t)
 	if code, _, _ := runProbe(t, w.args("-subject", "sense-main")); code != exitUsage {
 		t.Errorf("exit %d, want a usage error: probe takes no -subject, the arms are the subjects", code)
+	}
+}
+
+// The failure that produced two empty arms: the disposable HOME carries no
+// credential of its own, and there was none in the environment to pass through.
+// The executor's preserves_auth says what CAN survive isolation, not that
+// anything is there to survive.
+func TestACellWithNoCredentialInTheEnvironmentIsRefusedBeforeSpawning(t *testing.T) {
+	w := newProbeWorld(t)
+	for _, name := range isolate.Credentials() {
+		t.Setenv(name, "")
+	}
+
+	code, _, stderr := runProbe(t, w.args())
+	if code != exitError {
+		t.Fatalf("exit %d, want an error", code)
+	}
+	if !strings.Contains(stderr, "no credential") {
+		t.Errorf("the refusal does not say what is missing: %q", stderr)
+	}
+	if !strings.Contains(stderr, "empty runs") {
+		t.Errorf("the refusal does not say what would happen: %q", stderr)
+	}
+	if _, err := os.Stat(w.out); err == nil {
+		t.Error("a cell directory was created for a session that could not authenticate")
+	}
+}
+
+// One is enough: the arms need a credential, not a particular one.
+func TestAnyOneCredentialSatisfiesTheCheck(t *testing.T) {
+	for _, name := range isolate.Credentials() {
+		t.Run(name, func(t *testing.T) {
+			w := newProbeWorld(t)
+			for _, other := range isolate.Credentials() {
+				t.Setenv(other, "")
+			}
+			t.Setenv(name, "a-value")
+
+			code, stdout, stderr := runProbe(t, w.args())
+			if code == exitError && strings.Contains(stderr, "no credential") {
+				t.Errorf("%s did not satisfy the credential check:\n%s\n%s", name, stdout, stderr)
+			}
+		})
 	}
 }
