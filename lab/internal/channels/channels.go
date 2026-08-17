@@ -49,19 +49,13 @@ type Channel struct {
 	Rel string
 }
 
-// setupTool is the agent tool whose channels are derived. Cycle 03 is Claude
-// Code only; naming it here rather than letting detection choose keeps the
-// derived list from depending on what happens to be installed on the machine
-// running the bench.
-const setupTool = "claude-code"
-
 // Derive runs `sense setup` in a throwaway project and reports the repository
 // channels it wrote, plus the two that no file on disk can reveal.
 //
 // workDir must not exist: Derive creates it, along with the throwaway project
 // and a throwaway HOME beside it, so the probe cannot touch the operator's
 // configuration on its way to telling us what the product writes.
-func Derive(ctx context.Context, senseBin, workDir string) ([]Channel, error) {
+func Derive(ctx context.Context, senseBin, tool, workDir string) ([]Channel, error) {
 	project := filepath.Join(workDir, "project")
 	home := filepath.Join(workDir, "home")
 	for _, dir := range []string{project, home} {
@@ -70,7 +64,7 @@ func Derive(ctx context.Context, senseBin, workDir string) ([]Channel, error) {
 		}
 	}
 
-	cmd := exec.CommandContext(ctx, senseBin, "setup", "--tools", setupTool)
+	cmd := exec.CommandContext(ctx, senseBin, "setup", "--tools", tool)
 	cmd.Dir = project
 	cmd.Env = []string{"HOME=" + home, "PATH=" + os.Getenv("PATH")}
 	if out, err := cmd.CombinedOutput(); err != nil {
@@ -109,6 +103,9 @@ type Arm struct {
 	PathValue string
 	// SenseBinary is the binary name to look for on that PATH.
 	SenseBinary string
+	// ConfigDirs are the agent tool's per-user state directories, relative to
+	// Home.
+	ConfigDirs []string
 }
 
 // Absent reports every channel the arm can still reach, by name. An empty
@@ -139,15 +136,19 @@ func (c Channel) reachedBy(a Arm) string {
 			return fmt.Sprintf("%s: %s is executable at %s", c.Name, a.SenseBinary, at)
 		}
 	case Home:
-		if dir := MemoryDir(a.Home, a.Repo); exists(dir) {
-			return fmt.Sprintf("%s: %s exists", c.Name, dir)
+		for _, state := range a.ConfigDirs {
+			if dir := MemoryDir(a.Home, state, a.Repo); exists(dir) {
+				return fmt.Sprintf("%s: %s exists", c.Name, dir)
+			}
 		}
 		// The exact directory name depends on how the agent tool flattens a
 		// repository path, which is observed rather than documented. The whole
-		// .claude tree is checked as well, so an exact match is not what the
+		// state tree is checked as well, so an exact match is not what the
 		// proof rests on.
-		if claude := filepath.Join(a.Home, ".claude"); exists(claude) {
-			return fmt.Sprintf("%s: %s exists in the disposable HOME", c.Name, claude)
+		for _, dir := range a.ConfigDirs {
+			if state := filepath.Join(a.Home, dir); exists(state) {
+				return fmt.Sprintf("%s: %s exists in the disposable HOME", c.Name, state)
+			}
 		}
 	}
 	return ""
@@ -159,10 +160,15 @@ func (c Channel) reachedBy(a Arm) string {
 //
 // The flattening rule — every character outside [A-Za-z0-9-] becomes a dash —
 // is taken from the directories the tool has actually produced, not from
-// documentation. Absent therefore also checks the whole .claude tree, so the
+// documentation. Absent therefore also checks the whole state tree, so the
 // proof does not rest on this staying exact.
-func MemoryDir(home, repo string) string {
-	return filepath.Join(home, ".claude", "projects", flatten(repo), "memory")
+//
+// configDir is the tool's state directory and comes from the catalog: a
+// directory name compiled in here would make this look in the right place for
+// one tool and the wrong place for every other, and an empty result reads
+// exactly like a clean arm.
+func MemoryDir(home, configDir, repo string) string {
+	return filepath.Join(home, configDir, "projects", flatten(repo), "memory")
 }
 
 func flatten(path string) string {

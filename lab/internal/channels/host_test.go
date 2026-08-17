@@ -18,7 +18,7 @@ func hostHome(t *testing.T) (home, repo string) {
 	write(t, filepath.Join(home, ".claude.json"), `{"projects":{}}`)
 	write(t, filepath.Join(home, ".claude", "CLAUDE.md"), "answer in under six lines")
 	write(t, filepath.Join(home, ".claude", "settings.json"), `{"hooks":{}}`)
-	write(t, filepath.Join(channels.MemoryDir(home, repo), "MEMORY.md"), "- a fact from a previous run")
+	write(t, filepath.Join(channels.MemoryDir(home, ".claude", repo), "MEMORY.md"), "- a fact from a previous run")
 	return home, repo
 }
 
@@ -34,7 +34,7 @@ func write(t *testing.T, path, content string) {
 
 func snapshot(t *testing.T, home, repo string) channels.Snapshot {
 	t.Helper()
-	s, err := channels.Take(channels.HostWatch(home, repo))
+	s, err := channels.Take(channels.HostWatch(home, []string{".claude"}, repo))
 	if err != nil {
 		t.Fatalf("Take: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestAFileTheRunAddedToTheHostMemoryDirectoryIsReported(t *testing.T) {
 	home, repo := hostHome(t)
 	before := snapshot(t, home, repo)
 
-	write(t, filepath.Join(channels.MemoryDir(home, repo), "learned.md"), "- a fact from this run")
+	write(t, filepath.Join(channels.MemoryDir(home, ".claude", repo), "learned.md"), "- a fact from this run")
 
 	got := changed(t, before)
 	if len(got) != 1 || !strings.Contains(got[0], "modified") {
@@ -106,7 +106,7 @@ func TestAHostPathTheRunCreatedIsReported(t *testing.T) {
 	repo := filepath.Join(t.TempDir(), "checkout")
 	before := snapshot(t, home, repo)
 
-	write(t, filepath.Join(channels.MemoryDir(home, repo), "MEMORY.md"), "- written by the run")
+	write(t, filepath.Join(channels.MemoryDir(home, ".claude", repo), "MEMORY.md"), "- written by the run")
 
 	got := changed(t, before)
 	if len(got) != 1 || !strings.Contains(got[0], "created") {
@@ -134,13 +134,13 @@ func TestTheWatchListIsTheChannelPathsAndNoMore(t *testing.T) {
 	// somebody disables.
 	home, repo := hostHome(t)
 
-	got := channels.HostWatch(home, repo)
+	got := channels.HostWatch(home, []string{".claude"}, repo)
 
 	want := []string{
 		filepath.Join(home, ".claude.json"),
 		filepath.Join(home, ".claude", "CLAUDE.md"),
 		filepath.Join(home, ".claude", "settings.json"),
-		channels.MemoryDir(home, repo),
+		channels.MemoryDir(home, ".claude", repo),
 	}
 	if len(got) != len(want) {
 		t.Fatalf("HostWatch = %v, want %v", got, want)
@@ -180,7 +180,7 @@ func TestAPathThatCannotBeReadIsAnErrorRatherThanAPass(t *testing.T) {
 
 	// "I could not look" is not "nothing changed": reporting a pass here would
 	// clear a run on exactly the machines where something is already wrong.
-	if _, err := channels.Take(channels.HostWatch(home, repo)); err == nil {
+	if _, err := channels.Take(channels.HostWatch(home, []string{".claude"}, repo)); err == nil {
 		t.Fatal("Take reported success on a path it could not read")
 	}
 }
@@ -192,7 +192,7 @@ func TestAPathThatBecomesUnreadableDuringTheRunIsAnError(t *testing.T) {
 	home, repo := hostHome(t)
 	before := snapshot(t, home, repo)
 
-	memory := channels.MemoryDir(home, repo)
+	memory := channels.MemoryDir(home, ".claude", repo)
 	if err := os.Chmod(memory, 0o000); err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +210,7 @@ func TestAHomeThatIsNotADirectoryIsAnErrorRatherThanAnAllClear(t *testing.T) {
 	notADir := filepath.Join(t.TempDir(), "home")
 	write(t, notADir, "this is a file")
 
-	if _, err := channels.Take(channels.HostWatch(notADir, "/runs/r1/repo")); err == nil {
+	if _, err := channels.Take(channels.HostWatch(notADir, []string{".claude"}, "/runs/r1/repo")); err == nil {
 		t.Fatal("Take reported success against a HOME that is not a directory")
 	}
 }

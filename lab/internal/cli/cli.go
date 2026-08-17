@@ -31,6 +31,7 @@ Commands:
   catalog   Show the subjects, agents, models, repositories and executors in the config
   plan      Show what a campaign would run, and every rejection with its reason
   run       Run one scenario against one repository
+  probe     Run both arms of one cell and prove they differed only in Sense access
   score     Score a recorded run against a scenario's gold
   validate  Audit a scenario's gold and report what would be quarantined
   rescore   Recompute every recorded score and name the cause of each difference
@@ -93,6 +94,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 		return runSession(ctx, args[1:], stdout, stderr)
+	case "probe":
+		return probeSignals(args[1:], stdout, stderr)
 	case "tee":
 		// Deliberately absent from the usage text. It is what a run's
 		// .mcp.json points at instead of the Sense server, not a verb a person

@@ -87,6 +87,14 @@ func checkAgent(a Agent) []string {
 	if len(a.AuthModes) == 0 {
 		p = append(p, fmt.Sprintf("agent %s: no auth modes, so no model is reachable through it", a.ID))
 	}
+	if len(a.ConfigDirs) == 0 {
+		// Not cosmetic. The contamination checks join this onto the disposable
+		// HOME, and an empty one joins to HOME itself — which exists for every
+		// arm, so every arm reads as contaminated. A check that cannot run must
+		// not be allowed to run wrong.
+		p = append(p, fmt.Sprintf("agent %s: no config dirs, so there is nowhere to check for "+
+			"leaked state and the check would read the whole disposable HOME", a.ID))
+	}
 	return p
 }
 

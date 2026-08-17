@@ -19,7 +19,7 @@ func good(t *testing.T) string {
 	writeExecutor(t, dir, Executor{ID: "isolated-home",
 		PreservesAuth: []string{"api_key"}, IsolatesGlobalConfig: true})
 	writeAgent(t, dir, "tool", Agent{
-		ID: "tool", Binary: "toolbin", ModelFlag: "--model",
+		ID: "tool", Binary: "toolbin", ModelFlag: "--model", ConfigDirs: []string{".tool"},
 		HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"},
 		SupportsMCP: true,
 	})
@@ -137,7 +137,7 @@ func TestAMalformedCatalogIsRefusedAtLoadTime(t *testing.T) {
 		{
 			name: "an agent that cannot be driven headlessly",
 			breaks: func(t *testing.T, dir string) {
-				writeAgent(t, dir, "tool", Agent{ID: "tool", Binary: "toolbin", ModelFlag: "--model", AuthModes: []string{"api_key"}})
+				writeAgent(t, dir, "tool", Agent{ID: "tool", Binary: "toolbin", ModelFlag: "--model", ConfigDirs: []string{".tool"}, AuthModes: []string{"api_key"}})
 			},
 			want: "no headless args",
 		},
@@ -188,7 +188,7 @@ func TestAModelNoAgentCanReachIsRefused(t *testing.T) {
 	dir := good(t)
 	// The agent authenticates by subscription only; the model needs an api key.
 	writeAgent(t, dir, "tool", Agent{
-		ID: "tool", Binary: "toolbin", ModelFlag: "--model",
+		ID: "tool", Binary: "toolbin", ModelFlag: "--model", ConfigDirs: []string{".tool"},
 		HeadlessArgs: []string{"-p"}, AuthModes: []string{"subscription"},
 		SupportsMCP: true,
 	})
@@ -210,7 +210,7 @@ func TestASubjectNeedingMCPCannotUseAToolWithoutIt(t *testing.T) {
 		NeedsMCP: true,
 	})
 	writeAgent(t, dir, "tool", Agent{
-		ID: "tool", Binary: "toolbin", ModelFlag: "--model",
+		ID: "tool", Binary: "toolbin", ModelFlag: "--model", ConfigDirs: []string{".tool"},
 		HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"},
 		SupportsMCP: false,
 	})
@@ -385,10 +385,10 @@ func TestAgentAndModelFieldsThatWouldStopARunAreRequired(t *testing.T) {
 		want  string
 	}{
 		{"an agent with no binary", func(t *testing.T, dir string) {
-			writeAgent(t, dir, "tool", Agent{ID: "tool", ModelFlag: "-m", HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"}})
+			writeAgent(t, dir, "tool", Agent{ID: "tool", ModelFlag: "-m", ConfigDirs: []string{".tool"}, HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"}})
 		}, "no binary to spawn"},
 		{"an agent with no auth modes", func(t *testing.T, dir string) {
-			writeAgent(t, dir, "tool", Agent{ID: "tool", Binary: "b", ModelFlag: "-m", HeadlessArgs: []string{"-p"}})
+			writeAgent(t, dir, "tool", Agent{ID: "tool", Binary: "b", ModelFlag: "-m", ConfigDirs: []string{".tool"}, HeadlessArgs: []string{"-p"}})
 		}, "no auth modes"},
 		{"a model with no provider", func(t *testing.T, dir string) {
 			writeModel(t, dir, Model{ID: "m1", AvailableUnder: []string{"api_key"}, Agents: []string{"tool"}})
@@ -493,7 +493,7 @@ func TestTwoFilesClaimingOneIDAreRefused(t *testing.T) {
 			writeSubject(t, dir, "shadow", Subject{ID: "untreated", Kind: Baseline, Executor: "isolated-home", Agents: []string{"tool"}})
 		}, `subject id "untreated" is already claimed by`},
 		{"two agents", func(t *testing.T, dir string) {
-			writeAgent(t, dir, "shadow", Agent{ID: "tool", Binary: "b", ModelFlag: "-m",
+			writeAgent(t, dir, "shadow", Agent{ID: "tool", Binary: "b", ModelFlag: "-m", ConfigDirs: []string{".tool"},
 				HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"}})
 		}, `agent id "tool" is already claimed by`},
 		// An alias collides exactly as an id does. Which of the two files
@@ -587,7 +587,7 @@ func TestAnAliasedModelWithAFaultIsReportedOnce(t *testing.T) {
 func TestAnAgentWithoutMCPMayStillCarryASubjectThatDoesNotNeedIt(t *testing.T) {
 	dir := good(t)
 	writeAgent(t, dir, "tool", Agent{
-		ID: "tool", Binary: "b", ModelFlag: "-m",
+		ID: "tool", Binary: "b", ModelFlag: "-m", ConfigDirs: []string{".tool"},
 		HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"}, SupportsMCP: false,
 	})
 

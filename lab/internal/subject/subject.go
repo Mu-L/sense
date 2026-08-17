@@ -33,7 +33,7 @@ import (
 // and nothing about that is visible in a result months later. Recorded per run,
 // two runs far apart are comparable on what was installed rather than on an
 // assumption that it was the same.
-func Sense(ctx context.Context, senseBin, repo string) (map[string]string, error) {
+func Sense(ctx context.Context, senseBin, tool, repo string) (map[string]string, error) {
 	// The index lives at <repo>/.sense, where the MCP server the agent launches
 	// looks for it. Putting it anywhere else is a sense arm that is configured,
 	// reports no error, and reaches an empty index.
@@ -53,7 +53,7 @@ func Sense(ctx context.Context, senseBin, repo string) (map[string]string, error
 		return nil, err
 	}
 
-	setup := exec.CommandContext(ctx, senseBin, "setup", "--tools", "claude-code")
+	setup := exec.CommandContext(ctx, senseBin, "setup", "--tools", tool)
 	setup.Dir = repo
 	if out, err := setup.CombinedOutput(); err != nil {
 		return nil, fmt.Errorf("configure the subject: %w: %s", err, out)

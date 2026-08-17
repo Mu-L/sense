@@ -20,13 +20,16 @@ import (
 // It is exactly the paths the channels name, and no more. A general sweep of
 // HOME is flaky the moment any other process on the machine writes something,
 // and a flaky check is a check somebody disables.
-func HostWatch(home, repo string) []string {
-	return []string{
-		filepath.Join(home, ".claude.json"),
-		filepath.Join(home, ".claude", "CLAUDE.md"),
-		filepath.Join(home, ".claude", "settings.json"),
-		MemoryDir(home, repo),
+func HostWatch(home string, configDirs []string, repo string) []string {
+	var out []string
+	for _, dir := range configDirs {
+		out = append(out,
+			filepath.Join(home, dir+".json"),
+			filepath.Join(home, dir, "CLAUDE.md"),
+			filepath.Join(home, dir, "settings.json"),
+			MemoryDir(home, dir, repo))
 	}
+	return out
 }
 
 // absent is the digest of a path that is not there. It is a value rather than a

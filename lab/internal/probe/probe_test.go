@@ -109,17 +109,19 @@ func spec(t *testing.T) probe.Spec {
 	t.Helper()
 	parent, commit := parentRepo(t)
 	return probe.Spec{
-		Root:     filepath.Join(t.TempDir(), "cell"),
-		Parent:   parent,
-		Commit:   commit,
-		Prompt:   "what depends on Category?",
-		Command:  "/bin/sh",
-		Args:     []string{"-c", agentThatUsesSense + agentThatCannotUseSense},
-		SenseBin: fakeSense(t),
-		LabBin:   labBinary(t),
-		HostPath: os.Getenv("PATH"),
-		Wall:     60 * time.Second,
-		Grace:    200 * time.Millisecond,
+		Root:       filepath.Join(t.TempDir(), "cell"),
+		Parent:     parent,
+		Commit:     commit,
+		Prompt:     "what depends on Category?",
+		Command:    "/bin/sh",
+		Args:       []string{"-c", agentThatUsesSense + agentThatCannotUseSense},
+		SetupTool:  "claude-code",
+		ConfigDirs: []string{".claude"},
+		SenseBin:   fakeSense(t),
+		LabBin:     labBinary(t),
+		HostPath:   os.Getenv("PATH"),
+		Wall:       60 * time.Second,
+		Grace:      200 * time.Millisecond,
 	}
 }
 
@@ -520,4 +522,30 @@ esac
 		t.Fatal(err)
 	}
 	return bin
+}
+
+// A cell whose agent is not identified cannot have its contamination checked:
+// an empty config dir joins to the disposable HOME itself, which exists for
+// both arms, so every arm would read as contaminated. Refused before anything
+// spawns, because a check that cannot run must not run wrong.
+func TestACellWhoseAgentIsNotIdentifiedIsRefusedBeforeSpawning(t *testing.T) {
+	for _, tc := range []struct {
+		name, setup string
+		dirs        []string
+	}{
+		{"no setup tool", "", []string{".claude"}},
+		{"no config dirs", "claude-code", nil},
+		{"neither", "", nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := spec(t)
+			s.SetupTool, s.ConfigDirs = tc.setup, tc.dirs
+			if _, err := probe.Run(context.Background(), s); err == nil {
+				t.Fatal("the cell ran with an unidentified agent")
+			}
+			if _, err := os.Stat(s.Root); err == nil {
+				t.Error("a cell directory was created for a cell that cannot be checked")
+			}
+		})
+	}
 }

@@ -10,5 +10,9 @@
   "supports_mcp": true,
   "auth_modes": [
     "api_key"
+  ],
+  "config_dirs": [
+    ".config/opencode",
+    ".local/share/opencode"
   ]
 }

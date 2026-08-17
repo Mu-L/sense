@@ -70,6 +70,16 @@ type Agent struct {
 	Binary string `json:"binary"`
 	// ModelFlag is the flag that selects a model, e.g. "--model".
 	ModelFlag string `json:"model_flag"`
+	// ConfigDirs are the directories this tool keeps per-user state in, under
+	// HOME. Config rather than a constant for the same reason the binary is:
+	// the contamination checks look inside them, and a directory compiled in
+	// would have those checks looking in the right place for one tool and the
+	// wrong place for every other.
+	//
+	// A LIST, because opencode keeps two — `.config/opencode` and
+	// `.local/share/opencode` — and a single field would check one and call the
+	// arm clean, which is half the configured surface silently missing.
+	ConfigDirs []string `json:"config_dirs"`
 	// HeadlessArgs drive the tool with no terminal attached. They live here
 	// rather than in code because they are ecosystem facts: they change when
 	// somebody else ships a release, and no two tools spell them alike.

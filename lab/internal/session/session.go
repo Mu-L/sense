@@ -32,9 +32,14 @@ type Spec struct {
 	Commit string
 	// Prompt is what the agent is asked, on stdin.
 	Prompt string
-	// Command and Args spawn the agent tool.
-	Command string
-	Args    []string
+	// Command and Args spawn the agent tool, and SetupTool is the catalog id
+	// `sense setup` configures for. It comes from the catalog rather than a
+	// constant here: a probe of one agent that configured the repository for
+	// another would give the sense arm a treatment nobody asked for, and
+	// nothing in a score would show it.
+	Command   string
+	Args      []string
+	SetupTool string
 	// AgentEnv is what the agent tool declares in agent.json, as KEY=VALUE.
 	AgentEnv []string
 	// SenseBin is the Sense binary, and LabBin is this binary, which the
@@ -105,7 +110,7 @@ func prepareArm(ctx context.Context, s Spec, env isolate.Env) (map[string]string
 	if s.Arm != isolate.Sense {
 		return nil, nil
 	}
-	wrote, err := subject.Sense(ctx, s.SenseBin, env.Repo)
+	wrote, err := subject.Sense(ctx, s.SenseBin, s.SetupTool, env.Repo)
 	if err != nil {
 		return nil, err
 	}

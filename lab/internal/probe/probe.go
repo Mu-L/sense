@@ -38,10 +38,15 @@ type Spec struct {
 	// there is no version of this where the arms are asked different things:
 	// an asymmetry is fixed in the environment, never in the question.
 	Prompt string
-	// Command and Args spawn the agent tool, and AgentEnv is what it declares.
-	Command  string
-	Args     []string
-	AgentEnv []string
+	// Command and Args spawn the agent tool, AgentEnv is what it declares, and
+	// SetupTool is its catalog id, which is what `sense setup` configures for,
+	// and ConfigDir is the directory it keeps per-user state in, which the
+	// contamination checks look inside.
+	Command    string
+	Args       []string
+	AgentEnv   []string
+	SetupTool  string
+	ConfigDirs []string
 	// SenseBin is the Sense binary and LabBin is this one.
 	SenseBin string
 	LabBin   string
@@ -118,6 +123,16 @@ func (r Report) Sound() bool {
 // cannot produce a half-pair: lab/internal/cell owns that, and this is the
 // caller that needs it.
 func Run(ctx context.Context, s Spec) (Report, error) {
+	// A cell whose agent is unknown cannot have its contamination checked: an
+	// empty config dir joins to the disposable HOME itself, which exists for
+	// both arms, so every arm reads as contaminated. Refused here rather than
+	// producing a report nobody can act on.
+	if s.SetupTool == "" || len(s.ConfigDirs) == 0 {
+		return Report{}, fmt.Errorf("the agent is not identified: setup tool %q, config dirs %v; "+
+			"both come from the catalog and the contamination checks cannot run without them",
+			s.SetupTool, s.ConfigDirs)
+	}
+
 	var sense, baseline session.Result
 	arms := []cell.Arm{
 		{Name: senseArm, Run: s.armRunner(isolate.Sense, s.Wall, &sense)},
@@ -160,19 +175,20 @@ func (s Spec) armRunner(arm isolate.Arm, wall time.Duration, into *session.Resul
 // number without being visible in any of them.
 func (s Spec) arm(root string, arm isolate.Arm, wall time.Duration) session.Spec {
 	return session.Spec{
-		Root:     root,
-		Arm:      arm,
-		Parent:   s.Parent,
-		Commit:   s.Commit,
-		Prompt:   s.Prompt,
-		Command:  s.Command,
-		Args:     s.Args,
-		AgentEnv: s.AgentEnv,
-		SenseBin: s.SenseBin,
-		LabBin:   s.LabBin,
-		HostPath: s.HostPath,
-		Wall:     wall,
-		Grace:    s.Grace,
+		Root:      root,
+		Arm:       arm,
+		Parent:    s.Parent,
+		Commit:    s.Commit,
+		Prompt:    s.Prompt,
+		Command:   s.Command,
+		Args:      s.Args,
+		AgentEnv:  s.AgentEnv,
+		SetupTool: s.SetupTool,
+		SenseBin:  s.SenseBin,
+		LabBin:    s.LabBin,
+		HostPath:  s.HostPath,
+		Wall:      wall,
+		Grace:     s.Grace,
 	}
 }
 
@@ -180,7 +196,7 @@ func (s Spec) arm(root string, arm isolate.Arm, wall time.Duration) session.Spec
 func (s Spec) check(ctx context.Context, sense, baseline session.Result) (Report, error) {
 	r := Report{Sense: sense, Baseline: baseline}
 
-	derived, err := channels.Derive(ctx, s.SenseBin, filepath.Join(s.Root, "channel-probe"))
+	derived, err := channels.Derive(ctx, s.SenseBin, s.SetupTool, filepath.Join(s.Root, "channel-probe"))
 	if err != nil {
 		return Report{}, err
 	}
@@ -196,7 +212,7 @@ func (s Spec) check(ctx context.Context, sense, baseline session.Result) (Report
 	// runs — so it must be absent from both, and an arm that has it is
 	// measuring a previous session rather than this one.
 	treatment, contamination := split(derived)
-	senseWorld, baselineWorld := armWorld(sense, binary), armWorld(baseline, binary)
+	senseWorld, baselineWorld := armWorld(sense, binary, s.ConfigDirs), armWorld(baseline, binary, s.ConfigDirs)
 
 	r.SenseMissing = missing(treatment, channels.Absent(treatment, senseWorld))
 	r.BaselineReached = channels.Absent(treatment, baselineWorld)
@@ -264,12 +280,13 @@ func missing(all []channels.Channel, reached []string) []string {
 }
 
 // armWorld is where one arm's channels would be if it had them.
-func armWorld(res session.Result, binary string) channels.Arm {
+func armWorld(res session.Result, binary string, configDirs []string) channels.Arm {
 	return channels.Arm{
 		Repo:        res.Env.Repo,
 		Home:        res.Env.Home,
 		PathValue:   res.Meta.Path,
 		SenseBinary: binary,
+		ConfigDirs:  configDirs,
 	}
 }
 

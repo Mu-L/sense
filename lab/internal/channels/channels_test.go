@@ -38,7 +38,7 @@ func fakeSense(t *testing.T, writes ...string) string {
 func TestDeriveReportsEveryFileSetupWroteIntoTheProject(t *testing.T) {
 	bin := fakeSense(t, ".mcp.json", "CLAUDE.md", ".claude/settings.json", ".claude/skills/sense-explore.md")
 
-	got, err := channels.Derive(context.Background(), bin, filepath.Join(t.TempDir(), "probe"))
+	got, err := channels.Derive(context.Background(), bin, "claude-code", filepath.Join(t.TempDir(), "probe"))
 	if err != nil {
 		t.Fatalf("Derive: %v", err)
 	}
@@ -61,7 +61,7 @@ func TestDerivePicksUpAChannelNobodyWroteDown(t *testing.T) {
 	// four entries long here and every absence check would still pass.
 	bin := fakeSense(t, ".mcp.json", "CLAUDE.md", ".claude/settings.json", ".cursor/mcp.json")
 
-	got, err := channels.Derive(context.Background(), bin, filepath.Join(t.TempDir(), "probe"))
+	got, err := channels.Derive(context.Background(), bin, "claude-code", filepath.Join(t.TempDir(), "probe"))
 	if err != nil {
 		t.Fatalf("Derive: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestDerivePicksUpAChannelNobodyWroteDown(t *testing.T) {
 func TestDeriveAlsoNamesTheTwoChannelsNoFileCanReveal(t *testing.T) {
 	bin := fakeSense(t, ".mcp.json")
 
-	got, err := channels.Derive(context.Background(), bin, filepath.Join(t.TempDir(), "probe"))
+	got, err := channels.Derive(context.Background(), bin, "claude-code", filepath.Join(t.TempDir(), "probe"))
 	if err != nil {
 		t.Fatalf("Derive: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestDeriveRefusesASetupThatWroteNothing(t *testing.T) {
 	// of a leak that reads as a clean bill of health.
 	bin := fakeSense(t)
 
-	_, err := channels.Derive(context.Background(), bin, filepath.Join(t.TempDir(), "probe"))
+	_, err := channels.Derive(context.Background(), bin, "claude-code", filepath.Join(t.TempDir(), "probe"))
 
 	if err == nil {
 		t.Fatal("Derive accepted a setup that wrote nothing")
@@ -104,7 +104,7 @@ func TestDeriveRefusesASetupThatWroteNothing(t *testing.T) {
 func TestDeriveReportsASetupThatFailed(t *testing.T) {
 	bin := filepath.Join(t.TempDir(), "not-a-binary")
 
-	if _, err := channels.Derive(context.Background(), bin, filepath.Join(t.TempDir(), "probe")); err == nil {
+	if _, err := channels.Derive(context.Background(), bin, "claude-code", filepath.Join(t.TempDir(), "probe")); err == nil {
 		t.Fatal("Derive succeeded with no usable binary")
 	}
 }
@@ -115,7 +115,7 @@ func TestDeriveCannotWriteIntoTheProbeItCannotCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := channels.Derive(context.Background(), fakeSense(t, ".mcp.json"), filepath.Join(blocked, "work")); err == nil {
+	if _, err := channels.Derive(context.Background(), fakeSense(t, ".mcp.json"), "claude-code", filepath.Join(blocked, "work")); err == nil {
 		t.Fatal("Derive succeeded with an unusable work directory")
 	}
 }
@@ -132,7 +132,7 @@ func cleanArm(t *testing.T) channels.Arm {
 			t.Fatal(err)
 		}
 	}
-	return channels.Arm{Repo: repo, Home: home, PathValue: "/nonexistent/bin", SenseBinary: "sense"}
+	return channels.Arm{Repo: repo, Home: home, PathValue: "/nonexistent/bin", SenseBinary: "sense", ConfigDirs: []string{".claude"}}
 }
 
 func TestTheBaselineArmReachesNothing(t *testing.T) {
@@ -222,7 +222,7 @@ func TestNoBinaryNameMeansNoPathChannelToCheck(t *testing.T) {
 
 func TestThePersistedMemoryDirectoryIsReportedEvenThoughItIsOutsideTheRepository(t *testing.T) {
 	arm := cleanArm(t)
-	memory := channels.MemoryDir(arm.Home, arm.Repo)
+	memory := channels.MemoryDir(arm.Home, ".claude", arm.Repo)
 	if err := os.MkdirAll(memory, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -259,8 +259,8 @@ func TestAgentStateInTheDisposableHomeIsReportedEvenUnderAnotherKey(t *testing.T
 func TestTheMemoryDirectoryIsKeyedOffTheRepositoryPath(t *testing.T) {
 	// Two arms on different worktrees must not share a memory directory: that
 	// is the shared mutable host state the per-run worktree exists to separate.
-	sense := channels.MemoryDir("/home/bench", "/runs/r1/repo")
-	baseline := channels.MemoryDir("/home/bench", "/runs/r2/repo")
+	sense := channels.MemoryDir("/home/bench", ".claude", "/runs/r1/repo")
+	baseline := channels.MemoryDir("/home/bench", ".claude", "/runs/r2/repo")
 
 	if sense == baseline {
 		t.Fatalf("both arms resolve to %s", sense)
@@ -282,7 +282,7 @@ func TestTheRealBinaryWritesTheRepositoryChannelsWeExpect(t *testing.T) {
 		t.Skip("no built sense binary; make build")
 	}
 
-	got, err := channels.Derive(context.Background(), bin, filepath.Join(t.TempDir(), "probe"))
+	got, err := channels.Derive(context.Background(), bin, "claude-code", filepath.Join(t.TempDir(), "probe"))
 	if err != nil {
 		t.Fatalf("Derive: %v", err)
 	}

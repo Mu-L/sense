@@ -25,5 +25,8 @@
   "auth_modes": [
     "subscription",
     "api_key"
+  ],
+  "config_dirs": [
+    ".claude"
   ]
 }

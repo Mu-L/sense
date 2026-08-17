@@ -72,7 +72,7 @@ func repoWithSource(t *testing.T) string {
 func prepare(t *testing.T) (repo string, wrote map[string]string) {
 	t.Helper()
 	repo = repoWithSource(t)
-	wrote, err := subject.Sense(context.Background(), fakeSense(t), repo)
+	wrote, err := subject.Sense(context.Background(), fakeSense(t), "claude-code", repo)
 	if err != nil {
 		t.Fatalf("Sense: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestTwoSetupsThatWroteDifferentContentAreDistinguishable(t *testing.T) {
 
 	repo := repoWithSource(t)
 	drifted := fakeSenseWriting(t, `printf '{"mcpServers":{"sense":{"args":["mcp","--new"]}}}' > .mcp.json`)
-	changed, err := subject.Sense(context.Background(), drifted, repo)
+	changed, err := subject.Sense(context.Background(), drifted, "claude-code", repo)
 	if err != nil {
 		t.Fatalf("Sense: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestAFailedScanStopsBeforeAnythingIsConfigured(t *testing.T) {
 	repo := repoWithSource(t)
 	broken := fakeSenseFailing(t, "scan")
 
-	_, err := subject.Sense(context.Background(), broken, repo)
+	_, err := subject.Sense(context.Background(), broken, "claude-code", repo)
 
 	if err == nil {
 		t.Fatal("Sense succeeded with a scan that failed")
@@ -166,7 +166,7 @@ func TestAFailedSetupIsReportedRatherThanRecordedAsEmpty(t *testing.T) {
 	repo := repoWithSource(t)
 	broken := fakeSenseFailing(t, "setup")
 
-	_, err := subject.Sense(context.Background(), broken, repo)
+	_, err := subject.Sense(context.Background(), broken, "claude-code", repo)
 
 	if err == nil {
 		t.Fatal("Sense succeeded with a setup that failed")
@@ -182,7 +182,7 @@ func TestAnUnusableIndexDirectoryIsRefused(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := subject.Sense(context.Background(), fakeSense(t), notARepo); err == nil {
+	if _, err := subject.Sense(context.Background(), fakeSense(t), "claude-code", notARepo); err == nil {
 		t.Fatal("Sense succeeded where the index directory cannot be created")
 	}
 }
@@ -212,7 +212,7 @@ func TestAnUnreadableSubjectTreeIsReported(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(locked, 0o700) })
 
-	if _, err := subject.Sense(context.Background(), fakeSense(t), repo); err == nil {
+	if _, err := subject.Sense(context.Background(), fakeSense(t), "claude-code", repo); err == nil {
 		t.Fatal("Sense succeeded on a tree it could not read")
 	}
 }
@@ -222,7 +222,7 @@ func TestAnUnreadableSubjectTreeIsReported(t *testing.T) {
 func TestTheBaselineArmsRepositoryReachesNoChannelAfterPreparation(t *testing.T) {
 	derived, err := channels.Derive(context.Background(), fakeSenseWriting(t,
 		`printf '{}' > .mcp.json; mkdir -p .claude; printf '{}' > .claude/settings.json; printf '#\n' > CLAUDE.md`),
-		filepath.Join(t.TempDir(), "probe"))
+		"claude-code", filepath.Join(t.TempDir(), "probe"))
 	if err != nil {
 		t.Fatalf("Derive: %v", err)
 	}
@@ -230,7 +230,7 @@ func TestTheBaselineArmsRepositoryReachesNoChannelAfterPreparation(t *testing.T)
 	// Preparing the baseline arm is doing nothing to it, and this is what
 	// proves the nothing.
 	baseline := repoWithSource(t)
-	arm := channels.Arm{Repo: baseline, Home: t.TempDir(), PathValue: "/nonexistent/bin", SenseBinary: "sense"}
+	arm := channels.Arm{Repo: baseline, Home: t.TempDir(), PathValue: "/nonexistent/bin", SenseBinary: "sense", ConfigDirs: []string{".claude"}}
 
 	if reached := channels.Absent(derived, arm); len(reached) != 0 {
 		t.Errorf("the baseline arm reaches %v", reached)

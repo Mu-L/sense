@@ -142,7 +142,7 @@ func writeCatalog(t *testing.T, dir, bin, pin string) string {
 	cfg := filepath.Join(dir, "config")
 	for path, body := range map[string]string{
 		"agents/tool/agent.json": `{"id":"tool","binary":"` + bin + `","model_flag":"--model",
-		  "headless_args":["-p"],"env":[],"supports_mcp":false,"auth_modes":["api_key"]}`,
+		  "config_dirs":[".tool"],"headless_args":["-p"],"env":[],"supports_mcp":false,"auth_modes":["api_key"]}`,
 		"subjects/untreated/subject.json": `{"id":"untreated","kind":"baseline","executor":"isolated-home","agents":["tool"]}`,
 		"executors/isolated-home.json":    `{"id":"isolated-home","preserves_auth":["api_key"],"isolates_global_config":true}`,
 		"models/m1.json":                  `{"id":"m1","provider":"acme","available_under":["api_key"],"agents":["tool"]}`,
