@@ -9,6 +9,7 @@ package session
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -42,6 +43,10 @@ type Spec struct {
 	SetupTool string
 	// AgentEnv is what the agent tool declares in agent.json, as KEY=VALUE.
 	AgentEnv []string
+	// Credential is what this arm is given to reach a model, and Route is how it
+	// gets there. Both come from the catalog side, never from a constant here.
+	Credential isolate.Credential
+	Route      isolate.Route
 	// SenseBin is the Sense binary, and LabBin is this binary, which the
 	// capture shim is invoked through.
 	SenseBin string
@@ -68,11 +73,13 @@ const captureLog = "sense-io.jsonl"
 // is about to be diagnosed must survive the process that made it.
 func Run(ctx context.Context, s Spec) (Result, error) {
 	env, err := isolate.Prepare(isolate.Spec{
-		Root:     s.Root,
-		Arm:      s.Arm,
-		SenseBin: s.SenseBin,
-		HostPath: s.HostPath,
-		AgentEnv: s.AgentEnv,
+		Root:       s.Root,
+		Arm:        s.Arm,
+		SenseBin:   s.SenseBin,
+		HostPath:   s.HostPath,
+		AgentEnv:   s.AgentEnv,
+		Credential: s.Credential,
+		Route:      s.Route,
 	})
 	if err != nil {
 		return Result{}, err
@@ -84,9 +91,16 @@ func Run(ctx context.Context, s Spec) (Result, error) {
 
 	wrote, err := prepareArm(ctx, s, env)
 	if err != nil {
-		return Result{}, err
+		// Give the checkout and its registration back before reporting, or an
+		// attempt that never produced an arm still costs the parent repository a
+		// stale entry — and git then refuses the next attempt at that path. Three
+		// of those accumulated in one afternoon and were pruned by hand. The
+		// removal's own error is not allowed to hide the real one.
+		return Result{Env: env}, errors.Join(err, isolate.RemoveWorktree(detached(ctx), s.Parent, env.Repo))
 	}
 
+	// Past this point the run directory holds a transcript, so a failure leaves
+	// evidence and the caller decides what to do with it through Finish.
 	m, err := run.Session(ctx, filepath.Join(env.Root, "session"), run.Spec{
 		Dir:        env.Repo,
 		Name:       s.Command,
@@ -99,7 +113,11 @@ func Run(ctx context.Context, s Spec) (Result, error) {
 		Grace:      s.Grace,
 	})
 	if err != nil {
-		return Result{}, err
+		// The environment is returned with the error, not swallowed with it: the
+		// checkout and its registration exist and have to be given back, and the
+		// caller cannot do that from a zero Result. An interrupted cell is exactly
+		// the case nobody cleans up.
+		return Result{Env: env}, err
 	}
 	return Result{Env: env, Meta: m}, nil
 }
@@ -186,14 +204,55 @@ func Capture(env isolate.Env) (status tee.Status, present bool, err error) {
 	return status, true, nil
 }
 
+// Finish gives back everything the run no longer needs, in whichever of the two
+// shapes the directory calls for.
+//
+// A directory holding a capture, a transcript or a record is a measured arm: it
+// gives back its checkout, its registration and its credential, and keeps the
+// evidence. One holding none is a throwaway and goes entirely.
+//
+// Which shape applies is read off the directory rather than passed in. A boolean
+// at the call site is a boolean somebody eventually gets backwards, silently, on
+// the side that deletes an arm that was paid for and can never be recreated.
+func Finish(ctx context.Context, parent string, env isolate.Env) error {
+	ctx = detached(ctx)
+	if isolate.HoldsEvidence(env.Root) {
+		return Release(ctx, parent, env)
+	}
+	return Cleanup(ctx, parent, env)
+}
+
+// Release gives back the worktree, its registration and the credential, and
+// keeps the run record. A finished arm is 230MB of checkout and about 19,700
+// files that nothing will read again, beside a transcript that will be read for
+// months.
+func Release(ctx context.Context, parent string, env isolate.Env) error {
+	if err := isolate.RemoveWorktree(detached(ctx), parent, env.Repo); err != nil {
+		return err
+	}
+	return isolate.Release(env)
+}
+
 // Cleanup removes the worktree and then the whole environment, and proves both
-// are gone.
+// are gone. It is the shape for a throwaway directory; Finish is what a caller
+// with a run directory should reach for.
 func Cleanup(ctx context.Context, parent string, env isolate.Env) error {
-	if err := isolate.RemoveWorktree(ctx, parent, env.Repo); err != nil {
+	if err := isolate.RemoveWorktree(detached(ctx), parent, env.Repo); err != nil {
 		return err
 	}
 	return isolate.Cleanup(env)
 }
+
+// detached drops the caller's cancellation, for the git commands cleanup shells
+// out to.
+//
+// The case that most needs cleaning up is the interrupted one, and there the
+// context is already cancelled — so every removal would be killed before it ran,
+// precisely when a leaked registration costs most. Every entry point here does
+// this for itself rather than trusting the caller to have done it: the removals
+// are bounded work on local paths, and being correct only because of who called
+// you is not being correct.
+func detached(ctx context.Context) context.Context { return context.WithoutCancel(ctx) }
 
 // LogPath is where a run's MCP capture lives.
 func LogPath(env isolate.Env) string { return filepath.Join(env.Artifacts, captureLog) }

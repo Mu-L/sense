@@ -47,6 +47,12 @@ type Spec struct {
 	AgentEnv   []string
 	SetupTool  string
 	ConfigDirs []string
+	// Credential is what both arms are given to reach a model. One value, not
+	// two: an asymmetry in what the arms could reach would be an asymmetry in
+	// what they could do, and nothing in a score would show it.
+	Credential isolate.Credential
+	// Route is how that credential reaches the agent tool, from the catalog.
+	Route isolate.Route
 	// SenseBin is the Sense binary and LabBin is this one.
 	SenseBin string
 	LabBin   string
@@ -140,6 +146,22 @@ func Run(ctx context.Context, s Spec) (Report, error) {
 	}
 
 	rec, err := cell.Run(ctx, s.Root, arms)
+
+	// Whatever happened, the checkouts go back — but only after the checks have
+	// read them, because the repository routes are proved by looking inside the
+	// worktree and a released one would read as an arm that never had Sense.
+	//
+	// This is the call that was missing: the removal has been correct and
+	// unreachable from the binary since cycle 03, and one mastodon pair left
+	// 230MB and about 19,700 files behind. It runs on every path, because an
+	// interrupted or refused attempt leaks exactly the registration a finished
+	// one would — three of those accumulated in a single afternoon.
+	report, checkErr := s.report(ctx, rec, err, sense, baseline)
+	return report, errors.Join(checkErr, s.release(ctx, sense, baseline))
+}
+
+// report is the cell's outcome, before anything is given back.
+func (s Spec) report(ctx context.Context, rec cell.Record, err error, sense, baseline session.Result) (Report, error) {
 	if err != nil {
 		return Report{}, err
 	}
@@ -151,8 +173,31 @@ func Run(ctx context.Context, s Spec) (Report, error) {
 		return Report{}, fmt.Errorf("the cell is incomplete: %v has no result, and %v can never be paired",
 			rec.Unusable, rec.Burned)
 	}
-
 	return s.check(ctx, sense, baseline)
+}
+
+// release gives back both arms' checkouts, in whichever shape each directory
+// calls for. An arm that never ran has no environment and nothing to give back.
+//
+// A release failure is reported rather than swallowed: it means a registration
+// or a credential is still there, and the next attempt at that path is refused.
+func (s Spec) release(ctx context.Context, arms ...session.Result) error {
+	// Detached from the caller's cancellation, deliberately. Release shells out to
+	// git, and the case that most needs releasing is the interrupted cell — where
+	// the context is already cancelled, so every one of those commands would be
+	// killed before it ran and the registration would leak exactly when it costs
+	// most. The removals are bounded work on local paths, not something a user
+	// waits on.
+	ctx = context.WithoutCancel(ctx)
+
+	var errs []error
+	for _, a := range arms {
+		if a.Env.Root == "" {
+			continue
+		}
+		errs = append(errs, session.Finish(ctx, s.Parent, a.Env))
+	}
+	return errors.Join(errs...)
 }
 
 // armRunner is one side of the pair, as the supervisor sees it: a function that
@@ -161,10 +206,12 @@ func Run(ctx context.Context, s Spec) (Report, error) {
 func (s Spec) armRunner(arm isolate.Arm, wall time.Duration, into *session.Result) func(context.Context, string) (run.Meta, error) {
 	return func(ctx context.Context, dir string) (run.Meta, error) {
 		res, err := session.Run(ctx, s.arm(dir, arm, wall))
+		// Recorded whether or not the arm succeeded. The environment is what has
+		// to be released, and an arm that failed or was cut still took a checkout.
+		*into = res
 		if err != nil {
 			return run.Meta{}, err
 		}
-		*into = res
 		return res.Meta, nil
 	}
 }
@@ -175,28 +222,43 @@ func (s Spec) armRunner(arm isolate.Arm, wall time.Duration, into *session.Resul
 // number without being visible in any of them.
 func (s Spec) arm(root string, arm isolate.Arm, wall time.Duration) session.Spec {
 	return session.Spec{
-		Root:      root,
-		Arm:       arm,
-		Parent:    s.Parent,
-		Commit:    s.Commit,
-		Prompt:    s.Prompt,
-		Command:   s.Command,
-		Args:      s.Args,
-		AgentEnv:  s.AgentEnv,
-		SetupTool: s.SetupTool,
-		SenseBin:  s.SenseBin,
-		LabBin:    s.LabBin,
-		HostPath:  s.HostPath,
-		Wall:      wall,
-		Grace:     s.Grace,
+		Root:       root,
+		Arm:        arm,
+		Credential: s.Credential,
+		Route:      s.Route,
+		Parent:     s.Parent,
+		Commit:     s.Commit,
+		Prompt:     s.Prompt,
+		Command:    s.Command,
+		Args:       s.Args,
+		AgentEnv:   s.AgentEnv,
+		SetupTool:  s.SetupTool,
+		SenseBin:   s.SenseBin,
+		LabBin:     s.LabBin,
+		HostPath:   s.HostPath,
+		Wall:       wall,
+		Grace:      s.Grace,
 	}
 }
 
 // check runs every proof against the pair that just ran.
-func (s Spec) check(ctx context.Context, sense, baseline session.Result) (Report, error) {
+func (s Spec) check(ctx context.Context, sense, baseline session.Result) (rep Report, removed error) {
 	r := Report{Sense: sense, Baseline: baseline}
 
-	derived, err := channels.Derive(ctx, s.SenseBin, s.SetupTool, filepath.Join(s.Root, "channel-probe"))
+	// The channel probe is a throwaway: a scratch project and a scratch HOME that
+	// exist only to read back what `sense setup` writes. It holds no capture, no
+	// transcript and no record, so it goes whole, and it goes whether or not the
+	// derivation succeeded.
+	//
+	// Through isolate.Cleanup rather than a bare RemoveAll, so this removal is
+	// proven like every other one here. A discarded RemoveAll error is the exact
+	// shape of cleanup this package refuses everywhere else.
+	probeDir := filepath.Join(s.Root, "channel-probe")
+	defer func() {
+		removed = errors.Join(removed, isolate.Cleanup(isolate.Env{Layout: isolate.Layout{Root: probeDir}}))
+	}()
+
+	derived, err := channels.Derive(ctx, s.SenseBin, s.SetupTool, probeDir)
 	if err != nil {
 		return Report{}, err
 	}
@@ -284,6 +346,7 @@ func armWorld(res session.Result, binary string, configDirs []string) channels.A
 	return channels.Arm{
 		Repo:        res.Env.Repo,
 		Home:        res.Env.Home,
+		ConfigDir:   res.Env.Config,
 		PathValue:   res.Meta.Path,
 		SenseBinary: binary,
 		ConfigDirs:  configDirs,

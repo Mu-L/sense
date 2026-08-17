@@ -37,7 +37,7 @@ func envMap(t *testing.T, env []string) map[string]string {
 func TestSessionSeesTheDisposableHomeAndXDGDirectories(t *testing.T) {
 	l := LayoutFor("/runs/r1")
 
-	got := envMap(t, Environ(l, "/usr/bin", noHost, nil))
+	got := envMap(t, Environ(l, "/usr/bin", noHost, nil, ""))
 
 	want := map[string]string{
 		"HOME":            "/runs/r1/home",
@@ -64,7 +64,7 @@ func TestHostVariablesOutsideTheAllowlistDoNotReachTheSession(t *testing.T) {
 		"EDITOR":                                   "vim",
 	})
 
-	got := envMap(t, Environ(LayoutFor("/runs/r1"), "/usr/bin", host, nil))
+	got := envMap(t, Environ(LayoutFor("/runs/r1"), "/usr/bin", host, nil, ""))
 
 	if got["TERM"] != "xterm" {
 		t.Errorf("TERM = %q, want the allowlisted host value", got["TERM"])
@@ -77,7 +77,7 @@ func TestHostVariablesOutsideTheAllowlistDoNotReachTheSession(t *testing.T) {
 }
 
 func TestAnAllowlistedVariableTheHostDoesNotSetIsNotInvented(t *testing.T) {
-	got := envMap(t, Environ(LayoutFor("/runs/r1"), "/usr/bin", noHost, nil))
+	got := envMap(t, Environ(LayoutFor("/runs/r1"), "/usr/bin", noHost, nil, ""))
 
 	// An empty ANTHROPIC_API_KEY is not the same as an absent one: a tool that
 	// checks for presence would take the empty string as api-key auth and fail
@@ -107,7 +107,7 @@ func TestPathIsNotInheritedFromTheHostAllowlist(t *testing.T) {
 	}
 
 	host := hostWith(map[string]string{"PATH": "/host/bin"})
-	got := envMap(t, Environ(LayoutFor("/runs/r1"), "/arm/bin", host, nil))
+	got := envMap(t, Environ(LayoutFor("/runs/r1"), "/arm/bin", host, nil, ""))
 	if got["PATH"] != "/arm/bin" {
 		t.Errorf("PATH = %q, want the arm's value /arm/bin", got["PATH"])
 	}
@@ -117,7 +117,7 @@ func TestTheAgentToolsOwnEnvironmentWinsOverADefault(t *testing.T) {
 	agentEnv := []string{"IS_SANDBOX=1", "TERM=dumb"}
 	host := hostWith(map[string]string{"TERM": "xterm"})
 
-	got := envMap(t, Environ(LayoutFor("/runs/r1"), "/usr/bin", host, agentEnv))
+	got := envMap(t, Environ(LayoutFor("/runs/r1"), "/usr/bin", host, agentEnv, ""))
 
 	if got["IS_SANDBOX"] != "1" {
 		t.Errorf("IS_SANDBOX = %q, want the agent tool's 1", got["IS_SANDBOX"])
@@ -166,5 +166,51 @@ func TestTheLayoutNamesTheWholeRunTree(t *testing.T) {
 	}
 	if l.Root != "/runs/r1" {
 		t.Errorf("Root = %q, want /runs/r1", l.Root)
+	}
+}
+
+// The correction this pitch made, stated so it cannot regress silently.
+//
+// Credentials() used to decide what a credential is by looking for the word
+// "authentication" inside each entry's human-readable reason. Both flagged
+// entries happen to carry that word today, so swapping the flag back for the
+// string match passes every other test in the tree — which is exactly the shape
+// of wrong that reads as working. The fixture breaks the coincidence: one entry
+// says "authentication" and is not a credential, one is a credential and never
+// says it.
+func TestWhatCountsAsACredentialIsDeclaredRatherThanReadOutOfAComment(t *testing.T) {
+	was := allowed
+	t.Cleanup(func() { allowed = was })
+	allowed = []Entry{
+		{Name: "TALKS_ABOUT_AUTH", Why: "not a credential, but its reason mentions authentication in passing"},
+		{Name: "THE_REAL_ONE", Why: "reaches a model, and says so without using the word", Credential: true},
+	}
+
+	got := Credentials()
+
+	if !slices.Equal(got, []string{"THE_REAL_ONE"}) {
+		t.Errorf("Credentials() = %v, want only the entry declared as one", got)
+	}
+}
+
+// The variable that leaves the allowlist, named so re-adding it is a test
+// failure rather than a comment nobody reads.
+//
+// The hazard is measured: when it is set the agent tool writes a plaintext
+// credential and its fallback combiner then deletes the operator's keychain
+// entry on exit. A disposable HOME means the branch cannot fire today, which is
+// a reason to record the mechanism and not a reason to keep the variable.
+func TestTheKeychainDestroyingVariableIsNotOnTheAllowlist(t *testing.T) {
+	const destroys = "CLAUDE_CODE_OAUTH_TOKEN"
+
+	if slices.ContainsFunc(allowed, func(e Entry) bool { return e.Name == destroys }) {
+		t.Fatalf("%s is on the environment allowlist; a run on a host that sets it can delete "+
+			"the operator's own login, and nothing in a bench result would show it", destroys)
+	}
+
+	// And it does not reach a session even when the host sets it.
+	host := hostWith(map[string]string{destroys: "a-token"})
+	if _, ok := envMap(t, Environ(LayoutFor("/runs/r1"), "/usr/bin", host, nil, ""))[destroys]; ok {
+		t.Errorf("%s reached the session", destroys)
 	}
 }
