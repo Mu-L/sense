@@ -80,6 +80,22 @@ type Agent struct {
 	// `.local/share/opencode` — and a single field would check one and call the
 	// arm clean, which is half the configured surface silently missing.
 	ConfigDirs []string `json:"config_dirs"`
+	// ConfigDirVar is the environment variable that points the tool at a config
+	// directory, e.g. "CLAUDE_CONFIG_DIR". It is how a run is handed its own
+	// credential, so it is the door authentication comes through — per tool,
+	// because no two tools spell it alike and a tool that has none takes none.
+	ConfigDirVar string `json:"config_dir_var"`
+	// KeychainService is the item the tool keeps its login under in the platform
+	// credential store, read once by the attended parent so a run never has to
+	// reach a keychain of its own. Empty means this tool has no such store, and
+	// then the config directory is the only source.
+	KeychainService string `json:"keychain_service"`
+	// CredentialKey is the object the credential lives under inside that store's
+	// document. Config rather than a constant for the same reason as the rest:
+	// a key compiled in would be right for one tool and read nothing for the
+	// next, and a run with no credential looks exactly like a model with
+	// nothing to say.
+	CredentialKey string `json:"credential_key"`
 	// HeadlessArgs drive the tool with no terminal attached. They live here
 	// rather than in code because they are ecosystem facts: they change when
 	// somebody else ships a release, and no two tools spell them alike.

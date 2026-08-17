@@ -28,5 +28,8 @@
   ],
   "config_dirs": [
     ".claude"
-  ]
+  ],
+  "config_dir_var": "CLAUDE_CONFIG_DIR",
+  "keychain_service": "Claude Code-credentials",
+  "credential_key": "claudeAiOauth"
 }
