@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"encoding/json"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -515,4 +516,39 @@ func TestTheRecordSaysHowMuchTheSessionActuallySaid(t *testing.T) {
 			t.Errorf("stdout_bytes = %d, want 0", m.StdoutBytes)
 		}
 	})
+}
+
+// A run directory is read back for months. The environment it ran with carries
+// a bearer token, so nothing recorded may echo it — asserted rather than assumed,
+// because the record is written by a struct someone could add a field to.
+func TestNothingRecordedAboutARunCarriesItsCredentials(t *testing.T) {
+	dir := t.TempDir()
+	const token = "sk-ant-oat-should-never-be-recorded"
+
+	if _, err := Session(context.Background(), dir, Spec{
+		// The session says nothing about the token, which is the case worth
+		// checking: a transcript that quoted it would be the agent's doing and a
+		// different problem. This is about what the LAB writes down.
+		Name: "sh", Args: []string{"-c", "echo done"},
+		Env:  []string{"LAB_TEST_TOKEN=" + token},
+		Arm:  "sense",
+		Wall: 10 * time.Second,
+	}); err != nil {
+		t.Fatalf("Session: %v", err)
+	}
+
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return nil //nolint:nilerr // an unreadable entry is not a finding
+		}
+		b, readErr := os.ReadFile(path) // #nosec G304 -- the test's own run directory
+		if readErr == nil && strings.Contains(string(b), token) {
+			rel, _ := filepath.Rel(dir, path)
+			t.Errorf("%s carries the session's credential", rel)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk the run directory: %v", err)
+	}
 }

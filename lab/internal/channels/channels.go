@@ -106,6 +106,13 @@ type Arm struct {
 	// ConfigDirs are the agent tool's per-user state directories, relative to
 	// Home.
 	ConfigDirs []string
+	// ConfigDir is the run's own config directory, where the tool keeps its
+	// per-user state when it is pointed at one directly. It is checked as well as
+	// the HOME-relative names above, because a tool given an explicit config
+	// directory writes its persisted memory there and nowhere under HOME — and a
+	// memory check looking only under HOME would then pass by looking in the
+	// wrong place, which reads exactly like a clean arm.
+	ConfigDir string
 }
 
 // Absent reports every channel the arm can still reach, by name. An empty
@@ -138,6 +145,15 @@ func (c Channel) reachedBy(a Arm) string {
 	case Home:
 		for _, state := range a.ConfigDirs {
 			if dir := MemoryDir(a.Home, state, a.Repo); exists(dir) {
+				return fmt.Sprintf("%s: %s exists", c.Name, dir)
+			}
+		}
+		// The same directory, where a tool pointed at an explicit config
+		// directory would actually put it. The config directory itself is not
+		// checked for existence: the run creates it, so its presence says
+		// nothing, and only what the tool persisted inside it does.
+		if a.ConfigDir != "" {
+			if dir := MemoryDir(a.ConfigDir, "", a.Repo); exists(dir) {
 				return fmt.Sprintf("%s: %s exists", c.Name, dir)
 			}
 		}

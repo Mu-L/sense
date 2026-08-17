@@ -332,6 +332,36 @@ if [ -f .mcp.json ]; then echo answered; else sleep 30; fi`}
 	if _, statErr := os.Stat(filepath.Join(s.Root, "cell-meta.json")); statErr != nil {
 		t.Errorf("no cell record was written: %v", statErr)
 	}
+	// And the checkouts still go back. This is the case that produced three
+	// stale registrations in one afternoon: an interrupted cell is exactly the
+	// one nobody cleans up, and git then refuses the retry at that path.
+	if list := worktreeList(t, s.Parent); strings.Contains(list, s.Root) {
+		t.Errorf("an interrupted cell left a registration behind:\n%s", list)
+	}
+}
+
+// The channel probe is a scratch project and a scratch HOME, built to read back
+// what `sense setup` writes. It holds no evidence and must not survive the cell.
+func TestTheChannelProbeDirectoryDoesNotSurviveTheCell(t *testing.T) {
+	s := spec(t)
+
+	if _, err := probe.Run(context.Background(), s); err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(s.Root, "channel-probe")); !os.IsNotExist(err) {
+		t.Errorf("the channel probe directory is still there: %v", err)
+	}
+}
+
+// worktreeList is what the parent repository still names.
+func worktreeList(t *testing.T, parent string) string {
+	t.Helper()
+	out, err := exec.Command("git", "-C", parent, "worktree", "list").CombinedOutput()
+	if err != nil {
+		t.Fatalf("git worktree list: %v: %s", err, out)
+	}
+	return string(out)
 }
 
 func TestASenseArmThatCannotBePreparedStopsTheCell(t *testing.T) {
@@ -340,6 +370,12 @@ func TestASenseArmThatCannotBePreparedStopsTheCell(t *testing.T) {
 
 	if _, err := probe.Run(context.Background(), s); err == nil {
 		t.Fatal("Run reported success although the sense arm could not be prepared")
+	}
+
+	// A cell that could not prepare an arm has still taken a checkout, and it
+	// must give it back: a leaked registration makes git refuse the retry.
+	if list := worktreeList(t, s.Parent); strings.Contains(list, s.Root) {
+		t.Errorf("a refused cell left a registration behind:\n%s", list)
 	}
 }
 

@@ -2,13 +2,16 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/luuuc/sense/lab/internal/isolate"
 )
@@ -498,10 +501,11 @@ func TestProbeRejectsAFlagItDoesNotHave(t *testing.T) {
 }
 
 // The failure that produced two empty arms: the disposable HOME carries no
-// credential of its own, and there was none in the environment to pass through.
-// The executor's preserves_auth says what CAN survive isolation, not that
-// anything is there to survive.
-func TestACellWithNoCredentialInTheEnvironmentIsRefusedBeforeSpawning(t *testing.T) {
+// credential of its own, there was none in the operator's store this run could
+// read, and none in the environment to pass through. The executor's
+// preserves_auth says what CAN survive isolation, not that anything is there to
+// survive.
+func TestACellWithNoCredentialAnywhereIsRefusedBeforeSpawning(t *testing.T) {
 	w := newProbeWorld(t)
 	for _, name := range isolate.Credentials() {
 		t.Setenv(name, "")
@@ -537,5 +541,219 @@ func TestAnyOneCredentialSatisfiesTheCheck(t *testing.T) {
 				t.Errorf("%s did not satisfy the credential check:\n%s\n%s", name, stdout, stderr)
 			}
 		})
+	}
+}
+
+// hostHolding makes the operator's store answer with the given credential, and
+// restores the real read afterwards. It is how a seat-based host is stated
+// without a login: CI has none and can never be given one.
+func hostHolding(t *testing.T, c isolate.Credential, err error) {
+	t.Helper()
+	was := hostCredential
+	t.Cleanup(func() { hostCredential = was })
+	hostCredential = func(context.Context, func(string) (string, bool), isolate.Route) (isolate.Credential, error) {
+		return c, err
+	}
+}
+
+// aSeat is a credential good for the given span from now.
+func aSeat(good time.Duration) isolate.Credential {
+	return isolate.Credential{
+		AccessToken: "seat-token",
+		ExpiresAt:   time.Now().Add(good).UnixMilli(),
+		Scopes:      []string{"user:inference"},
+	}
+}
+
+// The half-pair hazard arriving through the credential. A token that outlives
+// the sense arm and dies during the baseline burns the finished arm: it is paid
+// for and can never be paired, because the baseline's budget derives from the
+// sense arm it ran with. Presence is not the question; lasting the whole cell is.
+func TestACredentialThatDiesPartWayThroughTheCellIsRefusedBeforeSpawning(t *testing.T) {
+	w := newProbeWorld(t)
+	for _, name := range isolate.Credentials() {
+		t.Setenv(name, "")
+	}
+	// Good for one wall, and the cell needs two: the arms run in sequence.
+	hostHolding(t, aSeat(90*time.Second), nil)
+	w.declareCredentialRoute(t)
+
+	code, _, stderr := runProbe(t, w.args("-wall", "60s"))
+	if code != exitError {
+		t.Fatalf("exit %d, want an error", code)
+	}
+	if !strings.Contains(stderr, "expires") {
+		t.Errorf("the refusal names something other than expiry: %q", stderr)
+	}
+	if strings.Contains(stderr, "no credential") {
+		t.Errorf("an expiring credential was reported as an absent one: %q", stderr)
+	}
+	if _, err := os.Stat(w.out); err == nil {
+		t.Error("a cell directory was created for a credential that could not last the cell")
+	}
+}
+
+func TestACredentialThatOutlivesBothWallsIsAccepted(t *testing.T) {
+	w := newProbeWorld(t)
+	for _, name := range isolate.Credentials() {
+		t.Setenv(name, "")
+	}
+	hostHolding(t, aSeat(time.Hour), nil)
+	w.declareCredentialRoute(t)
+
+	code, stdout, stderr := runProbe(t, w.args("-wall", "60s"))
+	if code == exitError {
+		t.Fatalf("a credential good for the whole cell was refused:\n%s\n%s", stdout, stderr)
+	}
+}
+
+// The seat and the key are two doors, and a host with the key needs neither the
+// store nor an expiry it cannot read.
+func TestAKeyBasedHostRunsWithNoStoreAtAll(t *testing.T) {
+	w := newProbeWorld(t)
+	hostHolding(t, isolate.Credential{}, errors.New("no store on this machine"))
+	t.Setenv("ANTHROPIC_API_KEY", "a-test-key")
+
+	code, stdout, stderr := runProbe(t, w.args())
+	if code == exitError {
+		t.Fatalf("a key-based host was refused for having no store:\n%s\n%s", stdout, stderr)
+	}
+}
+
+// Every arm of a seat-based cell is handed the credential, and nothing else from
+// the operator's store reaches it. This is the positive-space check cycle 03's
+// test set never had: every other isolation test asks what an arm CANNOT reach.
+//
+// Read off what the SESSION saw rather than off the file, because the file is
+// gone by the time the cell returns — release takes the credential and keeps the
+// evidence, which is the other half of this pitch.
+func TestBothArmsAreProvisionedWithTheCredentialAndNothingElse(t *testing.T) {
+	w := newProbeWorld(t)
+	for _, name := range isolate.Credentials() {
+		t.Setenv(name, "")
+	}
+	hostHolding(t, aSeat(time.Hour), nil)
+	w.declareCredentialRoute(t)
+
+	if code, stdout, stderr := runProbe(t, w.args()); code == exitError {
+		t.Fatalf("exit %d:\n%s\n%s", code, stdout, stderr)
+	}
+
+	for _, arm := range []string{"sense", "baseline"} {
+		said := armTranscript(t, w.out, arm)
+		fields := fieldLine(said, "CRED_FIELDS=")
+		if fields == "" {
+			t.Fatalf("the %s arm read no credential:\n%s", arm, said)
+		}
+		want := "fakeOauth accessToken expiresAt scopes"
+		if got := strings.Join(strings.Fields(fields), " "); got != want {
+			t.Errorf("the %s arm's credential carries %q, want %q", arm, got, want)
+		}
+	}
+}
+
+// The session is pointed at that credential by the tool's own variable, taken
+// from the catalog. Without it the file is written where nothing reads it, and
+// the arm exits in a second reading as a model with nothing to say — which is
+// the shape of the failure this pitch was written for.
+func TestTheSessionIsPointedAtItsOwnConfigDirectory(t *testing.T) {
+	w := newProbeWorld(t)
+	for _, name := range isolate.Credentials() {
+		t.Setenv(name, "")
+	}
+	hostHolding(t, aSeat(time.Hour), nil)
+	w.declareCredentialRoute(t)
+
+	if code, stdout, stderr := runProbe(t, w.args()); code == exitError {
+		t.Fatalf("exit %d:\n%s\n%s", code, stdout, stderr)
+	}
+
+	for _, arm := range []string{"sense", "baseline"} {
+		want := filepath.Join(w.out, arm, "config")
+		if got := fieldLine(armTranscript(t, w.out, arm), "CONFIG_DIR="); got != want {
+			t.Errorf("the %s arm saw config directory %q, want %q", arm, got, want)
+		}
+	}
+}
+
+// Nothing the cell keeps may carry the token. A cell directory is read back for
+// months by the scorer, the miner and status, so this walks all of it — the run
+// records, the transcripts, the MCP capture and the cell record — rather than
+// the one file a test could pick knowing where the token is.
+func TestNothingTheCellKeepsCarriesTheToken(t *testing.T) {
+	w := newProbeWorld(t)
+	for _, name := range isolate.Credentials() {
+		t.Setenv(name, "")
+	}
+	hostHolding(t, aSeat(time.Hour), nil)
+	w.declareCredentialRoute(t)
+
+	if code, stdout, stderr := runProbe(t, w.args()); code == exitError {
+		t.Fatalf("exit %d:\n%s\n%s", code, stdout, stderr)
+	}
+
+	if err := filepath.WalkDir(w.out, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return nil //nolint:nilerr // an unreadable entry is not a finding
+		}
+		b, readErr := os.ReadFile(path) // #nosec G304 -- the test's own cell directory
+		if readErr == nil && strings.Contains(string(b), "seat-token") {
+			rel, _ := filepath.Rel(w.out, path)
+			t.Errorf("%s carries the credential, in a directory kept for months", rel)
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("walk the cell: %v", err)
+	}
+}
+
+// armTranscript is what one arm said, which survives release.
+func armTranscript(t *testing.T, cell, arm string) string {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join(cell, arm, "session", "raw", "stdout"))
+	if err != nil {
+		t.Fatalf("read the %s arm's transcript: %v", arm, err)
+	}
+	return string(b)
+}
+
+// fieldLine is the value the stand-in reported for one key.
+func fieldLine(said, key string) string {
+	for _, line := range strings.Split(said, "\n") {
+		if v, ok := strings.CutPrefix(line, key); ok {
+			return strings.TrimSpace(v)
+		}
+	}
+	return ""
+}
+
+// recordingAgentScript is the stand-in agent, plus two lines: it reports the
+// config directory it was pointed at and the FIELD NAMES of the credential it
+// found there.
+//
+// The names rather than the values, deliberately. A stand-in that echoed the
+// token would put it in a transcript that is kept for months, which is the thing
+// this pitch forbids — and it would make the test that checks for that pass by
+// accident of its own setup.
+const recordingAgentScript = `#!/bin/sh
+printf 'CONFIG_DIR=%s\n' "$FAKE_CONFIG_DIR"
+printf 'CRED_FIELDS=%s\n' "$(grep -o '"[a-zA-Z]*":' "$FAKE_CONFIG_DIR/.credentials.json" | tr -d '":' | tr '\n' ' ')"
+` + fakeAgentScript
+
+// declareCredentialRoute rewrites the world's agent to declare a credential
+// route, the way the shipped catalog does: a config variable, a store item and
+// the key the credential lives under. Without one, an agent authenticates by
+// key and no file is provisioned at all.
+func (w probeWorld) declareCredentialRoute(t *testing.T) {
+	t.Helper()
+	bin := writeScript(t, filepath.Join(t.TempDir(), "recording-agent"), recordingAgentScript)
+	at := filepath.Join(w.config, "agents", "fake", "agent.json")
+	body := `{"id":"fake","binary":"` + bin + `","model_flag":"--model",` +
+		`"config_dirs":[".fake"],"config_dir_var":"FAKE_CONFIG_DIR",` +
+		`"keychain_service":"Fake-credentials","credential_key":"fakeOauth",` +
+		`"headless_args":["-c"],"judge_args":["-c"],"env":[],"supports_mcp":true,` +
+		`"auth_modes":["subscription","api_key"]}`
+	if err := os.WriteFile(at, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }

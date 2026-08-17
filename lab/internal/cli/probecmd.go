@@ -82,7 +82,7 @@ func probeCell(ctx context.Context, args []string, stdout, stderr io.Writer) int
 		return exitUsage
 	}
 
-	s, j, err := probeSpec(f)
+	s, j, err := probeSpec(ctx, f)
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "sense-lab probe: %v\n", err)
 		return exitError
@@ -117,28 +117,79 @@ func probeCell(ctx context.Context, args []string, stdout, stderr io.Writer) int
 // would have, and it costs a full wall per arm to discover.
 var labBinary = os.Executable
 
-// credentialPresent refuses a cell whose session could not authenticate.
+// hostCredential is the read of the operator's store, in the attended parent. It
+// is a variable so a test can state what the host holds without needing a login.
+var hostCredential = isolate.HostCredential
+
+// cellCredential resolves and validates the credential both arms will be given,
+// before anything spawns.
 //
-// It asks whether a credential is REACHABLE, not what the executor claims to
-// preserve. preserves_auth says what CAN survive isolation; this is whether
-// there is anything to survive, and the difference is two empty arms.
+// It asks whether a credential is USABLE FOR THE WHOLE CELL, which is two
+// corrections at once. It used to ask whether an environment variable was set:
+// that missed the seat case entirely, because a seat lives in a store rather
+// than in the environment, and it also passed a credential that expires part way
+// through. A token that outlives the sense arm and dies during the baseline
+// burns the finished arm — it can never be paired, because the baseline's budget
+// derives from the sense arm it ran with. That is the half-pair hazard arriving
+// through the credential instead of through an interrupt, so it is refused here,
+// where every other unrunnable combination is refused.
 //
-// Only the environment is checked, and that is a limitation rather than a
-// design. A seat lives in the platform credential store, which a disposable
-// HOME cannot reach non-interactively: macOS locates the login keychain through
-// HOME, and its ACL denies a session with no GUI context. Measured 2026-08-17,
-// linking the store in worked twice and then failed ten times with the control
-// passing throughout. Cycle 03-06 owns the fix; until it lands, an isolated
-// cell authenticates by key.
-func credentialPresent() error {
+// A key-based host needs none of this: the key is an allowlisted variable and it
+// reaches the session that way, with no expiry anyone can read.
+func cellCredential(ctx context.Context, a catalog.Agent, until time.Time) (isolate.Credential, error) {
+	route := credentialRoute(a)
+	// A tool that declares no credential route has no file a credential could be
+	// provisioned into, so a seat cannot reach it however good the token is. It
+	// authenticates by key or not at all.
+	if route.Key == "" {
+		if keyInEnvironment() {
+			return isolate.Credential{}, nil
+		}
+		return isolate.Credential{}, fmt.Errorf("%s declares no credential route, so it can only be "+
+			"authenticated by key; set one of %v, or both arms reach no model and produce empty runs",
+			a.ID, isolate.Credentials())
+	}
+
+	c, err := hostCredential(ctx, os.LookupEnv, route)
+	if err != nil {
+		if keyInEnvironment() {
+			return isolate.Credential{}, nil
+		}
+		return isolate.Credential{}, fmt.Errorf("no credential for this cell: %w. Log in with `%s` and /login, "+
+			"or set one of %v; without either, both arms reach no model and produce empty runs",
+			err, a.Binary, isolate.Credentials())
+	}
+	if c.ExpiresBefore(until) {
+		return isolate.Credential{}, fmt.Errorf("the credential expires at %s, before this cell can finish at %s: "+
+			"the arm that ran first would be paid for and could never be paired. Log in again with `%s` "+
+			"and re-run", c.Expiry().Format(time.RFC3339), until.Format(time.RFC3339), a.Binary)
+	}
+	return c, nil
+}
+
+// credentialRoute is the agent tool's credential route, as the catalog declares
+// it. The first config directory is the one the credential lives in; the rest
+// are other state directories the contamination checks look inside.
+func credentialRoute(a catalog.Agent) isolate.Route {
+	r := isolate.Route{
+		ConfigDirVar: a.ConfigDirVar,
+		Keychain:     a.KeychainService,
+		Key:          a.CredentialKey,
+	}
+	if len(a.ConfigDirs) > 0 {
+		r.ConfigDir = a.ConfigDirs[0]
+	}
+	return r
+}
+
+// keyInEnvironment reports whether the host authenticates by key instead.
+func keyInEnvironment() bool {
 	for _, name := range isolate.Credentials() {
 		if v, ok := os.LookupEnv(name); ok && v != "" {
-			return nil
+			return true
 		}
 	}
-	return fmt.Errorf("no credential in the environment: the disposable HOME carries none of its own and a "+
-		"seat cannot be reached from one until 03-06 lands, so both arms would reach no model and produce "+
-		"empty runs. Set one of %v", isolate.Credentials())
+	return false
 }
 
 // probeJob is what the catalog resolved, kept beside the spec so the header can
@@ -149,7 +200,7 @@ type probeJob struct {
 }
 
 // probeSpec resolves the catalog and the scenario into one cell to run.
-func probeSpec(f probeFlags) (probe.Spec, probeJob, error) {
+func probeSpec(ctx context.Context, f probeFlags) (probe.Spec, probeJob, error) {
 	c, err := catalog.Load(f.config)
 	if err != nil {
 		return probe.Spec{}, probeJob{}, err
@@ -171,8 +222,8 @@ func probeSpec(f probeFlags) (probe.Spec, probeJob, error) {
 		return probe.Spec{}, probeJob{}, err
 	}
 
-	// A credential the session can actually reach, checked before anything
-	// spawns.
+	// A credential the session can actually reach, and one that outlives the
+	// cell, resolved before anything spawns.
 	//
 	// The executor's preserves_auth says what a mode CAN survive isolation, not
 	// that a credential is there today. Measured 2026-08-17: both arms of a cell
@@ -180,7 +231,13 @@ func probeSpec(f probeFlags) (probe.Spec, probeJob, error) {
 	// disposable HOME carries no credential of its own and none was in the
 	// environment to pass through. That is two arms produced and a cell wasted,
 	// and it is exactly the kind of thing this command exists to refuse first.
-	if err := credentialPresent(); err != nil {
+	//
+	// Both walls, not one. The arms run in sequence, so the cell ends after the
+	// sense arm's wall and the baseline's, and a credential good for only the
+	// first produces the burned arm this whole layer exists to prevent.
+	until := time.Now().Add(f.wall + probe.BaselineWall(f.wall))
+	cred, err := cellCredential(ctx, j.agent, until)
+	if err != nil {
 		return probe.Spec{}, probeJob{}, err
 	}
 
@@ -202,6 +259,8 @@ func probeSpec(f probeFlags) (probe.Spec, probeJob, error) {
 		AgentEnv:   j.agent.Env,
 		SetupTool:  j.agent.ID,
 		ConfigDirs: j.agent.ConfigDirs,
+		Credential: cred,
+		Route:      credentialRoute(j.agent),
 		SenseBin:   f.senseBin,
 		LabBin:     labBin,
 		HostPath:   os.Getenv("PATH"),

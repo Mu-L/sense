@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -95,7 +96,39 @@ func checkAgent(a Agent) []string {
 		p = append(p, fmt.Sprintf("agent %s: no config dirs, so there is nowhere to check for "+
 			"leaked state and the check would read the whole disposable HOME", a.ID))
 	}
-	return p
+	return append(p, checkCredentialRoute(a)...)
+}
+
+// checkCredentialRoute refuses a HALF-declared credential route.
+//
+// The three fields are all-or-nothing: the variable points a run at its config
+// directory, the keychain item is where the operator's own login is read from,
+// and the key is the object it lives under in both. Declaring some of them
+// produces a route that cannot carry a credential, and the run then falls back
+// to key authentication and reads as a model with nothing to say — which is the
+// failure this whole route exists to end, re-entering through the catalog.
+//
+// None of the three is the same as some of them: a tool that takes no config
+// directory legitimately declares nothing here and authenticates by key.
+func checkCredentialRoute(a Agent) []string {
+	declared := map[string]string{
+		"config_dir_var":   a.ConfigDirVar,
+		"keychain_service": a.KeychainService,
+		"credential_key":   a.CredentialKey,
+	}
+	var missing []string
+	for name, value := range declared {
+		if value == "" {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) == 0 || len(missing) == len(declared) {
+		return nil
+	}
+	slices.Sort(missing)
+	return []string{fmt.Sprintf("agent %s: a half-declared credential route, missing %v. All three or "+
+		"none: a partial route cannot carry a credential, and the run falls back to key authentication "+
+		"and produces an arm that reads as a model with nothing to say", a.ID, missing)}
 }
 
 func (c *Catalog) checkModel(m Model) []string {

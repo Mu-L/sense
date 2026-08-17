@@ -364,6 +364,27 @@ func TestAFailingSubjectPreparationStopsBeforeTheAgentSpawns(t *testing.T) {
 	}
 }
 
+// The environment comes back WITH the error, and that contract is load-bearing:
+// the caller releases what the failed attempt took, and it cannot do that from a
+// zero Result. Stated here, where it is defined, rather than only through the
+// cell-level test that depends on it.
+func TestAFailedArmStillHandsBackTheEnvironmentItTook(t *testing.T) {
+	s := spec(t, isolate.Sense)
+	s.SenseBin = fakeSenseWriting(t, "printf '{}' > .mcp.json")
+
+	res, err := session.Run(context.Background(), s)
+
+	if err == nil {
+		t.Fatal("an arm with no registration ran")
+	}
+	if res.Env.Root == "" {
+		t.Fatal("the failed arm reported no environment, so its caller has nothing to release")
+	}
+	if res.Env.Repo == "" || res.Env.Config == "" {
+		t.Errorf("the environment came back incomplete: %+v", res.Env)
+	}
+}
+
 func TestAnAgentThatCannotBeSpawnedIsReported(t *testing.T) {
 	s := spec(t, isolate.Baseline)
 	s.Command = filepath.Join(t.TempDir(), "no-such-agent")
@@ -570,4 +591,119 @@ func readCaptured(t *testing.T, path string) []map[string]any {
 		entries = append(entries, e)
 	}
 	return entries
+}
+
+// A measured arm gives back the disk and keeps the evidence. A worktree is a
+// full checkout — one mastodon pair put 230MB and about 19,700 files on disk —
+// and the transcript beside it is read for months.
+func TestAFinishedArmGivesBackItsCheckoutAndKeepsItsRecord(t *testing.T) {
+	s := spec(t, isolate.Sense)
+	s.Credential = aCredential()
+	s.Route = aRoute()
+	res, err := session.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	if err := session.Finish(context.Background(), s.Parent, res.Env); err != nil {
+		t.Fatalf("Finish: %v", err)
+	}
+
+	if _, err := os.Stat(res.Env.Repo); !os.IsNotExist(err) {
+		t.Errorf("the checkout is still on disk: %v", err)
+	}
+	if list := gitOut(t, s.Parent, "worktree", "list"); strings.Contains(list, res.Env.Repo) {
+		t.Errorf("the parent still lists the worktree:\n%s", list)
+	}
+	if _, err := os.Stat(isolate.CredentialPath(res.Env.Config)); err == nil {
+		t.Error("the credential survived, in a directory kept for months")
+	}
+	// The evidence the scorer, the miner and status all read.
+	for _, kept := range []string{
+		filepath.Join(res.Env.Root, "session", "run-meta.json"),
+		filepath.Join(res.Env.Root, "session", "raw", "stdout"),
+	} {
+		if _, err := os.Stat(kept); err != nil {
+			t.Errorf("Finish destroyed %s, which is what the arm was run to produce", kept)
+		}
+	}
+}
+
+// A directory that holds nothing is a throwaway and goes whole. The shape is a
+// property of the directory, not a flag the caller passes.
+func TestADirectoryHoldingNoEvidenceIsRemovedEntirely(t *testing.T) {
+	s := spec(t, isolate.Baseline)
+	res, err := session.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	// Everything a later reader would want, gone: this is now the shape of an
+	// attempt that produced nothing at all.
+	for _, dir := range []string{"session", "artifacts", "logs"} {
+		if err := os.RemoveAll(filepath.Join(res.Env.Root, dir)); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := session.Finish(context.Background(), s.Parent, res.Env); err != nil {
+		t.Fatalf("Finish: %v", err)
+	}
+
+	if _, err := os.Stat(res.Env.Root); !os.IsNotExist(err) {
+		t.Errorf("a directory holding no evidence was kept: %v", err)
+	}
+}
+
+// The leak that produced three stale registrations in one afternoon: an attempt
+// that fails before the agent spawns has still taken a checkout, and git refuses
+// the next attempt at that path until somebody prunes by hand.
+func TestAnAttemptThatFailsBeforeSpawningLeaksNoRegistration(t *testing.T) {
+	s := spec(t, isolate.Sense)
+	// A setup that writes no registration, so the arm is refused after the
+	// worktree exists and before anything is spawned.
+	s.SenseBin = fakeSenseWriting(t, "printf '{}' > .mcp.json")
+
+	if _, err := session.Run(context.Background(), s); err == nil {
+		t.Fatal("an arm with no registration ran")
+	}
+
+	if list := gitOut(t, s.Parent, "worktree", "list"); strings.Contains(list, "run/repo") {
+		t.Errorf("a refused attempt left a registration behind:\n%s", list)
+	}
+}
+
+// The registration and the directory come apart, and the entry is what blocks
+// the retry. Removing the directory by any other means must still leave the
+// parent clean.
+func TestAWorktreeWhoseDirectoryVanishedIsStillDeregistered(t *testing.T) {
+	s := spec(t, isolate.Baseline)
+	res, err := session.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if err := os.RemoveAll(res.Env.Repo); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := session.Finish(context.Background(), s.Parent, res.Env); err != nil {
+		t.Fatalf("Finish: %v", err)
+	}
+
+	if list := gitOut(t, s.Parent, "worktree", "list"); strings.Contains(list, res.Env.Repo) {
+		t.Errorf("the parent still lists a worktree whose directory is gone:\n%s", list)
+	}
+}
+
+// aCredential is a usable seat, and aRoute the catalog names it reaches the tool
+// by. Both are the test's own: nothing here is compiled into the lab.
+func aCredential() isolate.Credential {
+	return isolate.Credential{
+		AccessToken: "seat-token",
+		ExpiresAt:   time.Now().Add(time.Hour).UnixMilli(),
+		Scopes:      []string{"user:inference"},
+	}
+}
+
+func aRoute() isolate.Route {
+	return isolate.Route{ConfigDirVar: "TOOL_CONFIG_DIR", ConfigDir: ".tool", Key: "toolOauth"}
 }

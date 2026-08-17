@@ -35,6 +35,41 @@ exception.
 
 Subscription or API key.
 
+**A seat is not an environment variable.** It lives in the platform credential
+store, which the tool locates through `HOME` — so a run with a disposable one
+looks for a store that is not there and exits in about a second with "Not logged
+in", at zero cost. Linking the host store in is worse than leaving it out: a
+denied read returns a sentinel the strict read path short-circuits on, so it
+never reaches the file fallback, while an absent store is unambiguously null and
+always falls back. Measured 2026-08-17, a linked store passed twice and then
+failed ten times in a row with a real-`HOME` control passing throughout.
+
+The route the bench uses instead is `CLAUDE_CONFIG_DIR` per run, provisioned with
+`.credentials.json` at mode `0600` holding `accessToken`, `expiresAt` and
+`scopes`. `scopes` is the gate: measured field by field, a token with an expiry
+and no scopes reads as logged out. **This file path is undocumented on macOS** —
+the published docs name it for Linux and Windows only — so it is verified against
+the shipped binary's credential store and re-verified when that binary moves.
+
+**`CLAUDE_CODE_OAUTH_TOKEN` is not used, and the mechanism is why.** When it is
+set the tool writes a plaintext credential, and its fallback combiner then
+deletes the operator's keychain entry on exit
+([#37512](https://github.com/anthropics/claude-code/issues/37512), closed as not
+planned). The delete fires only when the keychain read returned non-null, the
+keychain write then failed, and the plaintext write succeeded — so a disposable
+`HOME`, which makes that first read null, cannot trigger it today. The variable
+is still out of the allowlist: a bench that only fails to destroy the operator's
+login by accident of another design decision is one refactor from destroying it.
+
+`claude setup-token` mints a one-year token for non-interactive use, and it is
+consumed through that same variable. It is held in reserve for a campaign that
+outlives an access token, not used as the default door.
+
+The provisioned credential deliberately carries no refresh token: a run that
+cannot refresh cannot rotate the operator's login, so no number of unattended
+cells can invalidate the host seat by succeeding. The cost is that a campaign
+outliving the access token re-provisions rather than running on.
+
 ## Judging
 
 `judge_args` drive the tool tool-less and single-turn, for grading. `-p` with
