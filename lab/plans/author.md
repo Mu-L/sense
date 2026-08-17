@@ -28,6 +28,25 @@ so far is beside it, oldest first, and **all of them are read, not only the last
 Reading only the latest read is how six attempts oscillated between "the plain search got
 everything" and "neither arm got anything" without ever landing in between.
 
+0. **Fewer than about five runs per arm on disk? Step 1 has no input you may trust, and you say
+   so.** At zero there is no citation ranking at all; below five the ordering is noise by step
+   1's own measurement — a row that read as a perfect discriminator at n=2 was 4 of 5 by n=5.
+   Both cases are the same case, and the threshold is the law's rather than any one campaign's.
+
+   Nothing stands in for the ranking. A hand estimate of which rows are free is exactly the
+   substitute A GOLD ROW SHOULD COST A READ forbids from a phase that runs before the two-arm
+   bench. Write one line in the yaml header saying the free-row class is **unmeasured rather
+   than empty**, and carry on from step 2.
+
+   **Half of DECIDE rule 7 is skipped, not all of it.** Its free-and-unreachable-by-citation
+   half has no input. Its other half — a row the blast payload does not carry is dead weight —
+   needs no run history, and step 5 binds unconditionally: every `dependents` row you write must
+   appear in what the arm is shown.
+
+   *(Added by the first live campaign, dotnet-jellyfin cycle 1, at n=0. Keyed to five rather than
+   to zero in council review, so the case the campaign never saw — two or three recorded runs — is
+   covered too.)*
+
 1. **What the arms have ACTUALLY cited, per gold row, across every run on disk.** Rarest-cited
    first, scoped to the HEADLINE model's results root and not to every root: mixing model
    generations reorders the middle and hides the split, measured 2026-08-03, because a weak
@@ -75,10 +94,18 @@ everything" and "neither arm got anything" without ever landing in between.
 7. **Memorization, per candidate row, on a famous repository.** Cut what comes back recited. A
    famous repository is not disqualified; a memorized row is.
 
-8. After writing the yaml and the rubric: render the prompt, check the rubric, check gold
-   confidence on the `dependents` group, then stamp and verify the gold audit. `stamp` writes one
-   TODO row per gold item; you replace each by opening the file and reading the credit. `verify`
-   fails while any TODO remains.
+8. After writing the yaml and the rubric, audit the gold: `sense-lab validate -scenario <yaml>
+   -checkout <clone> -commit <pin>`. It resolves every row against the pinned checkout, reports
+   what would be quarantined, and flags the rows a covering grep for the anchor already prints.
+
+   **`stamp` and `verify` do not exist**, and neither does a rubric check, a gold-confidence
+   check or a prompt render. They are named for cycle 07 and are not built. Until they are, the
+   gold audit is `validate` plus opening every row by hand, which DO NOT below already requires.
+
+   *(Corrected by the first live campaign, dotnet-jellyfin cycle 1: the step named five absent
+   things — `stamp`, `verify`, a rubric check, a gold-confidence check and a prompt render — and
+   the Done-when list below required their artifacts, so the phase could not report itself done
+   by its own criteria.)*
 
 ## Decide
 
@@ -231,10 +258,30 @@ prints: `NO-ANCHOR` reached from a token grep is a report about grep, not about 
 - The scenario has two steps and the rubric has two matching steps in order.
 - `dependents` holds at least twelve rows across at least six areas, one file each.
 - No `dependents` row appears in the `contract` group.
-- The rendered prompt shows no path, symbol, count or tool name.
-- The rubric check passes.
-- The gold confidence check on the `dependents` group passes.
-- The gold audit verifies: zero TODO rows, gold unchanged under a finished sheet.
+- The prompt shows no path, symbol, count or tool name. No render command exists; the prompt is
+  `description` plus each `steps[].prompt` and two fixed boilerplate sentences
+  (`lab/internal/scenario/scenario.go:48-57`), so the check is performed by reading those fields
+  in the yaml.
+- `sense-lab validate` reports that it resolved every gold row at the pinned commit — the count,
+  not the word "skipped" — and quarantines none. **Read the report, not only the exit code:**
+  `validatecmd.go:64-69` prints `resolving skipped` and continues with a nil resolver when the
+  checkout cannot be opened, and `:77-80` exits non-zero only on a quarantine, so a wrong
+  `-checkout` or a bad pin produces a green run that verified nothing.
+- Every `dependents` row's `relation` carries a `path:line` and the exact expression standing at
+  that line, and `validate` resolves all of them. That is the hand-read leaving a trace; a bullet
+  asserting the author was diligent is not checkable and is not one.
+
+  *(The rubric check, the gold-confidence check and the stamp sheet were removed from this list
+  by the first live campaign: the commands they name do not exist, so the bullets could never be
+  satisfied. Restore them when cycle 07 builds the commands.*
+
+  *A fourth bullet requiring no `dependents` row inside the covering grep was written and then
+  removed in the same campaign's council review. It rebuilt a retired concept — NO GREP SCREEN IS
+  A GATE, IN ANY FORM — in the one place the shape cannot reach, and it is unsatisfiable on the
+  shipped corpus: on discourse, 19 of 23 gold rows lie inside a grep for `Category`, so at least
+  8 of its 12 `dependents` rows would fail it. `goldcheck.go:68` refuses to quarantine on that
+  reason for exactly this reason. Record the covering grep in the yaml header as an input to the
+  step 4 ranking; never let it decide.)*
 - The seam profile is in the yaml header and the anchor's precision is in the notes.
 - The yaml header names the ANSWER FORM this draft uses and its line on the campaign's
   answer-forms page: measured-to-win, under test, or unmeasured. A form that page records as
