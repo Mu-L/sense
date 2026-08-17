@@ -83,6 +83,11 @@ linters:
             - "**/lab/internal/judge/**"
             - "**/lab/internal/tally/**"
             - "**/lab/internal/gate/**"
+            - "**/lab/internal/phase/**"
+            - "**/lab/internal/loop/**"
+            - "**/lab/internal/mine/**"
+            - "**/lab/internal/validate/**"
+            - "**/lab/internal/replay/**"
           deny:
             - pkg: os
               desc: "the lab's pure core must not read a disk; recall may not depend on the state of one"
@@ -119,7 +124,7 @@ linters:
       # fixtures, and forbidding that would only push the reads into a helper
       # package and prove nothing.
       - linters: [depguard]
-        path: lab/internal/(score|plan|judge|tally|gate)/.*_test\.go
+        path: lab/internal/(score|plan|judge|tally|gate|phase|loop|mine|validate|replay)/.*_test\.go
       # dupword: SQL NULL repetitions and embedded Ruby/test fixtures are fine
       - linters: [dupword]
         path: _test\.go

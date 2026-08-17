@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"io/fs"
@@ -47,6 +48,12 @@ type labFile struct {
 // labFiles parses every .go file under lab/, test files included.
 func labFiles(t *testing.T) []labFile {
 	t.Helper()
+	return walkLab(t, parser.ImportsOnly, nil)
+}
+
+// walkLab parses every .go file under lab/ and hands each parsed file to see.
+func walkLab(t *testing.T, mode parser.Mode, see func(path string, f *ast.File)) []labFile {
+	t.Helper()
 	root := repoRoot(t)
 	fset := token.NewFileSet()
 	var out []labFile
@@ -66,9 +73,16 @@ func labFiles(t *testing.T) []labFile {
 		if !strings.HasSuffix(path, ".go") {
 			return nil
 		}
-		f, err := parser.ParseFile(fset, path, nil, parser.ImportsOnly)
+		f, err := parser.ParseFile(fset, path, nil, mode)
 		if err != nil {
 			return err
+		}
+		if see != nil {
+			rel, err := filepath.Rel(root, path)
+			if err != nil {
+				return err
+			}
+			see(filepath.ToSlash(rel), f)
 		}
 		lf := labFile{pkg: f.Name.Name}
 		for _, spec := range f.Imports {
@@ -128,4 +142,38 @@ func TestLabNeverImportsSenseInternals(t *testing.T) {
 			}
 		}
 	}
+}
+
+// No human gate exists in the per-repo phases, which means no interactive
+// prompt exists anywhere in the run path. A campaign runs unattended for hours;
+// a phase that stopped to ask a question would hang until its wall killed it,
+// and the record would look like a session that could not finish at budget.
+//
+// The escape hatch is --manual, which stops BEFORE a phase and prints the
+// artifact it awaits. It never asks anything of a running session.
+//
+// os.Stdin is allowed in exactly two places, and neither is a prompt: cli.go
+// hands it to the commands that consume a stream, and main.go wires the process
+// up. Both pass it as a parameter rather than reading it, which is what keeps
+// the reading testable and what makes this list short enough to be checked.
+func TestNoPhaseInTheRunPathPromptsForInput(t *testing.T) {
+	streamConsumers := map[string]bool{
+		"lab/internal/cli/cli.go":   true,
+		"lab/cmd/sense-lab/main.go": true,
+	}
+	walkLab(t, parser.AllErrors, func(path string, f *ast.File) {
+		if strings.HasSuffix(path, "_test.go") || streamConsumers[path] {
+			return
+		}
+		ast.Inspect(f, func(n ast.Node) bool {
+			sel, ok := n.(*ast.SelectorExpr)
+			if !ok || sel.Sel.Name != "Stdin" {
+				return true
+			}
+			if pkg, ok := sel.X.(*ast.Ident); ok && pkg.Name == "os" {
+				t.Errorf("%s reads os.Stdin; a campaign runs unattended and no phase may ask a human anything", path)
+			}
+			return true
+		})
+	})
 }

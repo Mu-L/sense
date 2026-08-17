@@ -62,6 +62,7 @@ func TestTheSameVerdictReAuthorsBelowTheCeilingAndParksAtIt(t *testing.T) {
 		{phase.Author, phase.NoAnchor},
 		{phase.Minibench, phase.Requestion},
 		{phase.Minibench, phase.NoAnchor},
+		{phase.Expand, phase.Requestion},
 		{phase.Validate, phase.DoNotPay},
 	}
 	for _, l := range backLevers {
