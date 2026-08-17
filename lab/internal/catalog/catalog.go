@@ -19,7 +19,9 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // Kind is what a subject is: the treatment under test.
@@ -111,6 +113,29 @@ type Agent struct {
 	// verify claims itself, whether it does varies run to run, and which
 	// instrument graded a run would not be visible in the number.
 	JudgeArgs []string `json:"judge_args"`
+	// WallNoteFlag and WallNote tell an arm how long it has.
+	//
+	// The CLI has no wall-clock parameter, so the number reaches the agent as a
+	// system prompt. It enforces nothing — the supervisor's kill is still the
+	// hard stop — and it exists so an arm can spend its clock deliberately
+	// instead of being cut mid-answer.
+	//
+	// This is not a nicety. It was measured absent on 2026-08-17, replaying the
+	// banked mastodon cell: both arms ran to their ceiling and were cut, 82 and
+	// 72 turns, and the scorer refused both captures as incomplete. The banked
+	// arms, which had the note, finished with time in hand.
+	//
+	// WallNote carries {{seconds}}, replaced with the arm's own wall. Each arm
+	// gets its own number, which is the whole point: the two walls differ.
+	//
+	// The WORDING is load-bearing and is copied from the instrument this one
+	// replaces, which recorded what a rewrite costs. An earlier phrasing offered
+	// "if you run short, say where you stopped", and both arms took the exit
+	// immediately: the sense arm used 143s of 480 and wrote that it had not
+	// finished with 337 seconds still in hand. Reword this and re-measure, or do
+	// not reword it.
+	WallNoteFlag string `json:"wall_note_flag"`
+	WallNote     string `json:"wall_note"`
 	// Env is added to the session environment, as KEY=VALUE. Same reason.
 	Env []string `json:"env"`
 	// SupportsMCP bounds which subjects this tool can carry.
@@ -412,4 +437,23 @@ func readFlat(dir string, add func(string, []byte) error) error {
 // IDs returns the ids of a catalog map, sorted, so output is stable.
 func IDs[T any](m map[string]T) []string {
 	return slices.Sorted(maps.Keys(m))
+}
+
+// wallNoteSeconds is the placeholder WallNote carries for the arm's own wall.
+const wallNoteSeconds = "{{seconds}}"
+
+// WallNoteArgs renders this tool's wall note for an arm that has this long,
+// ready to append to the arm's arguments.
+//
+// It returns nothing when the tool declares no note, so a tool that has no way
+// to carry one runs exactly as it did before rather than being handed an empty
+// flag. Seconds are truncated rather than rounded: a note claiming one second
+// more than the supervisor allows is a note that lies in the direction that
+// costs the arm its answer.
+func (a Agent) WallNoteArgs(wall time.Duration) []string {
+	if a.WallNoteFlag == "" || a.WallNote == "" {
+		return nil
+	}
+	seconds := strconv.Itoa(int(wall.Seconds()))
+	return []string{a.WallNoteFlag, strings.ReplaceAll(a.WallNote, wallNoteSeconds, seconds)}
 }

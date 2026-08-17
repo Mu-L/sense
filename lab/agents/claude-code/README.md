@@ -70,6 +70,30 @@ cannot refresh cannot rotate the operator's login, so no number of unattended
 cells can invalidate the host seat by succeeding. The cost is that a campaign
 outliving the access token re-provisions rather than running on.
 
+## Telling an arm its wall
+
+There is no wall-clock flag. Re-checked against **2.1.233** on 2026-08-17: no
+`--timeout`, `--max-duration`, `--deadline`, `--max-time`, `--max-turns`. The
+supervisor's kill is the only enforcement, and `--max-budget-usd` bills API
+quota rather than a subscription, so it is not a clock.
+
+So the number reaches the arm as a system prompt, through `wall_note_flag` and
+`wall_note`, with `{{seconds}}` replaced by **that arm's own wall**. It enforces
+nothing. It exists so an arm can spend its clock deliberately instead of being
+cut mid-answer.
+
+**This is not decoration, and it was measured missing.** Replaying the banked
+mastodon cell on 2026-08-17 without it, both arms ran to their ceiling and were
+cut — 82 and 72 turns, exit 124 — and the scorer refused both captures as
+incomplete. The banked arms, which had the note, finished with time in hand. The
+margin came back 0.400 against a banked 0.775.
+
+**Do not reword it.** The wording is copied from the instrument this one
+replaces, which recorded what a rewrite costs: an earlier phrasing offered "if
+you run short, say where you stopped", and both arms took the exit immediately.
+The sense arm used 143s of 480 and wrote that it had not finished with 337
+seconds still in hand. If it must change, re-measure it.
+
 ## Judging
 
 `judge_args` drive the tool tool-less and single-turn, for grading. `-p` with
