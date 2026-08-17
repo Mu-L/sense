@@ -409,13 +409,17 @@ func TestProbeRefusesACheckoutThatIsNotThere(t *testing.T) {
 	}
 }
 
-// The baseline's wall derives from the sense arm's rather than being chosen
-// beside it, and the header says so before anything spends.
+// The baseline's wall derives from what the sense arm SPENDS rather than being
+// chosen beside it, so before anything spends the header can only state a
+// ceiling for it — and it has to read as a ceiling, or somebody plans a session
+// around a number the baseline will not get.
 func TestProbeStatesBothWallsBeforeItSpends(t *testing.T) {
 	w := newProbeWorld(t)
 	_, stdout, _ := runProbe(t, w.args())
-	if !strings.Contains(stdout, "wall:     20s / 20s") {
-		t.Errorf("the header does not state both walls:\n%s", stdout)
+	for _, want := range []string{"20s sense", "at most 24s baseline"} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("the header does not state %q:\n%s", want, stdout)
+		}
 	}
 }
 

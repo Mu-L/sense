@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 // good returns a minimal catalog directory that loads clean. Tests break one
@@ -668,5 +670,45 @@ func TestModelResolvesOnACatalogBuiltAsALiteral(t *testing.T) {
 	}
 	if _, ok := c.Model("nope"); ok {
 		t.Error("a model that does not exist resolved")
+	}
+}
+
+func TestAnArmIsToldItsWallInSecondsInTheToolsOwnWords(t *testing.T) {
+	a := Agent{
+		WallNoteFlag: "--append-system-prompt",
+		WallNote:     "stopped hard after {{seconds}} seconds of real time",
+	}
+
+	got := a.WallNoteArgs(485 * time.Second)
+
+	want := []string{"--append-system-prompt", "stopped hard after 485 seconds of real time"}
+	if !slices.Equal(got, want) {
+		t.Errorf("WallNoteArgs(485s) = %q, want %q", got, want)
+	}
+}
+
+func TestAToolThatDeclaresNoWallNoteIsSpawnedWithoutOne(t *testing.T) {
+	// Not every agent tool can carry one. Handing such a tool a bare flag, or a
+	// flag with an empty value, is a spawn that fails on a usage error rather
+	// than a run that behaves as it did before.
+	for _, a := range []Agent{
+		{},
+		{WallNoteFlag: "--append-system-prompt"},
+		{WallNote: "stopped hard after {{seconds}} seconds"},
+	} {
+		if got := a.WallNoteArgs(485 * time.Second); got != nil {
+			t.Errorf("a tool declaring %+v was handed %q", a, got)
+		}
+	}
+}
+
+func TestTheWallAnArmIsToldIsNeverMoreThanTheWallItGets(t *testing.T) {
+	// Truncated, not rounded. A note claiming 486 seconds when the supervisor
+	// kills at 485.6 is a note that lies in the one direction that costs the arm
+	// its answer: it keeps working into a wall that has already closed.
+	a := Agent{WallNoteFlag: "--wall", WallNote: "{{seconds}}"}
+
+	if got := a.WallNoteArgs(485_600 * time.Millisecond); got[1] != "485" {
+		t.Errorf("an arm cut at 485.6s was told %q seconds", got[1])
 	}
 }

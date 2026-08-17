@@ -17,9 +17,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
+	"github.com/luuuc/sense/lab/internal/catalog"
 	"github.com/luuuc/sense/lab/internal/cell"
 	"github.com/luuuc/sense/lab/internal/channels"
 	"github.com/luuuc/sense/lab/internal/isolate"
@@ -42,9 +44,12 @@ type Spec struct {
 	// SetupTool is its catalog id, which is what `sense setup` configures for,
 	// and ConfigDir is the directory it keeps per-user state in, which the
 	// contamination checks look inside.
-	Command    string
-	Args       []string
-	AgentEnv   []string
+	Command  string
+	Args     []string
+	AgentEnv []string
+	// Agent is the tool's catalog entry, carried so each arm can be told its
+	// own wall in the words that tool understands.
+	Agent      catalog.Agent
 	SetupTool  string
 	ConfigDirs []string
 	// Credential is what both arms are given to reach a model. One value, not
@@ -58,7 +63,8 @@ type Spec struct {
 	LabBin   string
 	// HostPath is the PATH both arms derive from.
 	HostPath string
-	// Wall is the sense arm's budget. The baseline's is derived from it.
+	// Wall is the sense arm's budget. The baseline's derives from what the
+	// sense arm ELAPSED, so it is not knowable here.
 	Wall  time.Duration
 	Grace time.Duration
 }
@@ -69,14 +75,51 @@ const (
 	baselineArm = "baseline"
 )
 
-// BaselineWall is the baseline arm's budget, derived from the sense arm's.
+// baselineWallRatio is what the baseline gets, as a multiple of what the sense
+// arm actually spent.
+//
+// Above one deliberately. The baseline has to find by reading what the sense
+// arm can look up, so an equal budget is not an equal question, and the corpus
+// this instrument has to stay comparable with was banked at 1.2.
+const baselineWallRatio = 1.2
+
+// BaselineWall is the baseline arm's budget, derived from what the sense arm
+// ELAPSED — not from what it was allowed.
+//
+// The distinction is the whole function and it is easy to lose. A sense arm
+// given 480 seconds that finishes in 404 leaves the baseline 485, not 576: the
+// pairing is against the work the sense arm actually did. Deriving from the
+// budget instead silently hands the baseline more clock every time the sense
+// arm finishes early, which shrinks every margin in the same direction without
+// appearing in any of them.
+//
+// That is not hypothetical. This function returned its argument unchanged until
+// 2026-08-17, when replaying the banked mastodon cell showed the banked run had
+// derived 485s from a 404s sense arm while this derived 480s from its ceiling.
+// The two agreed only because that live sense arm ran out of time.
 //
 // It is a function rather than an assignment because the relationship is easy
 // to get backwards, and getting it backwards is not visible in a result. The
 // two walls are not independently chosen: the baseline's derives from the sense
 // arm it is paired with, which is also why a burned sense arm can never be
 // paired with a later baseline.
-func BaselineWall(senseWall time.Duration) time.Duration { return senseWall }
+func BaselineWall(senseElapsed time.Duration) time.Duration {
+	wall := time.Duration(float64(senseElapsed) * baselineWallRatio).Round(time.Second)
+	// A derived wall below a second is not a budget, it is an immediate kill,
+	// and the arm it kills is indistinguishable in a score from a baseline that
+	// simply had nothing to say. Rounding makes it worse: 1.2 times a few
+	// milliseconds rounds to exactly zero.
+	//
+	// It happens whenever the sense arm returns almost at once, which is not
+	// hypothetical — a session that cannot authenticate exits in about a second
+	// having done nothing. Such a pair is already unsound and is refused on the
+	// sense arm, which is the real fault; this only stops it being reported as a
+	// baseline that could not finish.
+	if wall < time.Second {
+		return time.Second
+	}
+	return wall
+}
 
 // Report is what the pair proved.
 type Report struct {
@@ -140,9 +183,13 @@ func Run(ctx context.Context, s Spec) (Report, error) {
 	}
 
 	var sense, baseline session.Result
+	// The baseline's wall is resolved when the baseline starts, not here,
+	// because it derives from what the sense arm ELAPSED and the sense arm has
+	// not run yet. The arms run in sequence, so by the time this closure is
+	// called `sense` is filled in.
 	arms := []cell.Arm{
-		{Name: senseArm, Run: s.armRunner(isolate.Sense, s.Wall, &sense)},
-		{Name: baselineArm, Run: s.armRunner(isolate.Baseline, BaselineWall(s.Wall), &baseline)},
+		{Name: senseArm, Run: s.armRunner(isolate.Sense, func() time.Duration { return s.Wall }, &sense)},
+		{Name: baselineArm, Run: s.armRunner(isolate.Baseline, func() time.Duration { return s.baselineWall(sense) }, &baseline)},
 	}
 
 	rec, err := cell.Run(ctx, s.Root, arms)
@@ -203,9 +250,9 @@ func (s Spec) release(ctx context.Context, arms ...session.Result) error {
 // armRunner is one side of the pair, as the supervisor sees it: a function that
 // produces a run in the directory it is handed, and leaves its result where the
 // checks can read it.
-func (s Spec) armRunner(arm isolate.Arm, wall time.Duration, into *session.Result) func(context.Context, string) (run.Meta, error) {
+func (s Spec) armRunner(arm isolate.Arm, wall func() time.Duration, into *session.Result) func(context.Context, string) (run.Meta, error) {
 	return func(ctx context.Context, dir string) (run.Meta, error) {
-		res, err := session.Run(ctx, s.arm(dir, arm, wall))
+		res, err := session.Run(ctx, s.arm(dir, arm, wall()))
 		// Recorded whether or not the arm succeeded. The environment is what has
 		// to be released, and an arm that failed or was cut still took a checkout.
 		*into = res
@@ -214,6 +261,22 @@ func (s Spec) armRunner(arm isolate.Arm, wall time.Duration, into *session.Resul
 		}
 		return res.Meta, nil
 	}
+}
+
+// baselineWall is what the baseline gets, given the sense arm that just ran.
+//
+// A sense arm that never reached the model reports no elapsed time, and 1.2
+// times nothing is a baseline killed the instant it starts — an empty arm that
+// reads in a score exactly like a baseline that had nothing to say. So a pair
+// whose sense arm did not run falls back to the ceiling the credential
+// preflight already budgeted for, and the pair fails its soundness checks on
+// the sense arm, which is where the real fault is.
+func (s Spec) baselineWall(sense session.Result) time.Duration {
+	elapsed := time.Duration(sense.Meta.TookSeconds * float64(time.Second))
+	if elapsed <= 0 {
+		return BaselineWall(s.Wall)
+	}
+	return BaselineWall(elapsed)
 }
 
 // arm builds one side of the pair. Everything except the arm and its wall is
@@ -230,14 +293,17 @@ func (s Spec) arm(root string, arm isolate.Arm, wall time.Duration) session.Spec
 		Commit:     s.Commit,
 		Prompt:     s.Prompt,
 		Command:    s.Command,
-		Args:       s.Args,
-		AgentEnv:   s.AgentEnv,
-		SetupTool:  s.SetupTool,
-		SenseBin:   s.SenseBin,
-		LabBin:     s.LabBin,
-		HostPath:   s.HostPath,
-		Wall:       wall,
-		Grace:      s.Grace,
+		// Each arm is told its OWN wall. Appended here rather than by the
+		// caller because this is the first place the number exists: the
+		// baseline's is not known until the sense arm has finished.
+		Args:      append(slices.Clone(s.Args), s.Agent.WallNoteArgs(wall)...),
+		AgentEnv:  s.AgentEnv,
+		SetupTool: s.SetupTool,
+		SenseBin:  s.SenseBin,
+		LabBin:    s.LabBin,
+		HostPath:  s.HostPath,
+		Wall:      wall,
+		Grace:     s.Grace,
 	}
 }
 
@@ -306,7 +372,7 @@ func (s Spec) check(ctx context.Context, sense, baseline session.Result) (rep Re
 		r.BaselineCaptured = true
 	}
 
-	r.Differences = Differences(sense.Meta, baseline.Meta)
+	r.Differences = Differences(sense.Meta, baseline.Meta, s.Agent.WallNoteFlag)
 	return r, nil
 }
 
@@ -358,7 +424,7 @@ func armWorld(res session.Result, binary string, configDirs []string) channels.A
 // Read off what was recorded rather than off what was configured: the two are
 // the same only when nothing went wrong, and the case worth catching is the one
 // where something did.
-func Differences(sense, baseline run.Meta) []string {
+func Differences(sense, baseline run.Meta, wallNoteFlag string) []string {
 	var found []string
 	compare := func(what, a, b string) {
 		if a != b {
@@ -366,13 +432,58 @@ func Differences(sense, baseline run.Meta) []string {
 		}
 	}
 	compare("the agent tool", sense.Command, baseline.Command)
-	compare("the arguments", fmt.Sprint(sense.Args), fmt.Sprint(baseline.Args))
+	// The wall note is dropped before the arguments are compared, because the
+	// arms are SUPPOSED to carry different ones: each is told its own wall, and
+	// the walls differ by design. Comparing it here would report every correct
+	// pair as asymmetric — which is worse than useless, because the check that
+	// cries wolf on every run is the check nobody reads on the run that matters.
+	// The walls themselves are checked below, where the relationship is known.
+	compare("the arguments",
+		fmt.Sprint(withoutWallNote(sense.Args, wallNoteFlag)),
+		fmt.Sprint(withoutWallNote(baseline.Args, wallNoteFlag)))
 	compare("where the wall starts", sense.WallStartsAt, baseline.WallStartsAt)
-	if sense.WallSeconds != baseline.WallSeconds {
-		found = append(found, fmt.Sprintf("the budget: the sense arm had %.0fs and the baseline had %.0fs, "+
-			"but the baseline's derives from the sense arm's", sense.WallSeconds, baseline.WallSeconds))
-	}
+	found = append(found, budgetDifference(sense, baseline)...)
 	return found
+}
+
+// budgetDifference checks the one relationship the arms are allowed to differ
+// in: the baseline's wall against what the sense arm spent.
+//
+// Equality is the wrong test and was the one here until 2026-08-17. The walls
+// are not meant to match; the baseline's is meant to be 1.2 times what the
+// sense arm ELAPSED. Asserting equality passed for as long as it did because
+// the derivation it was guarding had quietly become the identity.
+func budgetDifference(sense, baseline run.Meta) []string {
+	// A sense arm that recorded no time is a pair that has already failed for a
+	// louder reason, and its baseline ran on the fallback ceiling rather than on
+	// a derivation. Reporting a budget mismatch on top of that would bury the
+	// real fault under a second one.
+	if sense.TookSeconds <= 0 {
+		return nil
+	}
+	want := BaselineWall(time.Duration(sense.TookSeconds * float64(time.Second)))
+	if got := time.Duration(baseline.WallSeconds) * time.Second; got != want {
+		return []string{fmt.Sprintf("the budget: the sense arm spent %.0fs so the baseline should have had %s, and it had %s",
+			sense.TookSeconds, want, got)}
+	}
+	return nil
+}
+
+// withoutWallNote drops a flag and the value after it, so two arms carrying
+// their own wall notes can have the rest of their arguments compared.
+func withoutWallNote(args []string, flag string) []string {
+	if flag == "" {
+		return args
+	}
+	out := make([]string, 0, len(args))
+	for i := 0; i < len(args); i++ {
+		if args[i] == flag {
+			i++ // and its value
+			continue
+		}
+		out = append(out, args[i])
+	}
+	return out
 }
 
 // transcript is what an arm actually said, unnormalised. The canonical form is
