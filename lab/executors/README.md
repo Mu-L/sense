@@ -3,10 +3,11 @@
 Where and how a run happens. Two facts about each one are read before anything
 spawns, and both come from the design docs rather than from imagination.
 
-**Neither executor exists yet.** Cycle 03 builds isolated-home; cycle 08 builds
-the container. They are declared here because the planner must be able to refuse
-an impossible combination before either exists — a job that cannot authenticate
-is a burned arm, and its partner goes with it.
+**Only isolated-home exists.** Cycle 03 built it, 03-06 finished its
+authentication, and cycle 08 builds the container. Both are declared here because
+the planner must be able to refuse an impossible combination before either
+exists — a job that cannot authenticate is a burned arm, and its partner goes
+with it.
 
 That means these are the one place in the catalog that describes code rather
 than an ecosystem fact, and they are the one place most likely to be wrong. Both
@@ -16,21 +17,34 @@ files carry their source.
 
 `preserves_auth: ["subscription", "api_key"]`
 
-- *subscription* is verbatim from `02-architecture.md`: isolated-home "keeps the
-  host subscription usable".
-- *api_key* comes from `03-01`, which sets the environment allowlist: "Start
-  from empty, add what the agent tool genuinely needs (`PATH`, `TERM`,
-  **credentials the tool requires**)".
+**Both are now true of the implementation, and neither was when this was
+written.** The line claimed since cycle 03 that isolated-home "keeps the host
+subscription usable"; it was never implemented and never tested, and the first
+live cell produced two empty arms because of it. 03-06 made it true.
 
-The second one was questioned on review, because `02-architecture.md` mentions
-only the subscription and describes the environment as scrubbed. It is recorded
-here because it decides real money: four of the five arms in the frozen
-csharp-aspnet campaign reach their model by API key, and dropping it would
-reject arms that genuinely ran. **If cycle 03's allowlist turns out not to pass
-credentials, this line is wrong in the expensive direction — a false accept —
-and it is the first thing to check.**
+- *subscription* holds because the operator's credential is read once in the
+  attended parent and provisioned into a per-run config directory that
+  `CLAUDE_CONFIG_DIR` points the session at. The host keychain is never linked
+  in, and the provisioned credential carries no refresh token, so no run can
+  rotate the operator's login.
+- *api_key* holds through the environment allowlist, which carries
+  `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` with their reasons. This was the
+  entry questioned on review as a possible false accept in the expensive
+  direction — four of the five arms in the frozen csharp-aspnet campaign reach
+  their model by API key. It was checked rather than argued: the allowlist does
+  pass them, and there is a test per credential variable saying so.
 
-`isolates_global_config: true` is verbatim: "Strong config isolation".
+**macOS only, and that is a decision rather than an omission** (2026-08-17). The
+subscription route is measured there; nothing in the implementation branches on
+the platform, and the file it writes is the store Linux uses as its primary one,
+which is a reason to expect it to hold and not a reason to claim it does. 08-05
+stands up a container, which is a Linux box with a credential story of its own,
+and that is where the measurement happens. Until it exists, **no campaign may
+report a Linux result on this route.**
+
+`isolates_global_config: true` is verbatim: "Strong config isolation". It is also
+now literal: the run's config directory is its own, outside the disposable HOME,
+and it is removed when the run is released.
 
 ## container
 
