@@ -88,7 +88,10 @@ func probeCell(ctx context.Context, args []string, stdout, stderr io.Writer) int
 		return exitError
 	}
 
-	_, _ = fmt.Fprintf(stdout, "scenario: %s\nrepo:     %s @ %.8s\nagent:    %s\nmodel:    %s\nwall:     %s / %s\ncell:     %s\n\n",
+	// The baseline's wall is printed as a ceiling because it is not decided
+	// yet: it derives from what the sense arm elapses, and a sense arm that
+	// finishes early leaves the baseline less than this.
+	_, _ = fmt.Fprintf(stdout, "scenario: %s\nrepo:     %s @ %.8s\nagent:    %s\nmodel:    %s\nwall:     %s sense, at most %s baseline (1.2x what sense spends)\ncell:     %s\n\n",
 		j.scenarioName, j.repo.ID, j.repo.Commit, j.agent.ID, j.model.ID,
 		s.Wall, probe.BaselineWall(s.Wall), s.Root)
 
@@ -257,6 +260,7 @@ func probeSpec(ctx context.Context, f probeFlags) (probe.Spec, probeJob, error) 
 		Command:    j.agent.Binary,
 		Args:       append(slices.Clone(j.agent.HeadlessArgs), j.agent.ModelFlag, j.model.ID),
 		AgentEnv:   j.agent.Env,
+		Agent:      j.agent,
 		SetupTool:  j.agent.ID,
 		ConfigDirs: j.agent.ConfigDirs,
 		Credential: cred,

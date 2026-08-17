@@ -6,10 +6,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/luuuc/sense/lab/internal/catalog"
 	"github.com/luuuc/sense/lab/internal/probe"
 	"github.com/luuuc/sense/lab/internal/run"
 )
@@ -259,12 +261,18 @@ func TestABaselineWorktreeCarryingARouteIsCaught(t *testing.T) {
 	}
 }
 
-func TestTheTwoArmsShareTheirBudgetRelationship(t *testing.T) {
-	// The baseline's wall is not independently chosen. Getting the relationship
-	// backwards is not visible in a result, which is why it is a function with
-	// a name rather than an assignment at two call sites.
-	if got := probe.BaselineWall(480 * time.Second); got != 480*time.Second {
-		t.Errorf("BaselineWall(480s) = %s, want the sense arm's own wall", got)
+func TestTheBaselineIsPairedAgainstWhatTheSenseArmSpentNotWhatItWasAllowed(t *testing.T) {
+	// The banked pairing, which is the number this has to keep reproducing: a
+	// sense arm ALLOWED 480s that SPENT 404s left its baseline 485s. Deriving
+	// from the allowance instead gives 576s, and the gap is clock handed to the
+	// baseline for free, shrinking every margin in the same direction.
+	if got := probe.BaselineWall(404 * time.Second); got != 485*time.Second {
+		t.Errorf("BaselineWall(404s spent) = %s, want 485s", got)
+	}
+	// The failure this replaces: for as long as the derivation was the
+	// identity, a sense arm's allowance and its baseline's budget were equal.
+	if got := probe.BaselineWall(480 * time.Second); got == 480*time.Second {
+		t.Error("BaselineWall is returning its argument, which is the defect the replay found")
 	}
 
 	report, err := probe.Run(context.Background(), spec(t))
@@ -274,18 +282,104 @@ func TestTheTwoArmsShareTheirBudgetRelationship(t *testing.T) {
 
 	// Read off what was recorded, not off what was configured: the two are the
 	// same only when nothing went wrong.
-	if report.Sense.Meta.WallSeconds != report.Baseline.Meta.WallSeconds {
-		t.Errorf("the arms ran at %.0fs and %.0fs", report.Sense.Meta.WallSeconds, report.Baseline.Meta.WallSeconds)
+	spent := time.Duration(report.Sense.Meta.TookSeconds * float64(time.Second))
+	want := probe.BaselineWall(spent)
+	if got := time.Duration(report.Baseline.Meta.WallSeconds) * time.Second; got != want {
+		t.Errorf("the sense arm spent %s so the baseline should have had %s; it had %s", spent, want, got)
 	}
 	if report.Sense.Meta.Command != report.Baseline.Meta.Command {
 		t.Errorf("the arms ran %q and %q", report.Sense.Meta.Command, report.Baseline.Meta.Command)
 	}
 }
 
-func TestArmsThatDifferInAnythingElseAreNamed(t *testing.T) {
-	same := run.Meta{Command: "claude", Args: []string{"-p"}, WallSeconds: 480, WallStartsAt: "spawn"}
+// TestEachArmIsToldTheWallThatWillActuallyCutIt is the check whose absence cost
+// a paid pair.
+//
+// Both arms of the 2026-08-17 mastodon replay ran to their ceiling and were cut
+// mid-answer, because nothing told them what the ceiling was. Every hermetic
+// test was green through it: they all asked what an arm could REACH, and none
+// asked what it was TOLD. The number in the note has to be the number the
+// supervisor enforces, or the note is a lie that costs the arm its answer.
+func TestEachArmIsToldTheWallThatWillActuallyCutIt(t *testing.T) {
+	s := spec(t)
+	s.Agent = catalog.Agent{
+		WallNoteFlag: "--append-system-prompt",
+		WallNote:     "stopped hard after {{seconds}} seconds of real time",
+	}
 
-	if got := probe.Differences(same, same); len(got) != 0 {
+	report, err := probe.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	for _, arm := range []struct {
+		name string
+		meta run.Meta
+	}{
+		{"sense", report.Sense.Meta},
+		{"baseline", report.Baseline.Meta},
+	} {
+		told, ok := secondsInWallNote(arm.meta.Args, "--append-system-prompt")
+		if !ok {
+			t.Errorf("the %s arm was never told its wall; it ran with %v", arm.name, arm.meta.Args)
+			continue
+		}
+		if enforced := int(arm.meta.WallSeconds); told != enforced {
+			t.Errorf("the %s arm was told %ds and cut at %ds", arm.name, told, enforced)
+		}
+	}
+
+	// And the two notes differ, because the two walls do. An implementation
+	// that told both arms the sense arm's number would pass every check above.
+	senseNote, _ := secondsInWallNote(report.Sense.Meta.Args, "--append-system-prompt")
+	baseNote, _ := secondsInWallNote(report.Baseline.Meta.Args, "--append-system-prompt")
+	if senseNote == baseNote {
+		t.Errorf("both arms were told %ds, but their walls are not the same number", senseNote)
+	}
+}
+
+// secondsInWallNote reads back the number an arm was actually told.
+func secondsInWallNote(args []string, flag string) (int, bool) {
+	for i, a := range args {
+		if a != flag || i+1 >= len(args) {
+			continue
+		}
+		for _, field := range strings.Fields(args[i+1]) {
+			if n, err := strconv.Atoi(field); err == nil {
+				return n, true
+			}
+		}
+	}
+	return 0, false
+}
+
+// TestAPairCarryingItsOwnWallNotesIsStillSound guards the fix from its own
+// side effect: the arms are now SUPPOSED to differ in one argument, and a
+// difference check that did not know it would report every correct pair as
+// asymmetric.
+func TestAPairCarryingItsOwnWallNotesIsStillSound(t *testing.T) {
+	s := spec(t)
+	s.Agent = catalog.Agent{WallNoteFlag: "--append-system-prompt", WallNote: "{{seconds}} seconds"}
+
+	report, err := probe.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if len(report.Differences) != 0 {
+		t.Errorf("a correct pair was reported as differing: %v", report.Differences)
+	}
+	if !report.Sound() {
+		t.Error("a pair whose only asymmetry is each arm's own wall note is not a measurement")
+	}
+}
+
+func TestArmsThatDifferInAnythingElseAreNamed(t *testing.T) {
+	// TookSeconds is what the baseline's budget derives from, so a fixture
+	// without it cannot exercise the budget check at all. 400s spent pairs with
+	// a 480s baseline.
+	same := run.Meta{Command: "claude", Args: []string{"-p"}, WallSeconds: 480, TookSeconds: 400, WallStartsAt: "spawn"}
+
+	if got := probe.Differences(same, same, ""); len(got) != 0 {
 		t.Errorf("two identical arms differ in %v", got)
 	}
 
@@ -296,9 +390,13 @@ func TestArmsThatDifferInAnythingElseAreNamed(t *testing.T) {
 		{"a different agent tool", run.Meta{Command: "codex", Args: []string{"-p"}, WallSeconds: 480, WallStartsAt: "spawn"}},
 		{"different arguments", run.Meta{Command: "claude", Args: []string{"-p", "--verbose"}, WallSeconds: 480, WallStartsAt: "spawn"}},
 		{"a halved budget", run.Meta{Command: "claude", Args: []string{"-p"}, WallSeconds: 240, WallStartsAt: "spawn"}},
+		// The defect itself: a baseline handed 1.2x the sense arm's ALLOWANCE
+		// (480s) rather than 1.2x what it SPENT (400s). Ninety-six seconds of
+		// free clock, in the baseline's favour, invisible in any score.
+		{"a budget derived from the allowance instead of the spend", run.Meta{Command: "claude", Args: []string{"-p"}, WallSeconds: 576, WallStartsAt: "spawn"}},
 		{"a different wall start", run.Meta{Command: "claude", Args: []string{"-p"}, WallSeconds: 480, WallStartsAt: "first event"}},
 	} {
-		got := probe.Differences(same, tc.baseline)
+		got := probe.Differences(same, tc.baseline, "")
 		if len(got) == 0 {
 			t.Errorf("%s went unreported", tc.what)
 		}
@@ -311,11 +409,15 @@ func TestAnInterruptionAfterTheFirstArmRefusesToPair(t *testing.T) {
 	s := spec(t)
 	// The sense arm answers and stops; the baseline arm is still running when
 	// the interruption lands, which is the moment that burns a paid-for arm.
+	// The sense arm takes a beat before answering, so the baseline's derived
+	// wall is long enough to still be running when the interruption lands. An
+	// instant sense arm leaves its baseline about a second, and the cell would
+	// finish on its own before anything could interrupt it.
 	s.Args = []string{"-c", `cat > /dev/null
-if [ -f .mcp.json ]; then echo answered; else sleep 30; fi`}
+if [ -f .mcp.json ]; then sleep 5; echo answered; else sleep 30; fi`}
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		time.Sleep(4 * time.Second)
+		time.Sleep(7 * time.Second)
 		cancel()
 	}()
 
