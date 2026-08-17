@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.14.1] - 2026-08-17
+
+### Bug Fixes
+
+- floor the derived baseline wall, and catch an arm that never ran
 ## [1.14.0] - 2026-08-13
 
 ### Bug Fixes
