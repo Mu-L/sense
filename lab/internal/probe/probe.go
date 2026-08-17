@@ -104,7 +104,21 @@ const baselineWallRatio = 1.2
 // arm it is paired with, which is also why a burned sense arm can never be
 // paired with a later baseline.
 func BaselineWall(senseElapsed time.Duration) time.Duration {
-	return time.Duration(float64(senseElapsed) * baselineWallRatio).Round(time.Second)
+	wall := time.Duration(float64(senseElapsed) * baselineWallRatio).Round(time.Second)
+	// A derived wall below a second is not a budget, it is an immediate kill,
+	// and the arm it kills is indistinguishable in a score from a baseline that
+	// simply had nothing to say. Rounding makes it worse: 1.2 times a few
+	// milliseconds rounds to exactly zero.
+	//
+	// It happens whenever the sense arm returns almost at once, which is not
+	// hypothetical — a session that cannot authenticate exits in about a second
+	// having done nothing. Such a pair is already unsound and is refused on the
+	// sense arm, which is the real fault; this only stops it being reported as a
+	// baseline that could not finish.
+	if wall < time.Second {
+		return time.Second
+	}
+	return wall
 }
 
 // Report is what the pair proved.

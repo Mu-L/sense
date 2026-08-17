@@ -127,6 +127,23 @@ func spec(t *testing.T) probe.Spec {
 	}
 }
 
+// bothArmsRan is the precondition every check below rests on. An arm that never
+// started leaves no transcript, and a check that finds nothing in no transcript
+// reports the arm CLEAN — which is how a baseline killed before it could fork
+// passed three contamination checks at once.
+func bothArmsRan(t *testing.T, r probe.Report) {
+	t.Helper()
+	for _, a := range []struct {
+		name string
+		meta run.Meta
+	}{{"sense", r.Sense.Meta}, {"baseline", r.Baseline.Meta}} {
+		if a.meta.Outcome != run.Completed {
+			t.Fatalf("the %s arm did not run: %s after %.3fs on a %vs wall; every check here would read it as clean",
+				a.name, a.meta.Outcome, a.meta.TookSeconds, a.meta.WallSeconds)
+		}
+	}
+}
+
 func TestBothArmsRunAndTheDifferenceIsOnlySenseAccess(t *testing.T) {
 	s := spec(t)
 
@@ -154,6 +171,8 @@ func TestTheSenseArmHasEveryRouteItWasSupposedToHave(t *testing.T) {
 		t.Fatalf("Run: %v", err)
 	}
 
+	bothArmsRan(t, report)
+
 	if len(report.SenseMissing) != 0 {
 		t.Errorf("the sense arm is missing %v", report.SenseMissing)
 	}
@@ -172,6 +191,8 @@ func TestTheBaselineArmReachesNoRouteAndUsesNone(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
+
+	bothArmsRan(t, report)
 
 	if len(report.BaselineReached) != 0 {
 		t.Errorf("the baseline arm reaches %v", report.BaselineReached)
@@ -193,6 +214,8 @@ func TestNeitherArmCanReadPersistedMemory(t *testing.T) {
 		t.Fatalf("Run: %v", err)
 	}
 
+	bothArmsRan(t, report)
+
 	if len(report.MemoryReached) != 0 {
 		t.Errorf("persisted memory was reachable: %v", report.MemoryReached)
 	}
@@ -212,6 +235,8 @@ printf '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bas
 		t.Fatalf("Run: %v", err)
 	}
 
+	bothArmsRan(t, report)
+
 	if len(report.BaselineUsed) == 0 {
 		t.Fatal("a baseline arm that invoked the sense binary was reported clean")
 	}
@@ -230,6 +255,8 @@ printf '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"mcp
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
+
+	bothArmsRan(t, report)
 
 	if len(report.BaselineUsed) == 0 {
 		t.Fatal("a baseline arm that called a Sense tool was reported clean")
@@ -275,15 +302,30 @@ func TestTheBaselineIsPairedAgainstWhatTheSenseArmSpentNotWhatItWasAllowed(t *te
 		t.Error("BaselineWall is returning its argument, which is the defect the replay found")
 	}
 
-	report, err := probe.Run(context.Background(), spec(t))
+	// The one test that pays for real elapsed time. The stand-ins answer in
+	// under half a second, which derives a wall the one-second floor would have
+	// produced anyway, so without this beat the test cannot tell a derivation
+	// from a hardcoded constant.
+	s := spec(t)
+	s.Args = []string{"-c", `cat > /dev/null
+if [ -f .mcp.json ]; then sleep 2; fi
+` + agentThatUsesSense + agentThatCannotUseSense}
+
+	report, err := probe.Run(context.Background(), s)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
+	bothArmsRan(t, report)
 
 	// Read off what was recorded, not off what was configured: the two are the
 	// same only when nothing went wrong.
 	spent := time.Duration(report.Sense.Meta.TookSeconds * float64(time.Second))
 	want := probe.BaselineWall(spent)
+	// Without this the test goes vacuous on a fast machine: both sides collapse
+	// onto the floor and an implementation returning a constant second passes.
+	if want <= time.Second {
+		t.Fatalf("the sense arm spent only %s, so its baseline got the floor and this proves nothing", spent)
+	}
 	if got := time.Duration(report.Baseline.Meta.WallSeconds) * time.Second; got != want {
 		t.Errorf("the sense arm spent %s so the baseline should have had %s; it had %s", spent, want, got)
 	}
@@ -409,16 +451,31 @@ func TestAnInterruptionAfterTheFirstArmRefusesToPair(t *testing.T) {
 	s := spec(t)
 	// The sense arm answers and stops; the baseline arm is still running when
 	// the interruption lands, which is the moment that burns a paid-for arm.
-	// The sense arm takes a beat before answering, so the baseline's derived
-	// wall is long enough to still be running when the interruption lands. An
-	// instant sense arm leaves its baseline about a second, and the cell would
-	// finish on its own before anything could interrupt it.
+	//
+	// The cancellation waits for the baseline to SAY it started rather than for
+	// a stopwatch to run down. Guessing at the schedule is what made this test
+	// need ever-longer sleeps every time the timing underneath it moved, and a
+	// guess that lands early tests nothing while a guess that lands late is a
+	// flake nobody can reproduce.
+	//
+	// The sense arm still takes a beat, because the window to cancel INSIDE the
+	// baseline is that arm's derived wall, and an instant sense arm leaves only
+	// the one-second floor to aim at.
+	started := filepath.Join(t.TempDir(), "baseline-started")
 	s.Args = []string{"-c", `cat > /dev/null
-if [ -f .mcp.json ]; then sleep 5; echo answered; else sleep 30; fi`}
+if [ -f .mcp.json ]; then sleep 2; echo answered; else touch ` + started + `; sleep 30; fi`}
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	go func() {
-		time.Sleep(7 * time.Second)
-		cancel()
+		// Bounded, so a baseline that never starts fails the assertion below
+		// rather than hanging the package.
+		for range 1000 {
+			if _, err := os.Stat(started); err == nil {
+				cancel()
+				return
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
 	}()
 
 	_, err := probe.Run(ctx, s)
@@ -568,6 +625,8 @@ func TestASenseArmThatNeverTouchedSenseIsNotAMeasurement(t *testing.T) {
 		t.Fatalf("Run: %v", err)
 	}
 
+	bothArmsRan(t, report)
+
 	if report.Frames != 0 {
 		t.Fatalf("Frames = %d, want none from an agent that never called Sense", report.Frames)
 	}
@@ -685,5 +744,28 @@ func TestACellWhoseAgentIsNotIdentifiedIsRefusedBeforeSpawning(t *testing.T) {
 				t.Error("a cell directory was created for a cell that cannot be checked")
 			}
 		})
+	}
+}
+
+func TestABaselineIsNeverGivenAWallItCannotStartIn(t *testing.T) {
+	// Deriving from elapsed time has a failure mode that deriving from a budget
+	// did not: a sense arm that returns almost at once leaves its baseline
+	// almost nothing, and 1.2 times a few milliseconds ROUNDS TO ZERO. The
+	// baseline is then killed before it runs, and an arm that never ran is
+	// indistinguishable in a score from one that had nothing to say.
+	//
+	// It is not hypothetical. A session that cannot authenticate exits in about
+	// a second having done nothing.
+	for _, spent := range []time.Duration{
+		0, time.Millisecond, 10 * time.Millisecond, 100 * time.Millisecond, time.Second,
+	} {
+		if got := probe.BaselineWall(spent); got < time.Second {
+			t.Errorf("a sense arm that spent %s leaves its baseline %s, which it cannot start in", spent, got)
+		}
+	}
+
+	// And the floor does not disturb a real pairing.
+	if got := probe.BaselineWall(404 * time.Second); got != 485*time.Second {
+		t.Errorf("BaselineWall(404s) = %s, want the banked 485s", got)
 	}
 }
