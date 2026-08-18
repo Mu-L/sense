@@ -50,13 +50,13 @@ type partEvent struct {
 		// CallID distinguishes one call from the same call reported again as it
 		// moves through its states.
 		CallID string `json:"callID"`
-		// Reason says why a step finished. It is carried and deliberately NOT
-		// read as a verdict: a measured capture ends its first step with
-		// `tool-calls` and its last with `stop`, both of them normal, and a
-		// rule that treated every reason but one as a failure marked a clean
-		// session as broken. Which reasons mean trouble is somebody else's
-		// taxonomy, and the marks that matter — an error event, a session that
-		// never closed, an agent that said nothing — do not need it.
+		// Reason says why a step finished, and it is read for one thing only:
+		// whether the model stopped talking, which is what closes the session
+		// here. It is deliberately NOT read as a verdict — a measured capture
+		// ends its intermediate steps with `tool-calls` and its last with
+		// `stop`, both of them normal, and a rule that treated every reason but
+		// one as a failure marked a clean session as broken. Which other
+		// reasons mean trouble is somebody else's taxonomy.
 		Reason string `json:"reason"`
 		Tokens struct {
 			Input     int `json:"input"`
@@ -78,6 +78,8 @@ const (
 	partToolUse    = "tool_use"
 	partStepFinish = "step_finish"
 	partError      = "error"
+	// stopReason is the reason a final step gives: the model stopped talking.
+	stopReason = "stop"
 )
 
 func parseMessageParts(r io.Reader) (Transcript, error) {
@@ -105,7 +107,16 @@ func parseMessageParts(r io.Reader) (Transcript, error) {
 		sawAny = true
 		switch e.Type {
 		case partStepFinish:
-			sawClose = true
+			// A step closes the SESSION only when the model stopped talking.
+			// This format reports a step per round trip, so an intermediate
+			// step that ended to run tools is not a close — and reading it as
+			// one made a capture cut off mid-session read as a finished one,
+			// which is the silent divergence the conformance suite exists to
+			// catch. Measured: `tool-calls` on every intermediate step and
+			// `stop` on the last, in both recorded captures.
+			if e.Part.Reason == stopReason {
+				sawClose = true
+			}
 		case partError:
 			// An error event is also a close: the session ended, badly and on
 			// purpose, and without this it would be marked as one that was cut

@@ -166,7 +166,7 @@ func TestAMissingMessagePartsCaptureIsReported(t *testing.T) {
 // a third spelling and the reason nothing downstream matches a call name by
 // equality.
 func TestAnMCPCallCarriesTheToolItNamedInThisToolsSpelling(t *testing.T) {
-	tr := messageParts(t, "message-parts-mcp.jsonl")
+	tr := messageParts(t, "same-scenario-message-parts.jsonl")
 
 	if tr.Provisional() {
 		t.Errorf("a clean sense arm reads as provisional: %s", tr.Why)
