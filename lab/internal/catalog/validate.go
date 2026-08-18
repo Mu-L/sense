@@ -50,6 +50,7 @@ func (c *Catalog) checkSubject(s Subject) []string {
 	if len(s.Agents) == 0 {
 		p = append(p, fmt.Sprintf("subject %s: names no agent tools, so nothing can drive it", s.ID))
 	}
+	p = append(p, checkSubjectCommands(s)...)
 	if s.Executor == "" {
 		p = append(p, fmt.Sprintf("subject %s: names no executor, so there is nowhere to run it", s.ID))
 	} else if _, ok := c.Executors[s.Executor]; !ok {
@@ -69,6 +70,31 @@ func (c *Catalog) checkSubject(s Subject) []string {
 				p = append(p, fmt.Sprintf("subject %s needs MCP but agent %s does not support it", s.ID, a))
 			}
 		}
+	}
+	return p
+}
+
+// checkSubjectCommands refuses a command nothing could run, and a subject that
+// installs something without saying how to remove it.
+//
+// The second is the one that matters. A subject with an install and no cleanup
+// leaves whatever it wrote on the machine, every later run on that machine
+// reads it, and the symptom looks like drift rather than like a leak.
+func checkSubjectCommands(s Subject) []string {
+	var p []string
+	for _, stage := range []struct {
+		what string
+		cmds [][]string
+	}{{"install", s.Install}, {"setup", s.Setup}, {"cleanup", s.Cleanup}} {
+		for i, argv := range stage.cmds {
+			if len(argv) == 0 {
+				p = append(p, fmt.Sprintf("subject %s: %s step %d is an empty command", s.ID, stage.what, i+1))
+			}
+		}
+	}
+	if len(s.Install) > 0 && len(s.Cleanup) == 0 {
+		p = append(p, fmt.Sprintf("subject %s: installs something and declares no cleanup, so whatever it "+
+			"writes stays on the machine and every later run reads it", s.ID))
 	}
 	return p
 }

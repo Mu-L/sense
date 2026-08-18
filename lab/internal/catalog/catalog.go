@@ -61,6 +61,26 @@ type Subject struct {
 	Executor string `json:"executor"`
 	// Agents are the agent tool ids this subject can be driven through.
 	Agents []string `json:"agents"`
+	// Touches are the paths this subject may write, relative to the arm's HOME
+	// or repository, and it is a DECLARATION rather than a description: what a
+	// subject actually wrote is compared against it, and anything outside is a
+	// finding about that subject.
+	//
+	// Empty for a subject nobody has run yet. Its first run is a discovery run
+	// in the strictest isolation available, and the declaration is written from
+	// what was observed — never copied from the subject's own documentation,
+	// which says what it intends to do.
+	Touches []string `json:"touches"`
+	// Install, Setup and Cleanup are what this subject does to a machine,
+	// each a list of argv.
+	//
+	// Command lists rather than a script, so a person can read what a
+	// competitor's installer will do before it runs on their machine. They
+	// arrive here, in cycle 08, with their consumer: cycle 01 deliberately
+	// refused to invent them while nothing ran them.
+	Install [][]string `json:"install"`
+	Setup   [][]string `json:"setup"`
+	Cleanup [][]string `json:"cleanup"`
 }
 
 // Agent is the harness that runs a model: the CLI, and how to talk to it.
