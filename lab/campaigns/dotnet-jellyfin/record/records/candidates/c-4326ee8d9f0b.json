@@ -1,0 +1,14 @@
+{
+  "id": "c-4326ee8d9f0b",
+  "finding": "f-1c56a449e905",
+  "surface": "graph",
+  "hypothesis": "MECHANISM: internal/extract/csharp/csharp.go:71 lists namespace_declaration in isClass and never file_scoped_namespace_declaration, which appears nowhere under internal/. So a block-scoped namespace opens a naming scope and its types are qualified X.Type, while a file-scoped one is walked straight through and its types stay bare. Every reference is written bare either way. emitHolds (internal/extract/csharp/members.go:43) emits the composition edge with TargetQualified set to the written type name, so in the block-scoped case that target does not match the qualified symbol, the edge fails to resolve, and an unresolved edge is dropped rather than stored. CHANGE: make both namespace forms qualify identically, so a bare reference and its symbol agree. PREDICTION, target cells: on jellyfin @ae872302 over MCP, the count of declared interfaces returning a non-empty blast rises from 17 of 40 toward 40 of 40, and ILibraryManager, IFileSystem, IUserManager and IServerConfigurationManager each return a non-empty dependent set where all four are empty today. PREDICTION, regression: the banked corpus does not move, because no Ruby or Go extractor path is touched. PREDICTION, falsifier: if the counts do not move, or if any currently-resolving file-scoped interface goes empty, the change is rejected.",
+  "hypothesis_at": "2026-08-17T22:17:52Z",
+  "target_cells": [
+    "jellyfin/blast-resolution/declared-interfaces-resolving",
+    "jellyfin/blast-resolution/ILibraryManager",
+    "jellyfin/blast-resolution/IFileSystem",
+    "jellyfin/blast-resolution/IUserManager",
+    "jellyfin/blast-resolution/IServerConfigurationManager"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "f-eea567433cac",
+  "surface": "graph",
+  "detector": "operator, 07-02 validation of candidate c-4326ee8d9f0b",
+  "subject": "sense@candidate-composes-lexical",
+  "detail": "RESIDUAL of the block-scoped namespace defect, left standing after the composes lexical-scope fix. A hold whose declared type lives in a namespace that is not an enclosing scope of the holder still fails to resolve, because the walk climbs the source's own scopes and C# reaches other namespaces through using directives. Measured on jellyfin @ae872302 after the fix: ILibraryManager returns 5 dependents against 121 files that declare a field of it; IFileSystem (66), IUserManager (65) and IServerConfigurationManager (71) still return an empty blast. Closing it needs a per-file imported-scope map in the resolver, populated by scan from imports edges, in the shape WithGoEmbeddings already uses. That is a larger change and a separate candidate.",
+  "runs": [
+    "runs/campaigns/dotnet-jellyfin/records/validations"
+  ],
+  "discriminator": true,
+  "recorded_at": "2026-08-17T22:33:01Z"
+}
