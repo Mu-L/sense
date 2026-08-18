@@ -475,8 +475,8 @@ func (c *Catalog) addExecutor(path string, b []byte) error {
 // validation error nobody can locate; a duplicate lets the last file read win
 // and quietly discards the other, which is precisely the "setting that looks
 // applied and is not" that DisallowUnknownFields below exists to stop. Ids and
-// filenames are independent here by design — `models/glm-5.2_cloud.json` holds
-// id `glm-5.2:cloud` — so nothing else would notice.
+// filenames are independent here by design — `models/ollama-cloud_glm-5.2.json`
+// holds id `ollama-cloud/glm-5.2` — so nothing else would notice.
 //
 // The message names BOTH files, because which one is read first depends on
 // filename order and the one that trips the check is often the innocent one.
