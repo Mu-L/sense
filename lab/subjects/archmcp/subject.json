@@ -16,10 +16,18 @@
     "home/Library/Application Support/go"
   ],
   "install": [
-    ["go", "install", "./cmd/archmcp"]
+    [
+      "go",
+      "install",
+      "./cmd/archmcp"
+    ]
   ],
   "setup": [],
   "cleanup": [
-    ["rm", "-f", "bin/archmcp"]
+    [
+      "sh",
+      "-c",
+      "rm -f \"$HOME/bin/archmcp\""
+    ]
   ]
 }
