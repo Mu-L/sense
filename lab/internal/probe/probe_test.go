@@ -98,6 +98,9 @@ if [ -f .mcp.json ]; then
   args=$(printf '%s' "$flat" | sed 's/.*"args":\[\([^]]*\)\].*/\1/' | tr -d '"' | tr ',' ' ')
   printf '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"sense_graph"}}\n' | $server $args > /dev/null
   printf '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"mcp__sense__sense_graph"}]}}\n'
+  # The second spelling a real tool was measured writing: the server's name in
+  # front of the tool's, with no prefix a check could look for.
+  printf '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"sense_sense_graph"}]}}\n'
 fi
 printf '{"type":"result","result":"Category has three dependents"}\n'
 `
@@ -120,11 +123,14 @@ func spec(t *testing.T) probe.Spec {
 		Args:       []string{"-c", agentThatUsesSense + agentThatCannotUseSense},
 		SetupTool:  "claude-code",
 		ConfigDirs: []string{".claude"},
-		SenseBin:   fakeSense(t),
-		LabBin:     labBinary(t),
-		HostPath:   os.Getenv("PATH"),
-		Wall:       60 * time.Second,
-		Grace:      200 * time.Millisecond,
+		Agent: catalog.Agent{MCPRegistration: catalog.MCPRegistration{
+			File: ".mcp.json", ServersKey: "mcpServers", CommandStyle: catalog.CommandAndArgs,
+		}},
+		SenseBin: fakeSense(t),
+		LabBin:   labBinary(t),
+		HostPath: os.Getenv("PATH"),
+		Wall:     60 * time.Second,
+		Grace:    200 * time.Millisecond,
 	}
 }
 
@@ -345,11 +351,9 @@ if [ -f .mcp.json ]; then sleep 2; fi
 // supervisor enforces, or the note is a lie that costs the arm its answer.
 func TestEachArmIsToldTheWallThatWillActuallyCutIt(t *testing.T) {
 	s := spec(t)
-	s.Agent = catalog.Agent{
-		WallNoteFlag:     "--append-system-prompt",
-		WallNoteDelivery: catalog.WallNoteFlagged,
-		WallNote:         "stopped hard after {{seconds}} seconds of real time",
-	}
+	s.Agent.WallNoteFlag = "--append-system-prompt"
+	s.Agent.WallNoteDelivery = catalog.WallNoteFlagged
+	s.Agent.WallNote = "stopped hard after {{seconds}} seconds of real time"
 
 	report, err := probe.Run(context.Background(), s)
 	if err != nil {
@@ -403,7 +407,9 @@ func secondsInWallNote(args []string, flag string) (int, bool) {
 // asymmetric.
 func TestAPairCarryingItsOwnWallNotesIsStillSound(t *testing.T) {
 	s := spec(t)
-	s.Agent = catalog.Agent{WallNoteFlag: "--append-system-prompt", WallNote: "{{seconds}} seconds"}
+	s.Agent.WallNoteFlag = "--append-system-prompt"
+	s.Agent.WallNoteDelivery = catalog.WallNoteFlagged
+	s.Agent.WallNote = "{{seconds}} seconds"
 
 	report, err := probe.Run(context.Background(), s)
 	if err != nil {
@@ -777,10 +783,8 @@ func TestABaselineIsNeverGivenAWallItCannotStartIn(t *testing.T) {
 // but Sense access" is then a claim about something nothing was checking.
 func TestEachArmIsAskedTheScenariosQuestionWithItsOwnWallNoteInFront(t *testing.T) {
 	s := spec(t)
-	s.Agent = catalog.Agent{
-		WallNoteDelivery: catalog.WallNotePrompted,
-		WallNote:         "stopped hard after {{seconds}} seconds of real time",
-	}
+	s.Agent.WallNoteDelivery = catalog.WallNotePrompted
+	s.Agent.WallNote = "stopped hard after {{seconds}} seconds of real time"
 
 	report, err := probe.Run(context.Background(), s)
 	if err != nil {
@@ -828,5 +832,94 @@ func TestAnArmAskedADifferentQuestionIsReportedAsADifference(t *testing.T) {
 
 	if got := tampered.PromptDifferencesForTest(report.Sense, report.Baseline); len(got) != 2 {
 		t.Errorf("differences = %v, want both arms reported as asked something else", got)
+	}
+}
+
+// A completed run is not evidence that the agent tool drove the model. An
+// earlier instrument drove cloud models through a CLI that technically accepted
+// them and they ignored Sense almost entirely — 2 Sense calls against 97 native
+// ones, in a session that completed and passed every other check. The counts
+// are what make that visible, and they are reported rather than gated.
+func TestEachArmsToolCallsAreCountedAndSoAreTheOnesThatReachedSense(t *testing.T) {
+	report, err := probe.Run(context.Background(), spec(t))
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	if report.SenseCalls.Total == 0 {
+		t.Fatal("the sense arm made no tool calls at all, so nothing here is being counted")
+	}
+	// Both spellings the agent wrote: the prefixed one and the one a check
+	// looking for a prefix would miss entirely.
+	if report.SenseCalls.Sense != 2 {
+		t.Errorf("the sense arm made 2 Sense calls in two different spellings, counted as %s", report.SenseCalls)
+	}
+	if report.BaselineCalls.Total == 0 {
+		t.Error("the baseline arm's calls were not counted")
+	}
+	if report.BaselineCalls.Sense != 0 {
+		t.Errorf("the baseline arm reached Sense: %s", report.BaselineCalls)
+	}
+	if got := report.SenseCalls.String(); !strings.Contains(got, "reached Sense") {
+		t.Errorf("the count reads %q, which is not a line a human can act on", got)
+	}
+}
+
+// An arm whose prompt is not on disk cannot be checked, and an unchecked arm
+// must not read as a matching one: "the arms differ in nothing but Sense
+// access" would then be a claim about a file nobody could open.
+func TestAnArmWhoseRecordedPromptIsGoneIsReportedRatherThanPassed(t *testing.T) {
+	s := spec(t)
+	report, err := probe.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if err := os.Remove(filepath.Join(report.Sense.Env.Root, "session", "prompt.txt")); err != nil {
+		t.Fatalf("set up: %v", err)
+	}
+
+	got := s.PromptDifferencesForTest(report.Sense, report.Baseline)
+
+	if len(got) != 1 || !strings.Contains(got[0], "recorded none") {
+		t.Errorf("differences = %v, want the sense arm reported as having no recorded prompt", got)
+	}
+}
+
+// A capture nothing can read is a pair that cannot be checked, and it has to
+// fail loudly: a call count of zero from an unreadable transcript is
+// indistinguishable from an arm that used no tools.
+func TestAPairWhoseCaptureCannotBeReadFailsRatherThanCountingZero(t *testing.T) {
+	s := spec(t)
+	s.Agent.TranscriptFormat = "a-format-nothing-reads"
+
+	if _, err := probe.Run(context.Background(), s); err == nil {
+		t.Fatal("a pair whose transcripts could not be read was reported as a measurement")
+	}
+}
+
+// A sense arm that recorded no time at all is a pair that has already failed
+// for a louder reason, and its baseline ran on the fallback ceiling rather than
+// on a derivation. Reporting a budget mismatch on top of that would bury the
+// real fault under a second one.
+func TestAPairWhoseSenseArmRecordedNoTimeIsNotAlsoReportedAsABudgetMismatch(t *testing.T) {
+	sense := run.Meta{Command: "/bin/sh", WallStartsAt: "spawn", WallSeconds: 60, TookSeconds: 0}
+	baseline := run.Meta{Command: "/bin/sh", WallStartsAt: "spawn", WallSeconds: 1}
+
+	got := probe.Differences(sense, baseline, "--append-system-prompt")
+
+	for _, d := range got {
+		if strings.Contains(d, "budget") {
+			t.Errorf("a pair whose sense arm never ran was reported as a budget mismatch: %s", d)
+		}
+	}
+}
+
+// The baseline's wall derives from what the sense arm SPENT. A sense arm that
+// spent nothing leaves nothing to derive from, so the baseline falls back to
+// the ceiling the credential preflight already budgeted for rather than to
+// zero, which would be a baseline killed on spawn.
+func TestABaselineFallsBackToTheCeilingWhenTheSenseArmSpentNothing(t *testing.T) {
+	if got := probe.BaselineWall(10 * time.Second); got <= 0 {
+		t.Fatalf("BaselineWall(10s) = %v, want a usable ceiling", got)
 	}
 }

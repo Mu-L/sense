@@ -552,3 +552,50 @@ func TestNothingRecordedAboutARunCarriesItsCredentials(t *testing.T) {
 		t.Fatalf("walk the run directory: %v", err)
 	}
 }
+
+// A tool that starts an MCP server before it streams pays that cost inside its
+// wall, and the two arms of a cell do not pay it equally. The number is what
+// says whether a wall that starts at spawn is fair across tools, so it has to
+// be on disk rather than inferred later from a transcript that carries no
+// spawn time at all.
+func TestHowLongASessionTookToSayAnythingIsRecorded(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "run")
+
+	m, err := Session(context.Background(), dir, Spec{
+		Name: "/bin/sh",
+		Args: []string{"-c", "sleep 0.4; printf 'first\\n'"},
+		Wall: 20 * time.Second,
+	})
+	if err != nil {
+		t.Fatalf("Session: %v", err)
+	}
+
+	if m.FirstOutputSeconds < 0.3 {
+		t.Errorf("first output at %.2fs, want the 0.4s the session waited before speaking", m.FirstOutputSeconds)
+	}
+	if m.FirstOutputSeconds > m.TookSeconds {
+		t.Errorf("first output at %.2fs, after the session ended at %.2fs", m.FirstOutputSeconds, m.TookSeconds)
+	}
+}
+
+// A session that never said anything has no first output, and reporting one
+// would be a number about nothing.
+func TestASessionThatSaidNothingRecordsNoFirstOutput(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "run")
+
+	m, err := Session(context.Background(), dir, Spec{
+		Name: "/bin/sh",
+		Args: []string{"-c", "exit 0"},
+		Wall: 20 * time.Second,
+	})
+	if err != nil {
+		t.Fatalf("Session: %v", err)
+	}
+
+	if m.FirstOutputSeconds != 0 {
+		t.Errorf("first output at %.2fs for a session that wrote nothing", m.FirstOutputSeconds)
+	}
+	if m.StdoutBytes != 0 {
+		t.Errorf("stdout bytes = %d, want none", m.StdoutBytes)
+	}
+}

@@ -170,6 +170,7 @@ func newProbeWorld(t *testing.T) probeWorld {
 	write("repos/probe-repo.json", `{"id":"probe-repo","url":"https://example.com/r.git","commit":"`+commit+`","languages":["go"],"stack":"go"}`)
 	write("agents/fake/agent.json", `{"id":"fake","binary":"`+agentBin+`","setup_tool":"fake-cli",`+
 		`"transcript_format":"assistant-events","model_flag":"--model",`+
+		`"mcp_registration":{"file":".mcp.json","servers_key":"mcpServers","command_style":"command+args"},`+
 		`"config_dirs":[".fake"],"headless_args":["-c"],"judge_args":["-c"],"env":[],"supports_mcp":true,`+
 		`"auth_modes":["api_key"]}`)
 	write("models/fake-model.json", `{"id":"fake-model","provider":"fake","aliases":[],"available_under":["api_key"],"agents":["fake"]}`)
@@ -758,6 +759,7 @@ func (w probeWorld) declareCredentialRoute(t *testing.T) {
 	at := filepath.Join(w.config, "agents", "fake", "agent.json")
 	body := `{"id":"fake","binary":"` + bin + `","setup_tool":"fake-cli",` +
 		`"transcript_format":"assistant-events","model_flag":"--model",` +
+		`"mcp_registration":{"file":".mcp.json","servers_key":"mcpServers","command_style":"command+args"},` +
 		`"config_dirs":[".fake"],"config_dir_var":"FAKE_CONFIG_DIR",` +
 		`"keychain_service":"Fake-credentials","credential_file":".credentials.json",` +
 		`"credential_fields":["fakeOauth.accessToken","fakeOauth.scopes"],` +

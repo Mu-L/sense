@@ -99,22 +99,23 @@ func Prepare(s Spec) (Env, error) {
 	// The credential goes in before anything can be spawned against this
 	// environment, and a bad one fails the preparation rather than the session:
 	// the alternative is discovering it a wall at a time, twice per cell. An
-	// empty one is a key-based host, which needs no file; a half-filled one is a
-	// mistake and is refused.
-	if !s.Credential.Empty() {
-		if err := s.Route.Write(l.Config, s.Credential); err != nil {
-			return Env{}, err
-		}
+	// empty one is a key-based host, which needs no document at all; a
+	// half-filled one is a mistake and is refused.
+	credentialEnv, err := s.Route.Provision(l.Config, s.Credential)
+	if err != nil {
+		return Env{}, err
 	}
 
 	lookup := s.Lookup
 	if lookup == nil {
 		lookup = os.LookupEnv
 	}
+	// The credential comes last, after the agent tool's own overrides, so a
+	// declared variable cannot shadow the run's login.
 	return Env{
 		Layout:  l,
 		Arm:     s.Arm,
-		Environ: Environ(l, bin, lookup, s.AgentEnv, s.Route.ConfigDirVar),
+		Environ: append(Environ(l, bin, lookup, s.AgentEnv, s.Route.ConfigDirVar), credentialEnv...),
 	}, nil
 }
 

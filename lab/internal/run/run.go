@@ -122,6 +122,21 @@ type Meta struct {
 	Home string `json:"home,omitempty"`
 	Path string `json:"path,omitempty"`
 
+	// FirstOutputSeconds is how long after spawn the session first wrote
+	// anything, in seconds.
+	//
+	// It exists because a tool that initialises an MCP server before it streams
+	// pays that cost inside its wall, and the arms of a cell do not pay it
+	// equally: the sense arm has a server to start and the baseline does not.
+	// A wall that starts at spawn is only fair across tools if that cost is
+	// small, and this is the number that says whether it is. Reported rather
+	// than corrected for: a per-tool wall rule would make cross-tool results
+	// incomparable, so the correction, if the numbers ask for one, belongs to
+	// the shared rule.
+	//
+	// Zero means nothing was ever written, which StdoutBytes also says.
+	FirstOutputSeconds float64 `json:"first_output_seconds,omitempty"`
+
 	// TranscriptFormat is the shape raw/stdout is written in.
 	//
 	// Recorded rather than inferred at score time, because the inference would
@@ -213,28 +228,31 @@ func Session(ctx context.Context, dir string, s Spec) (Meta, error) {
 	defer func() { _ = stdout.Close(); _ = stderr.Close() }()
 
 	started := time.Now()
+	firstOutput := watchFirstOutput(stdout.Name(), started)
 	code, ended, err := spawn(ctx, s, stdout, stderr)
 	if err != nil {
 		return Meta{}, err
 	}
+	first := firstOutput()
 
 	said, _ := stdout.Seek(0, io.SeekCurrent)
 
 	m := Meta{
-		Outcome:          outcomeOf(code, ended),
-		StdoutBytes:      said,
-		ExitCode:         code,
-		WallSeconds:      s.Wall.Seconds(),
-		WallStartsAt:     wallStartsAtSpawn,
-		TookSeconds:      time.Since(started).Seconds(),
-		Command:          s.Name,
-		Args:             s.Args,
-		StartedAt:        started.UTC().Format(time.RFC3339),
-		Arm:              s.Arm,
-		TranscriptFormat: s.TranscriptFormat,
-		SenseSetup:       s.SenseSetup,
-		Home:             envValue(s.Env, "HOME"),
-		Path:             envValue(s.Env, "PATH"),
+		Outcome:            outcomeOf(code, ended),
+		StdoutBytes:        said,
+		ExitCode:           code,
+		WallSeconds:        s.Wall.Seconds(),
+		WallStartsAt:       wallStartsAtSpawn,
+		TookSeconds:        time.Since(started).Seconds(),
+		Command:            s.Name,
+		Args:               s.Args,
+		StartedAt:          started.UTC().Format(time.RFC3339),
+		Arm:                s.Arm,
+		TranscriptFormat:   s.TranscriptFormat,
+		FirstOutputSeconds: first,
+		SenseSetup:         s.SenseSetup,
+		Home:               envValue(s.Env, "HOME"),
+		Path:               envValue(s.Env, "PATH"),
 	}
 	if err := writeMeta(dir, m); err != nil {
 		return Meta{}, err
@@ -282,6 +300,54 @@ func rawFiles(dir string) (stdout, stderr *os.File, err error) {
 		return nil, nil, fmt.Errorf("create stderr capture: %w", err)
 	}
 	return stdout, stderr, nil
+}
+
+// watchFirstOutput reports how long after start the capture first held
+// anything. It returns a function that stops the watch and gives the answer.
+//
+// It polls the file rather than wrapping the writer, and that is not laziness:
+// os/exec hands a *os.File straight to the child and starts no copying
+// goroutine, and wrapping stdout in anything at all turns it into a pipe whose
+// close the wall then waits on. The comment in spawn explains what that costs.
+// Polling buys the number without touching the descriptor.
+//
+// The resolution is the poll interval, which is why it is stated here rather
+// than implied: this measures seconds of cold start, not milliseconds of
+// latency, and a session whose first output lands inside the last window is
+// reported up to one window late rather than not at all.
+func watchFirstOutput(path string, started time.Time) func() float64 {
+	const poll = 50 * time.Millisecond
+	done := make(chan struct{})
+	answer := make(chan float64, 1)
+	spoke := func() bool {
+		info, err := os.Stat(path)
+		return err == nil && info.Size() > 0
+	}
+	go func() {
+		defer close(answer)
+		for {
+			if spoke() {
+				answer <- time.Since(started).Seconds()
+				return
+			}
+			select {
+			case <-done:
+				// One last look. Output written inside the final poll window
+				// would otherwise be reported as no output at all, which is
+				// what a session that said nothing looks like — and every short
+				// session says everything inside one window.
+				if spoke() {
+					answer <- time.Since(started).Seconds()
+				}
+				return
+			case <-time.After(poll):
+			}
+		}
+	}()
+	return func() float64 {
+		close(done)
+		return <-answer
+	}
 }
 
 // spawn runs the command under the wall and reports its exit code and what

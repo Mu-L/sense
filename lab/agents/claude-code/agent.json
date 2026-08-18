@@ -42,5 +42,10 @@
     "claudeAiOauth.expiresAt",
     "claudeAiOauth.scopes"
   ],
-  "credential_expiry": "ms:claudeAiOauth.expiresAt"
+  "credential_expiry": "ms:claudeAiOauth.expiresAt",
+  "mcp_registration": {
+    "file": ".mcp.json",
+    "servers_key": "mcpServers",
+    "command_style": "command+args"
+  }
 }

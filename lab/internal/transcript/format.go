@@ -23,6 +23,7 @@ var Formats = map[string]func(path string) (Transcript, error){
 	// here.
 	"assistant-events": ReadClaudeCode,
 	"item-events":      ReadItemEvents,
+	"message-parts":    ReadMessageParts,
 }
 
 // Read normalizes a capture written in the named format.

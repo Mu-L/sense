@@ -178,6 +178,7 @@ func credentialRoute(a catalog.Agent) isolate.Route {
 		ConfigDirVar: a.ConfigDirVar,
 		Keychain:     a.KeychainService,
 		File:         a.CredentialFile,
+		EnvVar:       a.CredentialEnv,
 		Fields:       a.CredentialFields,
 		Expiry:       a.CredentialExpiry,
 	}
@@ -300,6 +301,13 @@ func renderReport(r probe.Report) string {
 		fmt.Fprintf(&b, "  %-22s %s\n", line.what, strings.Join(line.wrong, ", "))
 	}
 	fmt.Fprintf(&b, "  %-22s %v\n", "sense arm used Sense", r.SenseUsed)
+	// Reported for a human to read, never gated: an arm that had Sense and
+	// barely touched it is a finding about the agent tool, and a completed run
+	// is not evidence that the tool drove the model.
+	fmt.Fprintf(&b, "  %-22s %s\n", "sense arm's calls", r.SenseCalls)
+	fmt.Fprintf(&b, "  %-22s %s\n", "baseline arm's calls", r.BaselineCalls)
+	fmt.Fprintf(&b, "  %-22s %.1fs sense, %.1fs baseline\n", "time to first output",
+		r.Sense.Meta.FirstOutputSeconds, r.Baseline.Meta.FirstOutputSeconds)
 	fmt.Fprintf(&b, "  %-22s %d\n", "MCP frames captured", r.Frames)
 	fmt.Fprintf(&b, "  %-22s %v\n", "baseline left a capture", r.BaselineCaptured)
 

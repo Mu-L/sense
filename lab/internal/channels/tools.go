@@ -85,7 +85,12 @@ func toolsInReply(out []byte) ([]string, error) {
 // mcpPrefix is how an agent tool names an MCP tool in its own transcript. It is
 // matched as well as the bare names, because a transcript that says
 // `mcp__sense__sense_graph` and one that says `sense_graph` are the same event.
-const mcpPrefix = "mcp__sense"
+const mcpPrefix = MCPPrefix
+
+// MCPPrefix is how an agent tool namespaces this server's tools in its own
+// output. Exported because a transcript's CALL NAMES are read elsewhere and
+// the same prefix decides the same question there.
+const MCPPrefix = "mcp__sense"
 
 // UsedBy reports every sign that a transcript used Sense, by name.
 //
