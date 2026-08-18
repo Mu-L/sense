@@ -2,6 +2,7 @@ package probe_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -345,8 +346,9 @@ if [ -f .mcp.json ]; then sleep 2; fi
 func TestEachArmIsToldTheWallThatWillActuallyCutIt(t *testing.T) {
 	s := spec(t)
 	s.Agent = catalog.Agent{
-		WallNoteFlag: "--append-system-prompt",
-		WallNote:     "stopped hard after {{seconds}} seconds of real time",
+		WallNoteFlag:     "--append-system-prompt",
+		WallNoteDelivery: catalog.WallNoteFlagged,
+		WallNote:         "stopped hard after {{seconds}} seconds of real time",
 	}
 
 	report, err := probe.Run(context.Background(), s)
@@ -767,5 +769,64 @@ func TestABaselineIsNeverGivenAWallItCannotStartIn(t *testing.T) {
 	// And the floor does not disturb a real pairing.
 	if got := probe.BaselineWall(404 * time.Second); got != 485*time.Second {
 		t.Errorf("BaselineWall(404s) = %s, want the banked 485s", got)
+	}
+}
+
+// A tool with no system-prompt flag carries its wall note in the prompt, so the
+// two arms hold different prompts by design — and "the arms differ in nothing
+// but Sense access" is then a claim about something nothing was checking.
+func TestEachArmIsAskedTheScenariosQuestionWithItsOwnWallNoteInFront(t *testing.T) {
+	s := spec(t)
+	s.Agent = catalog.Agent{
+		WallNoteDelivery: catalog.WallNotePrompted,
+		WallNote:         "stopped hard after {{seconds}} seconds of real time",
+	}
+
+	report, err := probe.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	for _, arm := range []struct {
+		name string
+		root string
+		wall float64
+	}{
+		{"sense", report.Sense.Env.Root, report.Sense.Meta.WallSeconds},
+		{"baseline", report.Baseline.Env.Root, report.Baseline.Meta.WallSeconds},
+	} {
+		asked, err := os.ReadFile(filepath.Join(arm.root, "session", "prompt.txt"))
+		if err != nil {
+			t.Fatalf("read the %s arm's prompt: %v", arm.name, err)
+		}
+		want := fmt.Sprintf("stopped hard after %d seconds of real time", int(arm.wall))
+		if !strings.HasPrefix(string(asked), want) {
+			t.Errorf("the %s arm was not told its own wall in front of the prompt:\n%s", arm.name, asked)
+		}
+		if !strings.Contains(string(asked), s.Prompt) {
+			t.Errorf("the %s arm was not asked the scenario's question:\n%s", arm.name, asked)
+		}
+	}
+	for _, d := range report.Differences {
+		if strings.Contains(d, "the prompt") {
+			t.Errorf("a correct pair was reported as asking different questions: %s", d)
+		}
+	}
+}
+
+// And the check has to fire when an arm really was asked something else, or it
+// is a check that passes on every run including the one that matters.
+func TestAnArmAskedADifferentQuestionIsReportedAsADifference(t *testing.T) {
+	s := spec(t)
+	report, err := probe.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	tampered := s
+	tampered.Prompt = "something else entirely"
+
+	if got := tampered.PromptDifferencesForTest(report.Sense, report.Baseline); len(got) != 2 {
+		t.Errorf("differences = %v, want both arms reported as asked something else", got)
 	}
 }

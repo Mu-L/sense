@@ -1,6 +1,8 @@
 {
   "id": "opencode",
   "binary": "opencode",
+  "setup_tool": "opencode",
+  "transcript_format": "opencode-events",
   "model_flag": "--model",
   "headless_args": [
     "run",

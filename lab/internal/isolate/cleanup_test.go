@@ -70,7 +70,7 @@ func TestReleaseTakesTheCredentialAndLeavesTheEvidence(t *testing.T) {
 		t.Fatalf("release: %v", err)
 	}
 
-	if _, err := os.Stat(CredentialPath(env.Config)); err == nil {
+	if _, err := os.Stat(aRoute().CredentialPath(env.Config)); err == nil {
 		t.Error("the credential survived release, in a directory that is kept for months")
 	}
 	// The disposable HOME goes too, and for a reason no assertion about our own

@@ -1,6 +1,23 @@
 # claude-code
 
-Last verified: 2026-08-15.
+Last verified: 2026-08-15, except the credential shape, re-stated 2026-08-18
+when the route became per-tool data.
+
+## What `sense setup` writes for it
+
+`sense setup --tools claude-code`. The product's name for this tool and the
+catalog's happen to be the same string, which was true by coincidence for
+exactly as long as one tool existed; `setup_tool` says it rather than assuming
+it.
+
+## The credential
+
+`.credentials.json` inside the config directory, with the platform store as a
+second source. A run is given `accessToken`, `expiresAt` and `scopes` and
+nothing else — measured 2026-08-17, that is the smallest set that
+authenticates, and the refresh token beside them is deliberately withheld so a
+run cannot rotate the operator's login. Codex was measured not to have that
+property; see its README.
 
 ## Files it touches
 

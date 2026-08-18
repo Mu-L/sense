@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io/fs"
 	"os"
@@ -167,7 +168,8 @@ func newProbeWorld(t *testing.T) probeWorld {
 	}
 	agentBin := writeScript(t, filepath.Join(root, "bin", "fake-agent"), fakeAgentScript)
 	write("repos/probe-repo.json", `{"id":"probe-repo","url":"https://example.com/r.git","commit":"`+commit+`","languages":["go"],"stack":"go"}`)
-	write("agents/fake/agent.json", `{"id":"fake","binary":"`+agentBin+`","model_flag":"--model",`+
+	write("agents/fake/agent.json", `{"id":"fake","binary":"`+agentBin+`","setup_tool":"fake-cli",`+
+		`"transcript_format":"assistant-events","model_flag":"--model",`+
 		`"config_dirs":[".fake"],"headless_args":["-c"],"judge_args":["-c"],"env":[],"supports_mcp":true,`+
 		`"auth_modes":["api_key"]}`)
 	write("models/fake-model.json", `{"id":"fake-model","provider":"fake","aliases":[],"available_under":["api_key"],"agents":["fake"]}`)
@@ -563,9 +565,11 @@ func hostHolding(t *testing.T, c isolate.Credential, err error) {
 // aSeat is a credential good for the given span from now.
 func aSeat(good time.Duration) isolate.Credential {
 	return isolate.Credential{
-		AccessToken: "seat-token",
-		ExpiresAt:   time.Now().Add(good).UnixMilli(),
-		Scopes:      []string{"user:inference"},
+		Fields: map[string]json.RawMessage{
+			"fakeOauth.accessToken": json.RawMessage(`"seat-token"`),
+			"fakeOauth.scopes":      json.RawMessage(`["user:inference"]`),
+		},
+		ExpiresAt: time.Now().Add(good).UnixMilli(),
 	}
 }
 
@@ -649,7 +653,7 @@ func TestBothArmsAreProvisionedWithTheCredentialAndNothingElse(t *testing.T) {
 		if fields == "" {
 			t.Fatalf("the %s arm read no credential:\n%s", arm, said)
 		}
-		want := "fakeOauth accessToken expiresAt scopes"
+		want := "fakeOauth accessToken scopes"
 		if got := strings.Join(strings.Fields(fields), " "); got != want {
 			t.Errorf("the %s arm's credential carries %q, want %q", arm, got, want)
 		}
@@ -752,9 +756,12 @@ func (w probeWorld) declareCredentialRoute(t *testing.T) {
 	t.Helper()
 	bin := writeScript(t, filepath.Join(t.TempDir(), "recording-agent"), recordingAgentScript)
 	at := filepath.Join(w.config, "agents", "fake", "agent.json")
-	body := `{"id":"fake","binary":"` + bin + `","model_flag":"--model",` +
+	body := `{"id":"fake","binary":"` + bin + `","setup_tool":"fake-cli",` +
+		`"transcript_format":"assistant-events","model_flag":"--model",` +
 		`"config_dirs":[".fake"],"config_dir_var":"FAKE_CONFIG_DIR",` +
-		`"keychain_service":"Fake-credentials","credential_key":"fakeOauth",` +
+		`"keychain_service":"Fake-credentials","credential_file":".credentials.json",` +
+		`"credential_fields":["fakeOauth.accessToken","fakeOauth.scopes"],` +
+		`"credential_expiry":"ms:fakeOauth.expiresAt",` +
 		`"headless_args":["-c"],"judge_args":["-c"],"env":[],"supports_mcp":true,` +
 		`"auth_modes":["subscription","api_key"]}`
 	if err := os.WriteFile(at, []byte(body), 0o644); err != nil {

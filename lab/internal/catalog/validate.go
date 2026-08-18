@@ -88,6 +88,25 @@ func checkAgent(a Agent) []string {
 	if len(a.AuthModes) == 0 {
 		p = append(p, fmt.Sprintf("agent %s: no auth modes, so no model is reachable through it", a.ID))
 	}
+	if a.SetupTool == "" {
+		// The channel derivation asks `sense setup` to configure this tool and
+		// reads back what it wrote. Asking for a tool the product does not know
+		// writes nothing, and an empty derived list makes every absence check
+		// pass — a contaminated baseline arm reading as a clean one.
+		p = append(p, fmt.Sprintf("agent %s: no setup tool, so the channel list would be derived by "+
+			"configuring a tool the product does not know, and an empty list passes every check", a.ID))
+	}
+	if a.TranscriptFormat == "" {
+		p = append(p, fmt.Sprintf("agent %s: no transcript format, so nothing could read what it says", a.ID))
+	}
+	if a.WallNote != "" && a.WallNoteDelivery != WallNoteFlagged && a.WallNoteDelivery != WallNotePrompted {
+		p = append(p, fmt.Sprintf("agent %s: declares a wall note but delivers it by %q, which is neither "+
+			"%q nor %q, so the note would be written and never reach the arm",
+			a.ID, a.WallNoteDelivery, WallNoteFlagged, WallNotePrompted))
+	}
+	if a.WallNoteDelivery == WallNoteFlagged && a.WallNoteFlag == "" {
+		p = append(p, fmt.Sprintf("agent %s: delivers its wall note by flag but names no flag", a.ID))
+	}
 	if len(a.ConfigDirs) == 0 {
 		// Not cosmetic. The contamination checks join this onto the disposable
 		// HOME, and an empty one joins to HOME itself — which exists for every
@@ -101,9 +120,14 @@ func checkAgent(a Agent) []string {
 
 // checkCredentialRoute refuses a HALF-declared credential route.
 //
-// The three fields are all-or-nothing: the variable points a run at its config
-// directory, the keychain item is where the operator's own login is read from,
-// and the key is the object it lives under in both. Declaring some of them
+// The four fields are all-or-nothing: the variable points a run at its config
+// directory, the file names the document inside it, the field list is what may
+// be copied into it, and the expiry is how a planner knows the credential
+// outlives the cell.
+//
+// `keychain_service` is deliberately NOT among them. It is a second source for
+// the same document that only some tools have, and requiring it would refuse
+// the route of every tool that keeps its login in a file and nowhere else. Declaring some of them
 // produces a route that cannot carry a credential, and the run then falls back
 // to key authentication and reads as a model with nothing to say — which is the
 // failure this whole route exists to end, re-entering through the catalog.
@@ -112,9 +136,14 @@ func checkAgent(a Agent) []string {
 // directory legitimately declares nothing here and authenticates by key.
 func checkCredentialRoute(a Agent) []string {
 	declared := map[string]string{
-		"config_dir_var":   a.ConfigDirVar,
-		"keychain_service": a.KeychainService,
-		"credential_key":   a.CredentialKey,
+		"config_dir_var":    a.ConfigDirVar,
+		"credential_file":   a.CredentialFile,
+		"credential_expiry": a.CredentialExpiry,
+	}
+	if len(a.CredentialFields) > 0 {
+		declared["credential_fields"] = "declared"
+	} else {
+		declared["credential_fields"] = ""
 	}
 	var missing []string
 	for name, value := range declared {
@@ -126,7 +155,7 @@ func checkCredentialRoute(a Agent) []string {
 		return nil
 	}
 	slices.Sort(missing)
-	return []string{fmt.Sprintf("agent %s: a half-declared credential route, missing %v. All three or "+
+	return []string{fmt.Sprintf("agent %s: a half-declared credential route, missing %v. All four or "+
 		"none: a partial route cannot carry a credential, and the run falls back to key authentication "+
 		"and produces an arm that reads as a model with nothing to say", a.ID, missing)}
 }

@@ -43,7 +43,7 @@ func testCatalogPinned(t *testing.T, bin, pin string) string {
 			t.Fatal(err)
 		}
 	}
-	write(filepath.Join(dir, "agents", "tool", "agent.json"), `{"id":"tool","binary":"`+bin+`",
+	write(filepath.Join(dir, "agents", "tool", "agent.json"), `{"id":"tool","binary":"`+bin+`","setup_tool":"tool-cli","transcript_format":"assistant-events",
 	  "model_flag":"--model","config_dirs":[".tool"],"headless_args":["-p","--permission-mode","bypassPermissions"],
 	  "env":["IS_SANDBOX=1","CLAUDE_CODE_DISABLE_AUTO_MEMORY=1"],
 	  "supports_mcp":true,"auth_modes":["api_key"]}`)
@@ -307,7 +307,8 @@ func TestAModelTheAgentCannotDriveIsRefusedBeforeSpawning(t *testing.T) {
 	cfg := testCatalog(t, agent)
 	// A second model, declared as drivable only by a tool that is not ours.
 	writeFile(t, filepath.Join(cfg, "agents", "other", "agent.json"),
-		`{"id":"other","binary":"othertool","model_flag":"-m","config_dirs":[".tool"],"headless_args":["-p"],
+		`{"id":"other","binary":"othertool","setup_tool":"other-cli","transcript_format":"assistant-events",
+		"model_flag":"-m","config_dirs":[".tool"],"headless_args":["-p"],
 		  "env":[],"supports_mcp":false,"auth_modes":["api_key"]}`)
 	writeFile(t, filepath.Join(cfg, "models", "m2.json"),
 		`{"id":"m2","provider":"acme","available_under":["api_key"],"agents":["other"]}`)

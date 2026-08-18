@@ -21,7 +21,8 @@ func good(t *testing.T) string {
 	writeExecutor(t, dir, Executor{ID: "isolated-home",
 		PreservesAuth: []string{"api_key"}, IsolatesGlobalConfig: true})
 	writeAgent(t, dir, "tool", Agent{
-		ID: "tool", Binary: "toolbin", ModelFlag: "--model", ConfigDirs: []string{".tool"},
+		ID: "tool", Binary: "toolbin", SetupTool: "tool-cli", TranscriptFormat: "stream-json",
+		ModelFlag: "--model", ConfigDirs: []string{".tool"},
 		HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"},
 		SupportsMCP: true,
 	})
@@ -589,7 +590,8 @@ func TestAnAliasedModelWithAFaultIsReportedOnce(t *testing.T) {
 func TestAnAgentWithoutMCPMayStillCarryASubjectThatDoesNotNeedIt(t *testing.T) {
 	dir := good(t)
 	writeAgent(t, dir, "tool", Agent{
-		ID: "tool", Binary: "b", ModelFlag: "-m", ConfigDirs: []string{".tool"},
+		ID: "tool", Binary: "b", SetupTool: "tool-cli", TranscriptFormat: "stream-json",
+		ModelFlag: "-m", ConfigDirs: []string{".tool"},
 		HeadlessArgs: []string{"-p"}, AuthModes: []string{"api_key"}, SupportsMCP: false,
 	})
 
@@ -675,8 +677,9 @@ func TestModelResolvesOnACatalogBuiltAsALiteral(t *testing.T) {
 
 func TestAnArmIsToldItsWallInSecondsInTheToolsOwnWords(t *testing.T) {
 	a := Agent{
-		WallNoteFlag: "--append-system-prompt",
-		WallNote:     "stopped hard after {{seconds}} seconds of real time",
+		WallNoteFlag:     "--append-system-prompt",
+		WallNoteDelivery: WallNoteFlagged,
+		WallNote:         "stopped hard after {{seconds}} seconds of real time",
 	}
 
 	got := a.WallNoteArgs(485 * time.Second)
@@ -693,11 +696,44 @@ func TestAToolThatDeclaresNoWallNoteIsSpawnedWithoutOne(t *testing.T) {
 	// than a run that behaves as it did before.
 	for _, a := range []Agent{
 		{},
-		{WallNoteFlag: "--append-system-prompt"},
-		{WallNote: "stopped hard after {{seconds}} seconds"},
+		{WallNoteFlag: "--append-system-prompt", WallNoteDelivery: WallNoteFlagged},
+		{WallNote: "stopped hard after {{seconds}} seconds", WallNoteDelivery: WallNoteFlagged},
+		// The note is carried in the prompt, so the arguments must not carry it
+		// too: an arm told its wall twice, once through a flag its tool does
+		// not have, is a spawn that fails on a usage error.
+		{WallNoteFlag: "--append-system-prompt", WallNote: "n", WallNoteDelivery: WallNotePrompted},
 	} {
 		if got := a.WallNoteArgs(485 * time.Second); got != nil {
 			t.Errorf("a tool declaring %+v was handed %q", a, got)
+		}
+	}
+}
+
+// A tool with no flag that reaches a system prompt still has to be told its
+// wall, and the note goes in FRONT of the prompt so the clock is met before the
+// task is.
+func TestAToolWithNoFlagIsToldItsWallInFrontOfThePrompt(t *testing.T) {
+	a := Agent{WallNote: "you have {{seconds}} seconds", WallNoteDelivery: WallNotePrompted}
+
+	got := a.PromptWithWall("Find every caller of Plan.", 485*time.Second)
+
+	if want := "you have 485 seconds\n\nFind every caller of Plan."; got != want {
+		t.Errorf("PromptWithWall = %q, want %q", got, want)
+	}
+}
+
+// The prompt is what the scenario asked, and a tool carrying its note some
+// other way must not have it prepended as well: the two arms would then be
+// asked different questions.
+func TestAPromptIsUntouchedForAToolThatCarriesItsNoteAnotherWay(t *testing.T) {
+	const prompt = "Find every caller of Plan."
+	for _, a := range []Agent{
+		{},
+		{WallNoteFlag: "--append-system-prompt", WallNote: "n", WallNoteDelivery: WallNoteFlagged},
+		{WallNoteDelivery: WallNotePrompted},
+	} {
+		if got := a.PromptWithWall(prompt, 485*time.Second); got != prompt {
+			t.Errorf("a tool declaring %+v was asked %q", a, got)
 		}
 	}
 }
@@ -706,7 +742,7 @@ func TestTheWallAnArmIsToldIsNeverMoreThanTheWallItGets(t *testing.T) {
 	// Truncated, not rounded. A note claiming 486 seconds when the supervisor
 	// kills at 485.6 is a note that lies in the one direction that costs the arm
 	// its answer: it keeps working into a wall that has already closed.
-	a := Agent{WallNoteFlag: "--wall", WallNote: "{{seconds}}"}
+	a := Agent{WallNoteFlag: "--wall", WallNote: "{{seconds}}", WallNoteDelivery: WallNoteFlagged}
 
 	if got := a.WallNoteArgs(485_600 * time.Millisecond); got[1] != "485" {
 		t.Errorf("an arm cut at 485.6s was told %q seconds", got[1])

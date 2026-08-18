@@ -70,6 +70,23 @@ type Subject struct {
 type Agent struct {
 	ID     string `json:"id"`
 	Binary string `json:"binary"`
+	// SetupTool is what this tool is called by `sense setup --tools`, which is
+	// not always what the catalog calls it: the lab knows Codex as `codex` and
+	// the product knows it as `codex-cli`.
+	//
+	// A field rather than the id, because the id was the id by coincidence for
+	// exactly as long as one tool existed. Reusing it would derive the channel
+	// list by asking the product to configure a tool it has never heard of, and
+	// `sense setup` writing nothing is the one failure the derivation cannot
+	// tell from a tool that needs no configuration.
+	SetupTool string `json:"setup_tool"`
+	// TranscriptFormat names the shape this tool's output arrives in, and it is
+	// what selects a normalizer.
+	//
+	// The FORMAT rather than the tool, because two tools can share one: what
+	// varies is the event stream, and a reader keyed by tool id would be copied
+	// the first time two tools spelled the same events the same way.
+	TranscriptFormat string `json:"transcript_format"`
 	// ModelFlag is the flag that selects a model, e.g. "--model".
 	ModelFlag string `json:"model_flag"`
 	// ConfigDirs are the directories this tool keeps per-user state in, under
@@ -92,12 +109,38 @@ type Agent struct {
 	// reach a keychain of its own. Empty means this tool has no such store, and
 	// then the config directory is the only source.
 	KeychainService string `json:"keychain_service"`
-	// CredentialKey is the object the credential lives under inside that store's
-	// document. Config rather than a constant for the same reason as the rest:
-	// a key compiled in would be right for one tool and read nothing for the
-	// next, and a run with no credential looks exactly like a model with
-	// nothing to say.
-	CredentialKey string `json:"credential_key"`
+	// CredentialFile is the file the tool keeps its login in inside that
+	// config directory. Per tool because no two spell it alike: Claude Code
+	// writes `.credentials.json`, Codex writes `auth.json`, and a name compiled
+	// in would be read for one tool and missed for every other.
+	CredentialFile string `json:"credential_file"`
+	// CredentialFields are the dotted paths inside that document a run is given,
+	// and nothing outside this list ever reaches one.
+	//
+	// An ALLOWLIST rather than a denylist, because the host document gains
+	// fields when somebody else ships a release: a list of things to strip is a
+	// list that goes stale silently and in the dangerous direction, and this one
+	// goes stale by refusing to authenticate.
+	//
+	// What each tool needs here is MEASURED, not reasoned about. Claude Code
+	// takes an access token, an expiry and its scopes, and does not need the
+	// refresh token beside them — so a Claude run cannot rotate the operator's
+	// login. Codex was measured on 2026-08-18 and does not have that property:
+	// with `tokens.refresh_token` withheld and everything else present, every
+	// websocket connection came back 401, and it authenticates only with the
+	// refresh token in the document. That is a fact about the tool, recorded in
+	// its README, and it is the reason this is a per-tool list rather than a
+	// rule.
+	CredentialFields []string `json:"credential_fields"`
+	// CredentialExpiry is where the credential's end is read from, as
+	// `<form>:<dotted path>`. Two forms, because the two tools measured so far
+	// state it two ways: `ms` is unix milliseconds at that path, and `jwt` is
+	// the `exp` claim of the token at that path.
+	//
+	// It is not optional decoration. A cell asks whether the credential outlives
+	// its own end, and a tool whose expiry could not be read would be planned
+	// against a credential that dies mid-pair.
+	CredentialExpiry string `json:"credential_expiry"`
 	// HeadlessArgs drive the tool with no terminal attached. They live here
 	// rather than in code because they are ecosystem facts: they change when
 	// somebody else ships a release, and no two tools spell them alike.
@@ -136,6 +179,16 @@ type Agent struct {
 	// not reword it.
 	WallNoteFlag string `json:"wall_note_flag"`
 	WallNote     string `json:"wall_note"`
+	// WallNoteDelivery is HOW the note reaches the agent: `flag` appends
+	// WallNoteFlag and the note to the arguments, `prompt` puts the note in
+	// front of the prompt on stdin.
+	//
+	// Codex is why it exists. It has no flag that appends to a system prompt,
+	// so a tool-shaped rule would either hand it an empty flag or drop the note
+	// and leave that arm running blind against its own wall — and the note was
+	// measured to be the difference between an arm that finishes and one the
+	// supervisor cuts.
+	WallNoteDelivery string `json:"wall_note_delivery"`
 	// Env is added to the session environment, as KEY=VALUE. Same reason.
 	Env []string `json:"env"`
 	// SupportsMCP bounds which subjects this tool can carry.
@@ -445,15 +498,45 @@ const wallNoteSeconds = "{{seconds}}"
 // WallNoteArgs renders this tool's wall note for an arm that has this long,
 // ready to append to the arm's arguments.
 //
-// It returns nothing when the tool declares no note, so a tool that has no way
-// to carry one runs exactly as it did before rather than being handed an empty
-// flag. Seconds are truncated rather than rounded: a note claiming one second
-// more than the supervisor allows is a note that lies in the direction that
-// costs the arm its answer.
+// It returns nothing unless the tool declares that a flag is how its note is
+// delivered, so a tool that carries its note in the prompt is not also handed
+// a flag, and a tool that carries none runs exactly as it did before.
 func (a Agent) WallNoteArgs(wall time.Duration) []string {
-	if a.WallNoteFlag == "" || a.WallNote == "" {
+	if a.WallNoteDelivery != WallNoteFlagged || a.WallNoteFlag == "" || a.WallNote == "" {
 		return nil
 	}
+	return []string{a.WallNoteFlag, a.wallNote(wall)}
+}
+
+// The two ways a note can reach an agent. A tool declaring neither carries no
+// note, which is the tool running exactly as it did before rather than being
+// handed an empty flag.
+const (
+	// WallNoteFlagged appends the note to the arguments behind a flag.
+	WallNoteFlagged = "flag"
+	// WallNotePrompted puts the note in front of the prompt, for a tool with no
+	// flag that reaches a system prompt.
+	WallNotePrompted = "prompt"
+)
+
+// PromptWithWall is the prompt this arm is given, with the wall note in front
+// of it when that is how this tool carries one.
+//
+// In FRONT rather than behind, so an agent that reads a long prompt and starts
+// working has met its clock before it meets the task. Separated by a blank
+// line, because a note run onto the first line of the prompt is a note that
+// reads as part of the question.
+func (a Agent) PromptWithWall(prompt string, wall time.Duration) string {
+	if a.WallNoteDelivery != WallNotePrompted || a.WallNote == "" {
+		return prompt
+	}
+	return a.wallNote(wall) + "\n\n" + prompt
+}
+
+// wallNote is the note with this arm's own number in it. Seconds are truncated
+// rather than rounded: a note claiming one second more than the supervisor
+// allows is a note that lies in the direction that costs the arm its answer.
+func (a Agent) wallNote(wall time.Duration) string {
 	seconds := strconv.Itoa(int(wall.Seconds()))
-	return []string{a.WallNoteFlag, strings.ReplaceAll(a.WallNote, wallNoteSeconds, seconds)}
+	return strings.ReplaceAll(a.WallNote, wallNoteSeconds, seconds)
 }
