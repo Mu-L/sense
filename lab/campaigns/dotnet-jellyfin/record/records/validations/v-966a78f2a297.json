@@ -1,0 +1,23 @@
+{
+  "id": "v-966a78f2a297",
+  "candidate": "c-4326ee8d9f0b",
+  "before": {
+    "jellyfin/blast-resolution/IFileSystem": 0,
+    "jellyfin/blast-resolution/ILibraryManager": 0,
+    "jellyfin/blast-resolution/IServerConfigurationManager": 0,
+    "jellyfin/blast-resolution/IUserManager": 0,
+    "jellyfin/blast-resolution/declared-interfaces-resolving": 17
+  },
+  "after": {
+    "jellyfin/blast-resolution/IFileSystem": 0,
+    "jellyfin/blast-resolution/ILibraryManager": 5,
+    "jellyfin/blast-resolution/IServerConfigurationManager": 0,
+    "jellyfin/blast-resolution/IUserManager": 0,
+    "jellyfin/blast-resolution/declared-interfaces-resolving": 23
+  },
+  "regression": "NOT MEASURED THE WAY THE PHRASE SUGGESTS. A product change is not in the scoring path, so re-scoring recorded transcripts cannot detect a regression from it and rescore was not run as evidence. What was checked: the product's own suite (make ci green, coverage floor with no new exception, complexity ledger 0), and the jellyfin sweep itself, where 12 of 45 swept interfaces moved and every one moved UP \u2014 no cell went down, and no currently-resolving file-scoped interface went empty, which was the stated falsifier. A re-run of the benched arms was NOT bought.",
+  "corpus_size": 4,
+  "decision": "accepted",
+  "reason": "PARTIAL, accepted on the numbers and recorded as partial. Direction confirmed and strictly additive: 12 cells moved, all upward, none down. But the headline prediction is PARTIALLY FALSIFIED: declared interfaces resolving went 17 -> 23 of 40, not toward 40; ILibraryManager went 0 -> 5 against its 121 field declarations; and three of the four named cells (IFileSystem, IUserManager, IServerConfigurationManager) did not move at all. Cause, diagnosed rather than guessed: the lexical walk climbs the SOURCE's enclosing scopes, so it binds a hold only where holder and target share a namespace prefix. C# crosses namespaces through using directives and the resolver holds no per-file import map. Accepted anyway because the change is correct, minimal, in the pattern the file already uses for inherits, and adds only verified byQualified binds at real enclosing scopes. It does NOT close the defect, and the residual is recorded as its own finding rather than folded in. CORRECTION, recorded rather than silently amended: the after-count was first written as 22 from a partial read and is 23, re-measured on the final candidate. A later council fix (a kind filter, closing a path that could bind a hold to a method) was re-measured end to end and cost nothing: identical per-cell counts, zero regressions against before.",
+  "ran_at": "2026-08-17T22:33:01Z"
+}
