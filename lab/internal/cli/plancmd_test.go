@@ -13,7 +13,8 @@ func planCatalog(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	for path, body := range map[string]string{
-		"agents/tool/agent.json": `{"id":"tool","binary":"b","model_flag":"--model","config_dirs":[".tool"],
+		"agents/tool/agent.json": `{"id":"tool","binary":"b","setup_tool":"tool-cli","transcript_format":"assistant-events",
+		  "model_flag":"--model","config_dirs":[".tool"],
 		  "headless_args":["-p"],"env":[],"supports_mcp":true,"auth_modes":["api_key"]}`,
 		"subjects/untreated/subject.json": `{"id":"untreated","kind":"baseline","needs_mcp":false,
 		  "needs_isolated_config":false,"executor":"isolated-home","agents":["tool"]}`,
@@ -115,7 +116,8 @@ func TestADeliberatelyBrokenCombinationPlansNothingForThatArm(t *testing.T) {
 		}
 	}
 	// A second tool that exists and is reachable, but that no subject supports.
-	write("agents/lonely/agent.json", `{"id":"lonely","binary":"l","model_flag":"-m","config_dirs":[".tool"],
+	write("agents/lonely/agent.json", `{"id":"lonely","binary":"l","setup_tool":"lonely-cli","transcript_format":"assistant-events",
+	  "model_flag":"-m","config_dirs":[".tool"],
 	  "headless_args":["-p"],"env":[],"supports_mcp":true,"auth_modes":["api_key"]}`)
 	write("models/m1.json", `{"id":"m1","provider":"acme","aliases":[],
 	  "available_under":["api_key"],"agents":["lonely"]}`)
@@ -218,7 +220,8 @@ func TestAnArmOnANewToolAlsoNeedsEverySubjectToAllowThatTool(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	write("agents/newtool/agent.json", `{"id":"newtool","binary":"n","model_flag":"-m","config_dirs":[".tool"],
+	write("agents/newtool/agent.json", `{"id":"newtool","binary":"n","setup_tool":"newtool-cli","transcript_format":"assistant-events",
+	  "model_flag":"-m","config_dirs":[".tool"],
 	  "headless_args":["-p"],"env":[],"supports_mcp":true,"auth_modes":["api_key"]}`)
 	write("models/m2.json", `{"id":"m2","provider":"acme","aliases":[],
 	  "available_under":["api_key"],"agents":["newtool"]}`)

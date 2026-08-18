@@ -191,7 +191,7 @@ func compareRun(p string, set scenario.Set, model, repo, arm, run string, preFix
 	if json.Unmarshal(b, &rec) != nil || len(rec.GoldRecall.Groups) == 0 {
 		return nil, false
 	}
-	tr, err := transcript.ReadClaudeCode(filepath.Join(filepath.Dir(p), "transcript.json"))
+	tr, err := transcript.Read(runFormat(filepath.Dir(p)), filepath.Join(filepath.Dir(p), "transcript.json"))
 	if err != nil || strings.TrimSpace(tr.Answer()) == "" {
 		return nil, false
 	}

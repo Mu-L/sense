@@ -1,40 +1,46 @@
 package isolate
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
-// Credential is the whole of what a run is given to reach a model.
+// Credential is the whole of what a run is given to reach a model: the
+// allowlisted fields of the operator's own credential document, and when it
+// runs out.
 //
-// Three fields, and the shape is measured rather than assumed. Eight shapes were
-// written into an isolated run's config directory on 2026-08-17 and asked for one
-// word: `accessToken` alone does not authenticate, `accessToken` with an expiry
-// does not, and `accessToken` with an expiry and `subscriptionType` does not.
-// Scopes is the gate. The smallest thing that authenticates is these three.
+// What is deliberately NOT here is the point of the type. A host document also
+// holds the operator's connector tokens and, for some tools, a refresh token,
+// and a run given the whole document would hold both. Which fields a tool
+// actually needs is MEASURED rather than reasoned about, per tool, and the
+// measurement is recorded in that tool's README: Claude Code needs an access
+// token, an expiry and its scopes and does not need the refresh token beside
+// them, so a Claude run cannot rotate the operator's login. Codex was measured
+// on 2026-08-18 and does not have that property, and its README says so.
 //
-// What is deliberately NOT here is the point of the type. The host store also
-// holds a refresh token and the operator's connector tokens, and neither reaches
-// a model. A run that cannot refresh cannot rotate the operator's login, so no
-// number of unattended cells can invalidate the host seat by succeeding; and a
-// run with no connector tokens holds no credentials for services that have
-// nothing to do with this measurement. Both are safety properties, not tidiness.
+// The fields are carried as raw JSON rather than decoded: this package copies a
+// credential, it does not interpret one, and a decoded map invites a type
+// assertion on somebody else's document.
 type Credential struct {
-	AccessToken string   `json:"accessToken"`
-	ExpiresAt   int64    `json:"expiresAt"`
-	Scopes      []string `json:"scopes"`
+	// Fields is the allowlisted subset, keyed by the dotted path it came from
+	// and goes back to.
+	Fields map[string]json.RawMessage
+	// ExpiresAt is when the credential runs out, in unix milliseconds.
+	ExpiresAt int64
 }
 
 // Route is how a credential reaches one agent tool, as the catalog describes it.
 //
 // Every field is a per-tool identifier, and not one of them is compiled in. A
-// config directory name, a variable, a keychain item or a JSON key written into
-// this package would be right for one tool and silently wrong for every other —
-// the same rule the contamination checks already follow, and the reason the
-// binary-identifier probe exists.
+// config directory name, a variable, a keychain item, a file name or a JSON
+// path written into this package would be right for one tool and silently wrong
+// for every other — the same rule the contamination checks already follow, and
+// the reason the binary-identifier probe exists.
 type Route struct {
 	// ConfigDirVar is the variable that points the tool at a config directory.
 	// It is the door: a per-run value is what makes authentication a channel
@@ -46,22 +52,21 @@ type Route struct {
 	// Keychain is the platform store item the tool keeps its login under, read
 	// once by the attended parent. Empty means the tool has no platform store.
 	Keychain string
-	// Key is the object the credential lives under inside the store document.
-	Key string
+	// File is the credential document's name inside the config directory.
+	File string
+	// Fields are the dotted paths a run is given, and nothing outside this list
+	// ever reaches one.
+	Fields []string
+	// Expiry is where the end is read from, as `ms:<path>` for unix
+	// milliseconds or `jwt:<path>` for the `exp` claim of a token at that path.
+	Expiry string
 }
 
-// credentialFile is where the agent tool looks inside its config directory.
-//
-// Undocumented on macOS and load-bearing here: the published docs name this file
-// on Linux and Windows only, and the shipped binary contradicts them. Its
-// credential store is a two-backend combiner that reads the keychain first and
-// falls back to this path, with the directory honouring the tool's config
-// variable. Read from the shipped binary at 2.1.233; re-read when the binary
-// moves, because no doc page will announce a change here.
-//
-// The NAME is the one credential fact that is not per tool: it is the dotfile
-// convention rather than a tool identifier, and it carries no tool's name.
-const credentialFile = ".credentials.json"
+// The two ways a credential document states its own end.
+const (
+	expiryMillis = "ms:"
+	expiryJWT    = "jwt:"
+)
 
 // Empty reports a credential that was never provided.
 //
@@ -69,16 +74,12 @@ const credentialFile = ".credentials.json"
 // environment variable, the tool reads it from there, and no file is written at
 // all. It is a different thing from an INVALID credential, which is a mistake
 // and is refused rather than skipped.
-func (c Credential) Empty() bool {
-	return c.AccessToken == "" && c.ExpiresAt == 0 && len(c.Scopes) == 0
-}
+func (c Credential) Empty() bool { return len(c.Fields) == 0 && c.ExpiresAt == 0 }
 
-// Valid reports whether a credential could be used at all. An empty token or an
-// empty scope list is a credential that will read as logged out, which costs a
-// full wall per arm to discover.
-func (c Credential) Valid() bool {
-	return c.AccessToken != "" && c.ExpiresAt > 0 && len(c.Scopes) > 0
-}
+// Valid reports whether a credential could be used at all. A document with no
+// fields, or with no readable expiry, will read as logged out or be planned
+// against blind, and either costs a full wall per arm to discover.
+func (c Credential) Valid() bool { return len(c.Fields) > 0 && c.ExpiresAt > 0 }
 
 // ExpiresBefore reports whether the credential runs out before a moment a caller
 // has to reach.
@@ -95,7 +96,7 @@ func (c Credential) ExpiresBefore(t time.Time) bool {
 func (c Credential) Expiry() time.Time { return time.UnixMilli(c.ExpiresAt) }
 
 // CredentialPath is where a run's credential lives, given its config directory.
-func CredentialPath(configDir string) string { return filepath.Join(configDir, credentialFile) }
+func (r Route) CredentialPath(configDir string) string { return filepath.Join(configDir, r.File) }
 
 // Write provisions one run's credential into its config directory.
 //
@@ -103,36 +104,50 @@ func CredentialPath(configDir string) string { return filepath.Join(configDir, c
 // host. That is what lets the whole of this decision be tested in CI, which has
 // no credential and can never be given one.
 //
-// It builds the document field by field rather than marshalling something read
-// from the host, so a field the host store gains later cannot arrive here by
-// default. The only way another key reaches a run is for someone to add it to
-// Credential and say why.
+// It rebuilds the document from the allowlisted paths rather than copying
+// something read from the host, so a field the host store gains later cannot
+// arrive here by default. The only way another key reaches a run is for someone
+// to add it to the tool's declared list and say why.
 func (r Route) Write(configDir string, c Credential) error {
-	if r.Key == "" {
-		return fmt.Errorf("provision credential into %s: the agent tool names no credential key, "+
+	if r.File == "" {
+		return fmt.Errorf("provision credential into %s: the agent tool names no credential file, "+
 			"so the document would be written where nothing reads it", configDir)
 	}
 	if !c.Valid() {
-		return fmt.Errorf("provision credential into %s: the credential carries no token, no expiry or no scopes, "+
+		return fmt.Errorf("provision credential into %s: the credential carries no fields or no expiry, "+
 			"and a run given one reads as logged out", configDir)
+	}
+	// The route's declared paths, not whatever the credential happens to carry.
+	// A credential read through one tool's route and written through another's
+	// would otherwise be written under the first tool's names, into a file the
+	// second reads and finds nothing in — an arm that spends a full wall
+	// reading as logged out.
+	doc := map[string]any{}
+	for _, path := range r.Fields {
+		value, ok := c.Fields[path]
+		if !ok {
+			return fmt.Errorf("provision credential into %s: the credential carries no %s, "+
+				"and a run given one reads as logged out", configDir, path)
+		}
+		put(doc, strings.Split(path, "."), value)
 	}
 	if err := os.MkdirAll(configDir, 0o700); err != nil {
 		return fmt.Errorf("prepare the run's config directory: %w", err)
 	}
-	// A struct of a string, an int and a string slice cannot fail to encode.
-	//
 	// Marshalling a bearer token is the whole job here, not an accident: the
 	// agent tool reads its credential from this file and there is no other route
 	// into an isolated run. What keeps it safe is the mode below, the fact that
-	// the document holds three fields and no refresh token, and that cleanup
-	// proves the file gone.
-	b, _ := json.MarshalIndent(map[string]Credential{r.Key: c}, "", "  ") // #nosec G117 -- provisioning a credential is this function
-
+	// the document holds only what the tool was measured to need, and that
+	// cleanup proves the file gone.
+	b, err := json.MarshalIndent(doc, "", "  ") // #nosec G117 -- provisioning a credential is this function
+	if err != nil {
+		return fmt.Errorf("provision credential into %s: %w", configDir, err)
+	}
 	// 0600 because the file is a plaintext bearer token for as long as the run
 	// lasts. WriteFile does not chmod a file that already exists, and Prepare
 	// refuses a root that does, so there is no pre-existing file to inherit a
 	// mode from.
-	if err := os.WriteFile(CredentialPath(configDir), append(b, '\n'), 0o600); err != nil {
+	if err := os.WriteFile(r.CredentialPath(configDir), append(b, '\n'), 0o600); err != nil {
 		return fmt.Errorf("provision credential into %s: %w", configDir, err)
 	}
 	return nil
@@ -142,10 +157,13 @@ func (r Route) Write(configDir string, c Credential) error {
 //
 // It is the reverse of Write and takes the same narrow view: whatever else the
 // document holds is dropped rather than carried, so reading the operator's own
-// config directory yields the three fields and not the connector tokens beside
-// them.
+// config directory yields the declared fields and not the connector tokens
+// beside them.
 func (r Route) Read(configDir string) (Credential, error) {
-	path := CredentialPath(configDir)
+	path := r.CredentialPath(configDir)
+	if r.File == "" {
+		return Credential{}, fmt.Errorf("read credential from %s: the agent tool names no credential file", configDir)
+	}
 	b, err := os.ReadFile(path) // #nosec G304 -- a config directory the caller named
 	if err != nil {
 		return Credential{}, fmt.Errorf("read credential from %s: %w", path, err)
@@ -157,21 +175,115 @@ func (r Route) Read(configDir string) (Credential, error) {
 	return c, nil
 }
 
-// decode pulls the three fields worth carrying out of a store document.
+// decode pulls the declared fields, and the expiry, out of a store document.
 //
 // It is shared by the file and the platform store because both hold the same
-// document: the combiner writes one shape and reads it from either backend.
+// document: a tool with two backends writes one shape and reads it from either.
 func (r Route) decode(b []byte) (Credential, error) {
-	if r.Key == "" {
-		return Credential{}, fmt.Errorf("the agent tool names no credential key")
+	if len(r.Fields) == 0 {
+		return Credential{}, fmt.Errorf("the agent tool names no credential fields")
 	}
-	var doc map[string]Credential
+	var doc map[string]any
 	if err := json.Unmarshal(b, &doc); err != nil {
 		return Credential{}, err
 	}
-	c, ok := doc[r.Key]
-	if !ok {
-		return Credential{}, fmt.Errorf("no %s object", r.Key)
+	c := Credential{Fields: map[string]json.RawMessage{}}
+	for _, path := range r.Fields {
+		v, ok := at(doc, strings.Split(path, "."))
+		if !ok {
+			return Credential{}, fmt.Errorf("no %s in the document", path)
+		}
+		raw, err := json.Marshal(v)
+		if err != nil {
+			return Credential{}, fmt.Errorf("re-encode %s: %w", path, err)
+		}
+		c.Fields[path] = raw
 	}
+	ms, err := r.expiresAt(doc)
+	if err != nil {
+		return Credential{}, err
+	}
+	c.ExpiresAt = ms
 	return c, nil
+}
+
+// expiresAt reads the credential's end out of the document, the way this tool
+// states it.
+func (r Route) expiresAt(doc map[string]any) (int64, error) {
+	switch {
+	case strings.HasPrefix(r.Expiry, expiryMillis):
+		v, ok := at(doc, strings.Split(strings.TrimPrefix(r.Expiry, expiryMillis), "."))
+		ms, isNumber := v.(float64)
+		if !ok || !isNumber {
+			return 0, fmt.Errorf("no unix-millisecond expiry at %s", r.Expiry)
+		}
+		return int64(ms), nil
+	case strings.HasPrefix(r.Expiry, expiryJWT):
+		v, ok := at(doc, strings.Split(strings.TrimPrefix(r.Expiry, expiryJWT), "."))
+		token, isString := v.(string)
+		if !ok || !isString {
+			return 0, fmt.Errorf("no token at %s to read an expiry from", r.Expiry)
+		}
+		return jwtExpiry(token)
+	default:
+		return 0, fmt.Errorf("the agent tool states its expiry as %q, which is neither %s… nor %s…",
+			r.Expiry, expiryMillis, expiryJWT)
+	}
+}
+
+// jwtExpiry reads the `exp` claim, in seconds, and returns it in milliseconds.
+//
+// The signature is not checked, and that is deliberate rather than lax: this
+// reads the operator's own token to decide whether a cell can finish before it
+// dies. A forged token here would be a token the operator forged for themselves,
+// and the model at the other end is what actually verifies it.
+func jwtExpiry(token string) (int64, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return 0, fmt.Errorf("the token is not a JWT, so its expiry cannot be read")
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return 0, fmt.Errorf("read the token's claims: %w", err)
+	}
+	var claims struct {
+		Exp int64 `json:"exp"`
+	}
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return 0, fmt.Errorf("read the token's claims: %w", err)
+	}
+	if claims.Exp == 0 {
+		return 0, fmt.Errorf("the token carries no exp claim, so nothing knows when it dies")
+	}
+	return claims.Exp * 1000, nil
+}
+
+// at walks a dotted path into a decoded document.
+func at(doc map[string]any, path []string) (any, bool) {
+	var cur any = doc
+	for _, step := range path {
+		m, ok := cur.(map[string]any)
+		if !ok {
+			return nil, false
+		}
+		cur, ok = m[step]
+		if !ok {
+			return nil, false
+		}
+	}
+	return cur, true
+}
+
+// put writes a value at a dotted path, creating the objects on the way.
+func put(doc map[string]any, path []string, value json.RawMessage) {
+	cur := doc
+	for _, step := range path[:len(path)-1] {
+		next, ok := cur[step].(map[string]any)
+		if !ok {
+			next = map[string]any{}
+			cur[step] = next
+		}
+		cur = next
+	}
+	cur[path[len(path)-1]] = value
 }

@@ -12,14 +12,14 @@ import (
 
 // storeDocument is what a credential store holds: the login the tool reads, and
 // the operator's connector tokens and refresh token beside it.
-func storeDocument(t *testing.T, key string, c Credential) string {
+func storeDocument(t *testing.T, token string, c Credential) string {
 	t.Helper()
 	doc := map[string]any{
-		key: map[string]any{
-			"accessToken":  c.AccessToken,
+		"toolOauth": map[string]any{
+			"accessToken":  token,
 			"refreshToken": "sk-refresh-host",
 			"expiresAt":    c.ExpiresAt,
-			"scopes":       c.Scopes,
+			"scopes":       []string{"user:inference"},
 		},
 		"mcpOAuth": map[string]any{"a-connector": map[string]string{"accessToken": "connector-token"}},
 	}
@@ -76,7 +76,7 @@ func TestAHostWhoseConfigDirectoryCannotBeLocatedIsReportedRatherThanGuessed(t *
 		route Route
 		host  map[string]string
 	}{
-		{"the tool declares no config directory", Route{Key: "k"}, map[string]string{"HOME": "/home/op"}},
+		{"the tool declares no config directory", Route{File: ".credentials.json"}, map[string]string{"HOME": "/home/op"}},
 		{"nothing says where HOME is", aRoute(), nil},
 	} {
 		t.Run(tc.what, func(t *testing.T) {
@@ -92,12 +92,11 @@ func TestTheOperatorsFileIsPreferredOverThePlatformStore(t *testing.T) {
 	// that works on a machine with no keychain at all.
 	r := aRoute()
 	dir := t.TempDir()
-	fromFile := aCredential()
-	fromFile.AccessToken = "from-the-file"
-	if err := os.WriteFile(CredentialPath(dir), []byte(storeDocument(t, r.Key, fromFile)), 0o600); err != nil {
+	if err := os.WriteFile(r.CredentialPath(dir),
+		[]byte(storeDocument(t, "from-the-file", aCredential())), 0o600); err != nil {
 		t.Fatalf("set up: %v", err)
 	}
-	answeringKeychain(t, storeDocument(t, r.Key, aCredential()), false)
+	answeringKeychain(t, storeDocument(t, "from-the-store", aCredential()), false)
 
 	got, err := HostCredential(context.Background(), hostWith(map[string]string{
 		r.ConfigDirVar: dir, "USER": "op",
@@ -105,16 +104,14 @@ func TestTheOperatorsFileIsPreferredOverThePlatformStore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the host credential: %v", err)
 	}
-	if got.AccessToken != "from-the-file" {
-		t.Errorf("accessToken = %q, want the file's", got.AccessToken)
+	if token := theToken(got); token != "from-the-file" {
+		t.Errorf("accessToken = %q, want the file's", token)
 	}
 }
 
 func TestThePlatformStoreIsReadWhenThereIsNoFile(t *testing.T) {
 	r := aRoute()
-	want := aCredential()
-	want.AccessToken = "from-the-store"
-	answeringKeychain(t, storeDocument(t, r.Key, want), false)
+	answeringKeychain(t, storeDocument(t, "from-the-store", aCredential()), false)
 
 	got, err := HostCredential(context.Background(), hostWith(map[string]string{
 		r.ConfigDirVar: t.TempDir(), "USER": "op",
@@ -122,11 +119,11 @@ func TestThePlatformStoreIsReadWhenThereIsNoFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the host credential: %v", err)
 	}
-	if got.AccessToken != "from-the-store" {
-		t.Errorf("accessToken = %q, want the store's", got.AccessToken)
+	if token := theToken(got); token != "from-the-store" {
+		t.Errorf("accessToken = %q, want the store's", token)
 	}
 	// The narrowing has to happen on this path too, not only on the file one.
-	if got.Scopes == nil {
+	if _, ok := got.Fields["toolOauth.scopes"]; !ok {
 		t.Error("scopes were dropped, and a run without them reads as logged out")
 	}
 }
@@ -151,11 +148,12 @@ func TestAHostWithNoCredentialAnywhereIsReportedRatherThanReturnedEmpty(t *testi
 }
 
 func TestAToolWithNoPlatformStoreIsNotAskedForOne(t *testing.T) {
-	// codex and opencode keep no keychain item. Shelling out for one would fail
-	// with a message about a store that tool does not have.
+	// Codex keeps no keychain item: measured 2026-08-18, its login is a file in
+	// CODEX_HOME and nowhere else. Shelling out for a store would fail with a
+	// message about something that tool does not have.
 	r := aRoute()
 	r.Keychain = ""
-	answeringKeychain(t, storeDocument(t, r.Key, aCredential()), false)
+	answeringKeychain(t, storeDocument(t, "from-the-store", aCredential()), false)
 
 	_, err := HostCredential(context.Background(), hostWith(map[string]string{
 		r.ConfigDirVar: t.TempDir(), "USER": "op",
@@ -167,7 +165,7 @@ func TestAToolWithNoPlatformStoreIsNotAskedForOne(t *testing.T) {
 
 func TestAStoreThatCannotBeAddressedIsReported(t *testing.T) {
 	r := aRoute()
-	answeringKeychain(t, storeDocument(t, r.Key, aCredential()), false)
+	answeringKeychain(t, storeDocument(t, "from-the-store", aCredential()), false)
 
 	// No USER, so there is no account to ask the store about.
 	if _, err := HostCredential(context.Background(), hostWith(map[string]string{
@@ -201,12 +199,10 @@ func TestAnUnusableFileFallsThroughToTheStoreRatherThanFailing(t *testing.T) {
 	// login is in the platform store.
 	r := aRoute()
 	dir := t.TempDir()
-	if err := os.WriteFile(CredentialPath(dir), []byte(`{"toolOauth": {"accessToken": "t"}}`), 0o600); err != nil {
+	if err := os.WriteFile(r.CredentialPath(dir), []byte(`{"toolOauth": {"accessToken": "t"}}`), 0o600); err != nil {
 		t.Fatalf("set up: %v", err)
 	}
-	want := aCredential()
-	want.AccessToken = "from-the-store"
-	answeringKeychain(t, storeDocument(t, r.Key, want), false)
+	answeringKeychain(t, storeDocument(t, "from-the-store", aCredential()), false)
 
 	got, err := HostCredential(context.Background(), hostWith(map[string]string{
 		r.ConfigDirVar: dir, "USER": "op",
@@ -214,7 +210,33 @@ func TestAnUnusableFileFallsThroughToTheStoreRatherThanFailing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the host credential: %v", err)
 	}
-	if got.AccessToken != "from-the-store" {
-		t.Errorf("accessToken = %q, want the store's", got.AccessToken)
+	if token := theToken(got); token != "from-the-store" {
+		t.Errorf("accessToken = %q, want the store's", token)
+	}
+}
+
+// A route that names no config directory at all cannot say where the
+// operator's credential is, and inventing a path would provision a run from
+// nowhere. The failure has to arrive here, in the attended parent.
+func TestAToolWhoseConfigDirectoryCannotBeFoundYieldsNoCredential(t *testing.T) {
+	r := aRoute()
+	r.ConfigDir, r.ConfigDirVar = "", ""
+
+	if _, err := HostCredential(context.Background(), hostWith(map[string]string{"HOME": "/home/op"}), r); err == nil {
+		t.Fatal("a credential arrived from a tool that declares nowhere to keep one")
+	}
+}
+
+// The store can answer a document that decodes and still cannot be used: an
+// expiry of zero reads as a credential that died in 1970, and a run given one
+// spends a full wall discovering it is logged out.
+func TestAStoreAnswerThatDecodesButCannotBeUsedIsRefused(t *testing.T) {
+	r := aRoute()
+	answeringKeychain(t, `{"toolOauth":{"accessToken":"t","expiresAt":0,"scopes":["s"]}}`, false)
+
+	if _, err := HostCredential(context.Background(), hostWith(map[string]string{
+		r.ConfigDirVar: t.TempDir(), "USER": "op",
+	}), r); err == nil {
+		t.Fatal("a credential with no usable expiry was accepted from the store")
 	}
 }

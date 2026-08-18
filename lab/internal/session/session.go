@@ -41,6 +41,9 @@ type Spec struct {
 	Command   string
 	Args      []string
 	SetupTool string
+	// TranscriptFormat is the shape this tool's capture arrives in, carried
+	// from the catalog into the run record so a score reads it correctly.
+	TranscriptFormat string
 	// AgentEnv is what the agent tool declares in agent.json, as KEY=VALUE.
 	AgentEnv []string
 	// Credential is what this arm is given to reach a model, and Route is how it
@@ -102,15 +105,16 @@ func Run(ctx context.Context, s Spec) (Result, error) {
 	// Past this point the run directory holds a transcript, so a failure leaves
 	// evidence and the caller decides what to do with it through Finish.
 	m, err := run.Session(ctx, filepath.Join(env.Root, "session"), run.Spec{
-		Dir:        env.Repo,
-		Name:       s.Command,
-		Args:       s.Args,
-		Stdin:      s.Prompt,
-		Env:        env.Environ,
-		Arm:        string(s.Arm),
-		SenseSetup: wrote,
-		Wall:       s.Wall,
-		Grace:      s.Grace,
+		Dir:              env.Repo,
+		Name:             s.Command,
+		Args:             s.Args,
+		Stdin:            s.Prompt,
+		Env:              env.Environ,
+		Arm:              string(s.Arm),
+		TranscriptFormat: s.TranscriptFormat,
+		SenseSetup:       wrote,
+		Wall:             s.Wall,
+		Grace:            s.Grace,
 	})
 	if err != nil {
 		// The environment is returned with the error, not swallowed with it: the

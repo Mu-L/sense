@@ -615,7 +615,7 @@ func TestAFinishedArmGivesBackItsCheckoutAndKeepsItsRecord(t *testing.T) {
 	if list := gitOut(t, s.Parent, "worktree", "list"); strings.Contains(list, res.Env.Repo) {
 		t.Errorf("the parent still lists the worktree:\n%s", list)
 	}
-	if _, err := os.Stat(isolate.CredentialPath(res.Env.Config)); err == nil {
+	if _, err := os.Stat(aRoute().CredentialPath(res.Env.Config)); err == nil {
 		t.Error("the credential survived, in a directory kept for months")
 	}
 	// The evidence the scorer, the miner and status all read.
@@ -698,12 +698,19 @@ func TestAWorktreeWhoseDirectoryVanishedIsStillDeregistered(t *testing.T) {
 // by. Both are the test's own: nothing here is compiled into the lab.
 func aCredential() isolate.Credential {
 	return isolate.Credential{
-		AccessToken: "seat-token",
-		ExpiresAt:   time.Now().Add(time.Hour).UnixMilli(),
-		Scopes:      []string{"user:inference"},
+		Fields: map[string]json.RawMessage{
+			"toolOauth.accessToken": json.RawMessage(`"seat-token"`),
+			"toolOauth.scopes":      json.RawMessage(`["user:inference"]`),
+		},
+		ExpiresAt: time.Now().Add(time.Hour).UnixMilli(),
 	}
 }
 
 func aRoute() isolate.Route {
-	return isolate.Route{ConfigDirVar: "TOOL_CONFIG_DIR", ConfigDir: ".tool", Key: "toolOauth"}
+	return isolate.Route{
+		ConfigDirVar: "TOOL_CONFIG_DIR", ConfigDir: ".tool",
+		File:   ".credentials.json",
+		Fields: []string{"toolOauth.accessToken", "toolOauth.scopes"},
+		Expiry: "ms:toolOauth.expiresAt",
+	}
 }

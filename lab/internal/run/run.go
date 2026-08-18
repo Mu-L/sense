@@ -64,6 +64,9 @@ type Spec struct {
 	// Arm is which side of a cell this session is, recorded so a run can say so
 	// without anyone re-deriving it from a directory name.
 	Arm string
+	// TranscriptFormat is the shape the capture is written in, recorded so
+	// anything reading it later reads it with the reader it was written by.
+	TranscriptFormat string
 	// SenseSetup is what the subject's setup wrote into the repository, as path
 	// to content hash. Empty for the baseline arm, which is the point.
 	SenseSetup map[string]string
@@ -118,6 +121,15 @@ type Meta struct {
 	Arm  string `json:"arm,omitempty"`
 	Home string `json:"home,omitempty"`
 	Path string `json:"path,omitempty"`
+
+	// TranscriptFormat is the shape raw/stdout is written in.
+	//
+	// Recorded rather than inferred at score time, because the inference would
+	// have to be a guess about somebody else's stream and a wrong guess reads a
+	// capture as an arm that said nothing. A run recorded before this field
+	// existed carries none, and the whole corpus of those is one format —
+	// see transcript.FormatOfRun.
+	TranscriptFormat string `json:"transcript_format,omitempty"`
 
 	// SenseSetup is what the subject's setup wrote into the repository, as path
 	// to content hash.
@@ -209,19 +221,20 @@ func Session(ctx context.Context, dir string, s Spec) (Meta, error) {
 	said, _ := stdout.Seek(0, io.SeekCurrent)
 
 	m := Meta{
-		Outcome:      outcomeOf(code, ended),
-		StdoutBytes:  said,
-		ExitCode:     code,
-		WallSeconds:  s.Wall.Seconds(),
-		WallStartsAt: wallStartsAtSpawn,
-		TookSeconds:  time.Since(started).Seconds(),
-		Command:      s.Name,
-		Args:         s.Args,
-		StartedAt:    started.UTC().Format(time.RFC3339),
-		Arm:          s.Arm,
-		SenseSetup:   s.SenseSetup,
-		Home:         envValue(s.Env, "HOME"),
-		Path:         envValue(s.Env, "PATH"),
+		Outcome:          outcomeOf(code, ended),
+		StdoutBytes:      said,
+		ExitCode:         code,
+		WallSeconds:      s.Wall.Seconds(),
+		WallStartsAt:     wallStartsAtSpawn,
+		TookSeconds:      time.Since(started).Seconds(),
+		Command:          s.Name,
+		Args:             s.Args,
+		StartedAt:        started.UTC().Format(time.RFC3339),
+		Arm:              s.Arm,
+		TranscriptFormat: s.TranscriptFormat,
+		SenseSetup:       s.SenseSetup,
+		Home:             envValue(s.Env, "HOME"),
+		Path:             envValue(s.Env, "PATH"),
 	}
 	if err := writeMeta(dir, m); err != nil {
 		return Meta{}, err

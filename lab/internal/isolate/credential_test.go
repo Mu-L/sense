@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -20,28 +21,60 @@ func aRoute() Route {
 		ConfigDirVar: "TOOL_CONFIG_DIR",
 		ConfigDir:    ".tool",
 		Keychain:     "Tool-credentials",
-		Key:          "toolOauth",
+		File:         ".credentials.json",
+		Fields: []string{
+			"toolOauth.accessToken",
+			"toolOauth.expiresAt",
+			"toolOauth.scopes",
+		},
+		Expiry: "ms:toolOauth.expiresAt",
 	}
 }
+
+// aCredentialPath is where this test's route keeps a credential.
+func aCredentialPath(dir string) string { return aRoute().CredentialPath(dir) }
 
 // aCredential is a usable credential, stated once so a test that is about
 // something else does not have to.
 func aCredential() Credential {
+	expires := time.Now().Add(24 * time.Hour).UnixMilli()
 	return Credential{
-		AccessToken: "sk-ant-oat-example",
-		ExpiresAt:   time.Now().Add(24 * time.Hour).UnixMilli(),
-		Scopes:      []string{"user:inference", "user:profile"},
+		Fields: map[string]json.RawMessage{
+			"toolOauth.accessToken": json.RawMessage(`"sk-ant-oat-example"`),
+			"toolOauth.expiresAt":   json.RawMessage(strconv.FormatInt(expires, 10)),
+			"toolOauth.scopes":      json.RawMessage(`["user:inference","user:profile"]`),
+		},
+		ExpiresAt: expires,
 	}
 }
 
-func TestTheProvisionedFileCarriesOnlyTheThreeFieldsThatAuthenticate(t *testing.T) {
+// theToken is the access token inside a credential, for a test that wants to
+// look for it on disk.
+func theToken(c Credential) string {
+	var token string
+	_ = json.Unmarshal(c.Fields["toolOauth.accessToken"], &token)
+	return token
+}
+
+// without is this credential with one declared field taken out.
+func without(c Credential, field string) Credential {
+	out := Credential{Fields: map[string]json.RawMessage{}, ExpiresAt: c.ExpiresAt}
+	for k, v := range c.Fields {
+		if k != field {
+			out.Fields[k] = v
+		}
+	}
+	return out
+}
+
+func TestTheProvisionedFileCarriesOnlyTheDeclaredFields(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "config")
 
 	if err := aRoute().Write(dir, aCredential()); err != nil {
 		t.Fatalf("provision: %v", err)
 	}
 
-	b, err := os.ReadFile(CredentialPath(dir))
+	b, err := os.ReadFile(aCredentialPath(dir))
 	if err != nil {
 		t.Fatalf("read back: %v", err)
 	}
@@ -49,9 +82,9 @@ func TestTheProvisionedFileCarriesOnlyTheThreeFieldsThatAuthenticate(t *testing.
 	if err := json.Unmarshal(b, &doc); err != nil {
 		t.Fatalf("the provisioned file is not JSON: %v", err)
 	}
-	oauth, ok := doc[aRoute().Key]
+	oauth, ok := doc["toolOauth"]
 	if !ok {
-		t.Fatalf("no %s object; the combiner reads that key and nothing else", aRoute().Key)
+		t.Fatal("no toolOauth object; the declared paths nest under it and the tool reads it there")
 	}
 	want := map[string]bool{"accessToken": true, "expiresAt": true, "scopes": true}
 	for key := range oauth {
@@ -75,7 +108,7 @@ func TestNoRefreshTokenOrConnectorTokenCanReachARun(t *testing.T) {
 		t.Fatalf("provision: %v", err)
 	}
 
-	b, err := os.ReadFile(CredentialPath(dir))
+	b, err := os.ReadFile(aCredentialPath(dir))
 	if err != nil {
 		t.Fatalf("read back: %v", err)
 	}
@@ -98,7 +131,7 @@ func TestTheProvisionedCredentialIsNotReadableByAnyoneElse(t *testing.T) {
 		t.Fatalf("prepare: %v", err)
 	}
 
-	info, err := os.Stat(CredentialPath(env.Config))
+	info, err := os.Stat(aRoute().CredentialPath(env.Config))
 	if err != nil {
 		t.Fatalf("stat: %v", err)
 	}
@@ -118,15 +151,15 @@ func TestTheProvisionedCredentialIsNotReadableByAnyoneElse(t *testing.T) {
 
 func TestAnUnusableCredentialIsRefusedRatherThanWritten(t *testing.T) {
 	full := aCredential()
+	noExpiry := aCredential()
+	noExpiry.ExpiresAt = 0
 	for _, tc := range []struct {
 		what string
 		cred Credential
 	}{
-		{"no token at all", Credential{ExpiresAt: full.ExpiresAt, Scopes: full.Scopes}},
-		{"no expiry", Credential{AccessToken: full.AccessToken, Scopes: full.Scopes}},
-		// Scopes is the gate: measured 2026-08-17, a token with an expiry and no
-		// scopes returns "Not logged in" for a full wall's worth of nothing.
-		{"no scopes", Credential{AccessToken: full.AccessToken, ExpiresAt: full.ExpiresAt}},
+		{"nothing at all", Credential{}},
+		{"no expiry", noExpiry},
+		{"no fields", Credential{ExpiresAt: full.ExpiresAt}},
 	} {
 		t.Run(tc.what, func(t *testing.T) {
 			dir := filepath.Join(t.TempDir(), "config")
@@ -134,7 +167,7 @@ func TestAnUnusableCredentialIsRefusedRatherThanWritten(t *testing.T) {
 			if err := aRoute().Write(dir, tc.cred); err == nil {
 				t.Fatal("a credential that cannot authenticate was provisioned; the run would burn a wall to find out")
 			}
-			if _, err := os.Stat(CredentialPath(dir)); err == nil {
+			if _, err := os.Stat(aCredentialPath(dir)); err == nil {
 				t.Error("a refused credential was written anyway")
 			}
 		})
@@ -154,7 +187,7 @@ func TestProvisioningReportsAConfigDirectoryItCannotCreate(t *testing.T) {
 	}
 }
 
-func TestReadingACredentialTakesTheThreeFieldsAndLeavesTheRest(t *testing.T) {
+func TestReadingACredentialTakesTheDeclaredFieldsAndLeavesTheRest(t *testing.T) {
 	// The host's own store, which holds the operator's connector tokens and the
 	// refresh token beside the login. Reading it must not carry them along.
 	dir := t.TempDir()
@@ -168,7 +201,7 @@ func TestReadingACredentialTakesTheThreeFieldsAndLeavesTheRest(t *testing.T) {
 	  },
 	  "mcpOAuth": {"some-connector": {"accessToken": "connector-token"}}
 	}`
-	if err := os.WriteFile(CredentialPath(dir), []byte(host), 0o600); err != nil {
+	if err := os.WriteFile(aCredentialPath(dir), []byte(host), 0o600); err != nil {
 		t.Fatalf("set up: %v", err)
 	}
 
@@ -176,14 +209,14 @@ func TestReadingACredentialTakesTheThreeFieldsAndLeavesTheRest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read: %v", err)
 	}
-	if c.AccessToken != "sk-ant-oat-host" {
-		t.Errorf("accessToken = %q, want the host's", c.AccessToken)
+	if got := theToken(c); got != "sk-ant-oat-host" {
+		t.Errorf("accessToken = %q, want the host's", got)
 	}
 	if c.ExpiresAt != 1799999999000 {
 		t.Errorf("expiresAt = %d, want the host's", c.ExpiresAt)
 	}
-	if len(c.Scopes) != 1 || c.Scopes[0] != "user:inference" {
-		t.Errorf("scopes = %v, want the host's", c.Scopes)
+	if got := string(c.Fields["toolOauth.scopes"]); got != `["user:inference"]` {
+		t.Errorf("scopes = %s, want the host's", got)
 	}
 
 	// The proof that the narrowing happened is what a run would then be given.
@@ -191,7 +224,7 @@ func TestReadingACredentialTakesTheThreeFieldsAndLeavesTheRest(t *testing.T) {
 	if err := aRoute().Write(into, c); err != nil {
 		t.Fatalf("provision what was read: %v", err)
 	}
-	b, err := os.ReadFile(CredentialPath(into))
+	b, err := os.ReadFile(aCredentialPath(into))
 	if err != nil {
 		t.Fatalf("read back: %v", err)
 	}
@@ -215,7 +248,7 @@ func TestReadingReportsAStoreItCannotUse(t *testing.T) {
 		t.Run(tc.what, func(t *testing.T) {
 			dir := t.TempDir()
 			if tc.write {
-				if err := os.WriteFile(CredentialPath(dir), []byte(tc.contents), 0o600); err != nil {
+				if err := os.WriteFile(aCredentialPath(dir), []byte(tc.contents), 0o600); err != nil {
 					t.Fatalf("set up: %v", err)
 				}
 			}
@@ -233,9 +266,8 @@ func TestACredentialThatExpiresBeforeTheCellEndsIsKnownToExpire(t *testing.T) {
 	// finished arm: it can never be paired.
 	now := time.Now()
 	c := Credential{
-		AccessToken: "t",
-		Scopes:      []string{"user:inference"},
-		ExpiresAt:   now.Add(30 * time.Minute).UnixMilli(),
+		Fields:    map[string]json.RawMessage{"toolOauth.accessToken": json.RawMessage(`"t"`)},
+		ExpiresAt: now.Add(30 * time.Minute).UnixMilli(),
 	}
 
 	if c.ExpiresBefore(now) {
@@ -266,7 +298,7 @@ func TestTheCredentialIsWrittenOnlyIntoTheRunsOwnConfigDirectory(t *testing.T) {
 			return nil //nolint:nilerr // an unreadable entry is not a finding
 		}
 		b, readErr := os.ReadFile(path) // #nosec G304 -- the test's own run directory
-		if readErr == nil && strings.Contains(string(b), c.AccessToken) {
+		if readErr == nil && strings.Contains(string(b), theToken(c)) {
 			carrying = append(carrying, path)
 		}
 		return nil
@@ -274,7 +306,7 @@ func TestTheCredentialIsWrittenOnlyIntoTheRunsOwnConfigDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("walk the run directory: %v", err)
 	}
-	if want := []string{CredentialPath(env.Config)}; !slices.Equal(carrying, want) {
+	if want := []string{aRoute().CredentialPath(env.Config)}; !slices.Equal(carrying, want) {
 		t.Errorf("files carrying the token = %v, want only %v", carrying, want)
 	}
 }
@@ -287,7 +319,7 @@ func TestAKeyBasedRunIsGivenNoCredentialFileAtAll(t *testing.T) {
 		t.Fatalf("prepare: %v", err)
 	}
 
-	if _, err := os.Stat(CredentialPath(env.Config)); err == nil {
+	if _, err := os.Stat(aRoute().CredentialPath(env.Config)); err == nil {
 		t.Error("a run that was given no credential was provisioned with a file anyway")
 	}
 }
@@ -298,10 +330,12 @@ func TestARunGivenAHalfFilledCredentialIsRefusedRatherThanRun(t *testing.T) {
 	// that would cost a wall per arm to discover.
 	root := filepath.Join(t.TempDir(), "run")
 
+	half := without(aCredential(), "toolOauth.expiresAt")
+	half.ExpiresAt = 0
 	if _, err := Prepare(Spec{
 		Root:       root,
 		Arm:        Baseline,
-		Credential: Credential{AccessToken: "t"},
+		Credential: half,
 		Route:      aRoute(),
 	}); err == nil {
 		t.Fatal("an environment was prepared around a credential that cannot authenticate")
@@ -321,7 +355,7 @@ func TestTheSessionIsPointedAtTheConfigDirectoryTheCredentialIsIn(t *testing.T) 
 	if got[r.ConfigDirVar] != env.Config {
 		t.Errorf("%s = %q, want the run's own config directory %q", r.ConfigDirVar, got[r.ConfigDirVar], env.Config)
 	}
-	if _, err := os.Stat(CredentialPath(got[r.ConfigDirVar])); err != nil {
+	if _, err := os.Stat(r.CredentialPath(got[r.ConfigDirVar])); err != nil {
 		t.Errorf("the directory the session is pointed at holds no credential: %v", err)
 	}
 	// Outside the disposable HOME, or the contamination proof reads a
@@ -332,9 +366,11 @@ func TestTheSessionIsPointedAtTheConfigDirectoryTheCredentialIsIn(t *testing.T) 
 }
 
 func TestAToolWithNoConfigVariableIsGivenNone(t *testing.T) {
-	// codex and opencode take no config-directory variable. Inventing one would
-	// set a variable in their session that means nothing, and setting some other
-	// tool's would be worse.
+	// A tool that takes no config-directory variable is given none. Inventing
+	// one would set a variable in its session that means nothing, and setting
+	// some other tool's would be worse. Codex was assumed to be such a tool and
+	// measured on 2026-08-18 not to be: it takes CODEX_HOME. The rule is what is
+	// under test here, not the roster.
 	root := filepath.Join(t.TempDir(), "run")
 	r := aRoute()
 	r.ConfigDirVar = ""
@@ -351,32 +387,127 @@ func TestAToolWithNoConfigVariableIsGivenNone(t *testing.T) {
 	}
 }
 
-// A tool that names no credential key has nowhere its credential could be read
-// from, so a file written for it is a file nothing reads — and the run would
-// spend a full wall per arm discovering that it is logged out.
-func TestARouteWithNoCredentialKeyCannotProvisionOrRead(t *testing.T) {
-	keyless := aRoute()
-	keyless.Key = ""
+// A tool that names no credential file has nowhere its credential could be read
+// from or written to, so anything written for it is written where nothing reads
+// it — and the run would spend a full wall per arm discovering it is logged out.
+func TestARouteWithNoCredentialFileCannotProvisionOrRead(t *testing.T) {
+	fileless := aRoute()
+	fileless.File = ""
 	dir := filepath.Join(t.TempDir(), "config")
 
-	if err := keyless.Write(dir, aCredential()); err == nil {
-		t.Error("a credential was written under no key at all")
+	if err := fileless.Write(dir, aCredential()); err == nil {
+		t.Error("a credential was written for a tool that names no file")
 	}
-	if _, err := os.Stat(CredentialPath(dir)); err == nil {
-		t.Error("a refused credential was written anyway")
+	if entries, err := os.ReadDir(dir); err == nil && len(entries) > 0 {
+		t.Errorf("a refused credential left %d files behind", len(entries))
 	}
+	if _, err := fileless.Read(t.TempDir()); err == nil {
+		t.Error("a credential was read for a tool that names no file")
+	}
+}
 
-	// And the same on the way in. The document deliberately HOLDS a usable
-	// credential under the empty key, so this cannot pass by the decode failing
-	// for some other reason: without the guard the read succeeds and hands back a
-	// credential from a key nothing writes under.
-	host := t.TempDir()
-	stored := `{"": {"accessToken":"t","expiresAt":1799999999000,"scopes":["user:inference"]}}`
-	if err := os.WriteFile(CredentialPath(host), []byte(stored), 0o600); err != nil {
+// A tool whose declared fields are not all in the document is a tool whose
+// login is half there, and a run given it reads as logged out.
+func TestAHostDocumentMissingADeclaredFieldIsRefused(t *testing.T) {
+	dir := t.TempDir()
+	host := `{"toolOauth": {"accessToken": "t", "expiresAt": 1799999999000}}`
+	if err := os.WriteFile(aCredentialPath(dir), []byte(host), 0o600); err != nil {
 		t.Fatalf("set up: %v", err)
 	}
-	if _, err := keyless.Read(host); err == nil {
-		t.Error("a credential was read from a store with no key to read it under")
+
+	if _, err := aRoute().Read(dir); err == nil {
+		t.Fatal("a document missing a declared field was read as a usable credential")
+	}
+}
+
+// The expiry is stated two ways by the two tools measured so far, and a route
+// that could not read its own would be planned against a credential that dies
+// mid-cell.
+func TestTheExpiryIsReadTheWayTheToolStatesIt(t *testing.T) {
+	for _, tc := range []struct {
+		what   string
+		expiry string
+		doc    string
+		want   int64
+	}{
+		{
+			what:   "unix milliseconds at a path",
+			expiry: "ms:toolOauth.expiresAt",
+			doc:    `{"toolOauth":{"accessToken":"t","expiresAt":1799999999000,"scopes":["s"]}}`,
+			want:   1799999999000,
+		},
+		{
+			what:   "the exp claim of a token at a path",
+			expiry: "jwt:toolOauth.accessToken",
+			// exp 1799999999, with no signature to check because none is checked.
+			doc:  `{"toolOauth":{"accessToken":"header.eyJleHAiOjE3OTk5OTk5OTl9.sig","expiresAt":1,"scopes":["s"]}}`,
+			want: 1799999999000,
+		},
+	} {
+		t.Run(tc.what, func(t *testing.T) {
+			r := aRoute()
+			r.Expiry = tc.expiry
+			dir := t.TempDir()
+			if err := os.WriteFile(r.CredentialPath(dir), []byte(tc.doc), 0o600); err != nil {
+				t.Fatalf("set up: %v", err)
+			}
+
+			c, err := r.Read(dir)
+			if err != nil {
+				t.Fatalf("read: %v", err)
+			}
+			if c.ExpiresAt != tc.want {
+				t.Errorf("ExpiresAt = %d, want %d", c.ExpiresAt, tc.want)
+			}
+		})
+	}
+}
+
+// An expiry that cannot be read is refused rather than defaulted to zero: a
+// zero expiry reads as "already expired" in one place and "not stated" in
+// another, and a planner cannot tell a dead credential from an unreadable one.
+func TestAnUnreadableExpiryIsRefused(t *testing.T) {
+	for _, tc := range []struct {
+		what   string
+		expiry string
+		doc    string
+	}{
+		{"a form nobody implements", "seconds:toolOauth.expiresAt", `{"toolOauth":{"accessToken":"t","expiresAt":1,"scopes":["s"]}}`},
+		{"milliseconds that are not a number", "ms:toolOauth.accessToken", `{"toolOauth":{"accessToken":"t","expiresAt":1,"scopes":["s"]}}`},
+		{"a path that is not there", "ms:toolOauth.notThere", `{"toolOauth":{"accessToken":"t","expiresAt":1,"scopes":["s"]}}`},
+		{"a token that is not a JWT", "jwt:toolOauth.accessToken", `{"toolOauth":{"accessToken":"t","expiresAt":1,"scopes":["s"]}}`},
+		{"a JWT whose claims are not JSON", "jwt:toolOauth.accessToken", `{"toolOauth":{"accessToken":"a.bm90IGpzb24.c","expiresAt":1,"scopes":["s"]}}`},
+		{"a JWT with no exp claim", "jwt:toolOauth.accessToken", `{"toolOauth":{"accessToken":"a.eyJzdWIiOiJ4In0.c","expiresAt":1,"scopes":["s"]}}`},
+		{"a JWT whose claims are not base64", "jwt:toolOauth.accessToken", `{"toolOauth":{"accessToken":"a.!!!.c","expiresAt":1,"scopes":["s"]}}`},
+	} {
+		t.Run(tc.what, func(t *testing.T) {
+			r := aRoute()
+			r.Expiry = tc.expiry
+			dir := t.TempDir()
+			if err := os.WriteFile(r.CredentialPath(dir), []byte(tc.doc), 0o600); err != nil {
+				t.Fatalf("set up: %v", err)
+			}
+
+			if _, err := r.Read(dir); err == nil {
+				t.Fatal("a credential whose expiry cannot be read was read as usable")
+			}
+		})
+	}
+}
+
+// A route that declares no fields would copy nothing, and a run given an empty
+// document reads as logged out.
+func TestARouteWithNoDeclaredFieldsCannotRead(t *testing.T) {
+	fieldless := aRoute()
+	fieldless.Fields = nil
+	dir := t.TempDir()
+	if err := os.WriteFile(fieldless.CredentialPath(dir),
+		[]byte(`{"toolOauth":{"accessToken":"t","expiresAt":1799999999000,"scopes":["s"]}}`), 0o600); err != nil {
+		t.Fatalf("set up: %v", err)
+	}
+
+	if _, err := fieldless.Read(dir); err == nil {
+		t.Fatal("a credential was read for a tool that declares no fields")
 	}
 }
 

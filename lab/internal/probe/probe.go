@@ -291,19 +291,23 @@ func (s Spec) arm(root string, arm isolate.Arm, wall time.Duration) session.Spec
 		Route:      s.Route,
 		Parent:     s.Parent,
 		Commit:     s.Commit,
-		Prompt:     s.Prompt,
-		Command:    s.Command,
+		// The wall note reaches an agent as a flag or in front of the prompt,
+		// whichever this tool declares. Both are rendered here for the same
+		// reason: this is the first place the arm's own number exists.
+		Prompt:  s.Agent.PromptWithWall(s.Prompt, wall),
+		Command: s.Command,
 		// Each arm is told its OWN wall. Appended here rather than by the
 		// caller because this is the first place the number exists: the
 		// baseline's is not known until the sense arm has finished.
-		Args:      append(slices.Clone(s.Args), s.Agent.WallNoteArgs(wall)...),
-		AgentEnv:  s.AgentEnv,
-		SetupTool: s.SetupTool,
-		SenseBin:  s.SenseBin,
-		LabBin:    s.LabBin,
-		HostPath:  s.HostPath,
-		Wall:      wall,
-		Grace:     s.Grace,
+		Args:             append(slices.Clone(s.Args), s.Agent.WallNoteArgs(wall)...),
+		AgentEnv:         s.AgentEnv,
+		SetupTool:        s.SetupTool,
+		TranscriptFormat: s.Agent.TranscriptFormat,
+		SenseBin:         s.SenseBin,
+		LabBin:           s.LabBin,
+		HostPath:         s.HostPath,
+		Wall:             wall,
+		Grace:            s.Grace,
 	}
 }
 
@@ -373,7 +377,48 @@ func (s Spec) check(ctx context.Context, sense, baseline session.Result) (rep Re
 	}
 
 	r.Differences = Differences(sense.Meta, baseline.Meta, s.Agent.WallNoteFlag)
+	r.Differences = append(r.Differences, s.promptDifferences(sense, baseline)...)
 	return r, nil
+}
+
+// PromptDifferencesForTest exposes the prompt check to the package's own test,
+// which cannot otherwise ask what it reports about a pair it did not run.
+func (s Spec) PromptDifferencesForTest(sense, baseline session.Result) []string {
+	return s.promptDifferences(sense, baseline)
+}
+
+// promptDifferences reports an arm that was asked something other than the
+// scenario's question with its own wall note in front of it.
+//
+// The arguments are compared with the wall note dropped, and the prompt has to
+// be compared too now that a tool with no system-prompt flag carries its note
+// there: the two arms then legitimately hold different prompts, and "the arms
+// differ in nothing but Sense access" would be a claim nothing checked.
+//
+// It reads the prompt each arm was RECORDED with rather than re-deriving it
+// from the spec, because what was constructed and what was sent are the same
+// thing only when nothing went wrong in between.
+func (s Spec) promptDifferences(sense, baseline session.Result) []string {
+	var found []string
+	for _, arm := range []struct {
+		name string
+		res  session.Result
+		wall time.Duration
+	}{
+		{"the sense arm", sense, s.Wall},
+		{"the baseline arm", baseline, time.Duration(baseline.Meta.WallSeconds) * time.Second},
+	} {
+		asked, err := os.ReadFile(filepath.Join(arm.res.Env.Root, "session", "prompt.txt")) // #nosec G304 -- the run's own directory
+		if err != nil {
+			found = append(found, fmt.Sprintf("the prompt: %s recorded none (%v)", arm.name, err))
+			continue
+		}
+		if want := s.Agent.PromptWithWall(s.Prompt, arm.wall); string(asked) != want {
+			found = append(found, fmt.Sprintf("the prompt: %s was asked something other than "+
+				"the scenario's question with its own wall note in front of it", arm.name))
+		}
+	}
+	return found
 }
 
 // split separates the routes that are the treatment from the one that is

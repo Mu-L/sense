@@ -144,7 +144,7 @@ func cellCredential(ctx context.Context, a catalog.Agent, until time.Time) (isol
 	// A tool that declares no credential route has no file a credential could be
 	// provisioned into, so a seat cannot reach it however good the token is. It
 	// authenticates by key or not at all.
-	if route.Key == "" {
+	if route.File == "" {
 		if keyInEnvironment() {
 			return isolate.Credential{}, nil
 		}
@@ -177,7 +177,9 @@ func credentialRoute(a catalog.Agent) isolate.Route {
 	r := isolate.Route{
 		ConfigDirVar: a.ConfigDirVar,
 		Keychain:     a.KeychainService,
-		Key:          a.CredentialKey,
+		File:         a.CredentialFile,
+		Fields:       a.CredentialFields,
+		Expiry:       a.CredentialExpiry,
 	}
 	if len(a.ConfigDirs) > 0 {
 		r.ConfigDir = a.ConfigDirs[0]
@@ -261,7 +263,7 @@ func probeSpec(ctx context.Context, f probeFlags) (probe.Spec, probeJob, error) 
 		Args:       append(slices.Clone(j.agent.HeadlessArgs), j.agent.ModelFlag, j.model.ID),
 		AgentEnv:   j.agent.Env,
 		Agent:      j.agent,
-		SetupTool:  j.agent.ID,
+		SetupTool:  j.agent.SetupTool,
 		ConfigDirs: j.agent.ConfigDirs,
 		Credential: cred,
 		Route:      credentialRoute(j.agent),

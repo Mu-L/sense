@@ -87,7 +87,7 @@ func scoreRun(args []string, stdout, stderr io.Writer) int {
 		return exitError
 	}
 
-	tr, err := transcript.ReadClaudeCode(filepath.Join(f.run, "raw", "stdout"))
+	tr, err := transcript.Read(runFormat(f.run), filepath.Join(f.run, "raw", "stdout"))
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "sense-lab score: %v\n", err)
 		return exitError
@@ -150,6 +150,23 @@ func (s scoredRun) ProvisionalWhy() string {
 		return s.why
 	}
 	return s.tr.ProvisionalWhy()
+}
+
+// runFormat is the shape this run's capture is in, as the run itself recorded
+// it. A run with no record, or one that names no format, is read as the format
+// the whole recorded corpus is in — see transcript.LegacyFormat.
+func runFormat(dir string) string {
+	b, err := os.ReadFile(filepath.Join(dir, "run-meta.json"))
+	if err != nil {
+		return transcript.LegacyFormat
+	}
+	var m struct {
+		TranscriptFormat string `json:"transcript_format"`
+	}
+	if json.Unmarshal(b, &m) != nil {
+		return transcript.LegacyFormat
+	}
+	return transcript.FormatOfRun(m.TranscriptFormat)
 }
 
 // runWasNotCompleted reads the run's own record and reports why it is not a
