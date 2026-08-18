@@ -381,25 +381,19 @@ func (s Spec) check(ctx context.Context, sense, baseline session.Result) (rep Re
 		channels.Absent(contamination, senseWorld),
 		channels.Absent(contamination, baselineWorld)...)
 
-	senseSaid, err := rawTranscript(sense)
+	// Each arm's capture is read ONCE, through its own tool's normalizer, and
+	// both the use check and the counts are taken from what it says. Two reads
+	// would be two chances for them to disagree about the same arm.
+	senseDid, err := armDid(sense, s.Agent.TranscriptFormat, tools, binary)
 	if err != nil {
 		return Report{}, err
 	}
-	baselineSaid, err := rawTranscript(baseline)
+	baselineDid, err := armDid(baseline, s.Agent.TranscriptFormat, tools, binary)
 	if err != nil {
 		return Report{}, err
 	}
-	r.SenseUsed = channels.UsedBy(senseSaid, tools, binary)
-	r.BaselineUsed = channels.UsedBy(baselineSaid, tools, binary)
-
-	r.SenseCalls, err = armCalls(sense, s.Agent.TranscriptFormat, tools)
-	if err != nil {
-		return Report{}, err
-	}
-	r.BaselineCalls, err = armCalls(baseline, s.Agent.TranscriptFormat, tools)
-	if err != nil {
-		return Report{}, err
-	}
+	r.SenseUsed, r.SenseCalls = senseDid.used, senseDid.calls
+	r.BaselineUsed, r.BaselineCalls = baselineDid.used, baselineDid.calls
 
 	frames, err := countFrames(session.LogPath(sense.Env))
 	if err != nil {
@@ -569,37 +563,41 @@ func withoutWallNote(args []string, flag string) []string {
 	return out
 }
 
-// transcript is what an arm actually said, unnormalised. The canonical form is
-// cycle 02's and is built from the same bytes.
-func rawTranscript(res session.Result) ([]byte, error) {
-	path := filepath.Join(res.Env.Root, "session", "raw", "stdout")
-	b, err := os.ReadFile(path) // #nosec G304 -- the run's own capture
-	if err != nil {
-		return nil, fmt.Errorf("read the %s arm's transcript: %w", res.Meta.Arm, err)
-	}
-	return b, nil
+// armDid is everything one arm's own capture says it did, read once through
+// the normalizer its agent tool declares.
+type did struct {
+	used  []string
+	calls Calls
 }
 
-// armCalls counts what one arm did with its tools, read through the normalizer
-// its own agent tool declares.
+// armDid reads one arm's capture and reports both what it used Sense for and
+// how it spent its tool calls.
 //
-// Through the normalizer rather than by searching the raw bytes, because the
-// question is how many CALLS were made and not whether a name appears: a name
-// appears in the tool's own registration, in the reply the tool was handed and
-// in whatever the repository happens to contain.
-func armCalls(res session.Result, format string, senseTools []string) (Calls, error) {
-	tr, err := transcript.Read(transcript.FormatOfRun(format),
-		filepath.Join(res.Env.Root, "session", "raw", "stdout"))
+// Through the normalizer rather than by searching the raw bytes, because both
+// questions are about CALLS and not about text: a tool's name appears in the
+// output of any grep over a codebase that contains it, and an arm that read
+// such a file has not used Sense.
+func armDid(res session.Result, format string, senseTools []string, binary string) (did, error) {
+	path := filepath.Join(res.Env.Root, "session", "raw", "stdout")
+	tr, err := transcript.Read(transcript.FormatOfRun(format), path)
 	if err != nil {
-		return Calls{}, fmt.Errorf("read the %s arm's calls: %w", res.Meta.Arm, err)
+		return did{}, fmt.Errorf("read the %s arm's calls: %w", res.Meta.Arm, err)
 	}
-	c := Calls{Total: len(tr.Calls)}
+	raw, err := os.ReadFile(path) // #nosec G304 -- the run's own capture
+	if err != nil {
+		return did{}, fmt.Errorf("read the %s arm's transcript: %w", res.Meta.Arm, err)
+	}
+
+	d := did{calls: Calls{Total: len(tr.Calls)}}
+	names := make([]string, 0, len(tr.Calls))
 	for _, call := range tr.Calls {
+		names = append(names, call.Name)
 		if reachesSense(call.Name, senseTools) {
-			c.Sense++
+			d.calls.Sense++
 		}
 	}
-	return c, nil
+	d.used = channels.UsedBy(names, raw, senseTools, binary)
+	return d, nil
 }
 
 // reachesSense reports whether a call by this name went to Sense.

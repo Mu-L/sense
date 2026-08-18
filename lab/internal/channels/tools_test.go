@@ -105,28 +105,42 @@ done
 	}
 }
 
-// What the transcript says was used.
+// What an arm's own calls say it used.
 
 const tools = "sense_graph,sense_blast"
 
-func used(transcript string) []string {
-	return channels.UsedBy([]byte(transcript), strings.Split(tools, ","), "sense")
+// used is an arm that made these calls and recorded this transcript. The two
+// are separate arguments because they answer different questions: the calls say
+// what the arm DID, and the raw capture is where a shell invocation of the
+// binary is found.
+func used(calls []string, transcript string) []string {
+	return channels.UsedBy(calls, []byte(transcript), strings.Split(tools, ","), "sense")
 }
 
-func TestATranscriptThatCalledAnMcpToolIsReported(t *testing.T) {
-	got := used(`{"type":"assistant","message":{"content":[{"type":"tool_use","name":"mcp__sense__sense_graph"}]}}`)
+func TestAnArmThatCalledAnMcpToolIsReported(t *testing.T) {
+	got := used([]string{"mcp__sense__sense_graph"}, "")
 
 	if len(got) == 0 {
-		t.Fatal("a transcript naming an MCP tool was reported clean")
+		t.Fatal("an arm that called an MCP tool from the sense server was reported clean")
+	}
+}
+
+// The spellings the three agent tools were measured writing. All three are the
+// same event, and an arm that made any of these calls used Sense.
+func TestEverySpellingOfAnMcpCallIsReported(t *testing.T) {
+	for _, call := range []string{"mcp__sense__sense_graph", "sense_graph", "sense_sense_graph"} {
+		if got := used([]string{call}, ""); len(got) == 0 {
+			t.Errorf("a call named %q was reported clean", call)
+		}
 	}
 }
 
 func TestATranscriptThatRanTheBinaryIsReported(t *testing.T) {
 	// The check that catches what configuration checks cannot: an arm that
 	// found the binary some other way leaves no configuration trace at all.
-	got := used(`{"name":"Bash","input":{"command":"sense graph -symbol Category"}}`)
+	got := used([]string{"Bash"}, `{"name":"Bash","input":{"command":"sense graph -symbol Category"}}`)
 
-	if len(got) != 1 || !strings.Contains(got[0], "invokes") {
+	if len(got) != 1 || !strings.Contains(got[0], "ran the") {
 		t.Fatalf("UsedBy = %v, want the invocation reported", got)
 	}
 }
@@ -140,7 +154,7 @@ func TestTheBinaryIsCaughtAtAnyCommandPosition(t *testing.T) {
 		"(sense status)",
 		"/usr/local/bin/sense mcp",
 	} {
-		if got := used(`{"input":{"command":"` + command + `"}}`); len(got) == 0 {
+		if got := used(nil, `{"input":{"command":"`+command+`"}}`); len(got) == 0 {
 			t.Errorf("%q was reported clean", command)
 		}
 	}
@@ -155,14 +169,14 @@ func TestARepositoryThatMerelyMentionsSenseIsNotAnInvocation(t *testing.T) {
 		"cat docs/sense-of-scale.md",
 		"echo this does not make sense",
 	} {
-		if got := used(`{"input":{"command":"` + command + `"}}`); len(got) != 0 {
+		if got := used(nil, `{"input":{"command":"`+command+`"}}`); len(got) != 0 {
 			t.Errorf("%q was reported as an invocation: %v", command, got)
 		}
 	}
 }
 
 func TestACleanBaselineTranscriptReportsNothing(t *testing.T) {
-	got := used(`{"type":"assistant","message":{"content":[
+	got := used([]string{"Grep", "Bash"}, `{"type":"assistant","message":{"content":[
 		{"type":"tool_use","name":"Grep"},
 		{"type":"tool_use","name":"Bash","input":{"command":"grep -rn Category app/"}}]}}
 		{"type":"result","result":"Category is referenced in three files"}`)
@@ -172,16 +186,34 @@ func TestACleanBaselineTranscriptReportsNothing(t *testing.T) {
 	}
 }
 
+// The false positive this check was measured producing, and the reason it reads
+// calls rather than text.
+//
+// A baseline arm grepped a repository that happens to contain the tool names —
+// Sense's own, in the case that found it — and its own grep OUTPUT quoted them
+// back into the transcript. Six calls, all shell, grep and read, and the pair
+// was refused as a measurement on the strength of it. What an arm was TOLD is
+// not something it did.
+func TestAnArmThatOnlyREADAToolNameIsNotReportedAsHavingUsedIt(t *testing.T) {
+	got := used([]string{"grep", "read"}, `{"type":"tool_use","part":{"tool":"grep","state":{"output":
+		"lab/internal/mcpio/server_test.go:128: t.Run(\"sense_graph\", func(t *testing.T) {"}}}
+		{"type":"text","part":{"text":"The tests exercise sense_graph and sense_blast."}}`)
+
+	if len(got) != 0 {
+		t.Errorf("an arm that merely read a file naming a sense tool was reported as having used one: %v", got)
+	}
+}
+
 func TestAToolNameOnItsOwnIsEnough(t *testing.T) {
 	// An agent tool that records the bare name rather than the prefixed one is
 	// recording the same event.
-	if got := used(`{"tool":"sense_blast","args":{}}`); len(got) == 0 {
+	if got := used([]string{"sense_blast"}, ""); len(got) == 0 {
 		t.Fatal("a transcript naming sense_blast was reported clean")
 	}
 }
 
 func TestWithNoBinaryNamedNoInvocationIsLookedFor(t *testing.T) {
-	got := channels.UsedBy([]byte(`{"input":{"command":"sense graph"}}`), nil, "")
+	got := channels.UsedBy(nil, []byte(`{"input":{"command":"sense graph"}}`), nil, "")
 
 	if len(got) != 0 {
 		t.Errorf("UsedBy = %v with no binary named", got)
@@ -191,7 +223,7 @@ func TestWithNoBinaryNamedNoInvocationIsLookedFor(t *testing.T) {
 func TestACommandThatIsNotAStringIsSkipped(t *testing.T) {
 	// A transcript is another program's output, so it must be read defensively:
 	// one malformed record must not stop the check that follows it.
-	got := used(`{"input":{"command":"\uDEAD"}}{"input":{"command":"sense graph"}}`)
+	got := used(nil, `{"input":{"command":"\uDEAD"}}{"input":{"command":"sense graph"}}`)
 
 	if len(got) == 0 {
 		t.Fatal("a malformed record hid the invocation that followed it")

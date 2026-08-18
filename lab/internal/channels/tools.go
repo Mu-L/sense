@@ -92,28 +92,47 @@ const mcpPrefix = MCPPrefix
 // the same prefix decides the same question there.
 const MCPPrefix = "mcp__sense"
 
-// UsedBy reports every sign that a transcript used Sense, by name.
+// UsedBy reports every sign that an arm USED Sense, by name.
 //
 // Configuration checks say what was set up. This says what was used, and it is
 // the one that would reveal a channel nobody thought to enumerate: an arm that
 // found the binary some other way leaves no configuration trace at all.
 //
+// It reads the arm's CALLS, not the text of its transcript, and that is a
+// correction rather than a refinement. Searching the whole transcript for a
+// tool's name asks "does this name appear anywhere", and a name appears in the
+// output of any grep over a codebase that happens to contain it — so an arm
+// that merely READ a file mentioning `sense_graph` was reported as having used
+// Sense. Measured 2026-08-18: a baseline arm made six calls, all of them
+// shell, grep and read, and was reported contaminated because its own grep
+// output quoted `t.Run("sense_graph", …)` back into the transcript. The pair
+// was refused as a measurement on the strength of it.
+//
+// Every real route still lands here, because every one of them is a CALL:
+// an MCP call carries the server's tool name however the agent tool spells it,
+// and a shell invocation of the binary is a recorded command. What is gone is
+// the one route that was never a route at all — a name appearing in something
+// the arm was TOLD.
+//
 // An empty result for the baseline arm is necessary and not sufficient. An arm
 // that did not use Sense in one run may still have been able to, which is why
 // the channels are checked directly as well.
-func UsedBy(transcript []byte, toolNames []string, binary string) []string {
-	text := string(transcript)
+func UsedBy(calls []string, transcript []byte, toolNames []string, binary string) []string {
 	var used []string
-	if strings.Contains(text, mcpPrefix) {
-		used = append(used, "the transcript names an MCP tool from the sense server")
-	}
-	for _, name := range toolNames {
-		if strings.Contains(text, name) {
-			used = append(used, "the transcript names the tool "+name)
+	for _, call := range calls {
+		if strings.Contains(call, mcpPrefix) {
+			used = append(used, "it called an MCP tool from the sense server: "+call)
+			continue
+		}
+		for _, name := range toolNames {
+			if strings.Contains(call, name) {
+				used = append(used, "it called the tool "+call)
+				break
+			}
 		}
 	}
-	if ranBinary(text, binary) {
-		used = append(used, "the transcript invokes the "+binary+" binary")
+	if ranBinary(string(transcript), binary) {
+		used = append(used, "it ran the "+binary+" binary")
 	}
 	return used
 }
