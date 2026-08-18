@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luuuc/sense/lab/internal/catalog"
 	"github.com/luuuc/sense/lab/internal/isolate"
 )
 
@@ -768,5 +769,61 @@ func (w probeWorld) declareCredentialRoute(t *testing.T) {
 		`"auth_modes":["subscription","api_key"]}`
 	if err := os.WriteFile(at, []byte(body), 0o644); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// A model whose provider key is not among the fields the run would be given is
+// refused before anything spawns.
+//
+// The failure it prevents is unreadable rather than merely expensive: the tool
+// answers with `UnknownError: Unexpected server error`, which is the same
+// message asking for a model that does not exist produces. Measured on two arms
+// of a real cell, where the model id was correct and the obvious reading was
+// that it was wrong.
+func TestAModelWithNoCredentialInTheRunsLoginIsRefusedBeforeSpawning(t *testing.T) {
+	agent := catalog.Agent{
+		ID: "opencode", CredentialFields: []string{"kimi-for-coding.type", "kimi-for-coding.key"},
+	}
+
+	err := carriesThisModel(agent, catalog.Model{ID: "ollama-cloud/glm-5.2", CredentialKey: "ollama-cloud"})
+
+	if err == nil {
+		t.Fatal("a cell whose run would carry no key for its model was accepted")
+	}
+	for _, want := range []string{"ollama-cloud", "credential_fields", "opencode"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the refusal does not name %q: %v", want, err)
+		}
+	}
+}
+
+func TestAModelWhoseKeyIsCarriedIsAccepted(t *testing.T) {
+	agent := catalog.Agent{
+		ID: "opencode", CredentialFields: []string{"kimi-for-coding.type", "kimi-for-coding.key",
+			"ollama-cloud.type", "ollama-cloud.key"},
+	}
+
+	if err := carriesThisModel(agent, catalog.Model{ID: "ollama-cloud/glm-5.2", CredentialKey: "ollama-cloud"}); err != nil {
+		t.Fatalf("a cell whose run carries its model's key was refused: %v", err)
+	}
+}
+
+// A tool whose login is not keyed by provider has nothing to check, and
+// inventing a check for it would refuse every cell on that tool.
+func TestAModelOnAToolWhoseLoginIsNotPerProviderIsNotChecked(t *testing.T) {
+	agent := catalog.Agent{ID: "claude-code", CredentialFields: []string{"claudeAiOauth.accessToken"}}
+
+	if err := carriesThisModel(agent, catalog.Model{ID: "claude-opus-5"}); err != nil {
+		t.Fatalf("a model on a tool with no per-provider login was refused: %v", err)
+	}
+}
+
+// A key that is a prefix of another must not satisfy the check: `ollama` is not
+// `ollama-cloud`, and a run given the first would die exactly as before.
+func TestAKeyThatMerelySharesAPrefixDoesNotSatisfyTheCheck(t *testing.T) {
+	agent := catalog.Agent{ID: "opencode", CredentialFields: []string{"ollama-cloud-eu.key"}}
+
+	if err := carriesThisModel(agent, catalog.Model{ID: "x", CredentialKey: "ollama-cloud"}); err == nil {
+		t.Fatal("a different provider whose name starts the same was accepted")
 	}
 }

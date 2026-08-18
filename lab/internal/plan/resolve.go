@@ -3,12 +3,13 @@ package plan
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/luuuc/sense/lab/internal/catalog"
 )
 
 // resolve answers whether one job can run, and returns the reason when it
-// cannot. It is five explicit questions with five explicit answers.
+// cannot. It is six explicit questions with six explicit answers.
 //
 // It is deliberately not clever. A score for "how well supported" a
 // combination is would be a screen wearing a suit: it would let a job through
@@ -50,6 +51,9 @@ func resolve(c *catalog.Catalog, repo, subjectID string, arm Arm) (Job, string) 
 	if reason := executorSatisfiesIsolation(executor, subject); reason != "" {
 		return j, reason
 	}
+	if reason := credentialCarriesModel(agent, model); reason != "" {
+		return j, reason
+	}
 	return j, ""
 }
 
@@ -86,6 +90,33 @@ func subjectSupportsAgent(s catalog.Subject, agentID string) string {
 		return ""
 	}
 	return fmt.Sprintf("subject %s cannot be driven by %s; it supports %v", s.ID, agentID, s.Agents)
+}
+
+// credentialCarriesModel is question six: will the run's own login hold
+// anything for this model?
+//
+// It is asked HERE as well as in the attended parent, and the duplication is
+// deliberate. A campaign is planned once and run cell by cell, so a cell the
+// parent would refuse at spawn is a cell that plans clean and dies four cells
+// in — and it dies with a message that reads like a bad model id, because the
+// tool answers `UnknownError: Unexpected server error` whether the model does
+// not exist or its provider key was not among the fields the run was given.
+// Measured 2026-08-18, on two arms.
+//
+// A model naming no credential key runs on a tool whose login is not keyed by
+// provider, and there is nothing here to check.
+func credentialCarriesModel(a catalog.Agent, m catalog.Model) string {
+	if m.CredentialKey == "" {
+		return ""
+	}
+	for _, field := range a.CredentialFields {
+		if strings.HasPrefix(field, m.CredentialKey+".") {
+			return ""
+		}
+	}
+	return fmt.Sprintf("model %s needs the %q key and agent %s carries %v; the run would be handed a "+
+		"login with nothing for this model, and both arms would die with a server error that reads "+
+		"like a bad model id", m.ID, m.CredentialKey, a.ID, a.CredentialFields)
 }
 
 // pickAuth answers questions three and four together and CHOOSES the mode,

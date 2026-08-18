@@ -9,5 +9,6 @@
   ],
   "agents": [
     "opencode"
-  ]
+  ],
+  "credential_key": "ollama-cloud"
 }

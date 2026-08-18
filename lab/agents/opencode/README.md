@@ -37,9 +37,26 @@ the tool reads it, and the disposable HOME stays empty. Measured working:
 `auth list` in an isolated HOME with only that variable set reported all three
 providers.
 
-`credential_fields` names **one provider**, the one the catalog's models
-actually use. Adding another is two lines there, and a run then holds only the
-keys it needs rather than every key the operator has.
+`credential_fields` names **only the providers the catalog's models actually
+use** — currently `kimi-for-coding` and `ollama-cloud`. A run then holds only
+the keys it needs rather than every key the operator has, and adding a provider
+is two lines there.
+
+**A provider missing from that list does not fail as an auth error.** Measured
+2026-08-18: with only `kimi-for-coding` in the document, asking for
+`ollama-cloud/glm-5.2` returns one `error` event reading `UnknownError:
+Unexpected server error. Check server logs for details.` and nothing else —
+byte-identical in shape to what asking for a model that does not exist returns,
+so a missing key reads as a broken model id. It cost two arms of a real cell
+before it was understood.
+
+**Nothing has to be understood twice.** Each model declares the key it needs
+(`credential_key`) and the cell is refused before either arm spawns, naming the
+provider and the file to add it to. The message reads:
+
+> `ollama-cloud/glm-5.2` is driven through `opencode`, whose credential carries
+> [kimi-for-coding.type kimi-for-coding.key] and nothing for `"ollama-cloud"` …
+> Add `"ollama-cloud"` fields to `credential_fields` in the opencode agent file
 
 The expiry is declared `never`, because an API key has none. That is a stated
 fact rather than a missing one: a tool that simply left it out would be

@@ -588,3 +588,64 @@ func TestTheChosenAuthModeIsDeterministic(t *testing.T) {
 		}
 	}
 }
+
+// Question five, asked at PLAN time: will the run's own login hold anything for
+// this model?
+//
+// A campaign is planned once and run cell by cell, so a cell only the attended
+// parent would refuse is a cell that plans clean and dies four cells in — with
+// a message that reads like a bad model id, because the tool answers
+// `UnknownError: Unexpected server error` whether the model does not exist or
+// its provider key was missing from the credential.
+func TestACellWhoseLoginCarriesNothingForItsModelIsRefusedAtPlanTime(t *testing.T) {
+	c := &catalog.Catalog{
+		Subjects: map[string]catalog.Subject{"untreated": {
+			ID: "untreated", Kind: catalog.Baseline, Executor: "isolated-home", Agents: []string{"tool"},
+		}},
+		Agents: map[string]catalog.Agent{"tool": {
+			ID: "tool", AuthModes: []string{"api_key"},
+			CredentialFields: []string{"one-provider.type", "one-provider.key"},
+		}},
+		Models: map[string]catalog.Model{"other/model": {
+			ID: "other/model", AvailableUnder: []string{"api_key"},
+			Agents: []string{"tool"}, CredentialKey: "another-provider",
+		}},
+		Executors: map[string]catalog.Executor{"isolated-home": {
+			ID: "isolated-home", PreservesAuth: []string{"api_key"}, IsolatesGlobalConfig: true,
+		}},
+	}
+
+	_, reason := resolve(c, "r1", "untreated", Arm{Model: "other/model", Runs: 1})
+
+	if reason == "" {
+		t.Fatal("a cell whose run would carry no key for its model was planned")
+	}
+	for _, want := range []string{"another-provider", "other/model"} {
+		if !strings.Contains(reason, want) {
+			t.Errorf("the rejection does not name %q: %s", want, reason)
+		}
+	}
+}
+
+func TestACellWhoseLoginCarriesItsModelIsPlanned(t *testing.T) {
+	c := &catalog.Catalog{
+		Subjects: map[string]catalog.Subject{"untreated": {
+			ID: "untreated", Kind: catalog.Baseline, Executor: "isolated-home", Agents: []string{"tool"},
+		}},
+		Agents: map[string]catalog.Agent{"tool": {
+			ID: "tool", AuthModes: []string{"api_key"},
+			CredentialFields: []string{"one-provider.type", "one-provider.key"},
+		}},
+		Models: map[string]catalog.Model{"one-provider/model": {
+			ID: "one-provider/model", AvailableUnder: []string{"api_key"},
+			Agents: []string{"tool"}, CredentialKey: "one-provider",
+		}},
+		Executors: map[string]catalog.Executor{"isolated-home": {
+			ID: "isolated-home", PreservesAuth: []string{"api_key"}, IsolatesGlobalConfig: true,
+		}},
+	}
+
+	if _, reason := resolve(c, "r1", "untreated", Arm{Model: "one-provider/model", Runs: 1}); reason != "" {
+		t.Fatalf("a runnable cell was refused: %s", reason)
+	}
+}

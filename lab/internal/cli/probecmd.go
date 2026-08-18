@@ -139,7 +139,7 @@ var hostCredential = isolate.HostCredential
 //
 // A key-based host needs none of this: the key is an allowlisted variable and it
 // reaches the session that way, with no expiry anyone can read.
-func cellCredential(ctx context.Context, a catalog.Agent, until time.Time) (isolate.Credential, error) {
+func cellCredential(ctx context.Context, a catalog.Agent, m catalog.Model, until time.Time) (isolate.Credential, error) {
 	route := credentialRoute(a)
 	// A tool that declares no credential route has no file a credential could be
 	// provisioned into, so a seat cannot reach it however good the token is. It
@@ -151,6 +151,10 @@ func cellCredential(ctx context.Context, a catalog.Agent, until time.Time) (isol
 		return isolate.Credential{}, fmt.Errorf("%s declares no credential route, so it can only be "+
 			"authenticated by key; set one of %v, or both arms reach no model and produce empty runs",
 			a.ID, isolate.Credentials())
+	}
+
+	if err := carriesThisModel(a, m); err != nil {
+		return isolate.Credential{}, err
 	}
 
 	c, err := hostCredential(ctx, os.LookupEnv, route)
@@ -168,6 +172,34 @@ func cellCredential(ctx context.Context, a catalog.Agent, until time.Time) (isol
 			"and re-run", c.Expiry().Format(time.RFC3339), until.Format(time.RFC3339), a.Binary)
 	}
 	return c, nil
+}
+
+// carriesThisModel refuses a cell whose run would be handed a credential
+// document with nothing in it for the model being driven.
+//
+// The failure it prevents is unreadable rather than merely expensive. A tool
+// asked for a model whose provider key was not among the fields the run was
+// given answers with one event — `UnknownError: Unexpected server error` — and
+// that is the same message, in the same shape, as asking for a model that does
+// not exist. Measured 2026-08-18 on two arms of a real cell: the model id was
+// correct and the arms died anyway, and the obvious reading was that the id was
+// wrong.
+//
+// A model that names no credential key is a model on a tool whose login is not
+// per provider, and there is nothing here to check.
+func carriesThisModel(a catalog.Agent, m catalog.Model) error {
+	if m.CredentialKey == "" {
+		return nil
+	}
+	for _, field := range a.CredentialFields {
+		if strings.HasPrefix(field, m.CredentialKey+".") {
+			return nil
+		}
+	}
+	return fmt.Errorf("%s is driven through %s, whose credential carries %v and nothing for %q: "+
+		"the run would be handed a login with no key for this model and both arms would die with "+
+		"a server error that reads like a bad model id. Add %q fields to credential_fields in the "+
+		"%s agent file", m.ID, a.ID, a.CredentialFields, m.CredentialKey, m.CredentialKey, a.ID)
 }
 
 // credentialRoute is the agent tool's credential route, as the catalog declares
@@ -242,7 +274,7 @@ func probeSpec(ctx context.Context, f probeFlags) (probe.Spec, probeJob, error) 
 	// sense arm's wall and the baseline's, and a credential good for only the
 	// first produces the burned arm this whole layer exists to prevent.
 	until := time.Now().Add(f.wall + probe.BaselineWall(f.wall))
-	cred, err := cellCredential(ctx, j.agent, until)
+	cred, err := cellCredential(ctx, j.agent, j.model, until)
 	if err != nil {
 		return probe.Spec{}, probeJob{}, err
 	}

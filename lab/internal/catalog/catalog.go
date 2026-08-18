@@ -269,6 +269,22 @@ type Model struct {
 	AvailableUnder []string `json:"available_under"`
 	// Agents are the agent tool ids that can drive this model.
 	Agents []string `json:"agents"`
+	// CredentialKey is the object this model's credential lives under, for a
+	// tool whose login document is keyed by provider. Empty for a tool whose
+	// credential is not per provider.
+	//
+	// It exists because the failure it prevents is unreadable. A tool driving a
+	// model whose provider key was not among the fields the run was given
+	// answers with one event: `UnknownError: Unexpected server error` — the
+	// same message, in the same shape, that asking for a model that does not
+	// exist produces. Measured 2026-08-18, and it cost two arms before it was
+	// understood. Declared here, the planner refuses the cell instead.
+	//
+	// It is NOT derived by splitting the model id. The key and the id's first
+	// segment agree for one tool today and there is no reason they must, and
+	// parsing an identifier to decide something is the class of failure this
+	// catalog exists to end.
+	CredentialKey string `json:"credential_key"`
 }
 
 // Executor is where and how a run happens. Two facts about it matter before
