@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/luuuc/sense/lab/internal/catalog"
 	"github.com/luuuc/sense/lab/internal/isolate"
 	"github.com/luuuc/sense/lab/internal/run"
 	"github.com/luuuc/sense/lab/internal/subject"
@@ -44,6 +45,10 @@ type Spec struct {
 	// TranscriptFormat is the shape this tool's capture arrives in, carried
 	// from the catalog into the run record so a score reads it correctly.
 	TranscriptFormat string
+	// MCPRegistration is where and how this tool reads its MCP servers, so the
+	// capture can be put in front of the Sense one. A tool that declares none
+	// runs uncaptured.
+	MCPRegistration catalog.MCPRegistration
 	// AgentEnv is what the agent tool declares in agent.json, as KEY=VALUE.
 	AgentEnv []string
 	// Credential is what this arm is given to reach a model, and Route is how it
@@ -136,7 +141,7 @@ func prepareArm(ctx context.Context, s Spec, env isolate.Env) (map[string]string
 	if err != nil {
 		return nil, err
 	}
-	if err := wrapMCP(env.Repo, s.LabBin, filepath.Join(env.Artifacts, captureLog)); err != nil {
+	if err := wrapMCP(s.MCPRegistration, env.Repo, s.LabBin, filepath.Join(env.Artifacts, captureLog)); err != nil {
 		return nil, err
 	}
 	return wrote, nil
@@ -150,13 +155,20 @@ func prepareArm(ctx context.Context, s Spec, env isolate.Env) (map[string]string
 // measuring a configuration no user has. What changes is only where the server
 // is spawned from, and the server spawned is still exactly the one the product
 // named.
-func wrapMCP(repo, labBin, logPath string) error {
-	path := filepath.Join(repo, ".mcp.json")
+func wrapMCP(reg catalog.MCPRegistration, repo, labBin, logPath string) error {
+	if reg.File == "" {
+		// A tool whose registration this cannot rewrite runs against the real
+		// server. The arm still reaches Sense and its own transcript still
+		// names every call; what is missing is the frame-level capture, and the
+		// pair report says so by counting zero frames.
+		return nil
+	}
+	path := filepath.Join(repo, reg.File)
 	b, err := os.ReadFile(path) // #nosec G304 -- the run's own worktree
 	if err != nil {
 		return fmt.Errorf("read the MCP registration: %w", err)
 	}
-	// Edited as a generic document rather than through the struct above, so
+	// Edited as a generic document rather than through a type of our own, so
 	// every key the product wrote survives untouched. A round trip through a
 	// type the bench declares would silently drop whatever the bench does not
 	// know about yet.
@@ -164,29 +176,48 @@ func wrapMCP(repo, labBin, logPath string) error {
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return fmt.Errorf("read the MCP registration: %w", err)
 	}
-	servers, _ := raw["mcpServers"].(map[string]any)
+	servers, _ := raw[reg.ServersKey].(map[string]any)
 	entry, ok := servers["sense"].(map[string]any)
 	if !ok {
 		return fmt.Errorf("%s registers no sense server; the sense arm would run without Sense", path)
 	}
-	command, _ := entry["command"].(string)
-	if command == "" {
-		return fmt.Errorf("%s registers a sense server with no command", path)
+	if err := captureThrough(entry, reg.CommandStyle, labBin, logPath); err != nil {
+		return fmt.Errorf("%s: %w", path, err)
 	}
-	args := []string{"tee", "-log", logPath, "--", command}
-	if declared, ok := entry["args"].([]any); ok {
-		for _, a := range declared {
-			args = append(args, fmt.Sprint(a))
-		}
-	}
-	entry["command"] = labBin
-	entry["args"] = args
 
 	// Re-marshalling a document that was just unmarshalled into `any` cannot
 	// fail, so there is no error branch to write here.
 	out, _ := json.MarshalIndent(raw, "", "  ")
 	if err := os.WriteFile(path, append(out, '\n'), 0o644); err != nil {
 		return fmt.Errorf("rewrite the MCP registration: %w", err)
+	}
+	return nil
+}
+
+// captureThrough rewrites one server entry to run behind the capture, in whichever of the
+// two shapes this tool writes.
+func captureThrough(entry map[string]any, style, labBin, logPath string) error {
+	prefix := []any{labBin, "tee", "-log", logPath, "--"}
+	switch style {
+	case catalog.CommandArgv:
+		argv, ok := entry["command"].([]any)
+		if !ok || len(argv) == 0 {
+			return errors.New("registers a sense server with no command")
+		}
+		entry["command"] = append(prefix, argv...)
+	case catalog.CommandAndArgs:
+		command, _ := entry["command"].(string)
+		if command == "" {
+			return errors.New("registers a sense server with no command")
+		}
+		args := []any{"tee", "-log", logPath, "--", command}
+		if declared, ok := entry["args"].([]any); ok {
+			args = append(args, declared...)
+		}
+		entry["command"] = labBin
+		entry["args"] = args
+	default:
+		return fmt.Errorf("states its MCP command style as %q, which nothing here writes", style)
 	}
 	return nil
 }

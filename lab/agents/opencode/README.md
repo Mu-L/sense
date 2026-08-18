@@ -1,33 +1,92 @@
 # opencode
 
-The human half of `agent.json`: operational facts about someone else's product.
-Dated and tied to a version. **Nothing validates these dates and nothing warns
-when one is old — a stale date here is not a guarantee of anything.**
+Last verified: 2026-08-18, against **opencode 1.18.18**, by driving a scenario
+end to end on both arms. Everything below was measured on this machine rather
+than read out of a doc page.
 
-Last verified: 2026-08-15, against the model set in `lab/models/`.
+## Why it exists
 
-## Write a model id in provider/model form, always
-
-This is the quirk that has already cost a whole arm.
-
-An arm was written as `mistral-large-3:cloud`. The runner mapped a bare
-`<id>:cloud` to `ollama-cloud/<id>`, which **ate the size tag the model needed**:
-the provider offers only `mistral-large-3:675b`, so the id resolved to something
-that does not exist. Every run of that arm came back **empty, zero tokens, exit
-1** — and it failed as a bad result rather than as a crash, which is why it took
-a campaign to notice.
-
-`provider/model` form passes through untouched. The catalog now carries the
-full id (`ollama-cloud/mistral-large-3:675b`), and the shorter form is recorded
-as an alias so nothing silently re-derives it.
+It is how the confirmation arms reach the models that are neither Claude nor
+GPT. An earlier approach pointed the Claude CLI at an Anthropic-compatible
+endpoint serving cloud models, and it drove them so poorly that they ignored
+Sense almost entirely: **2 Sense calls against 97 native ones** in one session
+that completed and looked fine. This tool has a native authed provider and
+native MCP support, and the measured sense arm reached Sense through it.
 
 ## Files it touches
 
-`$HOME/.config/opencode` and `$HOME/.local/share/opencode`, both HOME-relative,
-so a disposable home contains them.
+`$HOME/.local/share/opencode` and `$HOME/.config/opencode`, both HOME-relative,
+and it keeps state in **both** — which is why `config_dirs` is a list. The
+credential directory is listed **first**, because that is the one the credential
+route reads.
 
-## Auth
+## Auth: through the environment, and that is not a convenience
 
-API key only. It cannot reach a model that is available under a subscription
-alone, and the catalog validator rejects that pairing at load time rather than
-at spawn time.
+API keys, per provider, in `auth.json`. Measured: `OPENCODE_CONFIG_DIR` does
+**not** move that file — pointed at a directory holding a valid `auth.json`, the
+tool reported 0 credentials and named `~/.local/share/opencode/auth.json` as
+where it was looking.
+
+So the login lives inside HOME and nowhere else, and HOME is the disposable one.
+Writing a credential there would put state in the exact place the contamination
+proof reads as a dirty arm, and **every arm of every run would report as
+contaminated** — a proof that has stopped proving anything.
+
+`OPENCODE_AUTH_CONTENT` is the way through: the document arrives in a variable,
+the tool reads it, and the disposable HOME stays empty. Measured working:
+`auth list` in an isolated HOME with only that variable set reported all three
+providers.
+
+`credential_fields` names **one provider**, the one the catalog's models
+actually use. Adding another is two lines there, and a run then holds only the
+keys it needs rather than every key the operator has.
+
+The expiry is declared `never`, because an API key has none. That is a stated
+fact rather than a missing one: a tool that simply left it out would be
+indistinguishable from one whose expiry nobody wired up, and a cell would be
+planned against a credential nothing could check.
+
+## Driving it headless
+
+`run --format json --auto`, with the prompt on **stdin**. The model id passes
+through untouched, in the `provider/model` form the model file states —
+`kimi-for-coding/k3` reached the tool as `--model kimi-for-coding/k3`.
+
+There is no flag that appends to a system prompt, so the wall note goes in front
+of the prompt, the same as Codex.
+
+## Cold start: measured, reported, and not corrected for
+
+It spawns and initialises the MCP server before the first streamed event. That
+was once misdiagnosed as "hangs on MCP" when it was premature kills at 35 to 60
+seconds.
+
+Time to first streamed event, same scenario, same repository, same day:
+
+| tool | sense arm | baseline arm | the sense arm's handicap |
+|---|---|---|---|
+| claude-code | 2.3s | 1.6s | 0.7s |
+| opencode (run 1) | 25.3s | 8.7s | 16.6s |
+| opencode (run 2) | 18.6s | 6.8s | 11.8s |
+
+**The handicap is real and it is one tool's, not the rule's.** On the 360-second
+wall used here it is 3 to 5 per cent of the sense arm's budget. The wall starts
+at spawn for both arms and for every tool, which is a definition every recorded
+number rests on, and changing it is not this adapter's business: a wall rule
+that differed by agent tool would make cross-tool results incomparable, which is
+worse than a measured handicap somebody can read. **Reported here so a later
+decision can be taken on numbers rather than on a hunch.**
+
+## MCP registration
+
+`sense setup --tools opencode` writes `opencode.json`, `AGENTS.md`,
+`.opencode/skills/` and `.opencode/plugin/sense.js`. The registration lives
+under a `mcp` key and states its command as a **single argv array**, which is a
+different shape from the other JSON registration — hence `mcp_registration` in
+the config. The capture shim rewrites it in place and recorded 8 frames in the
+measured run.
+
+## Judging
+
+`judge_args` is empty: nothing here has been measured to drive it tool-less and
+single-turn, and a judge with tools is a different instrument from one without.

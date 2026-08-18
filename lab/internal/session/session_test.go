@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luuuc/sense/lab/internal/catalog"
 	"github.com/luuuc/sense/lab/internal/isolate"
 	"github.com/luuuc/sense/lab/internal/run"
 	"github.com/luuuc/sense/lab/internal/session"
@@ -85,6 +86,9 @@ func spec(t *testing.T, arm isolate.Arm) session.Spec {
 		Args:     args,
 		SenseBin: fakeSense(t),
 		LabBin:   "/opt/sense-lab",
+		MCPRegistration: catalog.MCPRegistration{
+			File: ".mcp.json", ServersKey: "mcpServers", CommandStyle: catalog.CommandAndArgs,
+		},
 		HostPath: os.Getenv("PATH"),
 		Wall:     30 * time.Second,
 		Grace:    200 * time.Millisecond,
@@ -712,5 +716,65 @@ func aRoute() isolate.Route {
 		File:   ".credentials.json",
 		Fields: []string{"toolOauth.accessToken", "toolOauth.scopes"},
 		Expiry: "ms:toolOauth.expiresAt",
+	}
+}
+
+// The second registration shape measured: one array holding the command and its
+// arguments, under a different top-level key. A shim that knew only the first
+// shape refused the arm outright and no run could start.
+func TestARegistrationWrittenAsOneArgvArrayIsAlsoCaptured(t *testing.T) {
+	s := spec(t, isolate.Sense)
+	s.MCPRegistration = catalog.MCPRegistration{
+		File: "opencode.json", ServersKey: "mcp", CommandStyle: catalog.CommandArgv,
+	}
+	s.SenseBin = fakeSenseWriting(t,
+		`printf '{"mcp":{"sense":{"command":["sense","mcp"],"enabled":true,"type":"local"}}}' > opencode.json`)
+
+	res, err := session.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	b, err := os.ReadFile(filepath.Join(res.Env.Repo, "opencode.json"))
+	if err != nil {
+		t.Fatalf("read the registration back: %v", err)
+	}
+	var doc struct {
+		MCP map[string]struct {
+			Command []string `json:"command"`
+		} `json:"mcp"`
+	}
+	if err := json.Unmarshal(b, &doc); err != nil {
+		t.Fatalf("the rewritten registration is not JSON: %v", err)
+	}
+	argv := doc.MCP["sense"].Command
+	if len(argv) < 6 || argv[0] != s.LabBin || argv[1] != "tee" {
+		t.Fatalf("the registration spawns %v, want the capture shim in front", argv)
+	}
+	if argv[len(argv)-2] != "sense" || argv[len(argv)-1] != "mcp" {
+		t.Errorf("the registration ends %v, want the product's own command", argv[len(argv)-2:])
+	}
+	// Everything the product wrote beside the command survives: a round trip
+	// through a type of our own would drop whatever the bench does not know
+	// about yet.
+	if !strings.Contains(string(b), `"enabled": true`) {
+		t.Errorf("the rewrite dropped what the product wrote:\n%s", b)
+	}
+}
+
+// A tool whose registration this cannot rewrite still runs. It reaches the real
+// server, its own transcript still names every call, and the missing capture
+// shows up as zero frames rather than as a refused arm.
+func TestAToolWithNoRegistrationShapeRunsWithoutACapture(t *testing.T) {
+	s := spec(t, isolate.Sense)
+	s.MCPRegistration = catalog.MCPRegistration{}
+
+	res, err := session.Run(context.Background(), s)
+	if err != nil {
+		t.Fatalf("a sense arm whose registration cannot be rewritten was refused: %v", err)
+	}
+
+	if res.Meta.Outcome != run.Completed {
+		t.Errorf("outcome = %s, want a completed run", res.Meta.Outcome)
 	}
 }

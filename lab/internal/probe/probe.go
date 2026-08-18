@@ -27,6 +27,7 @@ import (
 	"github.com/luuuc/sense/lab/internal/isolate"
 	"github.com/luuuc/sense/lab/internal/run"
 	"github.com/luuuc/sense/lab/internal/session"
+	"github.com/luuuc/sense/lab/internal/transcript"
 )
 
 // Spec is one job: the same everything, run twice.
@@ -143,6 +144,20 @@ type Report struct {
 	// SenseUsed names every sign the sense arm's transcript used Sense. Empty
 	// here is a different failure: an arm that had Sense and never touched it.
 	SenseUsed []string
+	// SenseCalls and BaselineCalls are how many tool calls each arm made and how
+	// many of them reached Sense.
+	//
+	// Reported, never gated. An earlier instrument drove cloud models through a
+	// CLI that technically accepted them and they ignored Sense almost
+	// entirely: 2 Sense calls against 97 native ones, in a session that
+	// COMPLETED and passed every other check. So a completed run is not
+	// evidence of a working arm, and the tell is in the counts.
+	//
+	// There is deliberately no threshold. 2 against 97 is obvious; 15 against
+	// 40 is a judgement nobody has the data to automate, and a number invented
+	// here would be a screen wearing a check's clothes. A human reads it.
+	SenseCalls    Calls
+	BaselineCalls Calls
 	// Frames is how many MCP frames the sense arm's capture holds.
 	Frames int
 	// BaselineCaptured says whether the baseline arm left a capture file. It
@@ -152,6 +167,19 @@ type Report struct {
 	// Differences names every way the two arms differ other than Sense access.
 	// Empty is the only acceptable value.
 	Differences []string
+}
+
+// Calls is how a single arm spent its tool calls.
+type Calls struct {
+	// Sense is how many of them reached Sense.
+	Sense int
+	// Total is how many it made altogether.
+	Total int
+}
+
+// String is the one line a human reads.
+func (c Calls) String() string {
+	return fmt.Sprintf("%d of %d tool calls reached Sense", c.Sense, c.Total)
 }
 
 // Sound reports whether the pair is a measurement.
@@ -303,6 +331,7 @@ func (s Spec) arm(root string, arm isolate.Arm, wall time.Duration) session.Spec
 		AgentEnv:         s.AgentEnv,
 		SetupTool:        s.SetupTool,
 		TranscriptFormat: s.Agent.TranscriptFormat,
+		MCPRegistration:  s.Agent.MCPRegistration,
 		SenseBin:         s.SenseBin,
 		LabBin:           s.LabBin,
 		HostPath:         s.HostPath,
@@ -352,16 +381,25 @@ func (s Spec) check(ctx context.Context, sense, baseline session.Result) (rep Re
 		channels.Absent(contamination, senseWorld),
 		channels.Absent(contamination, baselineWorld)...)
 
-	senseSaid, err := transcript(sense)
+	senseSaid, err := rawTranscript(sense)
 	if err != nil {
 		return Report{}, err
 	}
-	baselineSaid, err := transcript(baseline)
+	baselineSaid, err := rawTranscript(baseline)
 	if err != nil {
 		return Report{}, err
 	}
 	r.SenseUsed = channels.UsedBy(senseSaid, tools, binary)
 	r.BaselineUsed = channels.UsedBy(baselineSaid, tools, binary)
+
+	r.SenseCalls, err = armCalls(sense, s.Agent.TranscriptFormat, tools)
+	if err != nil {
+		return Report{}, err
+	}
+	r.BaselineCalls, err = armCalls(baseline, s.Agent.TranscriptFormat, tools)
+	if err != nil {
+		return Report{}, err
+	}
 
 	frames, err := countFrames(session.LogPath(sense.Env))
 	if err != nil {
@@ -533,13 +571,57 @@ func withoutWallNote(args []string, flag string) []string {
 
 // transcript is what an arm actually said, unnormalised. The canonical form is
 // cycle 02's and is built from the same bytes.
-func transcript(res session.Result) ([]byte, error) {
+func rawTranscript(res session.Result) ([]byte, error) {
 	path := filepath.Join(res.Env.Root, "session", "raw", "stdout")
 	b, err := os.ReadFile(path) // #nosec G304 -- the run's own capture
 	if err != nil {
 		return nil, fmt.Errorf("read the %s arm's transcript: %w", res.Meta.Arm, err)
 	}
 	return b, nil
+}
+
+// armCalls counts what one arm did with its tools, read through the normalizer
+// its own agent tool declares.
+//
+// Through the normalizer rather than by searching the raw bytes, because the
+// question is how many CALLS were made and not whether a name appears: a name
+// appears in the tool's own registration, in the reply the tool was handed and
+// in whatever the repository happens to contain.
+func armCalls(res session.Result, format string, senseTools []string) (Calls, error) {
+	tr, err := transcript.Read(transcript.FormatOfRun(format),
+		filepath.Join(res.Env.Root, "session", "raw", "stdout"))
+	if err != nil {
+		return Calls{}, fmt.Errorf("read the %s arm's calls: %w", res.Meta.Arm, err)
+	}
+	c := Calls{Total: len(tr.Calls)}
+	for _, call := range tr.Calls {
+		if reachesSense(call.Name, senseTools) {
+			c.Sense++
+		}
+	}
+	return c, nil
+}
+
+// reachesSense reports whether a call by this name went to Sense.
+//
+// The tool names are asked of the running server rather than written down, and
+// the name is matched by CONTAINMENT because every tool namespaces an MCP call
+// differently and all of them were measured rather than assumed: one writes
+// `mcp__sense__sense_search`, one writes the bare `sense_search`, and one
+// writes `sense_sense_search`. Equality found none of the third tool's calls
+// and reported an arm that used Sense three times as having used it none —
+// which is the exact reading this count exists to prevent, arriving through the
+// count itself.
+func reachesSense(name string, senseTools []string) bool {
+	if strings.Contains(name, channels.MCPPrefix) {
+		return true
+	}
+	for _, tool := range senseTools {
+		if strings.Contains(name, tool) {
+			return true
+		}
+	}
+	return false
 }
 
 // countFrames is how much the sense arm's capture holds. Zero on a sense arm is

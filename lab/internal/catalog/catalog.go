@@ -141,6 +141,17 @@ type Agent struct {
 	// its own end, and a tool whose expiry could not be read would be planned
 	// against a credential that dies mid-pair.
 	CredentialExpiry string `json:"credential_expiry"`
+	// CredentialEnv is the variable a tool reads its credential document from,
+	// for a tool that reads one from the environment rather than from a file.
+	//
+	// Measured 2026-08-18: one tool keeps its login inside HOME and nowhere
+	// else, and its own config-directory variable does not move it. Writing it
+	// into the disposable HOME would put state in the one place the
+	// contamination proof reads as a dirty arm, so every arm — both of them,
+	// every run — would report as contaminated. The environment is how that
+	// tool takes a credential without leaving a trace the proof has to
+	// special-case.
+	CredentialEnv string `json:"credential_env"`
 	// HeadlessArgs drive the tool with no terminal attached. They live here
 	// rather than in code because they are ecosystem facts: they change when
 	// somebody else ships a release, and no two tools spell them alike.
@@ -191,11 +202,41 @@ type Agent struct {
 	WallNoteDelivery string `json:"wall_note_delivery"`
 	// Env is added to the session environment, as KEY=VALUE. Same reason.
 	Env []string `json:"env"`
+	// MCPRegistration is where and how this tool reads its MCP servers from the
+	// repository, which is what lets the capture shim put a tee in front of the
+	// Sense server.
+	//
+	// Per tool because no two tools spell it alike: one keeps a `mcpServers`
+	// object with a command and its arguments beside each other, another keeps
+	// a `mcp` object whose command is a single argv array, and a third keeps
+	// TOML. A tool that declares none is run without a capture — which is
+	// visible as zero frames in the pair report rather than silent.
+	MCPRegistration MCPRegistration `json:"mcp_registration"`
 	// SupportsMCP bounds which subjects this tool can carry.
 	SupportsMCP bool `json:"supports_mcp"`
 	// AuthModes are how this tool can be authenticated, e.g. subscription, api_key.
 	AuthModes []string `json:"auth_modes"`
 }
+
+// MCPRegistration is one tool's shape of MCP registration file.
+type MCPRegistration struct {
+	// File is the registration's path, relative to the repository.
+	File string `json:"file"`
+	// ServersKey is the top-level object the servers live under.
+	ServersKey string `json:"servers_key"`
+	// CommandStyle says how a server states what to run: `argv` for a single
+	// array, `command+args` for a string beside an array.
+	CommandStyle string `json:"command_style"`
+}
+
+// The two ways a registration states the command to run. Both are measured off
+// what `sense setup` writes, not guessed.
+const (
+	// CommandArgv is one array holding the command and its arguments.
+	CommandArgv = "argv"
+	// CommandAndArgs is a command string with its arguments beside it.
+	CommandAndArgs = "command+args"
+)
 
 // Model is a set of FACTS about a model. Never mechanics for invoking one:
 // those belong to the agent tool that drives it.

@@ -32,6 +32,9 @@ type Credential struct {
 	Fields map[string]json.RawMessage
 	// ExpiresAt is when the credential runs out, in unix milliseconds.
 	ExpiresAt int64
+	// NeverExpires is set for a credential whose tool declares it has no end,
+	// which is what an API key is.
+	NeverExpires bool
 }
 
 // Route is how a credential reaches one agent tool, as the catalog describes it.
@@ -58,14 +61,30 @@ type Route struct {
 	// ever reaches one.
 	Fields []string
 	// Expiry is where the end is read from, as `ms:<path>` for unix
-	// milliseconds or `jwt:<path>` for the `exp` claim of a token at that path.
+	// milliseconds, `jwt:<path>` for the `exp` claim of a token at that path,
+	// or `never` for a credential that does not expire.
 	Expiry string
+	// EnvVar is the variable this tool reads its credential document from,
+	// when it reads one from the environment at all.
+	//
+	// It exists because one measured tool keeps its login inside the disposable
+	// HOME and nowhere else, and provisioning it there would put state in the
+	// one place the contamination proof reads as a dirty arm — every arm would
+	// then report as contaminated, which is a proof that has stopped proving
+	// anything. Handed through the environment instead, the run holds the
+	// credential and the HOME stays empty.
+	EnvVar string
 }
 
-// The two ways a credential document states its own end.
+// The ways a credential document states its own end.
 const (
 	expiryMillis = "ms:"
 	expiryJWT    = "jwt:"
+	// expiryNever is an API key, which has no end to read. It is a declared
+	// fact rather than a missing one: a tool that simply left the expiry out
+	// would be indistinguishable from one whose expiry nobody wired up, and the
+	// preflight would then plan a cell against a credential it cannot check.
+	expiryNever = "never"
 )
 
 // Empty reports a credential that was never provided.
@@ -74,12 +93,12 @@ const (
 // environment variable, the tool reads it from there, and no file is written at
 // all. It is a different thing from an INVALID credential, which is a mistake
 // and is refused rather than skipped.
-func (c Credential) Empty() bool { return len(c.Fields) == 0 && c.ExpiresAt == 0 }
+func (c Credential) Empty() bool { return len(c.Fields) == 0 && c.ExpiresAt == 0 && !c.NeverExpires }
 
 // Valid reports whether a credential could be used at all. A document with no
 // fields, or with no readable expiry, will read as logged out or be planned
 // against blind, and either costs a full wall per arm to discover.
-func (c Credential) Valid() bool { return len(c.Fields) > 0 && c.ExpiresAt > 0 }
+func (c Credential) Valid() bool { return len(c.Fields) > 0 && (c.ExpiresAt > 0 || c.NeverExpires) }
 
 // ExpiresBefore reports whether the credential runs out before a moment a caller
 // has to reach.
@@ -89,6 +108,9 @@ func (c Credential) Valid() bool { return len(c.Fields) > 0 && c.ExpiresAt > 0 }
 // that can never be paired, which is the half-pair hazard arriving through the
 // credential instead of through an interrupt.
 func (c Credential) ExpiresBefore(t time.Time) bool {
+	if c.NeverExpires {
+		return false
+	}
 	return time.UnixMilli(c.ExpiresAt).Before(t)
 }
 
@@ -108,6 +130,56 @@ func (r Route) CredentialPath(configDir string) string { return filepath.Join(co
 // something read from the host, so a field the host store gains later cannot
 // arrive here by default. The only way another key reaches a run is for someone
 // to add it to the tool's declared list and say why.
+// Provision gives one run its credential, whichever way its tool takes one, and
+// reports the environment entries the session must be spawned with.
+//
+// One entry point rather than two call sites choosing between a file and a
+// variable: an arm provisioned by the wrong route is an arm that reads as
+// logged out after a full wall, and the choice belongs to the tool's declared
+// route rather than to whoever is spawning it.
+func (r Route) Provision(configDir string, c Credential) ([]string, error) {
+	if c.Empty() {
+		// A key-based host: the key is an allowlisted variable that reaches the
+		// session on its own, and no document is written anywhere.
+		return nil, nil
+	}
+	if r.EnvVar == "" {
+		return nil, r.Write(configDir, c)
+	}
+	if !c.Valid() {
+		return nil, fmt.Errorf("hand the credential to the run through %s: it carries no fields "+
+			"or no expiry, and a run given one reads as logged out", r.EnvVar)
+	}
+	doc, err := r.document(c)
+	if err != nil {
+		return nil, fmt.Errorf("hand the credential to the run through %s: %w", r.EnvVar, err)
+	}
+	return []string{r.EnvVar + "=" + string(doc)}, nil
+}
+
+// document rebuilds what the tool reads from the route's declared paths.
+//
+// The route's paths, not whatever the credential happens to carry. A credential
+// read through one tool's route and written through another's would otherwise
+// be written under the first tool's names, into a document the second reads and
+// finds nothing in — an arm that spends a full wall reading as logged out.
+func (r Route) document(c Credential) ([]byte, error) {
+	doc := map[string]any{}
+	for _, path := range r.Fields {
+		value, ok := c.Fields[path]
+		if !ok {
+			return nil, fmt.Errorf("the credential carries no %s, and a run given one reads as logged out", path)
+		}
+		put(doc, strings.Split(path, "."), value)
+	}
+	// Marshalling a bearer token is the whole job here, not an accident: the
+	// agent tool reads its credential from this document and there is no other
+	// route into an isolated run. What keeps it safe is that the document holds
+	// only what the tool was measured to need, that a file is written 0600, and
+	// that cleanup proves it gone.
+	return json.MarshalIndent(doc, "", "  ") // #nosec G117 -- provisioning a credential is this function
+}
+
 func (r Route) Write(configDir string, c Credential) error {
 	if r.File == "" {
 		return fmt.Errorf("provision credential into %s: the agent tool names no credential file, "+
@@ -117,31 +189,12 @@ func (r Route) Write(configDir string, c Credential) error {
 		return fmt.Errorf("provision credential into %s: the credential carries no fields or no expiry, "+
 			"and a run given one reads as logged out", configDir)
 	}
-	// The route's declared paths, not whatever the credential happens to carry.
-	// A credential read through one tool's route and written through another's
-	// would otherwise be written under the first tool's names, into a file the
-	// second reads and finds nothing in — an arm that spends a full wall
-	// reading as logged out.
-	doc := map[string]any{}
-	for _, path := range r.Fields {
-		value, ok := c.Fields[path]
-		if !ok {
-			return fmt.Errorf("provision credential into %s: the credential carries no %s, "+
-				"and a run given one reads as logged out", configDir, path)
-		}
-		put(doc, strings.Split(path, "."), value)
+	b, err := r.document(c)
+	if err != nil {
+		return fmt.Errorf("provision credential into %s: %w", configDir, err)
 	}
 	if err := os.MkdirAll(configDir, 0o700); err != nil {
 		return fmt.Errorf("prepare the run's config directory: %w", err)
-	}
-	// Marshalling a bearer token is the whole job here, not an accident: the
-	// agent tool reads its credential from this file and there is no other route
-	// into an isolated run. What keeps it safe is the mode below, the fact that
-	// the document holds only what the tool was measured to need, and that
-	// cleanup proves the file gone.
-	b, err := json.MarshalIndent(doc, "", "  ") // #nosec G117 -- provisioning a credential is this function
-	if err != nil {
-		return fmt.Errorf("provision credential into %s: %w", configDir, err)
 	}
 	// 0600 because the file is a plaintext bearer token for as long as the run
 	// lasts. WriteFile does not chmod a file that already exists, and Prepare
@@ -199,6 +252,10 @@ func (r Route) decode(b []byte) (Credential, error) {
 		}
 		c.Fields[path] = raw
 	}
+	if r.Expiry == expiryNever {
+		c.NeverExpires = true
+		return c, nil
+	}
 	ms, err := r.expiresAt(doc)
 	if err != nil {
 		return Credential{}, err
@@ -226,8 +283,8 @@ func (r Route) expiresAt(doc map[string]any) (int64, error) {
 		}
 		return jwtExpiry(token)
 	default:
-		return 0, fmt.Errorf("the agent tool states its expiry as %q, which is neither %s… nor %s…",
-			r.Expiry, expiryMillis, expiryJWT)
+		return 0, fmt.Errorf("the agent tool states its expiry as %q, which is none of %s…, %s… or %q",
+			r.Expiry, expiryMillis, expiryJWT, expiryNever)
 	}
 }
 

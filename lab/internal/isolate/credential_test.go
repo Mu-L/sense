@@ -529,3 +529,115 @@ func TestAConfigDirectoryThatCannotBeWrittenIntoIsReported(t *testing.T) {
 		t.Fatal("provisioning reported success although the credential could not be written")
 	}
 }
+
+// A tool that keeps its login inside HOME and nowhere else cannot be
+// provisioned with a file: HOME is the disposable one, and state inside it is
+// exactly what the contamination proof reads as a dirty arm. Handed through the
+// environment, the run holds the credential and the HOME stays empty.
+func TestACredentialCanReachARunThroughTheEnvironmentInstead(t *testing.T) {
+	r := aRoute()
+	r.EnvVar = "TOOL_AUTH_CONTENT"
+	dir := filepath.Join(t.TempDir(), "config")
+
+	env, err := r.Provision(dir, aCredential())
+	if err != nil {
+		t.Fatalf("provision: %v", err)
+	}
+
+	if len(env) != 1 || !strings.HasPrefix(env[0], "TOOL_AUTH_CONTENT=") {
+		t.Fatalf("environment = %v, want the tool's own variable carrying the document", env)
+	}
+	if !strings.Contains(env[0], "sk-ant-oat-example") {
+		t.Errorf("the document does not carry the token:\n%s", env[0])
+	}
+	// Nothing on disk, which is the whole point.
+	if _, err := os.Stat(dir); err == nil {
+		t.Error("a run given its credential through the environment was also written a config directory")
+	}
+}
+
+func TestAToolThatTakesAFileIsGivenAFileAndNoEnvironment(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "config")
+
+	env, err := aRoute().Provision(dir, aCredential())
+	if err != nil {
+		t.Fatalf("provision: %v", err)
+	}
+
+	if len(env) != 0 {
+		t.Errorf("environment = %v, want nothing: this tool reads a file", env)
+	}
+	if _, err := os.Stat(aCredentialPath(dir)); err != nil {
+		t.Errorf("no credential file was written: %v", err)
+	}
+}
+
+// A key-based host provisions nothing at all, and that is a different thing
+// from a half-filled credential, which is a mistake.
+func TestAKeyBasedHostProvisionsNothingByEitherRoute(t *testing.T) {
+	for _, r := range []Route{aRoute(), func() Route { r := aRoute(); r.EnvVar = "TOOL_AUTH_CONTENT"; return r }()} {
+		dir := filepath.Join(t.TempDir(), "config")
+
+		env, err := r.Provision(dir, Credential{})
+		if err != nil {
+			t.Fatalf("provision: %v", err)
+		}
+		if len(env) != 0 {
+			t.Errorf("environment = %v, want nothing", env)
+		}
+		if _, err := os.Stat(dir); err == nil {
+			t.Error("a key-based run was provisioned anyway")
+		}
+	}
+}
+
+func TestAHalfFilledCredentialIsRefusedOnTheEnvironmentRouteToo(t *testing.T) {
+	r := aRoute()
+	r.EnvVar = "TOOL_AUTH_CONTENT"
+	half := without(aCredential(), "toolOauth.accessToken")
+
+	if _, err := r.Provision(filepath.Join(t.TempDir(), "config"), half); err == nil {
+		t.Fatal("a credential missing a declared field was handed to a run")
+	}
+}
+
+// An API key has no end to read, and a tool that says so is a different thing
+// from a tool whose expiry nobody wired up: the second would have a cell
+// planned against a credential it cannot check.
+func TestACredentialThatDeclaresNoExpiryIsUsableAndNeverExpires(t *testing.T) {
+	r := aRoute()
+	r.Expiry = "never"
+	r.Fields = []string{"provider.key", "provider.type"}
+	dir := t.TempDir()
+	if err := os.WriteFile(r.CredentialPath(dir),
+		[]byte(`{"provider":{"key":"sk-key","type":"api"},"other":{"key":"not-this-one"}}`), 0o600); err != nil {
+		t.Fatalf("set up: %v", err)
+	}
+
+	c, err := r.Read(dir)
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+
+	if !c.Valid() {
+		t.Error("an API key reads as unusable because it has no expiry")
+	}
+	if c.Empty() {
+		t.Error("an API key reads as no credential at all, which is what a key-based host looks like")
+	}
+	if c.ExpiresBefore(time.Now().Add(100 * 365 * 24 * time.Hour)) {
+		t.Error("a credential that never expires was reported as expiring")
+	}
+	// The other provider's key is not this run's business.
+	into := filepath.Join(t.TempDir(), "config")
+	if err := r.Write(into, c); err != nil {
+		t.Fatalf("provision: %v", err)
+	}
+	b, err := os.ReadFile(r.CredentialPath(into))
+	if err != nil {
+		t.Fatalf("read back: %v", err)
+	}
+	if strings.Contains(string(b), "not-this-one") {
+		t.Errorf("a provider this run does not use reached it:\n%s", b)
+	}
+}

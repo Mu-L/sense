@@ -96,16 +96,10 @@ func checkAgent(a Agent) []string {
 		p = append(p, fmt.Sprintf("agent %s: no setup tool, so the channel list would be derived by "+
 			"configuring a tool the product does not know, and an empty list passes every check", a.ID))
 	}
+	p = append(p, checkCapture(a)...)
+	p = append(p, checkWallNote(a)...)
 	if a.TranscriptFormat == "" {
 		p = append(p, fmt.Sprintf("agent %s: no transcript format, so nothing could read what it says", a.ID))
-	}
-	if a.WallNote != "" && a.WallNoteDelivery != WallNoteFlagged && a.WallNoteDelivery != WallNotePrompted {
-		p = append(p, fmt.Sprintf("agent %s: declares a wall note but delivers it by %q, which is neither "+
-			"%q nor %q, so the note would be written and never reach the arm",
-			a.ID, a.WallNoteDelivery, WallNoteFlagged, WallNotePrompted))
-	}
-	if a.WallNoteDelivery == WallNoteFlagged && a.WallNoteFlag == "" {
-		p = append(p, fmt.Sprintf("agent %s: delivers its wall note by flag but names no flag", a.ID))
 	}
 	if len(a.ConfigDirs) == 0 {
 		// Not cosmetic. The contamination checks join this onto the disposable
@@ -116,6 +110,40 @@ func checkAgent(a Agent) []string {
 			"leaked state and the check would read the whole disposable HOME", a.ID))
 	}
 	return append(p, checkCredentialRoute(a)...)
+}
+
+// checkCapture refuses a registration shape the capture shim cannot rewrite. A
+// tool that declares none runs uncaptured on purpose; a tool that declares half
+// a shape runs uncaptured by accident.
+func checkCapture(a Agent) []string {
+	m := a.MCPRegistration
+	if m.File == "" {
+		return nil
+	}
+	var p []string
+	if m.ServersKey == "" {
+		p = append(p, fmt.Sprintf("agent %s: names an MCP registration file but no key the servers live "+
+			"under, so the capture would rewrite nothing and report zero frames", a.ID))
+	}
+	if m.CommandStyle != CommandArgv && m.CommandStyle != CommandAndArgs {
+		p = append(p, fmt.Sprintf("agent %s: states its MCP command style as %q, which is neither %q nor %q",
+			a.ID, m.CommandStyle, CommandArgv, CommandAndArgs))
+	}
+	return p
+}
+
+// checkWallNote refuses a note that would be written and never reach an arm.
+func checkWallNote(a Agent) []string {
+	var p []string
+	if a.WallNote != "" && a.WallNoteDelivery != WallNoteFlagged && a.WallNoteDelivery != WallNotePrompted {
+		p = append(p, fmt.Sprintf("agent %s: declares a wall note but delivers it by %q, which is neither "+
+			"%q nor %q, so the note would be written and never reach the arm",
+			a.ID, a.WallNoteDelivery, WallNoteFlagged, WallNotePrompted))
+	}
+	if a.WallNoteDelivery == WallNoteFlagged && a.WallNoteFlag == "" {
+		p = append(p, fmt.Sprintf("agent %s: delivers its wall note by flag but names no flag", a.ID))
+	}
+	return p
 }
 
 // checkCredentialRoute refuses a HALF-declared credential route.
@@ -135,6 +163,13 @@ func checkAgent(a Agent) []string {
 // None of the three is the same as some of them: a tool that takes no config
 // directory legitimately declares nothing here and authenticates by key.
 func checkCredentialRoute(a Agent) []string {
+	// A tool takes its credential either as a file in a config directory it is
+	// pointed at, or as a document in a variable. The two halves are checked
+	// as two routes rather than one long list, because a tool that takes the
+	// environment route legitimately has neither a config variable nor a file.
+	if a.CredentialEnv != "" {
+		return checkEnvCredentialRoute(a)
+	}
 	declared := map[string]string{
 		"config_dir_var":    a.ConfigDirVar,
 		"credential_file":   a.CredentialFile,
@@ -158,6 +193,31 @@ func checkCredentialRoute(a Agent) []string {
 	return []string{fmt.Sprintf("agent %s: a half-declared credential route, missing %v. All four or "+
 		"none: a partial route cannot carry a credential, and the run falls back to key authentication "+
 		"and produces an arm that reads as a model with nothing to say", a.ID, missing)}
+}
+
+// checkEnvCredentialRoute refuses a half-declared environment route.
+//
+// The document still has to be READ from the operator's own machine before it
+// can be handed to a run, so the file and its fields are as necessary here as
+// they are for a tool that takes a file. What is not necessary is a variable
+// pointing the run at a config directory, because the run is given no
+// directory to point at.
+func checkEnvCredentialRoute(a Agent) []string {
+	var missing []string
+	if a.CredentialFile == "" {
+		missing = append(missing, "credential_file")
+	}
+	if len(a.CredentialFields) == 0 {
+		missing = append(missing, "credential_fields")
+	}
+	if a.CredentialExpiry == "" {
+		missing = append(missing, "credential_expiry")
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	return []string{fmt.Sprintf("agent %s: takes its credential through %s but declares no %v, so nothing "+
+		"could read the operator's own login to hand it over", a.ID, a.CredentialEnv, missing)}
 }
 
 func (c *Catalog) checkModel(m Model) []string {
