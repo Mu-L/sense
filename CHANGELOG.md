@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.14.2] - 2026-08-18
+
+### Bug Fixes
+
+- bind a declared type through its enclosing scope
 ## [1.14.1] - 2026-08-17
 
 ### Bug Fixes
