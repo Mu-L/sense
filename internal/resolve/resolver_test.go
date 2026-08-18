@@ -955,3 +955,158 @@ func TestResolveInheritsQualifiedAncestorExactMatch(t *testing.T) {
 		t.Errorf("qualified ancestor should resolve to id 1, got ok=%v id=%d", ok, r.SymbolID)
 	}
 }
+
+// A C# class inside a block-scoped `namespace X { }` is qualified `X.Class`,
+// while the field type it declares is emitted as the bare written text
+// (`IThing`). The exact byQualified lookup misses, and composes is not a gated
+// kind, so before the lexical step it had no resolution path at all and the
+// edge was dropped — measured on jellyfin, where 23 of the 40 interfaces the
+// repository declares returned an empty blast, every one of them block-scoped.
+
+// TestResolveComposesFieldTypeInEnclosingNamespace — a class holding a field
+// whose declared type lives in the same namespace binds to it, so the
+// composition edge survives instead of being dropped.
+func TestResolveComposesFieldTypeInEnclosingNamespace(t *testing.T) {
+	rs := []model.SymbolRef{
+		{ID: 1, Qualified: "Demo.Block.IThing", FileID: 1},
+		{ID: 2, Qualified: "Demo.Block.Holder", FileID: 1},
+	}
+	ix := resolve.NewIndex(rs)
+	r, ok := ix.Resolve(resolve.Request{
+		Target:                "IThing",
+		Kind:                  model.EdgeComposes,
+		SourceFileID:          1,
+		SourceQualified:       "Demo.Block.Holder",
+		SourceParentQualified: "Demo.Block",
+		BaseConfidence:        1.0,
+	})
+	if !ok || r.SymbolID != 1 {
+		t.Fatalf("field type should resolve to Demo.Block.IThing (id 1) via lexical scope, got ok=%v id=%d", ok, r.SymbolID)
+	}
+	if r.Confidence != 1.0 {
+		t.Errorf("a declared type written in the source is static, not a guess: got confidence %v", r.Confidence)
+	}
+}
+
+// TestResolveComposesFieldTypeInnermostNamespaceWins — with the same leaf name
+// at two enclosing depths, the hold binds to the nearer one, which is what the
+// language does. A test that passed whichever way the walk ran would not be
+// testing the walk.
+func TestResolveComposesFieldTypeInnermostNamespaceWins(t *testing.T) {
+	rs := []model.SymbolRef{
+		{ID: 1, Qualified: "Demo.IThing", FileID: 1},
+		{ID: 2, Qualified: "Demo.Inner.IThing", FileID: 1},
+		{ID: 3, Qualified: "Demo.Inner.Holder", FileID: 1},
+	}
+	ix := resolve.NewIndex(rs)
+	r, ok := ix.Resolve(resolve.Request{
+		Target:                "IThing",
+		Kind:                  model.EdgeComposes,
+		SourceFileID:          1,
+		SourceQualified:       "Demo.Inner.Holder",
+		SourceParentQualified: "Demo.Inner",
+		BaseConfidence:        1.0,
+	})
+	if !ok || r.SymbolID != 2 {
+		t.Fatalf("hold should bind the innermost Demo.Inner.IThing (id 2), got ok=%v id=%d", ok, r.SymbolID)
+	}
+}
+
+// TestResolveComposesFieldTypeOutsideEveryEnclosingScopeStaysUnresolved —
+// precision guard (green today and after the change). The walk binds only what
+// exists at a real enclosing scope; a type in an unrelated namespace is left
+// unresolved rather than guessed at, because a wrong hold misleads a lifecycle
+// audit worse than a gap does. It asserts nothing the change made newly true —
+// it pins a contract that `composes` is newly exposed to, having reached this
+// path for the first time. It is also the shape of the residual named in the
+// bench record: a cross-namespace hold needs the file's imports, which this walk
+// does not read.
+func TestResolveComposesFieldTypeOutsideEveryEnclosingScopeStaysUnresolved(t *testing.T) {
+	rs := []model.SymbolRef{
+		{ID: 1, Qualified: "Other.Namespace.IThing", FileID: 1},
+		{ID: 2, Qualified: "Demo.Block.Holder", FileID: 1},
+	}
+	ix := resolve.NewIndex(rs)
+	if r, ok := ix.Resolve(resolve.Request{
+		Target:                "IThing",
+		Kind:                  model.EdgeComposes,
+		SourceFileID:          1,
+		SourceQualified:       "Demo.Block.Holder",
+		SourceParentQualified: "Demo.Block",
+		BaseConfidence:        1.0,
+	}); ok {
+		t.Fatalf("a type at no enclosing scope must stay unresolved, got id=%d confidence=%v", r.SymbolID, r.Confidence)
+	}
+}
+
+// TestResolveCallsNeverTakesTheLexicalWalk — the guard itself, which is the part
+// of the change that carries risk: the lexical walk was widened from `inherits`
+// to `inherits or composes`, and widening it further to calls or references
+// would reintroduce the cross-scope guessing isUnverifiedCrossScope exists to
+// demote. A call naming a symbol that DOES exist at an enclosing scope must
+// reach it through the leaf fallback, which demotes an unverified qualifier,
+// never through the walk, which would bind it at full confidence.
+func TestResolveCallsNeverTakesTheLexicalWalk(t *testing.T) {
+	rs := []model.SymbolRef{
+		{ID: 1, Qualified: "Demo.Helper", FileID: 1, Language: "csharp"},
+		{ID: 2, Qualified: "Demo.Inner.Caller", FileID: 1, Language: "csharp"},
+	}
+	ix := resolve.NewIndex(rs)
+	r, ok := ix.Resolve(resolve.Request{
+		Target:                "Helper",
+		Kind:                  model.EdgeCalls,
+		SourceFileID:          1,
+		SourceQualified:       "Demo.Inner.Caller",
+		SourceParentQualified: "Demo.Inner",
+		BaseConfidence:        1.0,
+	})
+	if ok && r.Confidence == 1.0 {
+		t.Fatalf("a call must not bind through the lexical walk at full confidence, got id=%d confidence=%v", r.SymbolID, r.Confidence)
+	}
+}
+
+// TestResolveComposesFieldTypeNeverBindsAMethod — the fabrication the kind
+// filter closes. In C# `.` separates a namespace from its types AND a type from
+// its members, so a source nested at `Ns.Outer.Inner` declaring a field of type
+// `Helper` walks to `Ns.Outer.Helper`. When that is a METHOD on Outer, binding
+// it would emit a hold pointing at a method. It must stay unresolved.
+func TestResolveComposesFieldTypeNeverBindsAMethod(t *testing.T) {
+	rs := []model.SymbolRef{
+		{ID: 1, Qualified: "Ns.Outer.Helper", FileID: 1, Kind: model.KindMethod, Language: "csharp"},
+		{ID: 2, Qualified: "Ns.Outer.Inner", FileID: 1, Kind: model.KindClass, Language: "csharp"},
+	}
+	ix := resolve.NewIndex(rs)
+	if r, ok := ix.Resolve(resolve.Request{
+		Target:                "Helper",
+		Kind:                  model.EdgeComposes,
+		SourceFileID:          1,
+		SourceQualified:       "Ns.Outer.Inner",
+		SourceParentQualified: "Ns.Outer",
+		BaseConfidence:        1.0,
+	}); ok {
+		t.Fatalf("a hold must not bind a method, got id=%d confidence=%v", r.SymbolID, r.Confidence)
+	}
+}
+
+// TestResolveComposesFieldTypeBindsATypeAtTheSameScope — the other side of the
+// kind filter: the same walk, the same scope, a type rather than a method, binds.
+// Without this the filter could exclude everything and the test above would
+// still pass.
+func TestResolveComposesFieldTypeBindsATypeAtTheSameScope(t *testing.T) {
+	rs := []model.SymbolRef{
+		{ID: 1, Qualified: "Ns.Outer.Helper", FileID: 1, Kind: model.KindClass, Language: "csharp"},
+		{ID: 2, Qualified: "Ns.Outer.Inner", FileID: 1, Kind: model.KindClass, Language: "csharp"},
+	}
+	ix := resolve.NewIndex(rs)
+	r, ok := ix.Resolve(resolve.Request{
+		Target:                "Helper",
+		Kind:                  model.EdgeComposes,
+		SourceFileID:          1,
+		SourceQualified:       "Ns.Outer.Inner",
+		SourceParentQualified: "Ns.Outer",
+		BaseConfidence:        1.0,
+	})
+	if !ok || r.SymbolID != 1 {
+		t.Fatalf("a hold on a type at the enclosing scope should bind it, got ok=%v id=%d", ok, r.SymbolID)
+	}
+}

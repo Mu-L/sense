@@ -202,6 +202,11 @@ const nameCollisionConfidence = extract.ConfidenceNameCollision
 //     shortcut entirely: its byQualified hit would be a leaf coincidence, so
 //     it goes straight to the gated fallback.
 //
+//     Lexical-scope step (between 2 and 3; inherits and composes only):
+//     a type name written relative to its own enclosing scope (`Base` inside
+//     `Outer`, `IFoo` inside `namespace X { }`) is resolved by walking the
+//     source's enclosing scopes outward, innermost first (resolveLexicalType).
+//
 //     Inherited-method step (between 2 and 3; calls/tests/references only):
 //     a `Sub#m` / `Sub.m` dispatch with no own `Sub#m` resolves to the
 //     nearest `Ancestor#m` up the class `inherits` chain (resolveInherited).
@@ -252,15 +257,18 @@ func (ix *Index) Resolve(req Request) (Result, bool) {
 		return r, ok
 	}
 
-	// Step 2b: inherits lexical-scope resolution. A superclass written relative to
-	// the subclass's namespace (`class Sub < Base` where the real base is
-	// `Outer::Base`) is emitted as the bare written text and misses the exact
-	// match; resolve it the way Ruby/Rust constant lookup does, by walking the
-	// subclass's enclosing scopes outward. inherits is not a gated kind, so this
-	// is its only resolution path past the exact match — and it repairs the
-	// `inherits` edges the ancestry map (resolveInherited) is built from.
-	if req.Kind == model.EdgeInherits {
-		if r, ok := ix.resolveLexicalInherits(target, req); ok {
+	// Step 2b: lexical-scope resolution for declared type names. A type written
+	// relative to its own namespace — a superclass (`class Sub < Base` where the
+	// real base is `Outer::Base`) or a field's declared type (`private readonly
+	// IFoo _f;` inside `namespace X { }` where the symbol is `X.IFoo`) — is
+	// emitted as the bare written text and misses the exact match; resolve it
+	// the way constant lookup does, by walking the enclosing scopes outward.
+	// Neither kind is gated, so this is their only resolution path past the
+	// exact match — and it repairs the `inherits` edges the ancestry map
+	// (resolveInherited) is built from.
+	declaredTypeKind := req.Kind == model.EdgeInherits || req.Kind == model.EdgeComposes
+	if declaredTypeKind {
+		if r, ok := ix.resolveLexicalType(target, req); ok {
 			return r, true
 		}
 	}
@@ -363,24 +371,43 @@ func (ix *Index) resolveInherited(target string, req Request) (Result, bool) {
 	return Result{}, false
 }
 
-// resolveLexicalInherits resolves an `inherits` target that missed the exact
+// resolveLexicalType resolves an `inherits` or `composes` target that missed the exact
 // match by walking the subclass's enclosing scopes outward, mirroring Ruby/Rust
 // constant lookup. A superclass named relative to the subclass's namespace
 // (`class Sub < Base` two modules deep, where the real base is `Outer::Base`) is
-// emitted by the extractor as the bare written text "Base", so the exact
-// byQualified lookup misses. Trying `<enclosing-scope><sep>Base` from the
+// emitted by the extractor as the bare written text, so the exact byQualified
+// lookup misses. Trying `<enclosing-scope><sep><target>` from the source's
 // innermost enclosing scope outward binds the same symbol the language would —
-// the innermost match wins (Ruby's rule), and a name that exists at no enclosing
-// scope resolves to nothing rather than a fabricated base (a wrong base misleads
-// blast worse than a gap).
+// the innermost match wins, and a name that exists at no enclosing scope
+// resolves to nothing rather than a fabricated target (a wrong base or a wrong
+// hold misleads blast worse than a gap).
 //
-// Scoped to inherits on purpose: gated kinds already have resolveByLeaf, and a
-// general scope walk for calls/references would reintroduce exactly the
-// cross-scope guessing isUnverifiedCrossScope exists to demote. The separator is
-// derived from the source's own qualified name so the walk stays language-
-// agnostic; when it cannot be determined (no enclosing scope, e.g. a top-level
-// subclass) the step is a no-op and the edge stays unresolved.
-func (ix *Index) resolveLexicalInherits(target string, req Request) (Result, bool) {
+// Scoped to inherits and composes on purpose, and the real argument is the
+// order rather than the shape of the target: step 2b runs only when the bare
+// form matched NOTHING, because resolveQualified returns done on any hit. So the
+// walk can bind only where the language's own outermost candidate does not exist
+// in the index, and it then requires an exact byQualified hit at a real
+// enclosing scope. That is a verified bind, not a leaf coincidence.
+//
+// It is NOT true that every such target is a name written in the source: three
+// of the composes emitters synthesise it (Rails `has_many :comments` ⇒
+// `Comment`, Eloquent relations, and Django's `"product.ProductVariant"` whose
+// app qualifier is deliberately stripped). Two of those three no-op here anyway
+// — Python qualified names carry class nesting but not module path, so the
+// separator cannot be derived, and PHP's `\` is not a separator this walk knows.
+// The live one is Rails, where `compute_type` walks the owner's module nesting
+// too, so the bind matches what the framework does.
+//
+// Gated kinds already have resolveByLeaf, and a general scope walk for
+// calls/references would reintroduce exactly the cross-scope guessing
+// isUnverifiedCrossScope exists to demote. `includes` is the third ungated
+// structural kind in the same situation (Ruby `include Foo` inside `module
+// App`); it is left out because nothing has measured it, not because it differs
+// in principle. The separator is derived from the
+// source's own qualified name so the walk stays language-agnostic; when it
+// cannot be determined (no enclosing scope, e.g. a top-level subclass) the step
+// is a no-op and the edge stays unresolved.
+func (ix *Index) resolveLexicalType(target string, req Request) (Result, bool) {
 	sep := separator(req.SourceQualified, req.SourceParentQualified)
 	if sep == "" {
 		return Result{}, false
@@ -389,7 +416,7 @@ func (ix *Index) resolveLexicalInherits(target string, req Request) (Result, boo
 	// top-level lookup: try the bare form only, never prepend an enclosing scope.
 	if strings.HasPrefix(target, sep) {
 		bare := target[len(sep):]
-		if m := ix.byQualified[bare]; len(m) > 0 {
+		if m := ix.lexicalCandidates(ix.byQualified[bare], req); len(m) > 0 {
 			return pickBest(m, req.SourceFileID, req.BaseConfidence), true
 		}
 		return Result{}, false
@@ -397,11 +424,41 @@ func (ix *Index) resolveLexicalInherits(target string, req Request) (Result, boo
 	// Walk the enclosing scopes outward, innermost first. The bare-target case
 	// (the "" scope) was already tried by the exact match, so it is skipped here.
 	for scope := req.SourceParentQualified; scope != ""; scope = trimLastSegment(scope, sep) {
-		if m := ix.byQualified[scope+sep+target]; len(m) > 0 {
+		if m := ix.lexicalCandidates(ix.byQualified[scope+sep+target], req); len(m) > 0 {
 			return pickBest(m, req.SourceFileID, req.BaseConfidence), true
 		}
 	}
 	return Result{}, false
+}
+
+// lexicalCandidates narrows a lexical-walk hit to what a declared type can
+// actually name: same code language, right test direction, and a type-like
+// kind.
+//
+// The kind filter is what the separator makes necessary. In C# and TypeScript
+// `.` separates a namespace from its types AND a type from its members, so a
+// source nested at `Ns.Outer.Inner` declaring a field of type `Helper` walks to
+// `Ns.Outer.Helper` — which may be a METHOD on Outer. Binding it would emit a
+// composition edge pointing at a method: a fabricated hold, and one this walk
+// hits far more often for composes (one edge per field) than it ever could for
+// inherits (one per class).
+func (ix *Index) lexicalCandidates(m []model.SymbolRef, req Request) []model.SymbolRef {
+	m = filterByLanguage(m, ix.fileLang[req.SourceFileID])
+	m = filterByTestDirection(m, ix.fileIsTest[req.SourceFileID], ix.fileIsTest)
+	kept := m[:0:0]
+	for _, r := range m {
+		switch r.Kind {
+		case model.KindClass, model.KindInterface, model.KindType,
+			model.KindModule, model.KindConstant, "":
+			// "" is an unkinded ref, which predates the kind column on some
+			// rows; excluding it would silently drop real binds.
+			kept = append(kept, r)
+		default:
+			// A method, function, field or variable is not something a
+			// declaration can name as its type.
+		}
+	}
+	return kept
 }
 
 // trimLastSegment drops the trailing `<sep>segment` of a qualified name, or
