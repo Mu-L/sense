@@ -1,9 +1,0 @@
-{
-  "id": "abp",
-  "url": "https://github.com/abpframework/abp.git",
-  "commit": "7ed43b1931b9df46a50c0c59148a18645641d0df",
-  "languages": [
-    "csharp"
-  ],
-  "stack": "dotnet"
-}

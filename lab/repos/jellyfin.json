@@ -1,9 +1,0 @@
-{
-  "id": "jellyfin",
-  "url": "https://github.com/jellyfin/jellyfin.git",
-  "commit": "ae8723026d97b6d0f926638803edef338919b794",
-  "languages": [
-    "csharp"
-  ],
-  "stack": "dotnet"
-}

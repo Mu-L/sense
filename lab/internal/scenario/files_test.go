@@ -382,37 +382,3 @@ func TestTheGoldGroupsAreListedInTheOrderTheRowsNameThem(t *testing.T) {
 		}
 	}
 }
-
-// Every group the shipped corpus actually carries, so a group added to a gold
-// file without the scorer being taught about it is visible here.
-func TestTheShippedCorpusCarriesTheFiveKnownGroups(t *testing.T) {
-	dir := filepath.Join(repoRoot(t), "lab", "scenarios")
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	seen := map[string]int{}
-	for _, e := range entries {
-		if !e.IsDir() {
-			continue
-		}
-		s, err := Load(filepath.Join(dir, e.Name()), e.Name())
-		if err != nil {
-			t.Fatalf("%s: %v", e.Name(), err)
-		}
-		for _, row := range s.Gold.Rows {
-			seen[row.Group]++
-		}
-	}
-	want := map[string]int{
-		"dependents": 70, "contract": 38, "write-path": 20, "guards": 17, "context": 9,
-	}
-	if len(seen) != len(want) {
-		t.Errorf("the corpus carries groups %v, want the five known ones", seen)
-	}
-	for g, n := range want {
-		if seen[g] != n {
-			t.Errorf("group %q has %d rows, want %d", g, seen[g], n)
-		}
-	}
-}

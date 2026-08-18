@@ -9,6 +9,11 @@ access and nothing else, so most of what is here exists to prove that. Read
 [`LAWS.md`](LAWS.md) before changing how anything is measured, and
 [`KILLERS.md`](KILLERS.md) before reporting a finding.
 
+**Nothing is shipped in `repos/`, `scenarios/` or `campaigns/`.** The
+repositories this instrument was built against were removed once it was
+finished: they were how it was crafted rather than what it is for. Each of those
+directories carries a README saying what goes in it.
+
 ## Build
 
 ```bash
@@ -56,8 +61,9 @@ says why it matters, in prose. That leading location is what the scorer matches
 against — a row with no `path:line` can never be matched, and a group where no
 row has one is refused rather than scored zero.
 
-The shipped scenarios carry extra keys (`contract_file`, `system_prompt`,
-`checks`, `scoring`) that the loader ignores. They are history, not schema.
+The loader reads those keys and no others. Scenarios written for the earlier
+instrument also carried `contract_file`, `system_prompt`, `checks` and
+`scoring`; they parse and are ignored, so an old file still loads.
 
 **3. Audit the gold before spending anything:**
 
@@ -101,14 +107,14 @@ whether the citations resolve; without it, grounding reads `NOT VERIFIED`.
 A campaign is `lab/campaigns/<key>/campaign.json`:
 
 ```json
-{"key": "dotnet-jellyfin", "judge": "claude-opus-4-7",
- "subjects": ["untreated", "sense-main"], "repos": ["jellyfin"],
+{"key": "ruby-rails", "judge": "claude-opus-4-7",
+ "subjects": ["untreated", "sense-main"], "repos": ["discourse"],
  "arms": [{"role": "headline", "model": "claude-opus-5", "runs": 2}]}
 ```
 
 ```bash
-./bin/sense-lab plan -campaign dotnet-jellyfin     # every cell, and every rejection with its reason
-./bin/sense-lab status -campaign runs/campaigns/dotnet-jellyfin
+./bin/sense-lab plan -campaign ruby-rails     # every cell, and every rejection with its reason
+./bin/sense-lab status -campaign runs/campaigns/ruby-rails
 ```
 
 `plan` refuses impossible combinations before anything spawns — a model no
@@ -148,7 +154,7 @@ keychain.
 |---|---|---|
 | claude-code | the platform keychain, or `~/.claude/.credentials.json` | an access token, its expiry and its scopes — no refresh token |
 | codex | `~/.codex/auth.json` | the same document minus nothing: it was measured to need its refresh token |
-| opencode | `~/.local/share/opencode/auth.json` | one provider's key, handed over in an environment variable |
+| opencode | `~/.local/share/opencode/auth.json` | the keys of the providers its models name, handed over in an environment variable |
 
 The per-agent READMEs carry the measurements behind those rows.
 
@@ -156,8 +162,9 @@ The per-agent READMEs carry the measurements behind those rows.
 
 - **The model id is the catalog id.** `kimi-for-coding/k3`, not the filename.
 - **A gold row without a `path:line` can never be matched**, and a group where
-  no row has one is refused rather than scored zero. That is why the shipped
-  `rails` scenario is quarantined: not one of its 25 rows carries a line.
+  no row has one is refused rather than scored zero. One scenario shipped in
+  that state for months — 25 rows, not one with a line — and nothing said so
+  until the validator existed. Run it before you spend anything.
 - **Pass `-checkout` and `-commit` to `score`**, or you will not know whether
   the citations you scored exist.
 - **Run `git worktree prune` in your clone** if a run dies part way. The next one

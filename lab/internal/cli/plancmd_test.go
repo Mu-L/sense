@@ -353,40 +353,6 @@ func TestAnUnknownFieldInACampaignIsRefused(t *testing.T) {
 	}
 }
 
-// The shipped campaign is the reference this pitch is checked against: the
-// csharp-aspnet arm set as of a named commit, planning to the cells that
-// campaign had. A broken one must fail here rather than in a session.
-func TestTheShippedCampaignPlansTheCellsItHad(t *testing.T) {
-	code, stdout, stderr := dispatch(t, "plan", "-config", repoConfigDir(t), "-campaign", "csharp-aspnet")
-
-	if code != 0 {
-		t.Fatalf("the shipped campaign does not plan: %s", stderr)
-	}
-	// One repository and five arms is five CELLS; two subjects makes each one a
-	// pair, so twenty sessions. A cell is the unit that is paired, budgeted and
-	// banked, and counting jobs as cells doubles every board.
-	if !strings.Contains(stdout, "WILL RUN: 5 cells, 20 sessions") {
-		t.Errorf("plan is not the frozen arm set:\n%s", stdout)
-	}
-	// The headline cell is the one that banked: both arms, on the headline
-	// model, against the repository the campaign had reached.
-	for _, want := range []string{
-		"headline     bitwarden-server / untreated / claude-code / claude-opus-5 / isolated-home / subscription x2",
-		"headline     bitwarden-server / sense-main / claude-code / claude-opus-5 / isolated-home / subscription x2",
-	} {
-		if !strings.Contains(stdout, want) {
-			t.Errorf("the banked cell is not planned:\n%s", stdout)
-		}
-	}
-	// The arm whose id cost a campaign to debug, in the form that works.
-	if !strings.Contains(stdout, "ollama-cloud/mistral-large-3:675b") {
-		t.Errorf("the mistral arm is missing:\n%s", stdout)
-	}
-	if strings.Contains(stdout, "WILL NOT RUN") {
-		t.Errorf("the frozen arm set rejects something:\n%s", stdout)
-	}
-}
-
 func TestPlanHelpIsNotReportedAsAnError(t *testing.T) {
 	_, _, stderr := dispatch(t, "plan", "-help")
 

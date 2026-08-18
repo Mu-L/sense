@@ -1,8 +1,6 @@
 package score
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -28,6 +26,11 @@ const mastodonFixture = "testdata/mastodon-symbol-cites.stream.jsonl"
 // the five, because trimming the list to the number in the note would be
 // fitting the evidence to the record. The three the note names are the first,
 // second and fifth here.
+// The rows are recorded here rather than read from a gold file: the scenario
+// they were copied from was removed with the rest of the corpus the instrument
+// was built against, so these are fixture data now and there is nothing left
+// for them to drift from. What they are still checked against is the recorded
+// transcript beside them, which is the thing that made the defect visible.
 var mastodonDefectRows = []Row{
 	{ID: "d:admin-audit-scope", Cite: "app/controllers/admin/action_logs_controller.rb:9"},
 	{ID: "d:favourited-by-accounts", Cite: "app/controllers/api/v1/statuses/favourited_by_accounts_controller.rb:22"},
@@ -111,24 +114,5 @@ func TestTheReportStaysSilentWhenEveryHitWasStrict(t *testing.T) {
 	}
 	if strings.Contains(r.String(), "whose line is unchecked") {
 		t.Errorf("a caveat appeared on a run that did not earn it:\n%s", r.String())
-	}
-}
-
-// The rows above are written out here so the claim is readable, which means
-// they can drift from the gold file they were copied from. A corrected gold row
-// would leave this test green while it checked a location nothing scores.
-func TestTheDefectRowsStillMatchTheCheckedInGold(t *testing.T) {
-	b, err := os.ReadFile(filepath.Join("..", "..", "scenarios", "mastodon", "mastodon.gold.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	gold := string(b)
-	for _, row := range mastodonDefectRows {
-		if !strings.Contains(gold, row.ID) {
-			t.Errorf("gold no longer has a row %q", row.ID)
-		}
-		if !strings.Contains(gold, row.Cite) {
-			t.Errorf("row %q no longer cites %s in the gold file", row.ID, row.Cite)
-		}
 	}
 }

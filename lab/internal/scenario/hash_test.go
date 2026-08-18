@@ -3,8 +3,6 @@ package scenario
 import (
 	"crypto/sha256"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -243,19 +241,35 @@ func TestAnchorsThatDoubleEachLevelAreRefused(t *testing.T) {
 
 // And the other side of that guard: the real scenarios must be nowhere near it,
 // or a legitimate file would start failing as the corpus grows.
-func TestTheRealScenariosAreFarInsideTheBudget(t *testing.T) {
-	b, err := os.ReadFile(filepath.Join("..", "..", "scenarios", "discourse", "discourse.yaml"))
-	if err != nil {
-		t.Fatalf("read: %v", err)
+func TestAScenarioOfRealisticSizeIsFarInsideTheBudget(t *testing.T) {
+	// The budget bounds how much of a document the canonical hash will walk,
+	// and it exists so a pathological file cannot make hashing unbounded. What
+	// it must never do is bite a real scenario: the ones this instrument was
+	// built against used well under a thousandth of it, and the shape below is
+	// theirs — seven steps of long prose, forty gold rows, each with the
+	// relation paragraph the scorer reads a location out of.
+	var b strings.Builder
+	b.WriteString("name: a work session\nrepo: r\ncontract_symbol: Thing\ndescription: >\n")
+	b.WriteString("  " + strings.Repeat("a sentence about the ticket. ", 60) + "\nsteps:\n")
+	for i := 0; i < 7; i++ {
+		fmt.Fprintf(&b, "  - name: step %d\n    prompt: >\n      %s\n",
+			i+1, strings.Repeat("a paragraph of instructions for this step. ", 40))
 	}
+	b.WriteString("rows:\n")
+	for i := 0; i < 40; i++ {
+		fmt.Fprintf(&b, "  - id: r%d\n    group: dependents\n    relation: \"app/models/thing.rb:%d %s\"\n",
+			i, i*13+1, strings.Repeat("why this location matters. ", 12))
+	}
+
 	var doc yaml.Node
-	if err := yaml.Unmarshal(b, &doc); err != nil {
+	if err := yaml.Unmarshal([]byte(b.String()), &doc); err != nil {
 		t.Fatalf("parse: %v", err)
 	}
 	c := &canon{h: sha256.New(), left: budget}
 	c.node(&doc)
+
 	if used := budget - c.left; used > budget/1000 {
-		t.Errorf("the largest scenario used %d nodes of %d; the headroom is gone", used, budget)
+		t.Errorf("a scenario of realistic size used %d nodes of %d; the headroom is gone", used, budget)
 	}
 }
 

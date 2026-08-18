@@ -7,18 +7,32 @@ import (
 	"testing"
 )
 
-// The shipped rails scenario, which cannot be scored: not one of its 25 gold
-// rows carries a path:line. It is the reason this command exists, and it must
-// be visible from the command line rather than discovered by a paid run.
-func TestValidateQuarantinesTheShippedRailsGold(t *testing.T) {
-	code, stdout, _ := dispatch(t, "validate",
-		"-scenario", filepath.Join(repoRoot(t), "lab", "scenarios", "rails", "rails.yaml"))
+// A gold whose rows carry no path:line cannot be scored at all: every row is
+// unmatchable, so a group of them refuses rather than returning an empty one.
+// It is the reason this command exists, and it must be visible from the command
+// line rather than discovered by a paid run. One scenario shipped in that state
+// for months and nothing said so.
+func unscoreableSet(t *testing.T) string {
+	t.Helper()
+	return scenarioSet(t, scoredScenario, `discriminator: dependents
+rows:
+  - id: d:no-line
+    group: dependents
+    relation: "the association is declared on the model"
+  - id: d:also-none
+    group: dependents
+    relation: "the scope that reads it"
+`, scoredRubric)
+}
+
+func TestValidateQuarantinesGoldWithNoLineToMatch(t *testing.T) {
+	code, stdout, _ := dispatch(t, "validate", "-scenario", unscoreableSet(t))
 
 	if code != exitBelowFloor {
 		t.Errorf("exit code = %d, want %d for a scenario with quarantined rows", code, exitBelowFloor)
 	}
-	if !strings.Contains(stdout, "25 quarantined") {
-		t.Errorf("the rails gold was not quarantined:\n%s", stdout)
+	if !strings.Contains(stdout, "2 quarantined") {
+		t.Errorf("gold with no line to match was not quarantined:\n%s", stdout)
 	}
 	if !strings.Contains(stdout, "no path:line") {
 		t.Errorf("the quarantine carries no named reason:\n%s", stdout)
@@ -27,13 +41,8 @@ func TestValidateQuarantinesTheShippedRailsGold(t *testing.T) {
 
 // A scenario whose gold is sound exits clean, or the command is just "always
 // complain" and nobody would read its output twice.
-//
-// This depends on the SHIPPED discourse gold staying sound. If it fails after
-// someone edits that scenario, the validator is probably right and the edit is
-// what to look at.
 func TestValidateAcceptsGoldThatIsSound(t *testing.T) {
-	code, stdout, stderr := dispatch(t, "validate",
-		"-scenario", filepath.Join(repoRoot(t), "lab", "scenarios", "discourse", "discourse.yaml"))
+	code, stdout, stderr := dispatch(t, "validate", "-scenario", scoredFile(t))
 
 	if code != exitOK {
 		t.Errorf("exit code = %d, want %d\n%s\n%s", code, exitOK, stdout, stderr)
@@ -48,9 +57,9 @@ func TestValidateAcceptsGoldThatIsSound(t *testing.T) {
 func TestValidateListsTheRunsAQuarantineMoves(t *testing.T) {
 	results := t.TempDir()
 	for _, run := range []string{
-		"opus/hash/sense/rails/run-1",
-		"opus/hash/baseline/rails/run-1",
-		"opus/hash/sense/discourse/run-1", // a different repo, and not affected
+		"opus/hash/sense/discourse/run-1",
+		"opus/hash/baseline/discourse/run-1",
+		"opus/hash/sense/elsewhere/run-1", // a different repo, and not affected
 	} {
 		dir := filepath.Join(results, filepath.FromSlash(run))
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -61,19 +70,17 @@ func TestValidateListsTheRunsAQuarantineMoves(t *testing.T) {
 		}
 	}
 
-	_, stdout, _ := dispatch(t, "validate",
-		"-scenario", filepath.Join(repoRoot(t), "lab", "scenarios", "rails", "rails.yaml"),
-		"-results", results)
+	_, stdout, _ := dispatch(t, "validate", "-scenario", unscoreableSet(t), "-results", results)
 
 	if !strings.Contains(stdout, "moves the recorded score of 2 runs") {
 		t.Errorf("the handover list is wrong:\n%s", stdout)
 	}
-	for _, want := range []string{"sense/rails/run-1", "baseline/rails/run-1"} {
+	for _, want := range []string{"sense/discourse/run-1", "baseline/discourse/run-1"} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("the handover list is missing %s:\n%s", want, stdout)
 		}
 	}
-	if strings.Contains(stdout, "discourse") {
+	if strings.Contains(stdout, "elsewhere") {
 		t.Errorf("a run of another repo is in the handover list:\n%s", stdout)
 	}
 }
@@ -82,9 +89,7 @@ func TestValidateListsTheRunsAQuarantineMoves(t *testing.T) {
 // checked out, which is how a scenario gets quarantined for being stale when it
 // is not.
 func TestValidateRefusesACheckoutWithoutACommit(t *testing.T) {
-	code, _, stderr := dispatch(t, "validate",
-		"-scenario", filepath.Join(repoRoot(t), "lab", "scenarios", "rails", "rails.yaml"),
-		"-checkout", t.TempDir())
+	code, _, stderr := dispatch(t, "validate", "-scenario", scoredFile(t), "-checkout", t.TempDir())
 
 	if code != exitUsage {
 		t.Errorf("exit code = %d, want %d", code, exitUsage)
@@ -97,8 +102,7 @@ func TestValidateRefusesACheckoutWithoutACommit(t *testing.T) {
 // An unusable checkout downgrades the audit rather than failing it, and the
 // report says which checks did not run.
 func TestValidateWithAnUnusableCheckoutSaysWhatItSkipped(t *testing.T) {
-	_, stdout, stderr := dispatch(t, "validate",
-		"-scenario", filepath.Join(repoRoot(t), "lab", "scenarios", "discourse", "discourse.yaml"),
+	_, stdout, stderr := dispatch(t, "validate", "-scenario", scoredFile(t),
 		"-checkout", t.TempDir(), "-commit", "deadbeef")
 
 	if !strings.Contains(stderr, "resolving skipped") {
@@ -180,9 +184,7 @@ func TestValidateRejectsAFlagItDoesNotHave(t *testing.T) {
 func TestValidateSaysWhenItCannotListTheAffectedRuns(t *testing.T) {
 	missing := filepath.Join(t.TempDir(), "not-created")
 
-	_, stdout, stderr := dispatch(t, "validate",
-		"-scenario", filepath.Join(repoRoot(t), "lab", "scenarios", "rails", "rails.yaml"),
-		"-results", missing)
+	_, stdout, stderr := dispatch(t, "validate", "-scenario", unscoreableSet(t), "-results", missing)
 
 	if !strings.Contains(stderr, "could not list recorded runs") {
 		t.Errorf("a missing results tree passed quietly:\n%s", stderr)

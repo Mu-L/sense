@@ -1,9 +1,0 @@
-{
-  "id": "bitwarden-server",
-  "url": "https://github.com/bitwarden/server.git",
-  "commit": "e93b962371d80964556f5590c6615f5160a437a1",
-  "languages": [
-    "csharp"
-  ],
-  "stack": "dotnet"
-}
