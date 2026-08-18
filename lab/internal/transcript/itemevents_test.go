@@ -188,7 +188,7 @@ func TestAMissingCaptureIsReportedWithItsPath(t *testing.T) {
 // generic kind, because "a tool was used" is not the question anyone asks of a
 // transcript.
 func TestAnMCPCallIsCountedAndCarriesTheToolItNamed(t *testing.T) {
-	tr := itemEvents(t, "item-events-mcp.jsonl")
+	tr := itemEvents(t, "same-scenario-item-events.jsonl")
 
 	if tr.Provisional() {
 		t.Errorf("a clean sense arm reads as provisional: %s", tr.Why)
