@@ -3,11 +3,13 @@ package status_test
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/luuuc/sense/lab/internal/phase"
+	"github.com/luuuc/sense/lab/internal/position"
 	"github.com/luuuc/sense/lab/internal/status"
 )
 
@@ -148,16 +150,17 @@ func TestABankedCycleAndAParkedRepositoryAreBothShown(t *testing.T) {
 
 	byName := map[string]status.Repo{}
 	for _, r := range p.Repos {
-		byName[r.Name] = r
+		byName[r.Repo] = r
 	}
 	if got := byName["mastodon"].Banked; len(got) != 1 || got[0] != 2 {
 		t.Errorf("mastodon banked %v, want cycle 2", got)
 	}
-	if byName["mastodon"].Parked {
+	if byName["mastodon"].Standing == position.Parked {
 		t.Error("a repository that banked a win was reported as parked")
 	}
-	if !byName["chatwoot"].Parked {
-		t.Error("a repository with a handoff page was not reported as parked")
+	if byName["chatwoot"].Standing != position.Parked {
+		t.Errorf("a repository with a handoff page stands as %q, want parked",
+			byName["chatwoot"].Standing)
 	}
 }
 
@@ -241,7 +244,7 @@ func TestSpendIsReportedPerRepositoryAgainstTheCeiling(t *testing.T) {
 
 	spent := map[string]int{}
 	for _, r := range p.Repos {
-		spent[r.Name] = r.Spend.Runs()
+		spent[r.Repo] = r.Spend.Runs()
 	}
 	if spent["mastodon"] != 2 {
 		t.Errorf("mastodon spent %d, want 2: a mini-bench is unpaid", spent["mastodon"])
@@ -305,5 +308,43 @@ func TestADirectoryThatIsNotACycleIsIgnored(t *testing.T) {
 	r := c.read(40).Repos[0]
 	if r.Cycle != 1 {
 		t.Errorf("cycle %d, want 1: a directory that is not a number is not a cycle", r.Cycle)
+	}
+}
+
+// The page and the crank read one position. They used to work it out
+// separately, and a repository admitted and scanned but with no cycle directory
+// yet was where they disagreed: this page derived the cycle from the numbered
+// directories, found none, and reported cycle 0 awaiting nothing with no resume
+// line, while the position the crank routes on read cycle 1 awaiting author.
+//
+// Measured 2026-08-19 on mastodon, freshly admitted.
+func TestAnAdmittedRepositoryReadsTheSameHereAsWhereTheCrankRoutes(t *testing.T) {
+	c := newTrees(t).indexed("mastodon")
+
+	r := c.read(40).Repos[0]
+	want, err := position.Read(c.dir, "mastodon")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(r.Position, want) {
+		t.Errorf("the page reads %+v\nthe crank reads %+v", r.Position, want)
+	}
+	if r.Cycle != 1 || r.Awaiting != phase.Author {
+		t.Errorf("cycle %d awaiting %q, want cycle 1 awaiting author", r.Cycle, r.Awaiting)
+	}
+}
+
+// And it is resumable: a repository with a phase owed is the whole reason the
+// page has a RESUME section, so reporting it with nothing to do is the failure
+// that section exists to prevent.
+func TestAnAdmittedRepositoryIsHandedItsFirstPhaseToRun(t *testing.T) {
+	p := newTrees(t).indexed("mastodon").read(40)
+
+	if len(p.Resume) != 1 {
+		t.Fatalf("%d resume lines, want the one repository that owes a phase: %+v", len(p.Resume), p.Resume)
+	}
+	if p.Resume[0].Repo != "mastodon" || p.Resume[0].Phase != phase.Author {
+		t.Errorf("resume %+v, want mastodon at author", p.Resume[0])
 	}
 }

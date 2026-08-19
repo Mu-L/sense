@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/luuuc/sense/lab/internal/phase"
+	"github.com/luuuc/sense/lab/internal/position"
 	"github.com/luuuc/sense/lab/internal/status"
 )
 
@@ -105,7 +106,8 @@ func TestCompleteCellsAreCountedAndNotListedAsProblems(t *testing.T) {
 // A phase with no artifact at all is a repository at the start, and the page
 // says so plainly instead of leaving a blank column that reads as a bug.
 func TestAPhaseThatIsNotThereIsNamedRatherThanLeftBlank(t *testing.T) {
-	page := status.Render(status.Position{Root: "x", Repos: []status.Repo{{Name: "mastodon", Cycle: 1}}})
+	page := status.Render(status.Position{Root: "x", Repos: []status.Repo{
+		{Position: position.Position{Repo: "mastodon", Cycle: 1}}}})
 	if !strings.Contains(page, "reached none") {
 		t.Errorf("an absent phase was rendered as a blank:\n%s", page)
 	}
