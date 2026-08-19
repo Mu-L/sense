@@ -20,10 +20,15 @@
 //	reads: scenario.draft.yaml
 //	writes: minibench.md
 //	emits: [PROCEED, REQUESTION, NO-ANCHOR]
+//	wall: 25m
 //	---
 //
 // It is a fixed set of keys rather than general YAML so that a malformed
 // contract fails to parse instead of parsing into something plausible.
+//
+// The wall is here rather than in Go because it is the number somebody would
+// otherwise raise in a hurry to rescue a stalled phase. Declared beside the
+// plan, changing it is an edit to a file that is reviewed.
 //
 // # What the checks can and cannot catch
 //
@@ -41,6 +46,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/luuuc/sense/lab/internal/phase"
 )
@@ -52,6 +58,16 @@ type Plan struct {
 	Reads  string
 	Writes string
 	Emits  []phase.Verdict
+	// Wall is how long this phase's agent gets. It is declared here, beside the
+	// plan the agent runs, and never as a constant in Go: config as data is
+	// this instrument's rule, and a wall held in a variable is the number that
+	// gets raised in a hurry at 3am to rescue a stalled phase — which is what
+	// CANNOT-FINISH-AT-BUDGET IS A RESULT forbids.
+	//
+	// Zero means the phase declares none, and whoever runs it decides what that
+	// means. This package loads; it does not supply defaults for what a file
+	// left out.
+	Wall time.Duration
 	// Body is everything after the header, verbatim. Nothing in this package
 	// writes to it.
 	Body []byte
@@ -88,8 +104,8 @@ func Load(dir string) ([]Plan, error) {
 
 // parse splits a plan into its declared header and its prose.
 //
-// The header is a fixed set of keys rather than general YAML: four fields, one
-// per line, so that a plan whose contract is malformed fails here rather than
+// The header is a fixed set of keys rather than general YAML: one field per
+// line, so that a plan whose contract is malformed fails here rather than
 // parsing into something plausible.
 func parse(b []byte) (Plan, error) {
 	rest, ok := bytes.CutPrefix(b, []byte(fence))
@@ -115,6 +131,12 @@ func parse(b []byte) (Plan, error) {
 			p.Writes = value
 		case "emits":
 			p.Emits = verdicts(value)
+		case "wall":
+			d, err := time.ParseDuration(strings.TrimSpace(value))
+			if err != nil {
+				return Plan{}, fmt.Errorf("wall %q: %w", value, err)
+			}
+			p.Wall = d
 		}
 	}
 	if p.Phase == "" {

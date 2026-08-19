@@ -3,6 +3,7 @@ phase: expand
 reads: minibench.md
 writes: scenario.yaml
 emits: [AUTO, REQUESTION]
+wall: 25m
 ---
 
 # expand
@@ -128,3 +129,15 @@ hole in the test set rather than a plan to bend around it.
 The old plan also named its passing verdict `SCENARIO`. That is `AUTO` here, since the graph's
 auto phases are the ones that make no judgement, and this one does not: it either carries the
 discriminator over or it re-questions.
+
+## Verdict
+
+Write `verdict.json` in this phase's directory, beside the artifact:
+
+```json
+{"phase": "expand", "repo": "<repo id>", "cycle": <n>, "verdict": "<one of the emitted>",
+ "table": "<why, in one or two sentences>"}
+```
+
+The crank reads that file and nothing else to route. A verdict left in prose is a verdict only a
+person can act on, and the loop this phase belongs to runs unattended.

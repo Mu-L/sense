@@ -3,6 +3,7 @@ phase: bench
 reads: scenario.yaml
 writes: cells.json
 emits: [AUTO]
+wall: 90m
 ---
 
 # bench
@@ -58,3 +59,15 @@ name the arms that are burned or have no result.
 - Do not re-run an arm to get a better number. One retry, never a loop, and a replaced run is
   never scored.
 - Do not spawn a subagent. Only the binary spawns.
+
+## Verdict
+
+Write `verdict.json` in this phase's directory, beside the artifact:
+
+```json
+{"phase": "bench", "repo": "<repo id>", "cycle": <n>, "verdict": "<one of the emitted>",
+ "table": "<why, in one or two sentences>"}
+```
+
+The crank reads that file and nothing else to route. A verdict left in prose is a verdict only a
+person can act on, and the loop this phase belongs to runs unattended.

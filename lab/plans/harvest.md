@@ -3,6 +3,7 @@ phase: harvest
 reads: report.md
 writes: harvest.json
 emits: [WIN CONFIRMED, DoD FAIL]
+wall: 30m
 ---
 
 # harvest
@@ -84,3 +85,15 @@ Every check here is one that a recorded campaign needed.
 **The RUN steps name what to compute, not which script to invoke**, because those scripts are not
 ported into this tree yet and a plan that names a path which does not exist is worse than one that
 names the computation. Cycle 07 binds each step to its command. See `author.md` for the full note.
+
+## Verdict
+
+Write `verdict.json` in this phase's directory, beside the artifact:
+
+```json
+{"phase": "harvest", "repo": "<repo id>", "cycle": <n>, "verdict": "<one of the emitted>",
+ "table": "<why, in one or two sentences>"}
+```
+
+The crank reads that file and nothing else to route. A verdict left in prose is a verdict only a
+person can act on, and the loop this phase belongs to runs unattended.
