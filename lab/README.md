@@ -35,7 +35,19 @@ Start by looking at what is already declared:
 
 Then, to bench one repository:
 
-**1. Declare the repository** — `lab/repos/<id>.json`:
+**1. Admit the repository** — one command clones it, pins it and indexes it:
+
+```bash
+./bin/sense-lab repo -campaign runs/campaigns/<key> -sense ./bin/sense \
+    discourse/discourse
+```
+
+The name is a github handle, a url, a path to a clone you already have, or the
+id of a repository already admitted. It prints what it resolved — the id, the
+url and the revision — before it writes anything, then clones under
+`runs/checkouts/`, records the revision the clone is actually at in
+`lab/repos/<id>.json`, and writes what the index holds to
+`<campaign>/<id>/index/index.json`:
 
 ```json
 {"id": "discourse", "url": "https://github.com/discourse/discourse.git",
@@ -43,9 +55,12 @@ Then, to bench one repository:
  "languages": ["ruby"], "stack": "ruby"}
 ```
 
-Clone it locally and check it out at that commit. Every run takes a worktree
-from your clone at the pinned commit, so the clone is the only thing that has to
-exist on disk.
+Running it again on an admitted repository admits nothing and prints where it
+stands. A clone the lab made is moved back to its pin if it has drifted; a clone
+you handed in is read and never written to, and a mismatch there is refused.
+
+Every run takes a worktree from that clone at the pinned commit, so the clone is
+the only thing that has to exist on disk.
 
 **2. Write the scenario** — three files beside each other in
 `lab/scenarios/<id>/`:

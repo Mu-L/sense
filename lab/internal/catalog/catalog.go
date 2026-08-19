@@ -317,11 +317,22 @@ type Executor struct {
 // is why languages, frameworks and stack live here. `cohort` is deliberately
 // absent: nothing selects on it yet.
 type Repo struct {
-	ID        string   `json:"id"`
-	URL       string   `json:"url"`
-	Commit    string   `json:"commit"`
+	ID     string `json:"id"`
+	URL    string `json:"url"`
+	Commit string `json:"commit"`
+	// Checkout is a clone somebody handed in, and its presence is the
+	// ownership record: a repository with none is cloned by the lab under its
+	// own clones root, and one the lab made is one it may move back to its pin.
+	// Empty for every repository admitted from a handle or a url, which is why
+	// it is `omitempty`: a field that says "the lab owns this" by being absent
+	// should be absent.
+	Checkout  string   `json:"checkout,omitempty"`
 	Languages []string `json:"languages"`
-	Stack     string   `json:"stack"`
+	// Stack is `omitempty` for the same reason Checkout is: admission cannot
+	// know it — a stack is a judgement about what a repository IS, not
+	// something a scan reports — and writing an empty one would read as a
+	// repository somebody decided had no stack.
+	Stack string `json:"stack,omitempty"`
 }
 
 // ErrNoConfig is returned when the config directory is not there at all. It is

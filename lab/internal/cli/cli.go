@@ -28,6 +28,7 @@ const usage = `sense-lab — the bench instrument for Sense
 Usage: sense-lab <command> [flags]
 
 Commands:
+  repo      Admit a repository: resolve it, clone it, pin it and index it
   catalog   Show the subjects, agents, models, repositories and executors in the config
   plan      Show what a campaign would run, and every rejection with its reason
   run       Run one scenario against one repository
@@ -82,6 +83,10 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 	switch args[0] {
+	case "repo":
+		// Admission clones and scans, both of them long, so it dies with the
+		// binary for the same reason a run does.
+		return admitSignals(args[1:], stdout, stderr)
 	case "plan":
 		return planCmd(args[1:], stdout, stderr)
 	case "run":
