@@ -86,11 +86,13 @@ func TestNextTryIsPerCycleAndPerPhase(t *testing.T) {
 // clock, so it is the same order on a machine whose clock is wrong.
 func TestAttemptsComeBackInTheOrderTheyCanOnlyHaveHappenedIn(t *testing.T) {
 	dir := t.TempDir()
-	// Written out of order on purpose.
+	// A later cycle recorded first, which is what a hand-repaired tree looks
+	// like. Within a cycle the order is the order they were recorded in; across
+	// cycles it is the cycle.
 	for _, a := range []Attempt{
 		{Cycle: 2, Phase: phase.Author, Verdict: phase.Draft, Try: 1},
-		{Cycle: 1, Phase: phase.Minibench, Verdict: phase.Requestion, Try: 1, Table: "the baseline reached it"},
 		{Cycle: 1, Phase: phase.Author, Verdict: phase.Draft, Try: 1},
+		{Cycle: 1, Phase: phase.Minibench, Verdict: phase.Requestion, Try: 1, Table: "the baseline reached it"},
 	} {
 		if err := Record(dir, a); err != nil {
 			t.Fatal(err)
@@ -105,22 +107,31 @@ func TestAttemptsComeBackInTheOrderTheyCanOnlyHaveHappenedIn(t *testing.T) {
 	if strings.Join(got, ",") != "author,minibench,author" {
 		t.Errorf("order = %v, want cycle 1's author, then its mini-bench, then cycle 2's author", got)
 	}
+	if all := mustRead(t, dir); all[2].Cycle != 2 {
+		t.Errorf("last is in cycle %d, want the later cycle last however it was recorded", all[2].Cycle)
+	}
 }
 
-// A phase the graph does not know sorts last rather than first, so an
-// unreadable record cannot displace the phase that actually ran.
-func TestAPhaseTheGraphDoesNotKnowSortsLast(t *testing.T) {
+// A record written by hand carries no step, and those fall back to the graph's
+// order — which is right for a forward walk and is the best guess available. A
+// phase the graph does not know sorts last rather than first, so an unreadable
+// record cannot displace the phase that actually ran.
+func TestHandWrittenRecordsFallBackToTheGraphsOrder(t *testing.T) {
 	dir := t.TempDir()
-	for _, a := range []Attempt{
-		{Cycle: 1, Phase: "invented", Verdict: phase.Auto, Try: 1},
-		{Cycle: 1, Phase: phase.Author, Verdict: phase.Draft, Try: 1},
+	for name, body := range map[string]string{
+		"1-invented-1.json": `{"cycle":1,"phase":"invented","verdict":"AUTO","try":1}`,
+		"1-author-1.json":   `{"cycle":1,"phase":"author","verdict":"DRAFT","try":1}`,
 	} {
-		if err := Record(dir, a); err != nil {
+		if err := os.MkdirAll(filepath.Join(dir, attemptsDir), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, attemptsDir, name), []byte(body), 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	all := mustRead(t, dir)
+
 	if all[0].Phase != phase.Author {
 		t.Errorf("first = %s, want the phase the graph knows", all[0].Phase)
 	}
@@ -234,15 +245,15 @@ func mustRead(t *testing.T, dir string) []Attempt {
 	return all
 }
 
-// The order is the graph's, not the filesystem's. Read back alphabetically an
-// expansion comes before the mini-bench that decides whether to expand at all,
-// and the last attempt — which is what a position is read from — would be the
-// wrong one.
-func TestTheOrderIsTheGraphsRatherThanTheAlphabets(t *testing.T) {
+// The order is the one they were recorded in, not the filesystem's. Read back
+// alphabetically an expansion comes before the mini-bench that decides whether
+// to expand at all, and the last attempt — which is what a position is read
+// from — would be the wrong one.
+func TestTheOrderIsTheOneTheyHappenedInRatherThanTheAlphabets(t *testing.T) {
 	dir := t.TempDir()
 	for _, a := range []Attempt{
-		{Cycle: 1, Phase: phase.Expand, Verdict: phase.Auto, Try: 1},
 		{Cycle: 1, Phase: phase.Minibench, Verdict: phase.Proceed, Try: 1},
+		{Cycle: 1, Phase: phase.Expand, Verdict: phase.Auto, Try: 1},
 	} {
 		if err := Record(dir, a); err != nil {
 			t.Fatal(err)
@@ -254,6 +265,57 @@ func TestTheOrderIsTheGraphsRatherThanTheAlphabets(t *testing.T) {
 	if all[0].Phase != phase.Minibench || all[1].Phase != phase.Expand {
 		t.Errorf("order = %s then %s, want the mini-bench before the expansion it decides on",
 			all[0].Phase, all[1].Phase)
+	}
+}
+
+// And it is not the graph's either, because a cycle that re-enters a phase did
+// not walk the graph in order.
+//
+// This is the failure that made the loop spin: ordered by the graph, the
+// mini-bench that sent work back sorts after the author attempt that answered
+// it, so the position routes from the rejection forever and re-runs the author
+// on every turn, at whatever an agent costs.
+func TestAReEnteredPhaseIsTheLastAttemptRatherThanTheOneThatSentItBack(t *testing.T) {
+	dir := t.TempDir()
+	for _, a := range []Attempt{
+		{Cycle: 1, Phase: phase.Author, Verdict: phase.Draft, Try: 1},
+		{Cycle: 1, Phase: phase.Minibench, Verdict: phase.Requestion, Try: 1, Table: "the baseline reached it"},
+		{Cycle: 1, Phase: phase.Author, Verdict: phase.Draft, Try: 2},
+	} {
+		if err := Record(dir, a); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	all := mustRead(t, dir)
+
+	last := all[len(all)-1]
+	if last.Phase != phase.Author || last.Try != 2 {
+		t.Errorf("last = %s try %d, want the re-entered author", last.Phase, last.Try)
+	}
+}
+
+// The step is what makes that possible, and it is assigned when the attempt is
+// recorded rather than held by a caller.
+func TestEachAttemptIsRecordedWithItsPlaceInTheCycle(t *testing.T) {
+	dir := t.TempDir()
+	for _, a := range []Attempt{
+		{Cycle: 1, Phase: phase.Author, Verdict: phase.Draft, Try: 1},
+		{Cycle: 1, Phase: phase.Minibench, Verdict: phase.Requestion, Try: 1, Table: "no"},
+		{Cycle: 2, Phase: phase.Author, Verdict: phase.Draft, Try: 1},
+	} {
+		if err := Record(dir, a); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	all := mustRead(t, dir)
+
+	// Steps count within a cycle, so a new cycle starts again at one.
+	for i, want := range []int{1, 2, 1} {
+		if all[i].Step != want {
+			t.Errorf("%s in cycle %d is step %d, want %d", all[i].Phase, all[i].Cycle, all[i].Step, want)
+		}
 	}
 }
 

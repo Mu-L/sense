@@ -390,3 +390,39 @@ func TestNothingIsLeftPastTheCeiling(t *testing.T) {
 		t.Errorf("to the ceiling = %d, want none left", p.ToCeiling())
 	}
 }
+
+// An attempt that produced no verdict says how it ended, and the two ways it
+// can are told apart because they are diagnosed differently: an agent that died
+// against an agent that misbehaved.
+func TestAnAttemptWithNoVerdictSaysHowItEnded(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		outcome Outcome
+		table   string
+		log     string
+		want    Standing
+		says    string
+	}{
+		{"it ran past its wall", Stalled, "", "runs/1/author/session/raw/stdout", Missing, "runs/1/author"},
+		{"it ran past its wall and left no log", Stalled, "", "", Missing, "not recorded"},
+		{"what it wrote is not a verdict", Refused, "the verdict names another phase", "", Unusable, "another phase"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			campaign := t.TempDir()
+			repo := filepath.Join(campaign, "r")
+			writeArtifact(t, filepath.Join(repo, "index", "index.json"), "{}")
+			writeArtifact(t, filepath.Join(repo, "1", "author", "scenario.draft.yaml"), "name: r\n")
+			record(t, repo, Attempt{Cycle: 1, Phase: phase.Author, Try: 1,
+				Outcome: tc.outcome, Table: tc.table, Log: tc.log})
+
+			p := read(t, campaign, "r")
+
+			if p.Standing != tc.want {
+				t.Errorf("standing = %s (%s), want %s", p.Standing, p.Because, tc.want)
+			}
+			if !strings.Contains(p.Because, tc.says) {
+				t.Errorf("because = %q, want it to carry %q", p.Because, tc.says)
+			}
+		})
+	}
+}
