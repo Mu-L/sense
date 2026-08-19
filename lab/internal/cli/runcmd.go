@@ -41,17 +41,31 @@ func resolveJob(c *catalog.Catalog, f runFlags) (job, error) {
 	if j.repo, ok = c.Repos[f.repo]; !ok {
 		return j, fmt.Errorf("no repo %q in the catalog; have %v", f.repo, catalog.IDs(c.Repos))
 	}
-	if j.agent, ok = c.Agents[f.agent]; !ok {
-		return j, fmt.Errorf("no agent %q in the catalog; have %v", f.agent, catalog.IDs(c.Agents))
+	agent, model, err := resolveDriver(c, f.agent, f.model)
+	if err != nil {
+		return j, err
 	}
-	if j.model, ok = c.Model(f.model); !ok {
-		return j, fmt.Errorf("no model %q in the catalog; have %v", f.model, catalog.IDs(c.Models))
-	}
-	if !slices.Contains(j.model.Agents, j.agent.ID) {
-		return j, fmt.Errorf("model %s cannot be driven by %s; it names %v",
-			j.model.ID, j.agent.ID, j.model.Agents)
-	}
+	j.agent, j.model = agent, model
 	return j, nil
+}
+
+// resolveDriver turns an agent id and a model id into the pair that can run,
+// and refuses a pair the catalog says cannot. It is separate from the repository
+// lookup because a phase agent is driven without one: it runs against a
+// repository rather than benching it.
+func resolveDriver(c *catalog.Catalog, agentID, modelID string) (catalog.Agent, catalog.Model, error) {
+	a, ok := c.Agents[agentID]
+	if !ok {
+		return a, catalog.Model{}, fmt.Errorf("no agent %q in the catalog; have %v", agentID, catalog.IDs(c.Agents))
+	}
+	m, ok := c.Model(modelID)
+	if !ok {
+		return a, m, fmt.Errorf("no model %q in the catalog; have %v", modelID, catalog.IDs(c.Models))
+	}
+	if !slices.Contains(m.Agents, a.ID) {
+		return a, m, fmt.Errorf("model %s cannot be driven by %s; it names %v", m.ID, a.ID, m.Agents)
+	}
+	return a, m, nil
 }
 
 // A note that used to live beside the compiled-in agent flags, kept because the

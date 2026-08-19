@@ -77,6 +77,25 @@ standing, because this command belongs in a loop:
 So `while sense-lab repo <id>; do :; done` stops on a park, on a `PAY` and on
 either refusal, rather than spinning on any of them.
 
+**Turning the loop.** Naming an agent and a model runs the phase the position
+owes, one per invocation:
+
+```bash
+./bin/sense-lab repo -campaign runs/campaigns/<key> -sense ./bin/sense \
+    -agent claude-code -model claude-opus-5 -until <id>
+```
+
+Each phase agent is handed one plan file from `lab/plans/`, under the wall that
+plan declares, in a disposable environment carrying no more than a run arm's
+credential. It writes its artifact and a `verdict.json` beside it; the crank
+reads that document, checks it against the plan's declared verdicts and against
+the artifact being on disk, records the attempt and routes. `-until` takes no
+argument and means crank until it stops on its own.
+
+**The crank stops at the pay call.** `PAY` prints the exact `probe` command and
+exits waiting-on-a-human. `bench`, `report`, `harvest` and `board` stay hand-run:
+an unattended loop that can reach a paid cell is a different product.
+
 Position is derived from the run tree every time — the authoring cycle is a
 directory name — except for the verdicts, which are recorded one file per
 attempt and never rewritten. There is no state file mapping a repository to a
