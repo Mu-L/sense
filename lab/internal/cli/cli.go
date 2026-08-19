@@ -28,7 +28,7 @@ const usage = `sense-lab — the bench instrument for Sense
 Usage: sense-lab <command> [flags]
 
 Commands:
-  repo      Admit a repository: resolve it, clone it, pin it and index it
+  repo      Admit a repository, and say where it stands: -show prints and stops
   catalog   Show the subjects, agents, models, repositories and executors in the config
   plan      Show what a campaign would run, and every rejection with its reason
   run       Run one scenario against one repository
