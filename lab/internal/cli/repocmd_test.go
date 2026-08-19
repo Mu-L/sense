@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -215,7 +216,7 @@ func TestRe_runningOnAnAdmittedRepositoryWritesNothing(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit = %d: %s", code, stderr)
 	}
-	if !strings.Contains(stdout, "admitted: nothing to do") || !strings.Contains(stdout, "indexed:  yes") {
+	if !strings.Contains(stdout, "indexed:  yes") || !strings.Contains(stdout, "awaiting: author") {
 		t.Errorf("stdout = %q, want where the repository stands", stdout)
 	}
 	if read(t, a.repoFile(id)) != before {
@@ -418,8 +419,8 @@ func TestPositionReportsARepositoryThatWasNeverIndexed(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit = %d: %s", code, stderr)
 	}
-	if !strings.Contains(stdout, "indexed:  no") {
-		t.Errorf("stdout = %q, want it to say the repository has no index", stdout)
+	if !strings.Contains(stdout, "indexed:  no") || !strings.Contains(stdout, "awaiting: index") {
+		t.Errorf("stdout = %q, want it to say the repository is waiting on its scan", stdout)
 	}
 }
 
@@ -524,5 +525,142 @@ func blocked(t *testing.T, path string) {
 	}
 	if err := os.WriteFile(filepath.Dir(path), []byte("in the way"), 0o644); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// The exit codes are this command's API, because it ends up in a shell loop:
+//
+//	while sense-lab repo <id>; do :; done
+//
+// Every code is asserted here, and every one that must stop that loop is
+// asserted to be non-zero in the same table — which is the property the loop
+// actually rests on.
+func TestTheExitCodeCarriesTheStanding(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		build func(t *testing.T, repoDir string)
+		show  bool
+		want  int
+	}{
+		{"a repository with a phase to run", func(*testing.T, string) {}, false, 0},
+		{"on the board", func(t *testing.T, dir string) {
+			artifact(t, filepath.Join(dir, "1", "board", "board.md"), "# board\n")
+		}, false, 3},
+		{"parked at the ceiling", func(t *testing.T, dir string) {
+			artifact(t, filepath.Join(dir, "6", "handoff", "handoff.md"), "# handoff\n")
+		}, false, 4},
+		{"waiting at a PAY", func(t *testing.T, dir string) {
+			artifact(t, filepath.Join(dir, "1", "validate", "pay-call.md"), "PAY\n")
+			attempt(t, dir, `{"cycle":1,"phase":"validate","verdict":"PAY","try":1}`)
+		}, false, 5},
+		{"refused: a verdict the phase cannot emit", func(t *testing.T, dir string) {
+			artifact(t, filepath.Join(dir, "1", "author", "scenario.draft.yaml"), "name: r\n")
+			attempt(t, dir, `{"cycle":1,"phase":"author","verdict":"WIN","try":1}`)
+		}, false, 6},
+		{"refused: the artifact the verdict claims is not there", func(t *testing.T, dir string) {
+			artifact(t, filepath.Join(dir, "1", "minibench", "minibench.md"), "# read\n")
+			attempt(t, dir, `{"cycle":1,"phase":"author","verdict":"DRAFT","try":1}`)
+		}, false, 7},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a, id := admitted(t)
+			tc.build(t, filepath.Join(a.campaign, id))
+
+			args := []string{"repo", "-config", a.config, "-campaign", a.campaign,
+				"-checkouts", a.checkouts, "-sense", a.sense}
+			if tc.show {
+				args = append(args, "-show")
+			}
+			code, stdout, stderr := dispatch(t, append(args, id)...)
+
+			if code != tc.want {
+				t.Errorf("exit = %d, want %d\n%s%s", code, tc.want, stdout, stderr)
+			}
+			if !strings.Contains(stdout, "standing:") {
+				t.Errorf("stdout = %q, want the position printed", stdout)
+			}
+		})
+	}
+}
+
+// -show is a preview of the admission, so it stops before the first thing an
+// admission would write. Without that it is a second reading of the inputs
+// rather than a look at what is about to happen.
+func TestShowWritesNothing(t *testing.T) {
+	source, _ := sourceRepo(t)
+	a := newAdmission(t, admissionStatus)
+
+	code, stdout, stderr := dispatch(t, "repo", "-config", a.config, "-campaign", a.campaign,
+		"-checkouts", a.checkouts, "-sense", a.sense, "-show", source)
+
+	if code != 2 {
+		t.Fatalf("exit = %d, want 2: %s", code, stderr)
+	}
+	if !strings.Contains(stdout, "id:       "+filepath.Base(source)) {
+		t.Errorf("stdout = %q, want the resolution it was about to act on", stdout)
+	}
+	if _, err := os.Stat(a.repoFile(filepath.Base(source))); !os.IsNotExist(err) {
+		t.Error("a repository was admitted by a command asked only to show")
+	}
+	if _, err := os.Stat(a.artifact(filepath.Base(source))); !os.IsNotExist(err) {
+		t.Error("a repository was indexed by a command asked only to show")
+	}
+}
+
+// admitted is a repository already in the catalog, with a real checkout at its
+// pin, so a test can put a run tree under it and ask where it stands.
+func admitted(t *testing.T) (admission, string) {
+	t.Helper()
+	source, head := sourceRepo(t)
+	a := newAdmission(t, admissionStatus)
+	id := filepath.Base(source)
+	artifact(t, a.repoFile(id), `{"id":"`+id+`","url":"https://example.test/`+id+`.git","commit":"`+head+
+		`","checkout":"`+source+`","languages":["go"]}`)
+	artifact(t, a.artifact(id), `{"repo":"`+id+`","symbols":40}`)
+	return a, id
+}
+
+func artifact(t *testing.T, path, body string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func attempt(t *testing.T, repoDir, body string) {
+	t.Helper()
+	var a struct {
+		Cycle int    `json:"cycle"`
+		Phase string `json:"phase"`
+		Try   int    `json:"try"`
+	}
+	if err := json.Unmarshal([]byte(body), &a); err != nil {
+		t.Fatal(err)
+	}
+	artifact(t, filepath.Join(repoDir, "attempts", fmt.Sprintf("%d-%s-%d.json", a.Cycle, a.Phase, a.Try)), body)
+}
+
+// A position that cannot be read is reported rather than answered with a
+// default one, which would be a repository at the start of its first cycle.
+func TestAPositionThatCannotBeReadIsReported(t *testing.T) {
+	a, id := admitted(t)
+	if err := os.RemoveAll(a.campaign); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(a.campaign, []byte("in the way"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	code, stdout, _ := dispatch(t, "repo", "-config", a.config, "-campaign", a.campaign,
+		"-checkouts", a.checkouts, "-sense", a.sense, id)
+
+	if code != 1 {
+		t.Errorf("exit = %d, want the error code", code)
+	}
+	if !strings.Contains(stdout, "unreadable") {
+		t.Errorf("stdout = %q, want it to say the position could not be read", stdout)
 	}
 }

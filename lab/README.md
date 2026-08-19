@@ -56,8 +56,31 @@ url and the revision — before it writes anything, then clones under
 ```
 
 Running it again on an admitted repository admits nothing and prints where it
-stands. A clone the lab made is moved back to its pin if it has drifted; a clone
-you handed in is read and never written to, and a mismatch there is refused.
+stands: the cycle it is on, the phase it awaits, and every rejection the next
+attempt has to answer. A clone the lab made is moved back to its pin if it has
+drifted; a clone you handed in is read and never written to, and a mismatch
+there is refused.
+
+`-show` prints that page and stops, writing nothing. The exit code carries the
+standing, because this command belongs in a loop:
+
+| Code | Means |
+|---|---|
+| 0 | there is a phase to run |
+| 2 | `-show`: a position was printed and nothing was done |
+| 3 | finished: the repository reached the board |
+| 4 | parked at the authoring ceiling, re-entered only by a deliberate human act |
+| 5 | waiting on a human: a `PAY` nothing will spend on its own |
+| 6 | refused: the last verdict is not one its phase can emit |
+| 7 | refused: the verdict is usable and the artifact it owed is not there |
+
+So `while sense-lab repo <id>; do :; done` stops on a park, on a `PAY` and on
+either refusal, rather than spinning on any of them.
+
+Position is derived from the run tree every time — the authoring cycle is a
+directory name — except for the verdicts, which are recorded one file per
+attempt and never rewritten. There is no state file mapping a repository to a
+phase.
 
 Every run takes a worktree from that clone at the pinned commit, so the clone is
 the only thing that has to exist on disk.

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/luuuc/sense/lab/internal/catalog"
+	"github.com/luuuc/sense/lab/internal/position"
 	"github.com/luuuc/sense/lab/internal/repo"
 )
 
@@ -20,6 +22,32 @@ import (
 // it made, and reads what it was given.
 const defaultCheckouts = "runs/checkouts"
 
+// The exit codes `sense-lab repo` answers with. They are its API rather than a
+// display, because this command ends up in a shell loop and what that loop stops
+// on is this:
+//
+//	while sense-lab repo <id>; do :; done
+//
+// It terminates on a park, on a PAY and on either refusal, and `-show` never
+// returns 0 so it cannot be dropped into that loop and spin.
+//
+// Two of them are worth telling apart above all: a park is the method failing on
+// this repository, and a PAY is the method succeeding and waiting on a wallet.
+// So are the two refusals: an agent that misbehaved, against an agent that died.
+//
+// exitShown is the binary's usage code, and that is not a collision in practice:
+// the codes are read with the arguments in hand, and a caller that passed -show
+// knows a position was printed while one that did not knows its flags were
+// wrong.
+const (
+	exitShown    = exitUsage
+	exitFinished = 3
+	exitParked   = 4
+	exitWaiting  = 5
+	exitUnusable = 6
+	exitMissing  = 7
+)
+
 // repoFlags is where a repository is admitted from and where the evidence of it
 // lands.
 type repoFlags struct {
@@ -27,6 +55,7 @@ type repoFlags struct {
 	campaign  string
 	checkouts string
 	senseBin  string
+	show      bool
 	name      string
 }
 
@@ -38,6 +67,7 @@ func parseRepoFlags(args []string, stderr io.Writer) (repoFlags, error) {
 	fs.StringVar(&f.campaign, "campaign", "", "the campaign's run tree, where the index artifact lands (required)")
 	fs.StringVar(&f.checkouts, "checkouts", defaultCheckouts, "the lab's own clones root")
 	fs.StringVar(&f.senseBin, "sense", "sense", "the Sense binary that indexes the repository")
+	fs.BoolVar(&f.show, "show", false, "print the position and stop, writing nothing")
 	if err := fs.Parse(args); err != nil {
 		return f, err
 	}
@@ -79,16 +109,24 @@ func admitRepo(ctx context.Context, args []string, stdout, stderr io.Writer) int
 		return exitError
 	}
 
-	p, err := repo.Prepare(ctx, targetFor(c, r), f.checkouts, announce(stdout))
-	if err != nil {
+	p, err := repo.Prepare(ctx, targetFor(c, r), f.checkouts, announce(stdout, f.show))
+	switch {
+	case errors.Is(err, errShown):
+		// Stopped at the announcement, before anything was written. What a
+		// caller asked to see is the position, so it is printed from what is on
+		// disk rather than from anything this run did.
+		return standing(f, r.ID, stdout, exitShown)
+	case err != nil:
 		_, _ = fmt.Fprintf(stderr, "sense-lab repo: %v\n", err)
 		return exitError
 	}
 	if p.Admitted {
-		_, _ = fmt.Fprint(stdout, position(f.campaign, p))
-		return exitOK
+		return standing(f, p.ID, stdout, exitOK)
 	}
-	return admitNew(ctx, f, p, stdout, stderr)
+	if code := admitNew(ctx, f, p, stdout, stderr); code != exitOK {
+		return code
+	}
+	return standing(f, p.ID, stdout, exitOK)
 }
 
 // targetFor is what admission acts on. A repository the catalog holds brings
@@ -109,12 +147,49 @@ func targetFor(c *catalog.Catalog, r repo.Resolution) repo.Target {
 // rather than three phases later — and it is a statement rather than a prompt,
 // because an interactive question in the run path is what the crank cannot
 // answer.
-func announce(stdout io.Writer) func(repo.Plan) error {
+func announce(stdout io.Writer, show bool) func(repo.Plan) error {
 	return func(p repo.Plan) error {
 		_, _ = fmt.Fprintf(stdout, "id:       %s\nurl:      %s\nrevision: %s\ncheckout: %s (%s)\n\n",
 			p.ID, p.URL, p.Revision, p.Checkout, sentence(p))
+		if show {
+			return errShown
+		}
 		return nil
 	}
+}
+
+// errShown stops an admission at the announcement. -show is the same code path
+// as an admission up to the point where one would write something, which is
+// what makes it a preview of that admission rather than a second reading of the
+// same inputs.
+var errShown = errors.New("shown")
+
+// standing prints where the repository stands and answers with the code that
+// carries it.
+//
+// A position is a fact about the run tree, so it is read back off disk rather
+// than assembled from what this invocation happened to do.
+func standing(f repoFlags, id string, stdout io.Writer, ok int) int {
+	at, err := position.Read(f.campaign, id)
+	if err != nil {
+		_, _ = fmt.Fprintf(stdout, "position: unreadable: %v\n", err)
+		return exitError
+	}
+	_, _ = fmt.Fprint(stdout, position.Render(at))
+	if code, stop := stopOn[at.Standing]; stop {
+		return code
+	}
+	return ok
+}
+
+// stopOn is every standing that ends the loop, and its code. A standing that is
+// not in here is one with a next phase to run.
+var stopOn = map[position.Standing]int{
+	position.Finished: exitFinished,
+	position.Parked:   exitParked,
+	position.Waiting:  exitWaiting,
+	position.Unusable: exitUnusable,
+	position.Missing:  exitMissing,
 }
 
 // sentence says what the checkout is about to have done to it, in words.
@@ -195,17 +270,6 @@ func repoFile(config, id string) string { return filepath.Join(config, "repos", 
 // does not rescan it.
 func indexArtifact(campaign, id string) string {
 	return filepath.Join(campaign, id, "index", "index.json")
-}
-
-// position is what a repository that is already admitted gets instead of an
-// admission: where its checkout is, what it is pinned at, and whether it has
-// been indexed.
-func position(campaign string, p repo.Plan) string {
-	indexed := "no"
-	if _, err := os.Stat(indexArtifact(campaign, p.ID)); err == nil {
-		indexed = "yes"
-	}
-	return fmt.Sprintf("admitted: nothing to do\nindexed:  %s\n", indexed)
 }
 
 // admitSignals runs admission under the same signal handling a session gets. A
