@@ -3,6 +3,7 @@ phase: board
 reads: harvest.json
 writes: board.md
 emits: [AUTO]
+wall: 15m
 ---
 
 # board
@@ -52,3 +53,15 @@ of every arm, and the build the headline column was banked at.
 - Do not re-round a figure, and do not write one that is not in the harvest record.
 - Do not omit an arm because it did poorly. A never-routed arm is a finding.
 - Do not spawn a subagent. Only the binary spawns.
+
+## Verdict
+
+Write `verdict.json` in this phase's directory, beside the artifact:
+
+```json
+{"phase": "board", "repo": "<repo id>", "cycle": <n>, "verdict": "<one of the emitted>",
+ "table": "<why, in one or two sentences>"}
+```
+
+The crank reads that file and nothing else to route. A verdict left in prose is a verdict only a
+person can act on, and the loop this phase belongs to runs unattended.

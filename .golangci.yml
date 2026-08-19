@@ -97,6 +97,23 @@ linters:
               desc: "the lab's pure core must not touch the network"
             - pkg: syscall
               desc: "the lab's pure core must not call syscalls directly"
+        # The deciding layer. These packages work out what happens next, and
+        # nothing that decides a next phase may spawn one: the spawner is a
+        # value the edge hands in, and the crank never imports one. `os` is
+        # allowed here and denied in lab-pure above, and the difference is the
+        # point — position reads a run tree by design, and what it may not do is
+        # reach a process.
+        lab-decides:
+          files:
+            - "**/lab/internal/position/**"
+            - "**/lab/internal/crank/**"
+          deny:
+            - pkg: os/exec
+              desc: "the deciding layer must not spawn; the spawner is injected at the edge"
+            - pkg: net
+              desc: "the deciding layer must not touch the network"
+            - pkg: syscall
+              desc: "the deciding layer must not call syscalls directly"
         lab-boundary:
           files:
             - "**/lab/**"

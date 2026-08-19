@@ -3,6 +3,7 @@ phase: author
 reads: slate.md
 writes: scenario.draft.yaml
 emits: [DRAFT, NO-ANCHOR]
+wall: 30m
 ---
 
 # author
@@ -309,3 +310,16 @@ ported into this tree. Naming a path that does not exist would be worse than nam
 computation, because a plan is followed literally. **Cycle 07 binds each step to its command, and
 until it does this plan is followed by hand.** Recorded rather than quietly dropped: the exact
 commands are the part of this plan most likely to be lost in the move.
+
+## Verdict
+
+Write `verdict.json` in this phase's directory, beside the artifact:
+
+```json
+{"phase": "author", "repo": "<repo id>", "cycle": <n>, "verdict": "<one of the emitted>",
+ "table": "<why, in one or two sentences>",
+ "anchor": "<the symbol this attempt is anchored on>"}
+```
+
+The crank reads that file and nothing else to route. A verdict left in prose is a verdict only a
+person can act on, and the loop this phase belongs to runs unattended.

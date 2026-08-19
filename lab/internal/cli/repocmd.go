@@ -55,7 +55,10 @@ type repoFlags struct {
 	campaign  string
 	checkouts string
 	senseBin  string
+	agent     string
+	model     string
 	show      bool
+	until     bool
 	name      string
 }
 
@@ -67,7 +70,10 @@ func parseRepoFlags(args []string, stderr io.Writer) (repoFlags, error) {
 	fs.StringVar(&f.campaign, "campaign", "", "the campaign's run tree, where the index artifact lands (required)")
 	fs.StringVar(&f.checkouts, "checkouts", defaultCheckouts, "the lab's own clones root")
 	fs.StringVar(&f.senseBin, "sense", "sense", "the Sense binary that indexes the repository")
+	fs.StringVar(&f.agent, "agent", "", "catalog agent id a phase is run by")
+	fs.StringVar(&f.model, "model", "", "catalog model id a phase is run by")
 	fs.BoolVar(&f.show, "show", false, "print the position and stop, writing nothing")
+	fs.BoolVar(&f.until, "until", false, "crank until it stops on its own, one phase at a time")
 	if err := fs.Parse(args); err != nil {
 		return f, err
 	}
@@ -121,7 +127,13 @@ func admitRepo(ctx context.Context, args []string, stdout, stderr io.Writer) int
 		return exitError
 	}
 	if p.Admitted {
-		return standing(f, p.ID, stdout, exitOK)
+		if f.agent == "" && f.model == "" {
+			// No driver named, so nothing can be dispatched. The position is
+			// the whole answer, which is what this command did before it could
+			// turn the loop at all.
+			return standing(f, p.ID, stdout, exitOK)
+		}
+		return turn(ctx, f, c, p.ID, stdout, stderr)
 	}
 	if code := admitNew(ctx, f, p, stdout, stderr); code != exitOK {
 		return code

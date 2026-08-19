@@ -3,6 +3,7 @@ phase: index
 reads: repo.json
 writes: index.json
 emits: [AUTO]
+wall: 20m
 ---
 
 # index
@@ -54,3 +55,15 @@ returned.
 - Do not read the SQLite index directly. Sense is reached through the MCP server, because that
   is the channel the benched agent actually has.
 - Do not spawn a subagent. Only the binary spawns.
+
+## Verdict
+
+Write `verdict.json` in this phase's directory, beside the artifact:
+
+```json
+{"phase": "index", "repo": "<repo id>", "cycle": <n>, "verdict": "<one of the emitted>",
+ "table": "<why, in one or two sentences>"}
+```
+
+The crank reads that file and nothing else to route. A verdict left in prose is a verdict only a
+person can act on, and the loop this phase belongs to runs unattended.

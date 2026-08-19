@@ -3,6 +3,7 @@ phase: preflight
 reads: scenario.yaml
 writes: preflight.json
 emits: [AUTO]
+wall: 15m
 ---
 
 # preflight
@@ -63,3 +64,15 @@ Two recorded failures have this shape:
 
 - Do not spend anything. This phase reads configuration.
 - Do not spawn a subagent. Only the binary spawns.
+
+## Verdict
+
+Write `verdict.json` in this phase's directory, beside the artifact:
+
+```json
+{"phase": "preflight", "repo": "<repo id>", "cycle": <n>, "verdict": "<one of the emitted>",
+ "table": "<why, in one or two sentences>"}
+```
+
+The crank reads that file and nothing else to route. A verdict left in prose is a verdict only a
+person can act on, and the loop this phase belongs to runs unattended.

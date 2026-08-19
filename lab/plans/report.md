@@ -3,6 +3,7 @@ phase: report
 reads: cells.json
 writes: report.md
 emits: [WIN, DIAGNOSIS]
+wall: 30m
 ---
 
 # report
@@ -98,3 +99,15 @@ report phase, and the reading of what the numbers mean sits in it. The split is 
 it had a reason — the reading was written after the figures were fixed, so no figure could be
 chosen to suit the sentence — and that property is held here by the rule that every claim is
 quoted output rather than by a phase boundary. Recorded rather than resolved.
+
+## Verdict
+
+Write `verdict.json` in this phase's directory, beside the artifact:
+
+```json
+{"phase": "report", "repo": "<repo id>", "cycle": <n>, "verdict": "<one of the emitted>",
+ "table": "<why, in one or two sentences>"}
+```
+
+The crank reads that file and nothing else to route. A verdict left in prose is a verdict only a
+person can act on, and the loop this phase belongs to runs unattended.

@@ -158,6 +158,23 @@ func (p *Position) settle(dir string, attempts []Attempt) {
 // route reads the last verdict and says where it leads, or why it leads
 // nowhere.
 func (p *Position) route(cycleDir string, last Attempt) {
+	switch last.Outcome {
+	case Stalled:
+		// An agent that died. It is Missing rather than Unusable because that
+		// is how it is diagnosed: there is a log, and the phase never reached a
+		// judgment.
+		p.Standing = Missing
+		p.Because = fmt.Sprintf("%s ran past its wall and recorded no verdict; its log is %s",
+			last.Phase, orText(last.Log, "not recorded"))
+		return
+	case Refused:
+		// An agent that misbehaved: it finished, and what it wrote is not a
+		// verdict for this phase.
+		p.Standing = Unusable
+		p.Because = fmt.Sprintf("%s was refused: %s", last.Phase, last.Table)
+		return
+	}
+
 	next, err := phase.Next(last.Phase, last.Verdict, p.Cycle)
 	if err != nil {
 		p.Standing, p.Because = Unusable, err.Error()
@@ -313,6 +330,15 @@ func yes(b bool) string {
 		return "yes"
 	}
 	return "no"
+}
+
+// orText is or, for a path. A blank where a file should be named reads as a
+// file called nothing.
+func orText(s, absent string) string {
+	if s == "" {
+		return absent
+	}
+	return s
 }
 
 // or names a phase, or says what its absence means. A phase that is empty is
