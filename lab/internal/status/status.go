@@ -1,6 +1,6 @@
-// Package status answers "where does this stand" from the run tree alone.
+// Package status answers "where does this stand" from the run trees alone.
 //
-// A campaign runs unattended for hours and is picked up later, often by a
+// A repository runs unattended for hours and is picked up later, often by a
 // session with no memory of it. The retired instrument answered this with a page
 // assembled from a results tree, two state files, a banked log and a ledger.
 // That page exists at all only because a resuming session was once pointed at
@@ -63,6 +63,11 @@ type Repo struct {
 	Parked bool
 	// Banked is every cycle that reached the board.
 	Banked []int
+	// Spend is what this repository has cost, read from its own tree. The
+	// scope is the repository because that is what a ceiling is decided
+	// about: a repository that burns its runs is a repository to stop, and
+	// nothing about the one beside it changed.
+	Spend budget.Spend
 }
 
 // ToCeiling is how many authoring cycles are left before this repository parks.
@@ -96,13 +101,14 @@ type Resume struct {
 
 // Position is everything the page reports.
 type Position struct {
-	Campaign string
-	Repos    []Repo
-	Cells    []Cell
+	// Root is the directory the run trees live under, one per repository.
+	Root  string
+	Repos []Repo
+	Cells []Cell
 	// Orphans are run directories that spawned and never recorded a terminal
 	// state. They are listed, never folded into a count.
 	Orphans []string
-	Spend   budget.Spend
+	// Ceiling is how many paid runs each repository gets over its lifetime.
 	Ceiling int
 	Resume  []Resume
 }
@@ -114,34 +120,28 @@ const (
 	recordFile  = "cell-meta.json"
 )
 
-// Read reports a campaign's position from its run tree.
+// Read reports every repository's position from the run trees under root.
 //
-// A campaign directory that does not exist yet reports an empty position rather
-// than an error: asking where a campaign stands before it has run is a fair
-// question with a short answer.
-func Read(campaignDir string, ceiling int) (Position, error) {
-	p := Position{Campaign: campaignDir, Ceiling: ceiling}
-	spend, err := budget.Read(campaignDir)
-	if err != nil {
-		return Position{}, err
-	}
-	p.Spend = spend
-
-	repos, err := subdirs(campaignDir)
+// A root that does not exist yet reports an empty position rather than an
+// error: asking where the repositories stand before any of them has run is a
+// fair question with a short answer.
+func Read(root string, ceiling int) (Position, error) {
+	p := Position{Root: root, Ceiling: ceiling}
+	repos, err := subdirs(root)
 	if err != nil {
 		return Position{}, err
 	}
 	for _, name := range repos {
-		r, err := readRepo(filepath.Join(campaignDir, name), name)
+		r, err := readRepo(filepath.Join(root, name), name)
 		if err != nil {
 			return Position{}, err
 		}
 		p.Repos = append(p.Repos, r)
 		if !r.Parked && r.Awaiting != "" {
-			p.Resume = append(p.Resume, resumeFor(campaignDir, r))
+			p.Resume = append(p.Resume, resumeFor(root, r))
 		}
 	}
-	if err := p.readCells(campaignDir); err != nil {
+	if err := p.readCells(root); err != nil {
 		return Position{}, err
 	}
 	return p, nil
@@ -171,6 +171,11 @@ func subdirs(dir string) ([]string, error) {
 // cycle got, whether it is parked, and every cycle that reached the board.
 func readRepo(dir, name string) (Repo, error) {
 	r := Repo{Name: name, Indexed: wrote(dir, indexPhase())}
+	spend, err := budget.Read(dir)
+	if err != nil {
+		return Repo{}, err
+	}
+	r.Spend = spend
 	cycles, err := subdirs(dir)
 	if err != nil {
 		return Repo{}, err
@@ -196,7 +201,7 @@ func readRepo(dir, name string) (Repo, error) {
 	}
 	if !r.Indexed {
 		// Nothing under a cycle can be believed before the repository is
-		// scanned, and the scan is what the campaign is waiting for.
+		// scanned, and the scan is what the loop is waiting for.
 		r.Awaiting = phase.Index
 	}
 	return r, nil
@@ -245,10 +250,10 @@ func wrote(dir string, p phase.Phase) bool {
 // resumeFor builds the next action for a repository. It names the binary's own
 // command where one exists and the plan file otherwise, so the line is never a
 // verb that does not exist.
-func resumeFor(campaignDir string, r Repo) Resume {
+func resumeFor(root string, r Repo) Resume {
 	// The index sits beside the cycles rather than inside one, so an
 	// unscanned repository is resumed at the repository directory.
-	at := filepath.Join(campaignDir, r.Name)
+	at := filepath.Join(root, r.Name)
 	if r.Indexed {
 		at = filepath.Join(at, strconv.Itoa(r.Cycle))
 	}
@@ -263,8 +268,8 @@ func resumeFor(campaignDir string, r Repo) Resume {
 
 // readCells walks the tree for cells and for run directories that never
 // recorded a terminal state.
-func (p *Position) readCells(campaignDir string) error {
-	err := filepath.WalkDir(campaignDir, func(path string, d fs.DirEntry, err error) error {
+func (p *Position) readCells(root string) error {
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		switch {
 		case err != nil:
 			return err
@@ -281,7 +286,7 @@ func (p *Position) readCells(campaignDir string) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("read cells under %s: %w", campaignDir, err)
+		return fmt.Errorf("read cells under %s: %w", root, err)
 	}
 	slices.Sort(p.Orphans)
 	slices.SortFunc(p.Cells, func(a, b Cell) int { return strings.Compare(a.Path, b.Path) })

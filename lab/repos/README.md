@@ -9,7 +9,8 @@ the commit it is pinned at, its languages and its stack.
  "languages": ["ruby"], "stack": "ruby"}
 ```
 
-`sense-lab repo <handle|url|path>` writes one of these. The commit is read back
+`sense-lab repo <handle|url|path>` writes one of these, and how that repository
+is measured is declared beside it in `../benches/<id>.json`. The commit is read back
 out of the clone rather than copied by hand, and `checkout` is present only for
 a clone somebody handed in: its absence is what says the lab made this one and
 may move it back to its pin.

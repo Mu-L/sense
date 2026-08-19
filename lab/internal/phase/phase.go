@@ -109,7 +109,7 @@ func (p Phase) Emits(v Verdict) bool {
 	return false
 }
 
-// Graph is every phase, in the order a campaign walks them. Handoff is last
+// Graph is every phase, in the order a repository walks them. Handoff is last
 // because it is not walked to: it is arrived at.
 var Graph = []Phase{
 	{Index, "repo.json", "index.json", []Verdict{Auto}},
@@ -122,7 +122,7 @@ var Graph = []Phase{
 	{Report, "cells.json", "report.md", []Verdict{Win, Diagnosis}},
 	{Harvest, "report.md", "harvest.json", []Verdict{WinConfirmed, DoDFail}},
 	{Board, "harvest.json", "board.md", []Verdict{Auto}},
-	{Handoff, "campaign.json", "handoff.md", []Verdict{Auto}},
+	{Handoff, "attempts/", "handoff.md", []Verdict{Auto}},
 }
 
 // Lookup reports the declared phase named n.
@@ -181,7 +181,7 @@ var forward = map[step]Name{
 }
 
 // Lever is one routed re-entry, named. The table exists because a done-means of
-// "every lever a real campaign has used is exercised" is only checkable against
+// "every lever a real run has used is exercised" is only checkable against
 // a fixed list, and a list held in whoever remembers it is not one.
 type Lever struct {
 	Name    string
@@ -191,7 +191,7 @@ type Lever struct {
 	To      Name
 }
 
-// Levers is that list. Any lever a recorded campaign used that is missing from
+// Levers is that list. Any lever a recorded run used that is missing from
 // here is a hole in the test set, not merely a gap in the documentation.
 var Levers = []Lever{
 	{"NO-ANCHOR from a draft", Author, NoAnchor, 1, Author},
@@ -230,7 +230,7 @@ func Next(from Name, v Verdict, cycle int) (Name, error) {
 	// Every verdict of every phase is in one of the two tables, and a test walks
 	// the graph to keep it that way. There is no third case to handle here: a
 	// verdict added without a transition fails that test rather than returning a
-	// runtime error nobody would see until a campaign stalled.
+	// runtime error nobody would see until the loop stalled.
 	return forward[step{from, v}], nil
 }
 

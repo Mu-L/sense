@@ -1,9 +1,9 @@
-// Package budget reports what a campaign has spent, by reading the run tree.
+// Package budget reports what a repository has spent, by reading its run tree.
 //
 // It never holds a counter. A ceiling kept in a variable is a ceiling that
 // resets when the process does, and this binary spends money unattended: a
-// campaign restarted after a crash would start again from zero and spend its
-// whole budget a second time without anything looking wrong.
+// loop restarted after a crash would start again from zero and spend its whole
+// budget a second time without anything looking wrong.
 //
 // So spend is recomputed, every time, from the directories that exist. That is
 // also why it cannot be double-counted across a restart: the total is the size
@@ -15,14 +15,15 @@
 // Not dollars. Nothing on disk records a price — the model files carry an id, a
 // provider and the tools that can drive them, and no rate — so a dollar figure
 // here would be a number this package invented. A paid run is the thing the
-// campaign actually decides to spend, and it is a fact in the tree.
+// lab actually decides to spend, and it is a fact in the tree.
 //
-// # The scope is the campaign, over its lifetime
+// # The scope is the repository, over its lifetime
 //
-// Not per repository, because a campaign that burns its budget on one repository
-// has made a decision worth stopping. Not per calendar period, because a month
-// boundary is not a fact about the work. [Read] is handed a campaign directory
-// and walks all of it.
+// A ceiling is decided about a repository: one that burns its runs without
+// reaching the board is the one to stop, and nothing about the repository
+// beside it changed. Not per calendar period, because a month boundary is not a
+// fact about the work. [Read] is handed a repository's run tree and walks all
+// of it.
 package budget
 
 import (
@@ -46,7 +47,7 @@ const (
 	rawDir      = "raw"
 )
 
-// Spend is what a campaign has spent, as the runs that produced it.
+// Spend is what a repository has spent, as the runs that produced it.
 //
 // Orphaned is not folded into Recorded and is not dropped. A bench run that
 // started and never wrote a terminal record still spent its money, and a ceiling
@@ -57,7 +58,7 @@ type Spend struct {
 	Orphaned []string
 }
 
-// Runs is the campaign's spend: every paid run in the tree, accounted or not.
+// Runs is the repository's spend: every paid run in the tree, accounted or not.
 func (s Spend) Runs() int { return len(s.Recorded) + len(s.Orphaned) }
 
 func (s Spend) String() string {
@@ -67,22 +68,22 @@ func (s Spend) String() string {
 	return fmt.Sprintf("%d paid runs, %d of them orphaned with no terminal record", s.Runs(), len(s.Orphaned))
 }
 
-// Read reports the spend recorded under a campaign directory.
+// Read reports the spend recorded under a repository's run tree.
 //
 // A paid run is one under the bench phase. Mini-bench and validation runs are
 // unscored and unpaid by law, and counting them against the ceiling would refuse
-// a campaign for the runs it does to avoid spending.
+// a repository for the runs it does to avoid spending.
 //
-// A campaign directory that does not exist yet has spent nothing, which is a
-// fact rather than an error: the ceiling is checked before the first run as well
-// as after the hundredth.
-func Read(campaignDir string) (Spend, error) {
+// A tree that does not exist yet has spent nothing, which is a fact rather than
+// an error: the ceiling is checked before the first run as well as after the
+// hundredth.
+func Read(tree string) (Spend, error) {
 	var s Spend
-	err := filepath.WalkDir(campaignDir, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(tree, func(path string, d fs.DirEntry, err error) error {
 		switch {
 		case err != nil:
 			return err
-		case !d.IsDir() || !paid(campaignDir, path):
+		case !d.IsDir() || !paid(tree, path):
 			return nil
 		}
 		if !exists(filepath.Join(path, rawDir)) {
@@ -99,7 +100,7 @@ func Read(campaignDir string) (Spend, error) {
 		return Spend{}, nil
 	}
 	if err != nil {
-		return Spend{}, fmt.Errorf("read spend under %s: %w", campaignDir, err)
+		return Spend{}, fmt.Errorf("read spend under %s: %w", tree, err)
 	}
 	slices.Sort(s.Recorded)
 	slices.Sort(s.Orphaned)
@@ -121,15 +122,21 @@ func paid(root, path string) bool {
 	return slices.Contains(strings.Split(filepath.ToSlash(rel), "/"), string(phase.Bench))
 }
 
-// Ceiling refuses a campaign that has reached its spend ceiling.
+// ErrCeiling is what a refusal is. It is a sentinel because a caller has to
+// tell "the ceiling says no" from "the tree could not be read": one is the
+// instrument working and the answer to the question that was asked, the other
+// is a broken invocation.
+var ErrCeiling = errors.New("spend ceiling reached")
+
+// Ceiling refuses a repository that has reached its spend ceiling.
 //
 // It refuses rather than warns. A ceiling that warns is a ceiling that gets
 // passed at the moment someone believes the next run will work, and that belief
 // is what the ceiling exists to bound.
 func Ceiling(s Spend, ceiling int) error {
 	if s.Runs() >= ceiling {
-		return fmt.Errorf("this campaign has spent %s against a ceiling of %d over its lifetime",
-			s, ceiling)
+		return fmt.Errorf("%w: this repository has spent %s against a ceiling of %d over its lifetime",
+			ErrCeiling, s, ceiling)
 	}
 	return nil
 }

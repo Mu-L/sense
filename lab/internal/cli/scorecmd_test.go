@@ -93,7 +93,7 @@ func TestScoreReportsTheNumberAndPassesAtTheFloor(t *testing.T) {
 	}
 }
 
-// A run below the floor exits non-zero, so a campaign script can branch on the
+// A run below the floor exits non-zero, so a driving script can branch on the
 // verdict without parsing the report.
 func TestScoreExitsNonZeroBelowTheFloor(t *testing.T) {
 	run := recordedRun(t, "Only found app/models/category.rb:1083.")
@@ -104,7 +104,7 @@ func TestScoreExitsNonZeroBelowTheFloor(t *testing.T) {
 		"-scenario", scoredFile(t), "-run", run, "-floor", "0.75")
 
 	// Its own code, distinct from "could not run at all": a run that scored and
-	// came up short is a result a campaign can bank.
+	// came up short is a result the loop can bank.
 	if code != 4 {
 		t.Errorf("exit = %d, want 4 for a run below the floor", code)
 	}

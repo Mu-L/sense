@@ -352,7 +352,7 @@ func TestCancellingTheContextKillsTheWholeTree(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 	if _, err := os.Stat(marker); err == nil {
-		t.Error("the grandchild outlived the cancellation: an interrupted campaign " +
+		t.Error("the grandchild outlived the cancellation: an interrupted run " +
 			"would leave agent sessions running and spending")
 	}
 
@@ -483,7 +483,7 @@ func TestOutcomeOfPrefersWhatEndedTheSessionOverTheExitCode(t *testing.T) {
 // A session that produced nothing is not the same as a session that ran and
 // failed, but on disk they look identical: same outcome, same exit code. The
 // measured case is an arm whose model id resolved to nothing — zero bytes,
-// exit 1, and a campaign before anyone noticed. The byte count is what makes a
+// exit 1, and a run before anyone noticed. The byte count is what makes a
 // broken spawn legible without reading transcripts.
 func TestTheRecordSaysHowMuchTheSessionActuallySaid(t *testing.T) {
 	t.Run("a session that said something", func(t *testing.T) {

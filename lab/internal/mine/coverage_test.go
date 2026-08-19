@@ -98,7 +98,7 @@ func TestCoverageIsUnchangedByWhetherAnythingWasFound(t *testing.T) {
 	}
 }
 
-func TestACampaignWithNoRunsExercisedNothing(t *testing.T) {
+func TestARunSetWithNoRunsExercisedNothing(t *testing.T) {
 	for _, e := range mine.Coverage(nil) {
 		if e.Calls != 0 || e.Runs != 0 || len(e.Params) != 0 {
 			t.Errorf("%s reports %+v with no runs", e.Surface, e)

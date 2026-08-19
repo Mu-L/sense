@@ -23,7 +23,7 @@ If a script here is broken, write one line naming it in `notes` and stop. Do not
 
 ## Run
 
-`slate.md` names the repository, the campaign and the anchor if one is carried. Every rejection
+`slate.md` names the repository and the anchor if one is carried. Every rejection
 so far is beside it, oldest first, and **all of them are read, not only the last one.**
 
 Reading only the latest read is how six attempts oscillated between "the plain search got
@@ -32,7 +32,7 @@ everything" and "neither arm got anything" without ever landing in between.
 0. **Fewer than about five runs per arm on disk? Step 1 has no input you may trust, and you say
    so.** At zero there is no citation ranking at all; below five the ordering is noise by step
    1's own measurement — a row that read as a perfect discriminator at n=2 was 4 of 5 by n=5.
-   Both cases are the same case, and the threshold is the law's rather than any one campaign's.
+   Both cases are the same case, and the threshold is the law's rather than any one repository's.
 
    Nothing stands in for the ranking. A hand estimate of which rows are free is exactly the
    substitute A GOLD ROW SHOULD COST A READ forbids from a phase that runs before the two-arm
@@ -44,8 +44,8 @@ everything" and "neither arm got anything" without ever landing in between.
    needs no run history, and step 5 binds unconditionally: every `dependents` row you write must
    appear in what the arm is shown.
 
-   *(Added by the first live campaign, dotnet-jellyfin cycle 1, at n=0. Keyed to five rather than
-   to zero in council review, so the case the campaign never saw — two or three recorded runs — is
+   *(Added by the first live run, jellyfin cycle 1, at n=0. Keyed to five rather than
+   to zero in council review, so the case that run never saw — two or three recorded runs — is
    covered too.)*
 
 1. **What the arms have ACTUALLY cited, per gold row, across every run on disk.** Rarest-cited
@@ -103,7 +103,7 @@ everything" and "neither arm got anything" without ever landing in between.
    check or a prompt render. They are named for cycle 07 and are not built. Until they are, the
    gold audit is `validate` plus opening every row by hand, which DO NOT below already requires.
 
-   *(Corrected by the first live campaign, dotnet-jellyfin cycle 1: the step named five absent
+   *(Corrected by the first live run, jellyfin cycle 1: the step named five absent
    things — `stamp`, `verify`, a rubric check, a gold-confidence check and a prompt render — and
    the Done-when list below required their artifacts, so the phase could not report itself done
    by its own criteria.)*
@@ -114,8 +114,8 @@ The KIND of question first, then the contract, then every gold row.
 
 ### The kind of question
 
-**Read the campaign's answer-forms page FIRST if it exists.** Each stack answers differently and
-the per-campaign page is where that is written down, with the n under every claim. It carries
+**Read the repository's answer-forms page FIRST if it exists.** Each stack answers differently and
+the per-repository page is where that is written down, with the n under every claim. It carries
 three things this shared plan cannot: the forms already MEASURED to fail here (do not re-buy
 them), the forms measured to win here, and the mechanisms killed by a run so they are not
 re-proposed.
@@ -273,18 +273,18 @@ prints: `NO-ANCHOR` reached from a token grep is a report about grep, not about 
   asserting the author was diligent is not checkable and is not one.
 
   *(The rubric check, the gold-confidence check and the stamp sheet were removed from this list
-  by the first live campaign: the commands they name do not exist, so the bullets could never be
+  by the first live run: the commands they name do not exist, so the bullets could never be
   satisfied. Restore them when cycle 07 builds the commands.*
 
   *A fourth bullet requiring no `dependents` row inside the covering grep was written and then
-  removed in the same campaign's council review. It rebuilt a retired concept — NO GREP SCREEN IS
+  removed in the same run's council review. It rebuilt a retired concept — NO GREP SCREEN IS
   A GATE, IN ANY FORM — in the one place the shape cannot reach, and it is unsatisfiable on the
   shipped corpus: on discourse, 19 of 23 gold rows lie inside a grep for `Category`, so at least
   8 of its 12 `dependents` rows would fail it. `goldcheck.go:68` refuses to quarantine on that
   reason for exactly this reason. Record the covering grep in the yaml header as an input to the
   step 4 ranking; never let it decide.)*
 - The seam profile is in the yaml header and the anchor's precision is in the notes.
-- The yaml header names the ANSWER FORM this draft uses and its line on the campaign's
+- The yaml header names the ANSWER FORM this draft uses and its line on the repository's
   answer-forms page: measured-to-win, under test, or unmeasured. A form that page records as
   MEASURED TO FAIL needs the sentence saying what is different this time, or it is the same cycle
   re-bought.

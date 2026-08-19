@@ -76,8 +76,8 @@ func (p Position) ToCeiling() int { return max(phase.AuthoringCeiling-p.Cycle, 0
 // A repository directory that is not there is not an error: asking where a
 // repository stands before it has been admitted is a fair question with an
 // answer, and the answer is that it awaits its index.
-func Read(campaign, repo string) (Position, error) {
-	dir := filepath.Join(campaign, repo)
+func Read(runs, repo string) (Position, error) {
+	dir := filepath.Join(runs, repo)
 	p := Position{Repo: repo, Indexed: wrote(dir, phaseOf(phase.Index))}
 
 	cycles, err := cycleDirs(dir)

@@ -11,7 +11,7 @@ import (
 )
 
 // The fixtures are six real recorded runs against bitwarden-server, five models
-// between them, taken from the campaign whose misses were found by hand. Nothing
+// between them, taken from the run whose misses were found by hand. Nothing
 // here is synthetic: a detector with no real example does not ship, and a
 // fixture written to make a detector fire is the same failure one step earlier.
 var recorded = []string{"opus-run-1", "opus-run-2", "glm-run-1", "glm-run-2", "glm-run-3", "gpt-run-2"}

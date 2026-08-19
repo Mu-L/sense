@@ -13,7 +13,7 @@ import (
 
 // Installing a signal handler and attaching the run to it are two different
 // things, and getting only the first is silent: the handler fires, the session
-// is not attached to it, and an interrupted campaign leaves the agent running,
+// is not attached to it, and an interrupted run leaves the agent running,
 // unowned and still spending, with no record on disk. Because the session sits
 // in its own process group, a second Ctrl-C cannot reach it either.
 //
@@ -72,7 +72,7 @@ func TestSIGTERMRecordsTheRunAndKillsTheAgentTree(t *testing.T) {
 		return err == nil && strings.Contains(string(b), "started")
 	}, "the agent to start")
 
-	// Interrupt the way a campaign driver would.
+	// Interrupt the way the crank would.
 	if err := lab.Process.Signal(syscall.SIGTERM); err != nil {
 		t.Fatalf("signal: %v", err)
 	}

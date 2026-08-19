@@ -9,7 +9,7 @@ import (
 	"github.com/luuuc/sense/lab/internal/replay"
 )
 
-// The fixture is the real banked corpus: five cells across two campaigns, with
+// The fixture is the real banked corpus: five cells across two repositories, with
 // each cell's margin and its own run-to-run spread derived from the runs it was
 // banked on.
 func banked(t *testing.T) []replay.Cell {

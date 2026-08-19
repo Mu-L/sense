@@ -1,5 +1,5 @@
-// Package plan expands a campaign into the jobs it implies and answers, for
-// each one, whether it can run at all.
+// Package plan expands one repository's bench into the jobs it implies and
+// answers, for each one, whether it can run at all.
 //
 // It exists so that an impossible combination is found before anything is
 // spent, rather than forty minutes into a session, or worse at the end of a
@@ -23,14 +23,14 @@ import (
 type Role string
 
 const (
-	// Headline is the arm a win is claimed on. Exactly one per campaign.
+	// Headline is the arm a win is claimed on. Exactly one per repository.
 	Headline Role = "headline"
 	// Confirmation is a cross-model check that the win is not an artifact of
 	// one model.
 	Confirmation Role = "confirmation"
 )
 
-// Arm is one model the campaign benches, and how many times per cell.
+// Arm is one model the repository is benched on, and how many times per cell.
 type Arm struct {
 	Role  Role   `json:"role"`
 	Model string `json:"model"`
@@ -40,10 +40,16 @@ type Arm struct {
 	Agent string `json:"agent"`
 }
 
-// Campaign is one measurement programme: which arms, over which repositories,
-// with which subjects.
-type Campaign struct {
-	Key string `json:"key"`
+// Bench is how one repository is measured: which arms, with which subjects,
+// graded by which judge.
+//
+// The scope is the repository because everything else already is. A repository
+// carries its own run tree, its own authoring cycles and its own spend ceiling,
+// and it advances to a verdict on its own — no second repository is authored
+// while the first is mid-diagnosis. A container above it held no fact that was
+// not either a decision about one repository or a directory name.
+type Bench struct {
+	Repo string `json:"repo"`
 	// Judge grades the rubric axes. It is NOT an arm: it produces no cell and
 	// it is a service the scoring layer calls. It lives here as a pinned field
 	// because a judge that moves with the arm makes every board incomparable,
@@ -51,7 +57,6 @@ type Campaign struct {
 	// it by convention, forever.
 	Judge    string   `json:"judge"`
 	Subjects []string `json:"subjects"`
-	Repos    []string `json:"repos"`
 	Arms     []Arm    `json:"arms"`
 }
 
@@ -90,15 +95,15 @@ type Rejection struct {
 
 func (r Rejection) String() string { return r.Job.String() + "\n    " + r.Reason }
 
-// Result is what a campaign plans to.
+// Result is what a bench plans to.
 type Result struct {
 	Jobs     []Job
 	Rejected []Rejection
 }
 
-// Cells is how many cells the plan runs: a cell is one repository and one arm
-// across every subject, which is the unit that is paired, budgeted and banked.
-// It is NOT the number of jobs — a two-subject campaign runs two jobs per cell.
+// Cells is how many cells the plan runs: a cell is one arm across every
+// subject, which is the unit that is paired, budgeted and banked. It is NOT the
+// number of jobs — a two-subject bench runs two jobs per cell.
 func (r Result) Cells() int {
 	seen := map[string]bool{}
 	for _, j := range r.Jobs {
@@ -114,28 +119,27 @@ func (r Result) Runs() int {
 	return n
 }
 
-// Expand turns a campaign into every job it implies and resolves each one.
+// Expand turns a repository's bench into every job it implies and resolves each
+// one.
 //
-// Order is repo, then subject, then arm, so the output reads the way a campaign
-// is run: one repository at a time, both arms of a cell adjacent.
-func Expand(c *catalog.Catalog, camp Campaign) (Result, error) {
-	if err := camp.validate(c); err != nil {
+// Order is subject, then arm, so the output reads the way the bench is run:
+// both arms of a cell adjacent.
+func Expand(c *catalog.Catalog, b Bench) (Result, error) {
+	if err := b.validate(c); err != nil {
 		return Result{}, err
 	}
 
 	// One ordered pass, decided afterwards, so the output reads in the order the
-	// campaign is run rather than grouped by outcome.
+	// bench is run rather than grouped by outcome.
 	var walked []Rejection
-	for _, repo := range camp.Repos {
-		for _, subject := range camp.Subjects {
-			for i, arm := range camp.Arms {
-				j, reason := resolve(c, repo, subject, arm)
-				j.cell = fmt.Sprintf("%s#%d", repo, i)
-				walked = append(walked, Rejection{Job: j, Reason: reason})
-			}
+	for _, subject := range b.Subjects {
+		for i, arm := range b.Arms {
+			j, reason := resolve(c, b.Repo, subject, arm)
+			j.cell = fmt.Sprintf("%s#%d", b.Repo, i)
+			walked = append(walked, Rejection{Job: j, Reason: reason})
 		}
 	}
-	return decide(walked, camp.Subjects), nil
+	return decide(walked, b.Subjects), nil
 }
 
 // decide splits a walked matrix into what runs and what does not, rejecting the
@@ -180,9 +184,9 @@ func decide(walked []Rejection, subjects []string) Result {
 			why, ok := lost[w.Job.cell]
 			if !ok {
 				// Nothing in this cell was rejected, so it is short a subject
-				// for a reason the campaign chose: one listed twice, or one
+				// for a reason the bench chose: one listed twice, or one
 				// missing.
-				why = "the campaign does not name every subject for this cell"
+				why = "the bench does not name every subject for this cell"
 			}
 			res.Rejected = append(res.Rejected, Rejection{Job: w.Job,
 				Reason: fmt.Sprintf("its cell is incomplete, so running this would burn it: %s", why)})
@@ -202,28 +206,28 @@ func complete(present map[string]bool, subjects []string) bool {
 	return true
 }
 
-// validate refuses a campaign that is malformed rather than merely
-// unsatisfiable. A campaign naming a subject the catalog does not have is a
-// typo; a campaign whose model no tool can drive is a rejection with a reason,
-// and those are different answers.
-func (camp Campaign) validate(c *catalog.Catalog) error {
-	if err := camp.validateArms(); err != nil {
+// validate refuses a bench that is malformed rather than merely unsatisfiable.
+// A bench naming a subject the catalog does not have is a typo; a bench whose
+// model no tool can drive is a rejection with a reason, and those are different
+// answers.
+func (b Bench) validate(c *catalog.Catalog) error {
+	if err := b.validateArms(); err != nil {
 		return err
 	}
-	if err := camp.validateNothingIsNamedTwice(); err != nil {
+	if err := b.validateNothingIsNamedTwice(); err != nil {
 		return err
 	}
-	return camp.validateReferences(c)
+	return b.validateReferences(c)
 }
 
 // validateArms checks the arm set can be read as one: exactly one arm to claim
 // a win on, and no arm that never runs.
 //
 // EVERY ARM GETS 2 RUNS PER CELL is a spending law and belongs to the gates,
-// not here. What this refuses is a campaign nobody could interpret.
-func (camp Campaign) validateArms() error {
+// not here. What this refuses is a bench nobody could interpret.
+func (b Bench) validateArms() error {
 	var heads int
-	for _, a := range camp.Arms {
+	for _, a := range b.Arms {
 		switch a.Role {
 		case Headline:
 			heads++
@@ -236,46 +240,38 @@ func (camp Campaign) validateArms() error {
 		}
 	}
 	if heads != 1 {
-		return fmt.Errorf("campaign %s has %d headline arms; exactly one arm is the one a win is claimed on",
-			camp.Key, heads)
+		return fmt.Errorf("the bench for %s has %d headline arms; exactly one arm is the one a win is claimed on",
+			b.Repo, heads)
 	}
 	return nil
 }
 
-// validateReferences checks every id the campaign names exists.
+// validateReferences checks every id the bench names exists.
 //
-// A campaign naming a subject the catalog does not have is a TYPO; a campaign
-// whose model no tool can drive is a rejection with a reason. Confusing the two
-// sends someone to fix the wrong file.
+// A bench naming a subject the catalog does not have is a TYPO; a bench whose
+// model no tool can drive is a rejection with a reason. Confusing the two sends
+// someone to fix the wrong file.
 // validateNothingIsNamedTwice refuses a list that repeats itself.
 //
 // This is the half-pair hazard in disguise, and it is why the check exists:
 // two untreated arms and no sense arm looks like a complete cell to anything
 // counting jobs, and the pair guard would pass it.
-func (camp Campaign) validateNothingIsNamedTwice() error {
-	if len(camp.Subjects) == 0 || len(camp.Repos) == 0 || len(camp.Arms) == 0 {
-		return fmt.Errorf("campaign %s plans nothing: %d subjects, %d repos, %d arms",
-			camp.Key, len(camp.Subjects), len(camp.Repos), len(camp.Arms))
+func (b Bench) validateNothingIsNamedTwice() error {
+	if len(b.Subjects) == 0 || len(b.Arms) == 0 {
+		return fmt.Errorf("the bench for %s plans nothing: %d subjects, %d arms",
+			b.Repo, len(b.Subjects), len(b.Arms))
 	}
-	for _, dup := range []struct {
-		kind string
-		ids  []string
-	}{
-		{"subject", camp.Subjects},
-		{"repo", camp.Repos},
-	} {
-		if id := firstRepeat(dup.ids); id != "" {
-			return fmt.Errorf("campaign %s names %s %q twice; a duplicated arm is not a pair",
-				camp.Key, dup.kind, id)
-		}
+	if id := firstRepeat(b.Subjects); id != "" {
+		return fmt.Errorf("the bench for %s names subject %q twice; a duplicated arm is not a pair",
+			b.Repo, id)
 	}
 	var armKeys []string
-	for _, a := range camp.Arms {
+	for _, a := range b.Arms {
 		armKeys = append(armKeys, a.Model+"/"+a.Agent)
 	}
 	if key := firstRepeat(armKeys); key != "" {
-		return fmt.Errorf("campaign %s names model %q twice; running one arm twice is not two arms",
-			camp.Key, strings.SplitN(key, "/", 2)[0])
+		return fmt.Errorf("the bench for %s names model %q twice; running one arm twice is not two arms",
+			b.Repo, strings.SplitN(key, "/", 2)[0])
 	}
 	return nil
 }
@@ -291,28 +287,25 @@ func firstRepeat(ids []string) string {
 	return ""
 }
 
-func (camp Campaign) validateReferences(c *catalog.Catalog) error {
-
-	if camp.Judge == "" {
-		return fmt.Errorf("campaign %s pins no judge; a judge that moves with the arm makes every board incomparable",
-			camp.Key)
+func (b Bench) validateReferences(c *catalog.Catalog) error {
+	if !has(c.Repos, b.Repo) {
+		return fmt.Errorf("the bench names repo %q, which no repo file declares", b.Repo)
 	}
-	if _, ok := c.Model(camp.Judge); !ok {
-		return fmt.Errorf("campaign %s pins judge %q, which no model file declares", camp.Key, camp.Judge)
+	if b.Judge == "" {
+		return fmt.Errorf("the bench for %s pins no judge; a judge that moves with the arm makes every board incomparable",
+			b.Repo)
 	}
-	for _, s := range camp.Subjects {
+	if _, ok := c.Model(b.Judge); !ok {
+		return fmt.Errorf("the bench for %s pins judge %q, which no model file declares", b.Repo, b.Judge)
+	}
+	for _, s := range b.Subjects {
 		if !has(c.Subjects, s) {
-			return fmt.Errorf("campaign %s names subject %q, which no subject file declares", camp.Key, s)
+			return fmt.Errorf("the bench for %s names subject %q, which no subject file declares", b.Repo, s)
 		}
 	}
-	for _, r := range camp.Repos {
-		if !has(c.Repos, r) {
-			return fmt.Errorf("campaign %s names repo %q, which no repo file declares", camp.Key, r)
-		}
-	}
-	for _, a := range camp.Arms {
+	for _, a := range b.Arms {
 		if _, ok := c.Model(a.Model); !ok {
-			return fmt.Errorf("campaign %s names model %q, which no model file declares", camp.Key, a.Model)
+			return fmt.Errorf("the bench for %s names model %q, which no model file declares", b.Repo, a.Model)
 		}
 	}
 	return nil

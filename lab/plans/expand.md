@@ -123,7 +123,7 @@ row or the phrase that failed, and it re-enters authoring with the anchor kept.
 The declared graph gave expansion `AUTO` alone. Porting this plan found the hole: the old plan
 emits `REQUESTION` when step 4 cannot survive verbatim, and a phase with no verdict for a case it
 really meets writes nothing and stalls the loop. `REQUESTION` was added to this phase's enum and
-to the lever table, because a lever a recorded campaign used and the table does not carry is a
+to the lever table, because a lever a recorded run used and the table does not carry is a
 hole in the test set rather than a plan to bend around it.
 
 The old plan also named its passing verdict `SCENARIO`. That is `AUTO` here, since the graph's

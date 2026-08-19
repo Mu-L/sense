@@ -380,7 +380,7 @@ func spawn(ctx context.Context, s Spec, stdout, stderr *os.File) (code int, ende
 	// twice: the child is still alive so its process group id is certainly
 	// valid (signalling a reaped pid can hit whoever the OS handed it to next),
 	// and Cancel fires on the parent's cancellation as well as the wall, so an
-	// interrupted campaign does not leave agents running and spending.
+	// interrupted run does not leave agents running and spending.
 	setProcessGroup(cmd)
 	cmd.Cancel = func() error { return stopGroup(cmd, s.grace()) }
 

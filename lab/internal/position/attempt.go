@@ -6,7 +6,7 @@
 // design.
 //
 // The run tree holds which runs exist, what they wrote, and the authoring
-// cycle — which is already a directory name under `<campaign>/<repo>/<cycle>/`.
+// cycle — which is already a directory name under `<runs>/<repo>/<cycle>/`.
 // Those are DERIVED, every time, and never stored. A counter beside the fact it
 // counts is a counter that drifts from it, and the drift is invisible.
 //

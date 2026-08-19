@@ -11,7 +11,7 @@ import (
 // A regenerated view that does not say it is a view is one somebody edits into a
 // decision. The banner is load-bearing, not decoration.
 func TestThePageSaysThePositionIsAuthoritativeOnDiskAndItDecidesNothing(t *testing.T) {
-	page := status.Render(newCampaign(t).indexed("mastodon").phaseDone("mastodon", 1, phase.Author).read(40))
+	page := status.Render(newTrees(t).indexed("mastodon").phaseDone("mastodon", 1, phase.Author).read(40))
 	first := strings.SplitN(page, "\n", 2)[0]
 	for _, want := range []string{"authoritative", "run tree", "decides nothing"} {
 		if !strings.Contains(first, want) {
@@ -22,7 +22,7 @@ func TestThePageSaysThePositionIsAuthoritativeOnDiskAndItDecidesNothing(t *testi
 
 // A status that shows only progress is a status nobody trusts twice.
 func TestTheUncomfortableRowsAreOnThePage(t *testing.T) {
-	page := status.Render(newCampaign(t).
+	page := status.Render(newTrees(t).
 		indexed("chatwoot").
 		phaseDone("chatwoot", 6, phase.Handoff).
 		cellAt("mastodon/1/bench/cell-0", `{"arms":{"sense":"x"},"complete":false,"burned":["sense"],"unusable":["untreated"]}`).
@@ -44,13 +44,14 @@ func TestTheUncomfortableRowsAreOnThePage(t *testing.T) {
 }
 
 // The ceiling's scope and window are named on the page rather than left to be
-// inferred: per campaign, over its lifetime.
+// inferred: per repository, over its lifetime.
 func TestSpendIsShownAgainstTheCeilingWithItsScope(t *testing.T) {
-	page := status.Render(newCampaign(t).
+	page := status.Render(newTrees(t).
+		indexed("mastodon").
 		run("mastodon/1/bench/cell-0/sense", true).
 		read(7))
 
-	for _, want := range []string{"1 paid runs", "ceiling of 7", "per campaign over its lifetime"} {
+	for _, want := range []string{"1 paid runs", "ceiling of 7", "over this repository's lifetime"} {
 		if !strings.Contains(page, want) {
 			t.Errorf("the spend section does not say %q:\n%s", want, page)
 		}
@@ -58,7 +59,7 @@ func TestSpendIsShownAgainstTheCeilingWithItsScope(t *testing.T) {
 }
 
 func TestTheLoopPositionShowsTheCycleAndTheDistanceToTheCeiling(t *testing.T) {
-	page := status.Render(newCampaign(t).
+	page := status.Render(newTrees(t).
 		indexed("mastodon").
 		phaseDone("mastodon", 4, phase.Author).
 		phaseDone("mastodon", 2, phase.Board).
@@ -72,9 +73,9 @@ func TestTheLoopPositionShowsTheCycleAndTheDistanceToTheCeiling(t *testing.T) {
 }
 
 // The resume line names the plan and the artifact it awaits, so a session with
-// no memory of the campaign can act on it without asking.
+// no memory of the repository can act on it without asking.
 func TestTheResumeLineNamesThePlanAndTheArtifact(t *testing.T) {
-	page := status.Render(newCampaign(t).
+	page := status.Render(newTrees(t).
 		indexed("mastodon").
 		phaseDone("mastodon", 1, phase.Author).
 		phaseDone("mastodon", 1, phase.Minibench).
@@ -86,10 +87,10 @@ func TestTheResumeLineNamesThePlanAndTheArtifact(t *testing.T) {
 	}
 }
 
-// A campaign whose cells are all complete still reports them, because "two
+// A repository whose cells are all complete still reports them, because "two
 // recorded, none incomplete" is the answer to a question a resuming session has.
 func TestCompleteCellsAreCountedAndNotListedAsProblems(t *testing.T) {
-	page := status.Render(newCampaign(t).
+	page := status.Render(newTrees(t).
 		cellAt("mastodon/1/bench/cell-0", `{"arms":{"sense":"x","untreated":"y"},"complete":true}`).
 		read(40))
 
@@ -104,7 +105,7 @@ func TestCompleteCellsAreCountedAndNotListedAsProblems(t *testing.T) {
 // A phase with no artifact at all is a repository at the start, and the page
 // says so plainly instead of leaving a blank column that reads as a bug.
 func TestAPhaseThatIsNotThereIsNamedRatherThanLeftBlank(t *testing.T) {
-	page := status.Render(status.Position{Campaign: "x", Repos: []status.Repo{{Name: "mastodon", Cycle: 1}}})
+	page := status.Render(status.Position{Root: "x", Repos: []status.Repo{{Name: "mastodon", Cycle: 1}}})
 	if !strings.Contains(page, "reached none") {
 		t.Errorf("an absent phase was rendered as a blank:\n%s", page)
 	}

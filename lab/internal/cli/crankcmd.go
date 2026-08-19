@@ -90,7 +90,7 @@ func crankFor(f repoFlags, c *catalog.Catalog, id string) (crank.Crank, error) {
 	if err != nil {
 		return crank.Crank{}, err
 	}
-	return crank.Crank{Campaign: f.campaign, Plans: loaded, Checkout: checkout, Spawn: spawn}, nil
+	return crank.Crank{Runs: f.runs, Plans: loaded, Checkout: checkout, Spawn: spawn}, nil
 }
 
 // phaseSpawner is the real spawner: the one thing in this cycle that reaches a

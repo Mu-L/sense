@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -126,6 +127,7 @@ type probeWorld struct {
 	checkout string
 	senseBin string
 	out      string
+	runs     string
 }
 
 // buildLabBinary builds this binary so the capture shim is spawned the way a
@@ -227,6 +229,7 @@ rows:
 		checkout: checkout,
 		senseBin: writeScript(t, filepath.Join(root, "bin", "sense"), fakeSenseScript),
 		out:      filepath.Join(root, "cell-0"),
+		runs:     filepath.Join(root, "runs"),
 	}
 }
 
@@ -240,6 +243,7 @@ func (w probeWorld) args(extra ...string) []string {
 		"-model", "fake-model",
 		"-sense", w.senseBin,
 		"-out", w.out,
+		"-runs", w.runs,
 		"-wall", "20s",
 	}, extra...)
 }
@@ -388,6 +392,56 @@ func TestProbeRefusesAnUnresolvableJobBeforeSpawningAnything(t *testing.T) {
 				t.Error("a cell directory was created for a job that cannot run")
 			}
 		})
+	}
+}
+
+// The ceiling is the one thing in this binary that stops money being spent, and
+// this is the only command that spends: a cell that would take a repository
+// past its lifetime's paid runs is refused before anything spawns.
+//
+// It answers with the refusal code rather than the error code. "This repository
+// has spent its budget" and "the binary broke" send whoever is reading to
+// opposite places.
+func TestACellPastTheRepositorysSpendCeilingIsRefusedBeforeSpawning(t *testing.T) {
+	w := newProbeWorld(t)
+	for i := 0; i < defaultCeiling; i++ {
+		paid := filepath.Join(w.runs, "probe-repo", "1", "bench", fmt.Sprintf("cell-%d", i), "sense", "raw")
+		if err := os.MkdirAll(paid, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	code, _, stderr := runProbe(t, w.args())
+
+	if code != exitRefused {
+		t.Errorf("exit %d, want the refusal code %d", code, exitRefused)
+	}
+	if !strings.Contains(stderr, "ceiling") {
+		t.Errorf("the refusal does not name the ceiling: %q", stderr)
+	}
+	if _, err := os.Stat(w.out); err == nil {
+		t.Error("a cell directory was created past the ceiling")
+	}
+}
+
+// The spend that counts is this repository's. A neighbour that burned its whole
+// budget is a fact about that neighbour, and a ceiling read across both would
+// stop a repository that has spent nothing.
+func TestAnotherRepositorysSpendDoesNotCountAgainstThisOne(t *testing.T) {
+	w := newProbeWorld(t)
+	for i := 0; i < defaultCeiling; i++ {
+		paid := filepath.Join(w.runs, "other-repo", "1", "bench", fmt.Sprintf("cell-%d", i), "sense", "raw")
+		if err := os.MkdirAll(paid, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// It gets past the ceiling and stops at the next refusal, which is the
+	// checkout: what is being asserted is that the ceiling did not fire.
+	code, _, stderr := runProbe(t, w.args("-checkout", filepath.Join(t.TempDir(), "nowhere")))
+
+	if code == exitRefused || strings.Contains(stderr, "ceiling") {
+		t.Errorf("exit %d: another repository's spend stopped this one: %q", code, stderr)
 	}
 }
 

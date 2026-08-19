@@ -30,7 +30,7 @@
 // gate off. A gate with an override is a suggestion, and the moment of
 // frustration is exactly when it would be used.
 //
-// The sanctioned path when a gate is wrong mid-campaign is named instead,
+// The sanctioned path when a gate is wrong mid-cycle is named instead,
 // because with no route the pressure lands on quietly editing the gate, which
 // is worse and less visible: fix the gate, or record a ruling that exempts that
 // one cell with the reason attached to it. A ruling is a decision someone

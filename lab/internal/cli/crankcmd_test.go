@@ -53,7 +53,7 @@ printf '%s\n' "$in" > "$(dirname "$art")/given-prompt.txt"
 type crankWorld struct {
 	admission
 	repo     string
-	campaign string
+	runs     string
 	checkout string
 }
 
@@ -83,18 +83,18 @@ func newCrankWorld(t *testing.T, env ...string) crankWorld {
 	for _, name := range isolate.Credentials() {
 		t.Setenv(name, "")
 	}
-	return crankWorld{admission: a, repo: id, campaign: a.campaign, checkout: checkoutOf(t, a, id)}
+	return crankWorld{admission: a, repo: id, runs: a.runs, checkout: checkoutOf(t, a, id)}
 }
 
 func (w crankWorld) run(t *testing.T, extra ...string) (int, string, string) {
 	t.Helper()
-	args := []string{"repo", "-config", w.config, "-campaign", w.campaign, "-checkouts", w.checkouts,
+	args := []string{"repo", "-config", w.config, "-runs", w.runs, "-checkouts", w.checkouts,
 		"-sense", w.sense, "-agent", "phase", "-model", "m1"}
 	return dispatch(t, append(append(args, extra...), w.repo)...)
 }
 
 func (w crankWorld) phaseDir(name string) string {
-	return filepath.Join(w.campaign, w.repo, "1", name)
+	return filepath.Join(w.runs, w.repo, "1", name)
 }
 
 // linkPlans points the world's config at the shipped plans. They are loaded from
@@ -211,7 +211,7 @@ func TestThePhaseAgentIsHandedItsPlan(t *testing.T) {
 func TestNoPhaseRunsWithoutAnAgentAndAModel(t *testing.T) {
 	w := newCrankWorld(t)
 
-	code, stdout, _ := dispatch(t, "repo", "-config", w.config, "-campaign", w.campaign,
+	code, stdout, _ := dispatch(t, "repo", "-config", w.config, "-runs", w.runs,
 		"-checkouts", w.checkouts, "-sense", w.sense, w.repo)
 
 	if code != exitOK {
@@ -228,7 +228,7 @@ func TestNoPhaseRunsWithoutAnAgentAndAModel(t *testing.T) {
 func TestAnAgentTheCatalogDoesNotKnowIsRefused(t *testing.T) {
 	w := newCrankWorld(t)
 
-	code, _, stderr := dispatch(t, "repo", "-config", w.config, "-campaign", w.campaign,
+	code, _, stderr := dispatch(t, "repo", "-config", w.config, "-runs", w.runs,
 		"-checkouts", w.checkouts, "-sense", w.sense, "-agent", "nobody", "-model", "m1", w.repo)
 
 	if code != exitError {
@@ -274,7 +274,7 @@ func TestASecondAttemptLandsBesideTheFirst(t *testing.T) {
 func TestHalfADriverIsRefused(t *testing.T) {
 	w := newCrankWorld(t)
 
-	code, _, stderr := dispatch(t, "repo", "-config", w.config, "-campaign", w.campaign,
+	code, _, stderr := dispatch(t, "repo", "-config", w.config, "-runs", w.runs,
 		"-checkouts", w.checkouts, "-sense", w.sense, "-agent", "phase", w.repo)
 
 	if code != exitError {
@@ -478,7 +478,7 @@ func TestARealAgentThatWroteNoArtifactDoesNotAdvance(t *testing.T) {
 
 func attemptsOf(t *testing.T, w crankWorld) []position.Attempt {
 	t.Helper()
-	all, err := position.Attempts(filepath.Join(w.campaign, w.repo))
+	all, err := position.Attempts(filepath.Join(w.runs, w.repo))
 	if err != nil {
 		t.Fatal(err)
 	}

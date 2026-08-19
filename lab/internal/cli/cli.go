@@ -30,13 +30,13 @@ Usage: sense-lab <command> [flags]
 Commands:
   repo      Admit a repository, say where it stands, and run its next phase
   catalog   Show the subjects, agents, models, repositories and executors in the config
-  plan      Show what a campaign would run, and every rejection with its reason
+  plan      Show what a repository's bench would run, and every rejection with its reason
   run       Run one scenario against one repository
   probe     Run both arms of one cell and prove they differed only in Sense access
   score     Score a recorded run against a scenario's gold
   validate  Audit a scenario's gold and report what would be quarantined
   rescore   Recompute every recorded score and name the cause of each difference
-  status    Show where a campaign stands, derived from its run tree
+  status    Show where every repository stands, derived from its run tree
   gate      Read a pay decision on stdin and refuse it, or not
   version   Print version
 `
@@ -59,7 +59,7 @@ const (
 	// and came up short is a result, and a caller must be able to tell it from
 	// a typo'd path or an unreadable transcript.
 	exitBelowFloor = 4
-	// exitIncomplete: the campaign is well-formed and part of its matrix cannot
+	// exitIncomplete: the bench is well-formed and part of its matrix cannot
 	// run. A caller must not proceed on a partial matrix, but "your config is
 	// broken" and "three arms cannot run" are opposite actions.
 	exitIncomplete = 5
@@ -92,7 +92,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	case "run":
 		// A run must die with the binary. Without this the cancel path the
 		// runner carefully distinguishes can never fire in production:
-		// interrupting a campaign would leave the agent running, unattended,
+		// interrupting a run would leave the agent running, unattended,
 		// unowned and still spending, with no record on disk — and because the
 		// session is in its own process group, a second Ctrl-C cannot reach it
 		// either.

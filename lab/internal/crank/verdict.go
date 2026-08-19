@@ -45,7 +45,7 @@ import (
 // VerdictFile is what a judgment phase writes beside its artifact.
 //
 // It exists because a verdict used to be prose inside the artifact, which is
-// why a parked campaign could be read by a person and by nothing else. The
+// why a parked repository could be read by a person and by nothing else. The
 // document is small on purpose: a phase reports what it decided and why, and
 // everything else about where that leads is the graph's.
 const VerdictFile = "verdict.json"
@@ -96,7 +96,7 @@ func guard(v Verdict, j Job, p plans.Plan) error {
 			"routes this one", v.Phase, j.Phase)
 	case v.Repo != j.Repo:
 		return fmt.Errorf("the verdict names repository %q and %q was dispatched; a verdict about another "+
-			"repository is a verdict about another campaign", v.Repo, j.Repo)
+			"repository is a verdict about another loop", v.Repo, j.Repo)
 	case v.Cycle != j.Cycle:
 		return fmt.Errorf("the verdict names cycle %d and cycle %d was dispatched; the cycle is what the "+
 			"authoring ceiling is counted in, so a verdict about another one is a verdict about another attempt",

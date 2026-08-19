@@ -61,7 +61,7 @@ for the baseline it is the win condition.
    tool calls, one `grep -rn "Setting\."`, 17 of 18 dependents, 157 seconds of a 480 second wall.
 
 6. **What the sense arm cited that was never returned to it.** Scope the mine to THIS cycle's
-   pair; a campaign-wide root would blend in the cycles this question already replaced.
+   pair; a repository-wide root would blend in the cycles this question already replaced.
 
 ## Decide
 

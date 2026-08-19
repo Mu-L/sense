@@ -50,7 +50,7 @@ type Spec struct {
 	// AgentEnv is what the agent tool declares.
 	AgentEnv []string
 	// Model is the pinned judge model, and ModelFlag selects it. It comes from
-	// campaign config rather than from the arm, because a judge that moves with
+	// the repository's bench rather than from the arm, because a judge that moves with
 	// the headline arm makes every board incomparable.
 	Model     string
 	ModelFlag string

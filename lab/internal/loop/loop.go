@@ -208,7 +208,7 @@ type Manual struct {
 }
 
 // NewManual refuses a phase the graph does not declare, so a typo stops the
-// campaign at the flag rather than never stopping it at all.
+// loop at the flag rather than never stopping it at all.
 func NewManual(at string) (Manual, error) {
 	if _, ok := phase.Lookup(phase.Name(at)); !ok {
 		return Manual{}, fmt.Errorf("no phase named %q to stop at", at)

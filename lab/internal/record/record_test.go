@@ -26,7 +26,7 @@ func aFinding() record.Finding {
 		Detector:      "cited-not-returned",
 		Subject:       "g:cloud-signup-validate",
 		Detail:        "CloudOrganizationSignUpCommand.cs was cited and never returned",
-		Runs:          []string{"campaigns/csharp/bitwarden/1/bench/cell-0/sense", "campaigns/csharp/bitwarden/1/bench/cell-1/sense"},
+		Runs:          []string{"runs/repos/bitwarden/1/bench/cell-0/sense", "runs/repos/bitwarden/1/bench/cell-1/sense"},
 		Discriminator: true,
 	}
 }
@@ -156,19 +156,19 @@ func TestInvalidatingARunMarksEveryFindingThatCitesIt(t *testing.T) {
 
 	other := aFinding()
 	other.Subject = "w:price-increase-scheduler"
-	other.Runs = []string{"campaigns/csharp/bitwarden/1/bench/cell-0/sense"}
+	other.Runs = []string{"runs/repos/bitwarden/1/bench/cell-0/sense"}
 	if _, err := record.RecordFinding(dir, other, monday); err != nil {
 		t.Fatal(err)
 	}
 
 	elsewhere := aFinding()
 	elsewhere.Subject = "g:invite-users-null"
-	elsewhere.Runs = []string{"campaigns/rails/mastodon/1/bench/cell-0/sense"}
+	elsewhere.Runs = []string{"runs/repos/mastodon/1/bench/cell-0/sense"}
 	if _, err := record.RecordFinding(dir, elsewhere, monday); err != nil {
 		t.Fatal(err)
 	}
 
-	dead := "campaigns/csharp/bitwarden/1/bench/cell-0/sense"
+	dead := "runs/repos/bitwarden/1/bench/cell-0/sense"
 	touched, err := record.InvalidateRun(dir, dead)
 	if err != nil {
 		t.Fatal(err)
@@ -318,7 +318,7 @@ func TestAnIdThatIsNotARecordIsRefused(t *testing.T) {
 // tree fell into: miner output in a log file and an empty findings directory.
 func TestTheMinersOutputLandsAsFindings(t *testing.T) {
 	dir := t.TempDir()
-	runs := []string{"campaigns/csharp/bitwarden/1/bench/cell-0/sense", "campaigns/csharp/bitwarden/1/bench/cell-1/sense"}
+	runs := []string{"runs/repos/bitwarden/1/bench/cell-0/sense", "runs/repos/bitwarden/1/bench/cell-1/sense"}
 	found := []mine.Finding{
 		{Detector: "cited-not-returned", Surface: mine.Blast, Subject: "g:cloud-signup-validate",
 			Detail: "cited and never returned", Runs: 3, Total: 6, Discriminator: true},
@@ -358,7 +358,7 @@ func TestTheMinersOutputLandsAsFindings(t *testing.T) {
 // in the pile saying they are the same thing.
 func TestMiningTwiceDoesNotDuplicateAFinding(t *testing.T) {
 	dir := t.TempDir()
-	runs := []string{"campaigns/csharp/bitwarden/1/bench/cell-0/sense"}
+	runs := []string{"runs/repos/bitwarden/1/bench/cell-0/sense"}
 	found := []mine.Finding{{Detector: "empty-returns", Surface: mine.Graph,
 		Subject: "sense_graph:ClaimsMap", Detail: "returned nothing", Runs: 1, Total: 6}}
 
@@ -476,7 +476,7 @@ func TestInvalidatingARunOverUnreadableFindingsIsAnError(t *testing.T) {
 	dir := t.TempDir()
 	f := recordFinding(t, dir)
 	corrupt(t, dir, "findings", f.ID)
-	if _, err := record.InvalidateRun(dir, "campaigns/csharp/bitwarden/1/bench/cell-0/sense"); err == nil {
+	if _, err := record.InvalidateRun(dir, "runs/repos/bitwarden/1/bench/cell-0/sense"); err == nil {
 		t.Fatal("invalidating a run over unreadable findings reported success")
 	}
 }

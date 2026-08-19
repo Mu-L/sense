@@ -19,9 +19,8 @@ const banner = "Position is authoritative in the run tree. This page is a view o
 func Render(p Position) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "%s\n\n", banner)
-	fmt.Fprintf(&b, "campaign %s\n\n", p.Campaign)
+	fmt.Fprintf(&b, "run trees under %s\n\n", p.Root)
 	renderRepos(&b, p)
-	renderSpend(&b, p)
 	renderCells(&b, p)
 	renderResume(&b, p)
 	return b.String()
@@ -40,16 +39,13 @@ func renderRepos(b *strings.Builder, p Position) {
 		}
 		fmt.Fprintf(b, "  %-20s %s\n", r.Name, state)
 		fmt.Fprintf(b, "  %-20s reached %s, awaiting %s\n", "", orNone(r.Reached), orNone(r.Awaiting))
+		fmt.Fprintf(b, "  %-20s %s against a ceiling of %d, over this repository's lifetime\n",
+			"", r.Spend, p.Ceiling)
 		if len(r.Banked) > 0 {
 			fmt.Fprintf(b, "  %-20s banked on cycle %v\n", "", r.Banked)
 		}
 	}
 	b.WriteString("\n")
-}
-
-func renderSpend(b *strings.Builder, p Position) {
-	b.WriteString("SPEND\n")
-	fmt.Fprintf(b, "  %s against a ceiling of %d, per campaign over its lifetime\n\n", p.Spend, p.Ceiling)
 }
 
 // renderCells shows the uncomfortable rows first and never folds them into a
@@ -93,7 +89,7 @@ func renderResume(b *strings.Builder, p Position) {
 }
 
 // orNone names a phase, or says plainly that there is not one. An empty column
-// reads as a rendering bug rather than as a fact about the campaign.
+// reads as a rendering bug rather than as a fact about the repository.
 func orNone(name phase.Name) string {
 	if name == "" {
 		return "none"

@@ -75,7 +75,7 @@ func (c Container) Release(_ context.Context, env isolate.Env) error { return is
 
 // Available reports whether this runtime can actually start a container here.
 //
-// Asked before a campaign rather than discovered by a burned arm: a runtime
+// Asked before a cell rather than discovered by a burned arm: a runtime
 // that is installed but not running fails at spawn, which costs the arm and
 // reads in a score exactly like a model with nothing to say.
 func (c Container) Available(ctx context.Context) error {

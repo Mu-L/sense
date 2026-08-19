@@ -10,7 +10,7 @@ wall: 90m
 
 ## Task
 
-Run the paid cells: every arm the campaign declares, against the validated scenario, at the real
+Run the paid cells: every arm the repository's bench declares, against the validated scenario, at the real
 wall, with both subjects of each cell run under one supervising process.
 
 ## Scope

@@ -22,6 +22,12 @@ import (
 // it made, and reads what it was given.
 const defaultCheckouts = "runs/checkouts"
 
+// defaultRuns is where a repository's run tree lives, one directory per
+// repository. It is a default rather than a flag anybody types, because which
+// tree a repository's evidence belongs to is not a decision: it belongs to the
+// repository.
+const defaultRuns = "runs/repos"
+
 // The exit codes `sense-lab repo` answers with. They are its API rather than a
 // display, because this command ends up in a shell loop and what that loop stops
 // on is this:
@@ -52,7 +58,7 @@ const (
 // lands.
 type repoFlags struct {
 	config    string
-	campaign  string
+	runs      string
 	checkouts string
 	senseBin  string
 	agent     string
@@ -67,7 +73,7 @@ func parseRepoFlags(args []string, stderr io.Writer) (repoFlags, error) {
 	fs := flag.NewFlagSet("repo", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	configFlag(fs, &f.config)
-	fs.StringVar(&f.campaign, "campaign", "", "the campaign's run tree, where the index artifact lands (required)")
+	fs.StringVar(&f.runs, "runs", defaultRuns, "the root the repositories' run trees live under")
 	fs.StringVar(&f.checkouts, "checkouts", defaultCheckouts, "the lab's own clones root")
 	fs.StringVar(&f.senseBin, "sense", "sense", "the Sense binary that indexes the repository")
 	fs.StringVar(&f.agent, "agent", "", "catalog agent id a phase is run by")
@@ -78,12 +84,9 @@ func parseRepoFlags(args []string, stderr io.Writer) (repoFlags, error) {
 		return f, err
 	}
 	// The name is positional and comes after the flags, which is how every Go
-	// flag set reads its arguments: `sense-lab repo -campaign X owner/name`.
+	// flag set reads its arguments: `sense-lab repo -sense ./bin/sense owner/name`.
 	if fs.NArg() != 1 {
 		return f, fmt.Errorf("name exactly one repository: an id already admitted, a path to a clone, `owner/name`, or a url")
-	}
-	if f.campaign == "" {
-		return f, fmt.Errorf("-campaign names the run tree the index artifact belongs to")
 	}
 	f.name = fs.Arg(0)
 	return f, nil
@@ -182,7 +185,7 @@ var errShown = errors.New("shown")
 // A position is a fact about the run tree, so it is read back off disk rather
 // than assembled from what this invocation happened to do.
 func standing(f repoFlags, id string, stdout io.Writer, ok int) int {
-	at, err := position.Read(f.campaign, id)
+	at, err := position.Read(f.runs, id)
 	if err != nil {
 		_, _ = fmt.Fprintf(stdout, "position: unreadable: %v\n", err)
 		return exitError
@@ -238,7 +241,7 @@ func admitNew(ctx context.Context, f repoFlags, p repo.Plan, stdout, stderr io.W
 		_, _ = fmt.Fprintf(stderr, "sense-lab repo: %v\n", err)
 		return exitError
 	}
-	artifact := indexArtifact(f.campaign, p.ID)
+	artifact := indexArtifact(f.runs, p.ID)
 	if err := repo.Write(artifact, i); err != nil {
 		_, _ = fmt.Fprintf(stderr, "sense-lab repo: %v\n", err)
 		return exitError
@@ -280,8 +283,8 @@ func repoFile(config, id string) string { return filepath.Join(config, "repos", 
 // indexArtifact is where the index phase's artifact lands: beside the cycles
 // rather than inside one, because a repository is scanned once and a re-entry
 // does not rescan it.
-func indexArtifact(campaign, id string) string {
-	return filepath.Join(campaign, id, "index", "index.json")
+func indexArtifact(runs, id string) string {
+	return filepath.Join(runs, id, "index", "index.json")
 }
 
 // admitSignals runs admission under the same signal handling a session gets. A

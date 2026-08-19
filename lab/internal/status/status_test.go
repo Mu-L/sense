@@ -11,21 +11,21 @@ import (
 	"github.com/luuuc/sense/lab/internal/status"
 )
 
-// campaign builds a run tree by hand, because the tree IS the contract: a
+// trees builds the run trees by hand, because the tree IS the contract: a
 // position derived from anything else would be a position that can disagree
 // with what is on disk.
-type campaign struct {
+type trees struct {
 	t   *testing.T
 	dir string
 }
 
-func newCampaign(t *testing.T) campaign {
+func newTrees(t *testing.T) trees {
 	t.Helper()
-	return campaign{t: t, dir: t.TempDir()}
+	return trees{t: t, dir: t.TempDir()}
 }
 
 // phaseDone writes a phase's output artifact for one repository and cycle.
-func (c campaign) phaseDone(repo string, cycle int, name phase.Name) campaign {
+func (c trees) phaseDone(repo string, cycle int, name phase.Name) trees {
 	c.t.Helper()
 	p, ok := phase.Lookup(name)
 	if !ok {
@@ -46,7 +46,7 @@ func (c campaign) phaseDone(repo string, cycle int, name phase.Name) campaign {
 }
 
 // cellAt writes a cell record beside its arms.
-func (c campaign) cellAt(rel, record string) campaign {
+func (c trees) cellAt(rel, record string) trees {
 	c.t.Helper()
 	dir := filepath.Join(c.dir, rel)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -58,7 +58,7 @@ func (c campaign) cellAt(rel, record string) campaign {
 
 // run writes a run directory. finished says whether it recorded a terminal
 // state; an unfinished one is what a reboot leaves behind.
-func (c campaign) run(rel string, finished bool) campaign {
+func (c trees) run(rel string, finished bool) trees {
 	c.t.Helper()
 	dir := filepath.Join(c.dir, rel)
 	if err := os.MkdirAll(filepath.Join(dir, "raw"), 0o755); err != nil {
@@ -71,7 +71,7 @@ func (c campaign) run(rel string, finished bool) campaign {
 }
 
 // indexed marks a repository as scanned.
-func (c campaign) indexed(repo string) campaign {
+func (c trees) indexed(repo string) trees {
 	c.t.Helper()
 	return c.phaseDone(repo, 0, phase.Index)
 }
@@ -85,7 +85,7 @@ func write(t *testing.T, path, body string) {
 
 func itoa(n int) string { return strconv.Itoa(n) }
 
-func (c campaign) read(ceiling int) status.Position {
+func (c trees) read(ceiling int) status.Position {
 	c.t.Helper()
 	p, err := status.Read(c.dir, ceiling)
 	if err != nil {
@@ -94,10 +94,10 @@ func (c campaign) read(ceiling int) status.Position {
 	return p
 }
 
-// The whole point: a session with no memory of a campaign reads its position off
+// The whole point: a session with no memory of a repository reads its position off
 // the tree, and nothing hand-maintained can disagree with it.
 func TestPositionIsTheFurthestPhaseWithItsArtifactAndTheFirstWithout(t *testing.T) {
-	c := newCampaign(t).
+	c := newTrees(t).
 		indexed("mastodon").
 		phaseDone("mastodon", 1, phase.Author).
 		phaseDone("mastodon", 1, phase.Minibench)
@@ -125,7 +125,7 @@ func TestPositionIsTheFurthestPhaseWithItsArtifactAndTheFirstWithout(t *testing.
 // repository as further back than it is, which is the resuming session's worst
 // possible input.
 func TestTheLatestCycleIsThePosition(t *testing.T) {
-	c := newCampaign(t).
+	c := newTrees(t).
 		indexed("mastodon").
 		phaseDone("mastodon", 1, phase.Author).
 		phaseDone("mastodon", 1, phase.Minibench).
@@ -141,7 +141,7 @@ func TestTheLatestCycleIsThePosition(t *testing.T) {
 }
 
 func TestABankedCycleAndAParkedRepositoryAreBothShown(t *testing.T) {
-	p := newCampaign(t).
+	p := newTrees(t).
 		phaseDone("mastodon", 2, phase.Board).
 		phaseDone("chatwoot", 6, phase.Handoff).
 		read(40)
@@ -164,7 +164,7 @@ func TestABankedCycleAndAParkedRepositoryAreBothShown(t *testing.T) {
 // A parked repository is waiting for a deliberate human action, so a resume line
 // for it would be an instruction to do the thing the ceiling exists to stop.
 func TestAParkedRepositoryGetsNoResumeLine(t *testing.T) {
-	p := newCampaign(t).
+	p := newTrees(t).
 		indexed("chatwoot").indexed("mastodon").
 		phaseDone("chatwoot", 6, phase.Handoff).
 		phaseDone("mastodon", 1, phase.Author).
@@ -184,7 +184,7 @@ func TestAParkedRepositoryGetsNoResumeLine(t *testing.T) {
 // does not have. Every resume line either names a real command or names the
 // plan file, and the plan checks guarantee that file exists.
 func TestEveryResumeLineIsRunnable(t *testing.T) {
-	c := newCampaign(t)
+	c := newTrees(t)
 	for _, p := range phase.Graph {
 		repo := "repo-" + string(p.Name)
 		c = c.indexed(repo).phaseDone(repo, 1, p.Name)
@@ -203,7 +203,7 @@ func TestEveryResumeLineIsRunnable(t *testing.T) {
 // A half-pair, a burned run and an orphan are what a resuming session most needs
 // and least expects to ask about. None of them may be folded into a count.
 func TestIncompleteCellsBurnedRunsAndOrphansAreAllNamed(t *testing.T) {
-	p := newCampaign(t).
+	p := newTrees(t).
 		cellAt("mastodon/1/bench/cell-0", `{"arms":{"sense":"x"},"complete":false,"burned":["sense"],"unusable":["untreated"]}`).
 		cellAt("mastodon/1/bench/cell-1", `{"arms":{"sense":"x","untreated":"y"},"complete":true}`).
 		run("mastodon/1/bench/cell-2/sense", false).
@@ -228,30 +228,41 @@ func TestIncompleteCellsBurnedRunsAndOrphansAreAllNamed(t *testing.T) {
 	}
 }
 
-func TestSpendIsReportedAgainstTheCeiling(t *testing.T) {
-	p := newCampaign(t).
+// Spend is a fact about a repository, not about the fleet: what one repository
+// has burned says nothing about the one beside it, and a ceiling is decided
+// about the repository it stops.
+func TestSpendIsReportedPerRepositoryAgainstTheCeiling(t *testing.T) {
+	p := newTrees(t).
 		run("mastodon/1/bench/cell-0/sense", true).
 		run("mastodon/1/bench/cell-0/untreated", true).
 		run("mastodon/1/minibench/cell-0/sense", true).
+		run("discourse/1/bench/cell-0/sense", true).
 		read(40)
 
-	if p.Spend.Runs() != 2 {
-		t.Errorf("spend %d, want 2: a mini-bench is unpaid", p.Spend.Runs())
+	spent := map[string]int{}
+	for _, r := range p.Repos {
+		spent[r.Name] = r.Spend.Runs()
+	}
+	if spent["mastodon"] != 2 {
+		t.Errorf("mastodon spent %d, want 2: a mini-bench is unpaid", spent["mastodon"])
+	}
+	if spent["discourse"] != 1 {
+		t.Errorf("discourse spent %d, want its own 1 and nothing of mastodon's", spent["discourse"])
 	}
 	if p.Ceiling != 40 {
 		t.Errorf("ceiling %d, want the one it was read with", p.Ceiling)
 	}
 }
 
-// Asking where a campaign stands before it has run is a fair question with a
-// short answer, not an error.
-func TestACampaignThatHasNotRunReportsAnEmptyPosition(t *testing.T) {
+// Asking where the repositories stand before any of them has run is a fair
+// question with a short answer, not an error.
+func TestARootThatHasNotRunReportsAnEmptyPosition(t *testing.T) {
 	p, err := status.Read(filepath.Join(t.TempDir(), "never-started"), 40)
 	if err != nil {
-		t.Fatalf("an unstarted campaign was an error: %v", err)
+		t.Fatalf("an unstarted root was an error: %v", err)
 	}
-	if len(p.Repos) != 0 || len(p.Cells) != 0 || p.Spend.Runs() != 0 {
-		t.Errorf("an unstarted campaign reported %+v", p)
+	if len(p.Repos) != 0 || len(p.Cells) != 0 {
+		t.Errorf("an unstarted root reported %+v", p)
 	}
 	page := status.Render(p)
 	for _, want := range []string{"nothing has run", "none", "nothing to resume"} {
@@ -262,7 +273,7 @@ func TestACampaignThatHasNotRunReportsAnEmptyPosition(t *testing.T) {
 }
 
 func TestAnUnreadableCellRecordIsAnErrorRatherThanAMissingRow(t *testing.T) {
-	c := newCampaign(t).cellAt("mastodon/1/bench/cell-0", "{not json")
+	c := newTrees(t).cellAt("mastodon/1/bench/cell-0", "{not json")
 	if _, err := status.Read(c.dir, 40); err == nil {
 		t.Fatal("a cell whose record could not be read was silently dropped")
 	}
@@ -287,7 +298,7 @@ func TestAnUnreadableTreeIsAnErrorRatherThanAnEmptyPosition(t *testing.T) {
 // A directory that is not a cycle is not an error and not a cycle. The tree
 // holds other things and this walk is not the place to rule on them.
 func TestADirectoryThatIsNotACycleIsIgnored(t *testing.T) {
-	c := newCampaign(t).indexed("mastodon").phaseDone("mastodon", 1, phase.Author)
+	c := newTrees(t).indexed("mastodon").phaseDone("mastodon", 1, phase.Author)
 	if err := os.MkdirAll(filepath.Join(c.dir, "mastodon", "notes"), 0o755); err != nil {
 		t.Fatal(err)
 	}
