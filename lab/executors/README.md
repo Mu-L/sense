@@ -30,7 +30,7 @@ live cell produced two empty arms because of it. 03-06 made it true.
 - *api_key* holds through the environment allowlist, which carries
   `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` with their reasons. This was the
   entry questioned on review as a possible false accept in the expensive
-  direction — four of the five arms in the frozen csharp-aspnet campaign reach
+  direction — four of the five arms in the frozen csharp-aspnet run set reach
   their model by API key. It was checked rather than argued: the allowlist does
   pass them, and there is a test per credential variable saying so.
 
@@ -39,7 +39,7 @@ subscription route is measured there; nothing in the implementation branches on
 the platform, and the file it writes is the store Linux uses as its primary one,
 which is a reason to expect it to hold and not a reason to claim it does. 08-05
 stands up a container, which is a Linux box with a credential story of its own,
-and that is where the measurement happens. Until it exists, **no campaign may
+and that is where the measurement happens. Until it exists, **no repository may
 report a Linux result on this route.**
 
 `isolates_global_config: true` is verbatim: "Strong config isolation". It is also

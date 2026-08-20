@@ -36,18 +36,17 @@ func cat() *catalog.Catalog {
 	}
 }
 
-func campaign() Campaign {
-	return Campaign{
-		Key: "c", Judge: "judge",
+func bench() Bench {
+	return Bench{
+		Repo: "r1", Judge: "judge",
 		Subjects: []string{"untreated", "sense"},
-		Repos:    []string{"r1"},
 		Arms:     []Arm{{Role: Headline, Model: "m1", Runs: 2}},
 	}
 }
 
-func expand(t *testing.T, c *catalog.Catalog, camp Campaign) Result {
+func expand(t *testing.T, c *catalog.Catalog, b Bench) Result {
 	t.Helper()
-	res, err := Expand(c, camp)
+	res, err := Expand(c, b)
 	if err != nil {
 		t.Fatalf("Expand: %v", err)
 	}
@@ -57,42 +56,41 @@ func expand(t *testing.T, c *catalog.Catalog, camp Campaign) Result {
 // Expansion is a matrix and it must produce BOTH arms of every cell. A plan
 // missing one side is a guaranteed half-pair: the finished arm can never be
 // paired, and the baseline's budget derives from its partner's wall.
-func TestEveryRepoSubjectAndArmBecomesAJob(t *testing.T) {
-	camp := campaign()
-	camp.Repos = []string{"r1", "r2"}
-	camp.Arms = append(camp.Arms, Arm{Role: Confirmation, Model: "judge", Runs: 3})
+func TestEverySubjectAndArmBecomesAJob(t *testing.T) {
+	b := bench()
+	b.Arms = append(b.Arms, Arm{Role: Confirmation, Model: "judge", Runs: 3})
 
-	res := expand(t, cat(), camp)
+	res := expand(t, cat(), b)
 
-	// A cell is one repository and one arm across every subject, so this is
-	// 2 repos x 2 arms — NOT the number of jobs, which is twice that.
-	if res.Cells() != 4 {
-		t.Fatalf("planned %d cells, want 4:\n%v", res.Cells(), res.Jobs)
+	// A cell is one arm across every subject, so this is 2 arms — NOT the
+	// number of jobs, which is twice that.
+	if res.Cells() != 2 {
+		t.Fatalf("planned %d cells, want 2:\n%v", res.Cells(), res.Jobs)
 	}
-	if len(res.Jobs) != 8 {
-		t.Errorf("planned %d jobs, want 8", len(res.Jobs))
+	if len(res.Jobs) != 4 {
+		t.Errorf("planned %d jobs, want 4", len(res.Jobs))
 	}
-	if res.Runs() != 4*(2+3) { // per-arm run counts, not a flat multiplier
-		t.Errorf("planned %d sessions, want %d", res.Runs(), 4*(2+3))
+	if res.Runs() != 2*(2+3) { // per-arm run counts, not a flat multiplier
+		t.Errorf("planned %d sessions, want %d", res.Runs(), 2*(2+3))
 	}
 	if len(res.Rejected) != 0 {
 		t.Errorf("rejected %v", res.Rejected)
 	}
 }
 
-// One repository at a time, both arms of a cell adjacent: the output reads in
-// the order a campaign is run in.
-func TestJobsComeOutInTheOrderACampaignIsRun(t *testing.T) {
-	camp := campaign()
-	camp.Repos = []string{"r1", "r2"}
+// Both arms of a cell adjacent: the output reads in the order the bench is run
+// in.
+func TestJobsComeOutInTheOrderTheBenchIsRun(t *testing.T) {
+	b := bench()
+	b.Arms = append(b.Arms, Arm{Role: Confirmation, Model: "judge", Runs: 3})
 
-	res := expand(t, cat(), camp)
+	res := expand(t, cat(), b)
 
 	var got []string
 	for _, j := range res.Jobs {
-		got = append(got, j.Repo+"/"+j.Subject)
+		got = append(got, j.Subject+"/"+j.Model)
 	}
-	want := "r1/untreated r1/sense r2/untreated r2/sense"
+	want := "untreated/m1 untreated/judge sense/m1 sense/judge"
 	if strings.Join(got, " ") != want {
 		t.Errorf("order = %v, want %s", got, want)
 	}
@@ -104,12 +102,12 @@ func TestJobsComeOutInTheOrderACampaignIsRun(t *testing.T) {
 func TestEachResolutionQuestionRejectsWithItsOwnReason(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
-		change func(c *catalog.Catalog, camp *Campaign)
+		change func(c *catalog.Catalog, b *Bench)
 		want   string
 	}{
 		{
 			name: "one: the subject cannot be driven by that agent tool",
-			change: func(c *catalog.Catalog, _ *Campaign) {
+			change: func(c *catalog.Catalog, _ *Bench) {
 				s := c.Subjects["untreated"]
 				s.Agents = []string{"other"}
 				c.Subjects["untreated"] = s
@@ -120,14 +118,14 @@ func TestEachResolutionQuestionRejectsWithItsOwnReason(t *testing.T) {
 			// Question two is answered by pickAgent: the arm names a tool the
 			// model does not list.
 			name: "two: the agent tool cannot drive that model",
-			change: func(_ *catalog.Catalog, camp *Campaign) {
-				camp.Arms[0].Agent = "other" // m1 names only "tool"
+			change: func(_ *catalog.Catalog, b *Bench) {
+				b.Arms[0].Agent = "other" // m1 names only "tool"
 			},
 			want: `the arm names agent "other", but model m1 can be driven by [tool]`,
 		},
 		{
 			name: "three: nothing can authenticate to that model through that tool",
-			change: func(c *catalog.Catalog, _ *Campaign) {
+			change: func(c *catalog.Catalog, _ *Bench) {
 				m := c.Models["m1"]
 				m.AvailableUnder = []string{"subscription"}
 				c.Models["m1"] = m
@@ -136,7 +134,7 @@ func TestEachResolutionQuestionRejectsWithItsOwnReason(t *testing.T) {
 		},
 		{
 			name: "four: the executor does not preserve the auth that would reach it",
-			change: func(c *catalog.Catalog, _ *Campaign) {
+			change: func(c *catalog.Catalog, _ *Bench) {
 				for id, s := range c.Subjects {
 					s.Executor = "container"
 					c.Subjects[id] = s
@@ -146,7 +144,7 @@ func TestEachResolutionQuestionRejectsWithItsOwnReason(t *testing.T) {
 		},
 		{
 			name: "five: the executor does not isolate config the subject writes",
-			change: func(c *catalog.Catalog, _ *Campaign) {
+			change: func(c *catalog.Catalog, _ *Bench) {
 				s := c.Subjects["sense"]
 				s.Executor = "local"
 				c.Subjects["sense"] = s
@@ -155,10 +153,10 @@ func TestEachResolutionQuestionRejectsWithItsOwnReason(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c, camp := cat(), campaign()
-			tc.change(c, &camp)
+			c, b := cat(), bench()
+			tc.change(c, &b)
 
-			res := expand(t, c, camp)
+			res := expand(t, c, b)
 
 			if len(res.Rejected) == 0 {
 				t.Fatalf("nothing was rejected; planned %v", res.Jobs)
@@ -179,12 +177,12 @@ func TestEachResolutionQuestionRejectsWithItsOwnReason(t *testing.T) {
 // A rejected job is not silently dropped: it comes back with the job it was,
 // so a reader can see what would have run.
 func TestARejectionCarriesTheJobItWas(t *testing.T) {
-	c, camp := cat(), campaign()
+	c, b := cat(), bench()
 	s := c.Subjects["sense"]
 	s.Executor = "local"
 	c.Subjects["sense"] = s
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
 	var r Rejection
 	for _, got := range res.Rejected {
@@ -203,12 +201,12 @@ func TestARejectionCarriesTheJobItWas(t *testing.T) {
 // A model several tools can drive is ambiguous, and picking one arbitrarily is
 // how an arm ends up measured on a surface nobody intended.
 func TestAModelSeveralToolsCanDriveNeedsTheArmToSayWhich(t *testing.T) {
-	c, camp := cat(), campaign()
+	c, b := cat(), bench()
 	m := c.Models["m1"]
 	m.Agents = []string{"tool", "other"}
 	c.Models["m1"] = m
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
 	if len(res.Rejected) == 0 {
 		t.Fatal("an ambiguous model was resolved anyway")
@@ -218,18 +216,18 @@ func TestAModelSeveralToolsCanDriveNeedsTheArmToSayWhich(t *testing.T) {
 	}
 
 	// Naming the tool resolves it.
-	camp.Arms[0].Agent = "tool"
-	if res := expand(t, c, camp); res.Cells() != 1 || len(res.Jobs) != 2 {
+	b.Arms[0].Agent = "tool"
+	if res := expand(t, c, b); res.Cells() != 1 || len(res.Jobs) != 2 {
 		t.Errorf("naming the agent left %d cells / %d jobs, want 1 and 2:\n%v",
 			res.Cells(), len(res.Jobs), res.Rejected)
 	}
 }
 
 func TestAnArmNamingAToolItsModelDoesNotSupportIsRejected(t *testing.T) {
-	c, camp := cat(), campaign()
-	camp.Arms[0].Agent = "other" // m1 names only "tool"
+	c, b := cat(), bench()
+	b.Arms[0].Agent = "other" // m1 names only "tool"
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
 	if len(res.Rejected) == 0 {
 		t.Fatal("the arm's agent was not checked against its model")
@@ -239,46 +237,46 @@ func TestAnArmNamingAToolItsModelDoesNotSupportIsRejected(t *testing.T) {
 	}
 }
 
-// A malformed campaign is a different answer from an unsatisfiable one. Naming
+// A malformed bench is a different answer from an unsatisfiable one. Naming
 // a subject the catalog does not have is a typo; a model no tool can drive is a
 // rejection with a reason. Confusing the two sends someone to fix the wrong
 // file.
-func TestAMalformedCampaignIsAnErrorNotARejection(t *testing.T) {
+func TestAMalformedBenchIsAnErrorNotARejection(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
-		change func(camp *Campaign)
+		change func(b *Bench)
 		want   string
 	}{
-		{"no headline arm", func(c *Campaign) { c.Arms[0].Role = Confirmation },
+		{"no headline arm", func(c *Bench) { c.Arms[0].Role = Confirmation },
 			"has 0 headline arms"},
-		{"two headline arms", func(c *Campaign) {
+		{"two headline arms", func(c *Bench) {
 			c.Arms = append(c.Arms, Arm{Role: Headline, Model: "judge", Runs: 2})
 		}, "has 2 headline arms"},
-		{"a role that is neither", func(c *Campaign) { c.Arms[0].Role = "control" },
+		{"a role that is neither", func(c *Bench) { c.Arms[0].Role = "control" },
 			`role "control" is not headline or confirmation`},
-		{"an arm that never runs", func(c *Campaign) { c.Arms[0].Runs = 0 },
+		{"an arm that never runs", func(c *Bench) { c.Arms[0].Runs = 0 },
 			"an arm that never runs is not an arm"},
-		{"no judge", func(c *Campaign) { c.Judge = "" },
+		{"no judge", func(c *Bench) { c.Judge = "" },
 			"makes every board incomparable"},
-		{"a judge no model file declares", func(c *Campaign) { c.Judge = "ghost" },
+		{"a judge no model file declares", func(c *Bench) { c.Judge = "ghost" },
 			`pins judge "ghost"`},
-		{"a subject no file declares", func(c *Campaign) { c.Subjects = []string{"ghost"} },
+		{"a subject no file declares", func(c *Bench) { c.Subjects = []string{"ghost"} },
 			`names subject "ghost"`},
-		{"a repo no file declares", func(c *Campaign) { c.Repos = []string{"ghost"} },
+		{"a repo no file declares", func(c *Bench) { c.Repo = "ghost" },
 			`names repo "ghost"`},
-		{"a model no file declares", func(c *Campaign) { c.Arms[0].Model = "ghost" },
+		{"a model no file declares", func(c *Bench) { c.Arms[0].Model = "ghost" },
 			`names model "ghost"`},
-		{"nothing to run", func(c *Campaign) { c.Repos = nil },
+		{"nothing to run", func(c *Bench) { c.Subjects = nil },
 			"plans nothing"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			camp := campaign()
-			tc.change(&camp)
+			b := bench()
+			tc.change(&b)
 
-			_, err := Expand(cat(), camp)
+			_, err := Expand(cat(), b)
 
 			if err == nil {
-				t.Fatal("a malformed campaign was expanded")
+				t.Fatal("a malformed bench was expanded")
 			}
 			if !strings.Contains(err.Error(), tc.want) {
 				t.Errorf("error = %q, want %q", err, tc.want)
@@ -290,7 +288,7 @@ func TestAMalformedCampaignIsAnErrorNotARejection(t *testing.T) {
 // The judge is not an arm. It produces no cell, and a plan that ran it as one
 // would spend on a session that scores nothing.
 func TestTheJudgeIsNotPlannedAsAnArm(t *testing.T) {
-	res := expand(t, cat(), campaign())
+	res := expand(t, cat(), bench())
 
 	for _, j := range res.Jobs {
 		if j.Model == "judge" {
@@ -317,7 +315,7 @@ func TestAJobAndARejectionReadAsThemselves(t *testing.T) {
 // An arm may name a tool the model lists, and still be unreachable through it.
 // Support and reachability are different questions and both have to be asked.
 func TestAToolTheModelListsMayStillBeUnableToReachIt(t *testing.T) {
-	c, camp := cat(), campaign()
+	c, b := cat(), bench()
 	// The subject supports both tools, so question one passes and question two
 	// is the one that has to fire.
 	for id, s := range c.Subjects {
@@ -327,9 +325,9 @@ func TestAToolTheModelListsMayStillBeUnableToReachIt(t *testing.T) {
 	m := c.Models["m1"]
 	m.Agents = []string{"tool", "other"}
 	c.Models["m1"] = m
-	camp.Arms[0].Agent = "other"
+	b.Arms[0].Agent = "other"
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
 	// "other" authenticates by subscription; m1 is api_key only, so the pair
 	// cannot authenticate and question three answers.
@@ -344,12 +342,12 @@ func TestAToolTheModelListsMayStillBeUnableToReachIt(t *testing.T) {
 // A model naming no agent tool at all cannot be driven by anything, and the
 // arm cannot rescue it by naming one.
 func TestAModelNamingNoAgentToolIsRejected(t *testing.T) {
-	c, camp := cat(), campaign()
+	c, b := cat(), bench()
 	m := c.Models["m1"]
 	m.Agents = nil
 	c.Models["m1"] = m
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
 	if len(res.Rejected) == 0 {
 		t.Fatal("a model nothing can drive was planned")
@@ -365,13 +363,13 @@ func TestAModelNamingNoAgentToolIsRejected(t *testing.T) {
 // finished side can never be paired, and the baseline's budget derives from its
 // partner's wall, so there is nothing to derive it from.
 func TestASurvivingArmOfAnIncompleteCellIsRejectedToo(t *testing.T) {
-	c, camp := cat(), campaign()
+	c, b := cat(), bench()
 	// The sense subject cannot run where it is pointed; untreated still can.
 	s := c.Subjects["sense"]
 	s.Executor = "local"
 	c.Subjects["sense"] = s
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
 	if len(res.Jobs) != 0 {
 		t.Fatalf("planned %d jobs; a half-pair was planned:\n%v", len(res.Jobs), res.Jobs)
@@ -397,25 +395,24 @@ func TestASurvivingArmOfAnIncompleteCellIsRejectedToo(t *testing.T) {
 }
 
 // Only the cell that lost a subject is dropped. One broken arm must not take
-// the rest of the campaign with it.
-func TestAnIncompleteCellDoesNotTakeTheWholeCampaignWithIt(t *testing.T) {
-	c, camp := cat(), campaign()
-	camp.Repos = []string{"r1", "r2"}
-	camp.Arms = append(camp.Arms, Arm{Role: Confirmation, Model: "judge", Runs: 2})
+// the rest of the bench with it.
+func TestAnIncompleteCellDoesNotTakeTheWholeBenchWithIt(t *testing.T) {
+	c, b := cat(), bench()
+	b.Arms = append(b.Arms, Arm{Role: Confirmation, Model: "judge", Runs: 2})
 	// Break exactly one job: the sense subject on the confirmation model.
 	m := c.Models["judge"]
 	m.Agents = []string{"tool", "other"}
 	c.Models["judge"] = m
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
-	// The judge-model arm is ambiguous for BOTH subjects, so its cells go. The
-	// m1 arm is untouched: one cell per repository, two jobs each.
-	if res.Cells() != 2 {
-		t.Fatalf("planned %d cells, want the 2 m1 cells to survive:\n%v", res.Cells(), res.Jobs)
+	// The judge-model arm is ambiguous for BOTH subjects, so its cell goes. The
+	// m1 arm is untouched: one cell, both its jobs.
+	if res.Cells() != 1 {
+		t.Fatalf("planned %d cells, want the m1 cell to survive:\n%v", res.Cells(), res.Jobs)
 	}
-	if len(res.Jobs) != 4 {
-		t.Errorf("planned %d jobs, want 4 — a cell is a pair", len(res.Jobs))
+	if len(res.Jobs) != 2 {
+		t.Errorf("planned %d jobs, want 2 — a cell is a pair", len(res.Jobs))
 	}
 	for _, j := range res.Jobs {
 		if j.Model != "m1" {
@@ -424,15 +421,15 @@ func TestAnIncompleteCellDoesNotTakeTheWholeCampaignWithIt(t *testing.T) {
 	}
 }
 
-// A campaign with one subject has no pair to complete, and dropping its jobs
-// would be the planner inventing a rule the campaign did not ask for. Whether
+// A bench with one subject has no pair to complete, and dropping its jobs
+// would be the planner inventing a rule the bench did not ask for. Whether
 // one subject is enough to conclude anything is a spending law, and it belongs
 // to the gates.
-func TestASingleSubjectCampaignIsNotTreatedAsHalfOfSomething(t *testing.T) {
-	c, camp := cat(), campaign()
-	camp.Subjects = []string{"untreated"}
+func TestASingleSubjectBenchIsNotTreatedAsHalfOfSomething(t *testing.T) {
+	c, b := cat(), bench()
+	b.Subjects = []string{"untreated"}
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
 	if res.Cells() != 1 || len(res.Jobs) != 1 {
 		t.Errorf("planned %d cells / %d jobs, want 1 and 1", res.Cells(), len(res.Jobs))
@@ -443,11 +440,11 @@ func TestASingleSubjectCampaignIsNotTreatedAsHalfOfSomething(t *testing.T) {
 }
 
 // A cell short a subject with nothing rejected in it is not a resolution
-// failure, it is a campaign that listed something twice. An earlier version
+// failure, it is a bench that listed something twice. An earlier version
 // reported it with a blank reason, which breaks this package's own rule that a
 // rejection someone cannot act on is one they route around by guessing.
 func TestACellShortASubjectForNoResolutionReasonStillSaysWhy(t *testing.T) {
-	// decide is exercised directly: a campaign like this is refused at
+	// decide is exercised directly: a bench like this is refused at
 	// validation now, and the branch is the last line of defence if it ever
 	// is not.
 	walked := []Rejection{
@@ -467,30 +464,28 @@ func TestACellShortASubjectForNoResolutionReasonStillSaysWhy(t *testing.T) {
 	}
 }
 
-// A campaign that lists the same thing twice looks complete to anything
-// counting: two untreated arms and no sense arm is two jobs in one cell.
-func TestACampaignNamingSomethingTwiceIsRefused(t *testing.T) {
+// A bench that lists the same thing twice looks complete to anything counting:
+// two untreated arms and no sense arm is two jobs in one cell.
+func TestABenchNamingSomethingTwiceIsRefused(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
-		change func(camp *Campaign)
+		change func(b *Bench)
 		want   string
 	}{
-		{"a subject twice", func(c *Campaign) { c.Subjects = []string{"untreated", "untreated"} },
+		{"a subject twice", func(c *Bench) { c.Subjects = []string{"untreated", "untreated"} },
 			`names subject "untreated" twice; a duplicated arm is not a pair`},
-		{"a repo twice", func(c *Campaign) { c.Repos = []string{"r1", "r1"} },
-			`names repo "r1" twice`},
-		{"an arm twice", func(c *Campaign) {
+		{"an arm twice", func(c *Bench) {
 			c.Arms = append(c.Arms, Arm{Role: Confirmation, Model: "m1", Runs: 2})
 		}, `names model "m1" twice; running one arm twice is not two arms`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			camp := campaign()
-			tc.change(&camp)
+			b := bench()
+			tc.change(&b)
 
-			_, err := Expand(cat(), camp)
+			_, err := Expand(cat(), b)
 
 			if err == nil {
-				t.Fatal("a campaign naming something twice was expanded")
+				t.Fatal("a bench naming something twice was expanded")
 			}
 			if !strings.Contains(err.Error(), tc.want) {
 				t.Errorf("error = %q, want %q", err, tc.want)
@@ -502,14 +497,14 @@ func TestACampaignNamingSomethingTwiceIsRefused(t *testing.T) {
 // The planned job names the model's canonical id, so one plan shows one form
 // of a name. Whether an ALIAS resolves is an integration property — a Catalog
 // literal has no alias index — and it is tested against a real config directory
-// in TestACampaignMayNameAModelByItsAlias.
+// in TestABenchMayNameAModelByItsAlias.
 func TestAPlannedJobNamesTheCanonicalModelID(t *testing.T) {
-	c, camp := cat(), campaign()
+	c, b := cat(), bench()
 	c.Models["full/m1:v2"] = catalog.Model{ID: "full/m1:v2", Provider: "acme",
 		AvailableUnder: []string{"api_key"}, Agents: []string{"tool"}}
-	camp.Arms[0].Model = "full/m1:v2"
+	b.Arms[0].Model = "full/m1:v2"
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
 	for _, j := range res.Jobs {
 		if j.Model != "full/m1:v2" {
@@ -522,10 +517,10 @@ func TestAPlannedJobNamesTheCanonicalModelID(t *testing.T) {
 // plan that labelled every job headline would look right and mean something
 // else entirely.
 func TestEachJobKeepsItsArmsRole(t *testing.T) {
-	camp := campaign()
-	camp.Arms = append(camp.Arms, Arm{Role: Confirmation, Model: "judge", Runs: 2})
+	b := bench()
+	b.Arms = append(b.Arms, Arm{Role: Confirmation, Model: "judge", Runs: 2})
 
-	res := expand(t, cat(), camp)
+	res := expand(t, cat(), b)
 
 	got := map[Role]int{}
 	for _, j := range res.Jobs {
@@ -542,7 +537,7 @@ func TestEachJobKeepsItsArmsRole(t *testing.T) {
 // otherwise cycle 03's executor has to guess, and a session that guesses wrong
 // dies empty at zero tokens.
 func TestTheJobCarriesTheAuthModeThatWasChosen(t *testing.T) {
-	c, camp := cat(), campaign()
+	c, b := cat(), bench()
 	m := c.Models["m1"]
 	m.AvailableUnder = []string{"subscription", "api_key"}
 	c.Models["m1"] = m
@@ -554,7 +549,7 @@ func TestTheJobCarriesTheAuthModeThatWasChosen(t *testing.T) {
 	e.PreservesAuth = []string{"api_key"}
 	c.Executors["isolated-home"] = e
 
-	res := expand(t, c, camp)
+	res := expand(t, c, b)
 
 	if len(res.Jobs) == 0 {
 		t.Fatalf("nothing planned: %v", res.Rejected)
@@ -569,7 +564,7 @@ func TestTheJobCarriesTheAuthModeThatWasChosen(t *testing.T) {
 // Deterministic: the model's own order decides, so a plan does not change
 // between runs of the same config.
 func TestTheChosenAuthModeIsDeterministic(t *testing.T) {
-	c, camp := cat(), campaign()
+	c, b := cat(), bench()
 	for _, mode := range [][]string{{"subscription", "api_key"}, {"api_key", "subscription"}} {
 		m := c.Models["m1"]
 		m.AvailableUnder = mode
@@ -578,7 +573,7 @@ func TestTheChosenAuthModeIsDeterministic(t *testing.T) {
 		a.AuthModes = []string{"subscription", "api_key"}
 		c.Agents["tool"] = a
 
-		res := expand(t, c, camp)
+		res := expand(t, c, b)
 
 		if len(res.Jobs) == 0 {
 			t.Fatalf("nothing planned for %v: %v", mode, res.Rejected)
@@ -592,7 +587,7 @@ func TestTheChosenAuthModeIsDeterministic(t *testing.T) {
 // Question five, asked at PLAN time: will the run's own login hold anything for
 // this model?
 //
-// A campaign is planned once and run cell by cell, so a cell only the attended
+// A bench is planned once and run cell by cell, so a cell only the attended
 // parent would refuse is a cell that plans clean and dies four cells in — with
 // a message that reads like a bad model id, because the tool answers
 // `UnknownError: Unexpected server error` whether the model does not exist or

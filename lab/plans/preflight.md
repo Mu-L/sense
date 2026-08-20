@@ -10,16 +10,17 @@ wall: 15m
 
 ## Task
 
-Expand the campaign into every job it implies and answer, for each one, whether it can run at all.
+Expand the repository's bench into every job it implies and answer, for each one, whether it can
+run at all.
 
 ## Scope
 
 You resolve configuration. **Out of scope:** running anything, spending anything, judging a
-scenario, any other campaign.
+scenario, any other repository.
 
 ## Run
 
-1. Expand the campaign: every repository, every subject, every arm.
+1. Expand the bench: every subject, every arm.
 2. Resolve each job: does the model exist, can some tool drive it, is there an auth mode that
    reaches it, does the executor exist.
 3. Reject the survivors of any cell that lost a subject.
@@ -55,10 +56,10 @@ Two recorded failures have this shape:
 - Every job in the matrix appears exactly once, either as a job or as a rejection.
 - Every rejection names its reason, and a survivor's rejection names why its partner failed rather
   than merely reporting that one did.
-- A campaign that is malformed rather than merely unsatisfiable is an error, not a rejection list:
-  a campaign naming a subject the catalog does not have is a typo, and a campaign whose model no
-  tool can drive is a rejection with a reason. Those are different answers and they send someone
-  to different files.
+- A bench that is malformed rather than merely unsatisfiable is an error, not a rejection list:
+  a bench naming a subject the catalog does not have is a typo, and a bench whose model no tool
+  can drive is a rejection with a reason. Those are different answers and they send someone to
+  different files.
 
 ## Do not
 

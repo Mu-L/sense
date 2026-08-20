@@ -211,7 +211,7 @@ func (p Plan) check() []error {
 // A plan naming a verdict the graph does not know is a plan whose routing cannot
 // be tested. A plan missing one the graph knows is worse and quieter: it is a
 // case the phase really meets and has been given no instruction for, which is
-// how a phase writes nothing and stalls a campaign at three in the morning.
+// how a phase writes nothing and stalls the loop at three in the morning.
 func (p Plan) checkVerdicts(declared phase.Phase) []error {
 	var problems []error
 	for _, v := range p.Emits {

@@ -73,9 +73,9 @@ func declared(t *testing.T) []plans.Plan {
 	return loaded
 }
 
-// campaign is a repository admitted and scanned, ready for its first authoring
+// admitted is a repository admitted and scanned, ready for its first authoring
 // phase.
-func campaign(t *testing.T) (dir, repo string) {
+func admitted(t *testing.T) (dir, repo string) {
 	t.Helper()
 	dir, repo = t.TempDir(), "jellyfin"
 	write(t, filepath.Join(dir, repo, "index", "index.json"), `{"repo":"jellyfin","symbols":11410}`)
@@ -84,7 +84,7 @@ func campaign(t *testing.T) (dir, repo string) {
 
 func cranked(t *testing.T, dir string, a *agent) Crank {
 	t.Helper()
-	return Crank{Campaign: dir, Plans: declared(t), Checkout: t.TempDir(), Spawn: a.spawn}
+	return Crank{Runs: dir, Plans: declared(t), Checkout: t.TempDir(), Spawn: a.spawn}
 }
 
 func advance(t *testing.T, c Crank, repo string) Result {
@@ -100,7 +100,7 @@ func advance(t *testing.T, c Crank, repo string) Result {
 // it is the next phase. Nothing about this asserts that an agent was spawned —
 // it asserts that the loop moved, which is the only reason to spawn one.
 func TestOneTurnRunsThePhaseThatIsOwedAndMovesOn(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1,
 		Verdict: phase.Draft, Anchor: "BaseItem"}}
 
@@ -120,7 +120,7 @@ func TestOneTurnRunsThePhaseThatIsOwedAndMovesOn(t *testing.T) {
 // One phase per invocation. `-until` is a loop in main around this call, so a
 // turn that ran two phases would be a mode nobody asked for.
 func TestOneTurnRunsOnePhase(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1, Verdict: phase.Draft}}
 
 	advance(t, cranked(t, dir, a), repo)
@@ -144,7 +144,7 @@ func TestEveryLeverRoutesTheWayTheGraphDeclares(t *testing.T) {
 			continue
 		}
 		t.Run(lever.Name, func(t *testing.T) {
-			dir, repo := campaign(t)
+			dir, repo := admitted(t)
 			// The lever's cycle is a fact about the tree, so the tree is built
 			// with it rather than a counter being set.
 			for c := 1; c < lever.Cycle; c++ {
@@ -172,7 +172,7 @@ func TestEveryLeverRoutesTheWayTheGraphDeclares(t *testing.T) {
 func TestNoPhaseThatSpendsIsEverRun(t *testing.T) {
 	for _, spends := range []phase.Name{phase.Bench, phase.Report, phase.Harvest, phase.Board} {
 		t.Run(string(spends), func(t *testing.T) {
-			dir, repo := campaign(t)
+			dir, repo := admitted(t)
 			reach(t, dir, repo, 1, spends)
 			a := &agent{}
 
@@ -201,7 +201,7 @@ func TestALeverPulledByAPhaseThatSpendsIsNotDrivenAtAll(t *testing.T) {
 			continue
 		}
 		t.Run(lever.Name, func(t *testing.T) {
-			dir, repo := campaign(t)
+			dir, repo := admitted(t)
 			reach(t, dir, repo, 1, lever.From)
 			a := &agent{}
 
@@ -223,7 +223,7 @@ func TestALeverPulledByAPhaseThatSpendsIsNotDrivenAtAll(t *testing.T) {
 // The ceiling parks rather than opening a seventh authoring cycle, and a parked
 // repository does not advance again.
 func TestTheCeilingParksAndAParkedRepositoryDoesNotAdvance(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	// Five finished authoring cycles and a sixth open: the position's cycle is a
 	// directory name, so the ceiling is reached by the tree rather than set.
 	for c := 1; c < phase.AuthoringCeiling; c++ {
@@ -255,7 +255,7 @@ func TestTheCeilingParksAndAParkedRepositoryDoesNotAdvance(t *testing.T) {
 // it. Asserted on the position rather than on whether a spawner was called,
 // because what matters is that nothing moved.
 func TestAPayPrintsTheCommandAndSpendsNothing(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	reach(t, dir, repo, 1, phase.Validate)
 	write(t, filepath.Join(dir, repo, "1", "validate", "pay-call.md"), "PAY\n")
 	attempt(t, dir, repo, position.Attempt{Cycle: 1, Phase: phase.Validate, Verdict: phase.Pay, Try: 1})
@@ -282,7 +282,7 @@ func TestAPayPrintsTheCommandAndSpendsNothing(t *testing.T) {
 // A phase whose agent runs past its wall is recorded as out of clock, and the
 // crank moves on rather than holding. Cannot-finish-at-budget is a result.
 func TestAPhaseThatRanPastItsWallIsRecordedRatherThanWaitedOn(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	a := &agent{stalled: true}
 
 	r := advance(t, cranked(t, dir, a), repo)
@@ -312,7 +312,7 @@ func TestTheWallComesFromTheDeclarationRatherThanFromCode(t *testing.T) {
 		{phase.Minibench, 11 * time.Minute},
 	} {
 		t.Run(string(tc.name), func(t *testing.T) {
-			dir, repo := campaign(t)
+			dir, repo := admitted(t)
 			reach(t, dir, repo, 1, tc.name)
 			a := &agent{artifact: true, verdict: &Verdict{Phase: tc.name, Repo: repo, Cycle: 1,
 				Verdict: firstEmitted(t, tc.name)}}
@@ -361,7 +361,7 @@ func TestTheGuardRefusesAVerdictThatIsNotThisPhasesOwn(t *testing.T) {
 		{"there is no verdict document at all", nil, "has not finished"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			dir, repo := campaign(t)
+			dir, repo := admitted(t)
 			a := &agent{artifact: true, verdict: tc.verdict}
 
 			r := advance(t, cranked(t, dir, a), repo)
@@ -383,7 +383,7 @@ func TestTheGuardRefusesAVerdictThatIsNotThisPhasesOwn(t *testing.T) {
 // so the check is driven by editing the declaration: a verdict the graph knows
 // and the plan no longer declares is refused, and the refusal quotes the plan.
 func TestTheDeclaredEnumIsReadFromThePlanFile(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1, Verdict: phase.Draft}}
 	c := cranked(t, dir, a)
 	c.Plans = onlyEmits(t, c.Plans, phase.Author, phase.NoAnchor)
@@ -401,7 +401,7 @@ func TestTheDeclaredEnumIsReadFromThePlanFile(t *testing.T) {
 // An exit code is a claim; the artifact is the fact. A phase that finished, said
 // the right thing and wrote nothing does not advance.
 func TestAPhaseThatWroteNoArtifactDoesNotAdvance(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	a := &agent{verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1, Verdict: phase.Draft}}
 
 	r := advance(t, cranked(t, dir, a), repo)
@@ -421,7 +421,7 @@ func TestAPhaseThatWroteNoArtifactDoesNotAdvance(t *testing.T) {
 // opened six months later shows the chain that produced it rather than a phase
 // name and a date.
 func TestAnAdvanceRecordsThePlanTheVerdictAndTheArtifact(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1, Verdict: phase.Draft}}
 
 	advance(t, cranked(t, dir, a), repo)
@@ -447,7 +447,7 @@ func TestAnAdvanceRecordsThePlanTheVerdictAndTheArtifact(t *testing.T) {
 // reads both — every rejection, oldest first, because reading only the latest is
 // how six attempts oscillate between two failures without landing in between.
 func TestAReEntryKeepsTheAnchorAndCarriesEveryRejection(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	c := cranked(t, dir, &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo,
 		Cycle: 1, Verdict: phase.Draft, Anchor: "MediaBrowser.Controller.Entities.BaseItem"}})
 	advance(t, c, repo)
@@ -482,7 +482,7 @@ func TestAReEntryKeepsTheAnchorAndCarriesEveryRejection(t *testing.T) {
 // forever, at whatever an agent costs. The turn after a re-entry is the one
 // nothing was checking.
 func TestTheLoopMovesOnFromAReEnteredPhase(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	c := cranked(t, dir, &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo,
 		Cycle: 1, Verdict: phase.Draft, Anchor: "BaseItem"}})
 	advance(t, c, repo)
@@ -510,7 +510,7 @@ func TestTheLoopMovesOnFromAReEnteredPhase(t *testing.T) {
 // at nothing reads nothing, and its draft would be about a repository it never
 // opened.
 func TestThePhaseIsDispatchedAgainstTheCheckout(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1, Verdict: phase.Draft}}
 	c := cranked(t, dir, a)
 
@@ -525,7 +525,7 @@ func TestThePhaseIsDispatchedAgainstTheCheckout(t *testing.T) {
 // of it. Nothing here composes a method: a sentence added in code is a method
 // nobody can review by reading a file.
 func TestThePlanReachesTheAgentVerbatim(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1, Verdict: phase.Draft}}
 	c := cranked(t, dir, a)
 	author, _ := planFor(c.Plans, phase.Author)
@@ -542,7 +542,7 @@ func TestThePlanReachesTheAgentVerbatim(t *testing.T) {
 
 // A repository with nothing owed is not dispatched against.
 func TestARepositoryThatIsNotReadyIsNotDispatchedAgainst(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	write(t, filepath.Join(dir, repo, "1", "board", "board.md"), "# board\n")
 	a := &agent{}
 
@@ -559,7 +559,7 @@ func TestARepositoryThatIsNotReadyIsNotDispatchedAgainst(t *testing.T) {
 // A phase with no plan is a phase nobody can run, and that is a refusal rather
 // than a dispatch with an empty prompt.
 func TestAPhaseWithNoPlanIsRefused(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	c := cranked(t, dir, &agent{})
 	c.Plans = without(c.Plans, phase.Author)
 
@@ -570,7 +570,7 @@ func TestAPhaseWithNoPlanIsRefused(t *testing.T) {
 
 // A spawner that fails is the crank's failure, not a verdict.
 func TestASpawnerThatFailsIsNotAVerdict(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	c := cranked(t, dir, &agent{})
 	c.Spawn = func(context.Context, Job) (Ran, error) { return Ran{}, os.ErrPermission }
 
@@ -595,11 +595,11 @@ func TestAnUnreadablePositionIsAnError(t *testing.T) {
 
 // reach writes every artifact up to and including the phase before `to`, which
 // is what makes that phase the one owed.
-func reach(t *testing.T, campaign, repo string, cycle int, to phase.Name) {
+func reach(t *testing.T, runs, repo string, cycle int, to phase.Name) {
 	t.Helper()
 	// The cycle is a directory name, so an open cycle with nothing written in
 	// it is a directory that exists and is empty.
-	if err := os.MkdirAll(filepath.Join(campaign, repo, strconv.Itoa(cycle)), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(runs, repo, strconv.Itoa(cycle)), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	for _, p := range phase.Graph {
@@ -609,7 +609,7 @@ func reach(t *testing.T, campaign, repo string, cycle int, to phase.Name) {
 		if p.Name == phase.Index || p.Name == phase.Handoff {
 			continue
 		}
-		write(t, filepath.Join(campaign, repo, strconv.Itoa(cycle), string(p.Name), p.Writes), "written\n")
+		write(t, filepath.Join(runs, repo, strconv.Itoa(cycle), string(p.Name), p.Writes), "written\n")
 	}
 	t.Fatalf("%s is not a phase the graph walks to", to)
 }
@@ -624,16 +624,16 @@ func write(t *testing.T, path, body string) {
 	}
 }
 
-func attempt(t *testing.T, campaign, repo string, a position.Attempt) {
+func attempt(t *testing.T, runs, repo string, a position.Attempt) {
 	t.Helper()
-	if err := position.Record(filepath.Join(campaign, repo), a); err != nil {
+	if err := position.Record(filepath.Join(runs, repo), a); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func attempts(t *testing.T, campaign, repo string) []position.Attempt {
+func attempts(t *testing.T, runs, repo string) []position.Attempt {
 	t.Helper()
-	all, err := position.Attempts(filepath.Join(campaign, repo))
+	all, err := position.Attempts(filepath.Join(runs, repo))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -681,7 +681,7 @@ func without(loaded []plans.Plan, name phase.Name) []plans.Plan {
 // A verdict document that is not a document is refused like any other thing
 // that is not a verdict, and the loop stops rather than routing on it.
 func TestAVerdictThatIsNotADocumentIsRefused(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	c := cranked(t, dir, &agent{artifact: true})
 	// The agent writes an artifact and something unreadable where its verdict
 	// belongs, which is what a half-finished write looks like.
@@ -705,14 +705,14 @@ func TestAVerdictThatIsNotADocumentIsRefused(t *testing.T) {
 // A second attempt at one phase is told which attempt it is, so a spawner can
 // keep the first's evidence rather than writing over it.
 func TestASecondAttemptAtOnePhaseIsToldWhichItIs(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	attempt(t, dir, repo, position.Attempt{Cycle: 1, Phase: phase.Author, Verdict: phase.Draft, Try: 1})
 	// The artifact is missing, so the position holds at the author. A human
 	// clearing that record is not this test's subject: what matters is that the
 	// next dispatch knows it is the second.
 	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1, Verdict: phase.Draft}}
 	c := cranked(t, dir, a)
-	c.Campaign = dir
+	c.Runs = dir
 
 	// The position is Missing, so nothing dispatches. The try is still what the
 	// records say it is, and that is what the spawner would be handed.
@@ -724,7 +724,7 @@ func TestASecondAttemptAtOnePhaseIsToldWhichItIs(t *testing.T) {
 // An unreadable record set means nothing is known about earlier tries, and the
 // dispatch is the first one rather than a failure inside a counter.
 func TestAnUnreadableRecordSetCountsAsNoEarlierTries(t *testing.T) {
-	dir, repo := campaign(t)
+	dir, repo := admitted(t)
 	write(t, filepath.Join(dir, repo, "attempts", "1-author-1.json"), "{not a document")
 
 	if got := cranked(t, dir, &agent{}).try(repo, 1, phase.Author); got != 1 {

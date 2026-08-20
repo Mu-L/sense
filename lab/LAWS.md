@@ -64,7 +64,7 @@ BOUND IS RETIRED
 **Spending** — THE MINI-BENCH COMES FIRST · THE VALIDATION RUN IS UNSCORED · IF THE BASELINE
 ASSEMBLES THE SET, DO NOT PAY · THE BAR IS +0.50 ON A GOLD GROUP · EVERY ARM GETS 2 RUNS PER CELL
 · CANNOT-FINISH-AT-BUDGET IS A RESULT · ONE SENSE RETRY, NEVER A LOOP · COSTING MORE IS A PRODUCT
-FINDING · SPEND IS QUERYABLE BY CELL, CAMPAIGN AND MODEL
+FINDING · SPEND IS QUERYABLE BY CELL, REPOSITORY AND MODEL
 
 **The instrument** — MCP IS THE ONLY SURFACE · STOPPER · THE SIMULATED ADVERSARY PROBE IS RETIRED
 · ONE REPO AT A TIME, TO A VERDICT · A PHASE IS SELF-CONTAINED · WHAT A PER-REPO PHASE DOES NOT
@@ -517,7 +517,7 @@ Declared in **cycle 04** (04-03) when the report is first written, consumed in *
 Nothing asks Sense a question the gold already answers and calls the result a health check.
 Product gaps come from a post-run transcript miner, never from an oracle.
 
-**Precedent:** measured on a live campaign, such a check reported 100% green on the exact repo
+**Precedent:** measured on a live run, such a check reported 100% green on the exact repo
 where the paid runs showed four discriminator-group misses, a nondeterministic return and an
 empty one.
 
@@ -612,13 +612,13 @@ to recover an uncensored wall, never to buy Sense a second draw at scoring.
 Two consequences bind. *(The source says two and then states three; see Questioned, not changed.)*
 
 **The retry is sense-only.** A baseline that runs out of `sense_wall x 1.2` is the measurement,
-not a malfunction — it is the win condition itself, and 12 such runs are where the campaign's
-second cycle result actually lives. *(The source says "cycle 2"; renumbered here only to avoid
+not a malfunction — it is the win condition itself, and 12 such runs are where the second cycle
+result actually lives. *(The source says "cycle 2"; renumbered here only to avoid
 collision with sense-lab's build cycles.)* Never "fix" a timed-out baseline by re-running it.
 
 **The replaced run is parked**, renamed from `run-N` to `failed-run-N` rather than scored.
 Scoring both the run you declared unfit and its replacement is a double count: it put 3 sense runs
-against a 2-run baseline in two of that campaign's cells, with the superseded 0.0 still in the
+against a 2-run baseline in two of that repository's cells, with the superseded 0.0 still in the
 mean.
 
 **The cap is load-bearing.** Because the replaced run is parked, raising the retry cap above one
@@ -643,10 +643,12 @@ equivalents — never the uncached remainder.
 
 **Mechanism:** shape — cost cannot reach the verdict. Built in **cycle 04** (04-04).
 
-## SPEND IS QUERYABLE BY CELL, CAMPAIGN AND MODEL — shape, cycle 04 *(new)*
+## SPEND IS QUERYABLE BY CELL, REPOSITORY AND MODEL — shape, cycle 04 *(new)*
 
-Total spend is answerable from the store by cell, by campaign and by model. A spend ceiling is
-enforced from the store, never from a counter in memory.
+Total spend is answerable from the store by cell, by repository and by model. A spend ceiling is
+enforced from the store, never from a counter in memory. The scope of a ceiling is the
+repository: one that burns its runs is the one to stop, and nothing about the repository beside
+it changed.
 
 **Precedent:** none recorded. Promoted from an enforcement-map row rather than inherited as a
 law; the in-memory-counter clause is new with sense-lab.
@@ -679,9 +681,9 @@ a re-score diff proving zero impact. A mitigation is not a resolution.
 
 **Precedent:** none recorded.
 
-**Mechanism:** doc today, and it is describing a gate. It wants a `stopper` flag on the campaign
-row that the planner refuses to plan against — the same row ONE REPO AT A TIME already reads, so
-it should be built with it in **cycle 01** (01-03).
+**Mechanism:** doc today, and it is describing a gate. It wants a `stopper` flag on the
+repository's bench that the planner refuses to plan against — the same file ONE REPO AT A TIME
+would read, so it should be built with it in **cycle 01** (01-03).
 
 ## THE SIMULATED ADVERSARY PROBE IS RETIRED — gate, cycle 01 *(inherited)*
 
@@ -701,8 +703,10 @@ from state, it never restarts.
 
 **Precedent:** none recorded.
 
-**Mechanism:** gate — the planner refuses a second repo mid-verdict, against the campaigns row.
-Built in **cycle 01** (01-03).
+**Mechanism:** gate — the planner refuses a second repo mid-verdict, read from the run trees:
+each repository carries its own, and a second one mid-diagnosis is visible in its position. NOT
+BUILT. The container that was going to hold the row was removed as a thing that held no fact,
+and nothing has replaced the check.
 
 ## A PHASE IS SELF-CONTAINED — shape, cycle 05 *(inherited)*
 

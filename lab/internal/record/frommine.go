@@ -11,7 +11,7 @@ import (
 //
 // It exists so the miner's output lands without hand-editing. The retired tree's
 // failure was exactly the gap this closes: miner output in a log file, an empty
-// findings directory, and three loose write-ups under a different campaign
+// findings directory, and three loose write-ups under a different tree,
 // connected to nothing.
 //
 // The runs are the whole mined set rather than the subset each finding fired on.

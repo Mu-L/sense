@@ -96,7 +96,7 @@ func subjectSupportsAgent(s catalog.Subject, agentID string) string {
 // anything for this model?
 //
 // It is asked HERE as well as in the attended parent, and the duplication is
-// deliberate. A campaign is planned once and run cell by cell, so a cell the
+// deliberate. A bench is planned once and run cell by cell, so a cell the
 // parent would refuse at spawn is a cell that plans clean and dies four cells
 // in — and it dies with a message that reads like a bad model id, because the
 // tool answers `UnknownError: Unexpected server error` whether the model does

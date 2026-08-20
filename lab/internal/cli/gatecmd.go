@@ -19,7 +19,7 @@ import (
 // know which gate fired; the exit code is what makes them a gate.
 //
 // There is no bypass flag, and there is not going to be one. When a gate is
-// wrong mid-campaign the sanctioned path is to fix the gate, or to record a
+// wrong mid-cycle the sanctioned path is to fix the gate, or to record a
 // ruling that exempts that one cell with the reason attached to it.
 
 func gateCmd(args []string, stdin io.Reader, stdout, stderr io.Writer) int {

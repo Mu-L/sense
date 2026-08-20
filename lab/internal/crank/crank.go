@@ -52,8 +52,8 @@ type Spawner func(ctx context.Context, j Job) (Ran, error)
 // the moment a phase needs something the others do not, it belongs in that
 // phase's plan or in the spawner, never in this signature.
 type Crank struct {
-	// Campaign is the run tree.
-	Campaign string
+	// Runs is the root the repositories' run trees live under.
+	Runs string
 	// Plans are the declared plans, already checked against the graph.
 	Plans []plans.Plan
 	// Checkout is the repository under study, at its pin.
@@ -80,7 +80,7 @@ type Result struct {
 // nothing in here knows which of the two it is in and no mode is threaded
 // through it.
 func (c Crank) Advance(ctx context.Context, repo string) (Result, error) {
-	before, err := position.Read(c.Campaign, repo)
+	before, err := position.Read(c.Runs, repo)
 	if err != nil {
 		return Result{}, err
 	}
@@ -114,7 +114,7 @@ func (c Crank) Advance(ctx context.Context, repo string) (Result, error) {
 	if err := c.record(before, j, p, ran); err != nil {
 		return r, err
 	}
-	after, err := position.Read(c.Campaign, repo)
+	after, err := position.Read(c.Runs, repo)
 	if err != nil {
 		return r, err
 	}
@@ -155,7 +155,7 @@ func (c Crank) record(at position.Position, j Job, p plans.Plan, ran Ran) error 
 		// as one rather than waited on: the alternative is a crank that holds
 		// on a hung agent until somebody notices.
 		a.Outcome = position.Stalled
-		return position.Record(filepath.Join(c.Campaign, j.Repo), a)
+		return position.Record(filepath.Join(c.Runs, j.Repo), a)
 	}
 
 	v, err := readVerdict(j.Dir)
@@ -166,7 +166,7 @@ func (c Crank) record(at position.Position, j Job, p plans.Plan, ran Ran) error 
 		// The phase said something that is not a verdict for this phase. It is
 		// recorded as refused, with the reason, and the loop stops there.
 		a.Outcome, a.Table = position.Refused, err.Error()
-		return position.Record(filepath.Join(c.Campaign, j.Repo), a)
+		return position.Record(filepath.Join(c.Runs, j.Repo), a)
 	}
 
 	a.Verdict, a.Table = v.Verdict, v.Table
@@ -183,12 +183,12 @@ func (c Crank) record(at position.Position, j Job, p plans.Plan, ran Ran) error 
 		// the missing artifact for itself.
 		a.Artifact = filepath.Join(j.Dir, p.Writes)
 	}
-	return position.Record(filepath.Join(c.Campaign, j.Repo), a)
+	return position.Record(filepath.Join(c.Runs, j.Repo), a)
 }
 
 // job is the phase to dispatch, assembled from the position and the plan.
 func (c Crank) job(at position.Position, repo string, p plans.Plan, try int) Job {
-	dir := filepath.Join(c.Campaign, repo, strconv.Itoa(at.Cycle), string(p.Phase))
+	dir := filepath.Join(c.Runs, repo, strconv.Itoa(at.Cycle), string(p.Phase))
 	return Job{
 		Repo: repo, Cycle: at.Cycle, Phase: p.Phase, Dir: dir, Try: try,
 		Checkout: c.Checkout, Wall: p.Wall, Prompt: prompt(at, repo, dir, p),
@@ -199,7 +199,7 @@ func (c Crank) job(at position.Position, repo string, p plans.Plan, try int) Job
 // worked out before the phase runs so the spawner can be told, and again from
 // the same records when the attempt is recorded.
 func (c Crank) try(repo string, cycle int, name phase.Name) int {
-	attempts, err := position.Attempts(filepath.Join(c.Campaign, repo))
+	attempts, err := position.Attempts(filepath.Join(c.Runs, repo))
 	if err != nil {
 		// An unreadable record set is the recorder's to report; here it means
 		// only that nothing is known about earlier tries.

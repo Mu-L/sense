@@ -6,9 +6,9 @@
 // fault, and proposing a change.
 //
 // Unrecorded, that chain has two failure modes and the retired tree shows both.
-// One campaign's miner output sits in a log file, its findings directory is
+// One run tree's miner output sits in a log file, its findings directory is
 // empty, and the findings that were written up live as three loose markdown
-// files under a different campaign, connected to nothing. And "why was this
+// files under a different tree, connected to nothing. And "why was this
 // change made to Sense" is answerable only by someone who remembers.
 //
 // # Three records, each pointing at the last

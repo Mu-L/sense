@@ -118,7 +118,7 @@ func TestEachDeclaredExecutorResolvesToItsImplementation(t *testing.T) {
 
 // A runtime that is installed but not running fails at spawn, which costs the
 // arm and reads in a score exactly like a model with nothing to say. It is
-// asked before a campaign instead.
+// asked before a cell instead.
 func TestAContainerRuntimeThatCannotStartAnythingIsRefusedBeforeARunIsSpent(t *testing.T) {
 	for _, tc := range []struct{ what, runtime string }{
 		{"no runtime declared at all", ""},

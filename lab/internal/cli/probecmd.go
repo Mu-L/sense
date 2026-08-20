@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/luuuc/sense/lab/internal/budget"
 	"github.com/luuuc/sense/lab/internal/catalog"
 	"github.com/luuuc/sense/lab/internal/isolate"
 	"github.com/luuuc/sense/lab/internal/probe"
@@ -27,6 +29,7 @@ type probeFlags struct {
 	repo     string
 	checkout string
 	out      string
+	runs     string
 	agent    string
 	model    string
 	senseBin string
@@ -42,6 +45,7 @@ func parseProbeFlags(args []string, stderr io.Writer) (probeFlags, error) {
 	fs.StringVar(&f.repo, "repo", "", "catalog repo id to run against (required)")
 	fs.StringVar(&f.checkout, "checkout", "", "repository the worktrees are taken from (required)")
 	fs.StringVar(&f.out, "out", "", "cell directory to create, holding one run per arm (required)")
+	fs.StringVar(&f.runs, "runs", defaultRuns, "the root the repositories' run trees live under; the spend ceiling is read from this repository's")
 	fs.StringVar(&f.agent, "agent", "", "catalog agent id to drive (required)")
 	fs.StringVar(&f.model, "model", "", "catalog model id (required)")
 	fs.StringVar(&f.senseBin, "sense", "sense", "the Sense binary under test")
@@ -83,6 +87,14 @@ func probeCell(ctx context.Context, args []string, stdout, stderr io.Writer) int
 	}
 
 	s, j, err := probeSpec(ctx, f)
+	if errors.Is(err, budget.ErrCeiling) {
+		// The ceiling refused. That is the instrument working, so it answers
+		// with the refusal code rather than the error code: "this repository
+		// has spent its budget" and "the binary broke" send whoever is reading
+		// to opposite places.
+		_, _ = fmt.Fprintf(stderr, "sense-lab probe: %v\n", err)
+		return exitRefused
+	}
 	if err != nil {
 		_, _ = fmt.Fprintf(stderr, "sense-lab probe: %v\n", err)
 		return exitError
@@ -109,6 +121,26 @@ func probeCell(ctx context.Context, args []string, stdout, stderr io.Writer) int
 		return exitRefused
 	}
 	return exitOK
+}
+
+// underCeiling refuses a cell once the repository has spent its lifetime's
+// paid runs.
+//
+// This is the only command that spends, so it is the only place the ceiling can
+// bite. It is read from the tree on every call rather than counted in memory: a
+// ceiling held in a variable resets when the process does, and a loop resumed
+// after a crash would spend the whole budget a second time with nothing looking
+// wrong.
+//
+// There is no flag to raise it. A ceiling with an override is a ceiling that
+// gets passed at the moment somebody believes the next run will work, and that
+// belief is what it exists to bound.
+func underCeiling(tree string) error {
+	spend, err := budget.Read(tree)
+	if err != nil {
+		return err
+	}
+	return budget.Ceiling(spend, defaultCeiling)
 }
 
 // labBinary is this binary, which the capture shim is spawned through.
@@ -245,6 +277,9 @@ func probeSpec(ctx context.Context, f probeFlags) (probe.Spec, probeJob, error) 
 	}
 	j, err := resolveJob(c, runFlags{repo: f.repo, agent: f.agent, model: f.model})
 	if err != nil {
+		return probe.Spec{}, probeJob{}, err
+	}
+	if err := underCeiling(filepath.Join(f.runs, j.repo.ID)); err != nil {
 		return probe.Spec{}, probeJob{}, err
 	}
 	set, err := scenario.LoadPath(f.scenario)

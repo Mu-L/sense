@@ -62,7 +62,7 @@ you: say so and stop. Diagnosis belongs to the report phase.
 
 The check that exists because of a specific failure is number 5: a credited gold dependent whose
 identifier never appeared in the transcript, credited on a basename that matched something else.
-Every check here is one that a recorded campaign needed.
+Every check here is one that a recorded run needed.
 
 ## Artifact
 

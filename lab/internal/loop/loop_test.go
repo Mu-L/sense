@@ -300,12 +300,12 @@ func TestAnUnsetManualNeverStops(t *testing.T) {
 	var m loop.Manual
 	for _, p := range phase.Graph {
 		if _, halted := m.Halt(p.Name); halted {
-			t.Errorf("a campaign with no --manual stopped at %s", p.Name)
+			t.Errorf("a loop with no --manual stopped at %s", p.Name)
 		}
 	}
 }
 
-// A typo stops the campaign at the flag rather than never stopping it at all,
+// A typo stops the loop at the flag rather than never stopping it at all,
 // which is the failure mode of a stop-at that silently matches nothing.
 func TestManualRefusesAPhaseTheGraphDoesNotDeclare(t *testing.T) {
 	if _, err := loop.NewManual("minibensh"); err == nil {

@@ -94,7 +94,7 @@ func commit(t *testing.T, dir, name string) {
 
 // admission is one run of the command, with the paths a test cares about.
 type admission struct {
-	config, campaign, checkouts, sense string
+	config, runs, checkouts, sense string
 }
 
 func newAdmission(t *testing.T, status string) admission {
@@ -111,7 +111,7 @@ func newAdmission(t *testing.T, status string) admission {
 	}
 	return admission{
 		config:    config,
-		campaign:  filepath.Join(root, "campaign"),
+		runs:      filepath.Join(root, "runs"),
 		checkouts: filepath.Join(root, "checkouts"),
 		sense:     senseStandIn(t, status),
 	}
@@ -119,13 +119,13 @@ func newAdmission(t *testing.T, status string) admission {
 
 func (a admission) run(t *testing.T, name string) (int, string, string) {
 	t.Helper()
-	return dispatch(t, "repo", "-config", a.config, "-campaign", a.campaign,
+	return dispatch(t, "repo", "-config", a.config, "-runs", a.runs,
 		"-checkouts", a.checkouts, "-sense", a.sense, name)
 }
 
 func (a admission) repoFile(id string) string { return filepath.Join(a.config, "repos", id+".json") }
 func (a admission) artifact(id string) string {
-	return filepath.Join(a.campaign, id, "index", "index.json")
+	return filepath.Join(a.runs, id, "index", "index.json")
 }
 
 // The whole point of the command: a repository nobody declared goes from a name
@@ -338,16 +338,15 @@ func TestAdmissionRefusesWhatItCannotResolve(t *testing.T) {
 	}
 }
 
-func TestAdmissionNeedsOneNameAndACampaign(t *testing.T) {
+func TestAdmissionNeedsExactlyOneName(t *testing.T) {
 	a := newAdmission(t, admissionStatus)
 
 	for _, tc := range []struct {
 		name string
 		args []string
 	}{
-		{"no repository named", []string{"repo", "-config", a.config, "-campaign", a.campaign}},
-		{"two repositories named", []string{"repo", "-config", a.config, "-campaign", a.campaign, "a", "b"}},
-		{"no campaign", []string{"repo", "-config", a.config, "owner/name"}},
+		{"no repository named", []string{"repo", "-config", a.config, "-runs", a.runs}},
+		{"two repositories named", []string{"repo", "-config", a.config, "-runs", a.runs, "a", "b"}},
 		{"an unknown flag", []string{"repo", "-nope"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -361,7 +360,7 @@ func TestAdmissionNeedsOneNameAndACampaign(t *testing.T) {
 func TestAdmissionCannotRunWithoutAConfigDirectory(t *testing.T) {
 	absent := filepath.Join(t.TempDir(), "no-such-config")
 
-	code, _, stderr := dispatch(t, "repo", "-config", absent, "-campaign", t.TempDir(), "owner/name")
+	code, _, stderr := dispatch(t, "repo", "-config", absent, "-runs", t.TempDir(), "owner/name")
 
 	if code == 0 || !strings.Contains(stderr, "no config directory") {
 		t.Errorf("exit = %d, stderr = %q; want it to name the missing config", code, stderr)
@@ -564,9 +563,9 @@ func TestTheExitCodeCarriesTheStanding(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			a, id := admitted(t)
-			tc.build(t, filepath.Join(a.campaign, id))
+			tc.build(t, filepath.Join(a.runs, id))
 
-			args := []string{"repo", "-config", a.config, "-campaign", a.campaign,
+			args := []string{"repo", "-config", a.config, "-runs", a.runs,
 				"-checkouts", a.checkouts, "-sense", a.sense}
 			if tc.show {
 				args = append(args, "-show")
@@ -590,7 +589,7 @@ func TestShowWritesNothing(t *testing.T) {
 	source, _ := sourceRepo(t)
 	a := newAdmission(t, admissionStatus)
 
-	code, stdout, stderr := dispatch(t, "repo", "-config", a.config, "-campaign", a.campaign,
+	code, stdout, stderr := dispatch(t, "repo", "-config", a.config, "-runs", a.runs,
 		"-checkouts", a.checkouts, "-sense", a.sense, "-show", source)
 
 	if code != 2 {
@@ -647,14 +646,14 @@ func attempt(t *testing.T, repoDir, body string) {
 // default one, which would be a repository at the start of its first cycle.
 func TestAPositionThatCannotBeReadIsReported(t *testing.T) {
 	a, id := admitted(t)
-	if err := os.RemoveAll(a.campaign); err != nil {
+	if err := os.RemoveAll(a.runs); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(a.campaign, []byte("in the way"), 0o644); err != nil {
+	if err := os.WriteFile(a.runs, []byte("in the way"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	code, stdout, _ := dispatch(t, "repo", "-config", a.config, "-campaign", a.campaign,
+	code, stdout, _ := dispatch(t, "repo", "-config", a.config, "-runs", a.runs,
 		"-checkouts", a.checkouts, "-sense", a.sense, id)
 
 	if code != 1 {

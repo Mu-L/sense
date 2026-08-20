@@ -145,7 +145,7 @@ func TestLabNeverImportsSenseInternals(t *testing.T) {
 }
 
 // No human gate exists in the per-repo phases, which means no interactive
-// prompt exists anywhere in the run path. A campaign runs unattended for hours;
+// prompt exists anywhere in the run path. The crank runs unattended for hours;
 // a phase that stopped to ask a question would hang until its wall killed it,
 // and the record would look like a session that could not finish at budget.
 //
@@ -171,7 +171,7 @@ func TestNoPhaseInTheRunPathPromptsForInput(t *testing.T) {
 				return true
 			}
 			if pkg, ok := sel.X.(*ast.Ident); ok && pkg.Name == "os" {
-				t.Errorf("%s reads os.Stdin; a campaign runs unattended and no phase may ask a human anything", path)
+				t.Errorf("%s reads os.Stdin; the crank runs unattended and no phase may ask a human anything", path)
 			}
 			return true
 		})

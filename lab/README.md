@@ -9,7 +9,7 @@ access and nothing else, so most of what is here exists to prove that. Read
 [`LAWS.md`](LAWS.md) before changing how anything is measured, and
 [`KILLERS.md`](KILLERS.md) before reporting a finding.
 
-**Nothing is shipped in `repos/`, `scenarios/` or `campaigns/`.** The
+**Nothing is shipped in `repos/`, `scenarios/` or `benches/`.** The
 repositories this instrument was built against were removed once it was
 finished: they were how it was crafted rather than what it is for. Each of those
 directories carries a README saying what goes in it.
@@ -38,8 +38,7 @@ Then, to bench one repository:
 **1. Admit the repository** — one command clones it, pins it and indexes it:
 
 ```bash
-./bin/sense-lab repo -campaign runs/campaigns/<key> -sense ./bin/sense \
-    discourse/discourse
+./bin/sense-lab repo -sense ./bin/sense discourse/discourse
 ```
 
 The name is a github handle, a url, a path to a clone you already have, or the
@@ -47,7 +46,7 @@ id of a repository already admitted. It prints what it resolved — the id, the
 url and the revision — before it writes anything, then clones under
 `runs/checkouts/`, records the revision the clone is actually at in
 `lab/repos/<id>.json`, and writes what the index holds to
-`<campaign>/<id>/index/index.json`:
+`runs/repos/<id>/index/index.json`:
 
 ```json
 {"id": "discourse", "url": "https://github.com/discourse/discourse.git",
@@ -81,7 +80,7 @@ either refusal, rather than spinning on any of them.
 owes, one per invocation:
 
 ```bash
-./bin/sense-lab repo -campaign runs/campaigns/<key> -sense ./bin/sense \
+./bin/sense-lab repo -sense ./bin/sense \
     -agent claude-code -model claude-opus-5 -until <id>
 ```
 
@@ -159,25 +158,32 @@ number may not be cited.
 `-group all` scores every group. Passing the checkout is what lets it say
 whether the citations resolve; without it, grounding reads `NOT VERIFIED`.
 
-## Running a campaign rather than a cell
+## Planning a repository's cells rather than one cell
 
-A campaign is `lab/campaigns/<key>/campaign.json`:
+A repository's bench is `lab/benches/<id>.json`:
 
 ```json
-{"key": "ruby-rails", "judge": "claude-opus-4-7",
- "subjects": ["untreated", "sense-main"], "repos": ["discourse"],
+{"repo": "discourse", "judge": "claude-opus-4-7",
+ "subjects": ["untreated", "sense-main"],
  "arms": [{"role": "headline", "model": "claude-opus-5", "runs": 2}]}
 ```
 
 ```bash
-./bin/sense-lab plan -campaign ruby-rails     # every cell, and every rejection with its reason
-./bin/sense-lab status -campaign runs/campaigns/ruby-rails
+./bin/sense-lab plan -repo discourse     # every cell, and every rejection with its reason
+./bin/sense-lab status                   # every repository, from its own run tree
 ```
 
 `plan` refuses impossible combinations before anything spawns — a model no
 agent can drive, a subject that needs MCP on a tool that has none, an executor
-that preserves no auth mode for a model that needs one. `status` derives where a
-campaign stands from its run tree rather than from a state file anybody edits.
+that preserves no auth mode for a model that needs one. `status` derives where
+each repository stands from its run tree rather than from a state file anybody
+edits.
+
+Everything is scoped to the repository: its run tree, its authoring cycles, its
+arms and its spend ceiling of 40 paid runs over its lifetime, which `probe`
+refuses to spend past. There is no container above it — a repository advances to
+a verdict on its own, and no second repository is authored while the first is
+mid-diagnosis.
 
 `gate` reads a pay decision as JSON on stdin and reports every rule that refuses
 it, not just the first.
@@ -195,7 +201,7 @@ Adding one is a file.
 | `repos/` | repository | url, pinned commit, languages, stack |
 | `executors/` | where a run happens | which auth modes survive into it, whether it isolates global config |
 | `scenarios/` | scenario | the question, the gold, the rubric |
-| `campaigns/` | campaign | subjects × repos × arms, and the judge |
+| `benches/` | repository | subjects × arms for that repository, and the judge |
 
 Each `agents/<id>/` and `subjects/<id>/` also carries a `README.md` of measured
 operational facts — what that tool actually does, dated and tied to a version.

@@ -1,6 +1,6 @@
 ---
 phase: handoff
-reads: campaign.json
+reads: attempts/
 writes: handoff.md
 emits: [AUTO]
 wall: 20m

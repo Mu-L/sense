@@ -10,20 +10,20 @@ import (
 	"github.com/luuuc/sense/lab/internal/phase"
 )
 
-// fixture is the committed campaign: three repositories, one of each shape a
+// fixture is the committed run trees: three repositories, one of each shape a
 // real one takes.
-const fixture = "testdata/campaign"
+const fixture = "testdata/runs"
 
-func read(t *testing.T, campaign, repo string) Position {
+func read(t *testing.T, runs, repo string) Position {
 	t.Helper()
-	p, err := Read(campaign, repo)
+	p, err := Read(runs, repo)
 	if err != nil {
 		t.Fatal(err)
 	}
 	return p
 }
 
-// The three shapes, read from the tree the jellyfin campaign's layout was copied
+// The three shapes, read from the tree the jellyfin layout was copied
 // from. Each is asserted whole rather than field by field across three tests,
 // because what matters is that one tree produces one coherent answer.
 func TestPositionIsReadFromTheCommittedTree(t *testing.T) {
@@ -112,8 +112,8 @@ func TestEveryRejectionIsCarriedWithTheTableThatProducedIt(t *testing.T) {
 // nobody opened does not move it. The tree says where a repository is; a record
 // says what was judged there.
 func TestTheDirectoriesDecideTheCycleAndTheRecordsDoNot(t *testing.T) {
-	campaign := t.TempDir()
-	repo := filepath.Join(campaign, "r")
+	runs := t.TempDir()
+	repo := filepath.Join(runs, "r")
 	writeArtifact(t, filepath.Join(repo, "index", "index.json"), "{}")
 	writeArtifact(t, filepath.Join(repo, "1", "author", "scenario.draft.yaml"), "name: r\n")
 	writeArtifact(t, filepath.Join(repo, "2", "author", "scenario.draft.yaml"), "name: r\n")
@@ -121,7 +121,7 @@ func TestTheDirectoriesDecideTheCycleAndTheRecordsDoNot(t *testing.T) {
 	// A verdict recorded for a cycle whose directory was never opened.
 	record(t, repo, Attempt{Cycle: 3, Phase: phase.Author, Verdict: phase.NoAnchor, Try: 1})
 
-	p := read(t, campaign, "r")
+	p := read(t, runs, "r")
 
 	if p.Cycle != 2 {
 		t.Errorf("cycle = %d, want the highest directory on disk", p.Cycle)
@@ -134,10 +134,10 @@ func TestTheDirectoriesDecideTheCycleAndTheRecordsDoNot(t *testing.T) {
 // A repository that has opened no cycle is in its first. Reporting cycle 0
 // would be a number no rule is written in: the ceiling counts from 1.
 func TestAFreshlyIndexedRepositoryIsInItsFirstCycle(t *testing.T) {
-	campaign := t.TempDir()
-	writeArtifact(t, filepath.Join(campaign, "r", "index", "index.json"), "{}")
+	runs := t.TempDir()
+	writeArtifact(t, filepath.Join(runs, "r", "index", "index.json"), "{}")
 
-	p := read(t, campaign, "r")
+	p := read(t, runs, "r")
 
 	if p.Cycle != 1 || p.Awaiting != phase.Author {
 		t.Errorf("cycle %d awaiting %s, want cycle 1 awaiting the author", p.Cycle, p.Awaiting)
@@ -150,10 +150,10 @@ func TestAFreshlyIndexedRepositoryIsInItsFirstCycle(t *testing.T) {
 // Nothing under a cycle can be believed before the repository is scanned, so an
 // unscanned one waits on its index whatever else is on disk.
 func TestAnUnscannedRepositoryWaitsOnItsIndex(t *testing.T) {
-	campaign := t.TempDir()
-	writeArtifact(t, filepath.Join(campaign, "r", "1", "author", "scenario.draft.yaml"), "name: r\n")
+	runs := t.TempDir()
+	writeArtifact(t, filepath.Join(runs, "r", "1", "author", "scenario.draft.yaml"), "name: r\n")
 
-	p := read(t, campaign, "r")
+	p := read(t, runs, "r")
 
 	if p.Indexed || p.Awaiting != phase.Index {
 		t.Errorf("indexed %v awaiting %s, want it waiting on the scan", p.Indexed, p.Awaiting)
@@ -183,8 +183,8 @@ func TestTheTwoRefusalsAreToldApart(t *testing.T) {
 		{"a usable verdict that wrote its artifact", phase.Draft, true, Ready},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			campaign := t.TempDir()
-			repo := filepath.Join(campaign, "r")
+			runs := t.TempDir()
+			repo := filepath.Join(runs, "r")
 			writeArtifact(t, filepath.Join(repo, "index", "index.json"), "{}")
 			if err := os.MkdirAll(filepath.Join(repo, "1"), 0o755); err != nil {
 				t.Fatal(err)
@@ -194,7 +194,7 @@ func TestTheTwoRefusalsAreToldApart(t *testing.T) {
 			}
 			record(t, repo, Attempt{Cycle: 1, Phase: phase.Author, Verdict: tc.verdict, Try: 1})
 
-			p := read(t, campaign, "r")
+			p := read(t, runs, "r")
 
 			if p.Standing != tc.want {
 				t.Errorf("standing = %s (%s), want %s", p.Standing, p.Because, tc.want)
@@ -206,12 +206,12 @@ func TestTheTwoRefusalsAreToldApart(t *testing.T) {
 // A repository on the board is finished, and it says so from the board on disk
 // rather than from the last thing anybody recorded about it.
 func TestARepositoryOnTheBoardIsFinished(t *testing.T) {
-	campaign := t.TempDir()
-	repo := filepath.Join(campaign, "r")
+	runs := t.TempDir()
+	repo := filepath.Join(runs, "r")
 	writeArtifact(t, filepath.Join(repo, "index", "index.json"), "{}")
 	writeArtifact(t, filepath.Join(repo, "1", "board", "board.md"), "# board\n")
 
-	p := read(t, campaign, "r")
+	p := read(t, runs, "r")
 
 	if p.Standing != Finished || p.Awaiting != phase.Done {
 		t.Errorf("standing = %s awaiting %s, want a finished repository", p.Standing, p.Awaiting)
@@ -224,14 +224,14 @@ func TestARepositoryOnTheBoardIsFinished(t *testing.T) {
 // A parked repository is parked whatever a later record says, because no
 // transition re-enters one: resuming is a human act.
 func TestParkingBeatsAnyVerdictRecordedAfterIt(t *testing.T) {
-	campaign := t.TempDir()
-	repo := filepath.Join(campaign, "r")
+	runs := t.TempDir()
+	repo := filepath.Join(runs, "r")
 	writeArtifact(t, filepath.Join(repo, "index", "index.json"), "{}")
 	writeArtifact(t, filepath.Join(repo, "1", "handoff", "handoff.md"), "# handoff\n")
 	writeArtifact(t, filepath.Join(repo, "1", "author", "scenario.draft.yaml"), "name: r\n")
 	record(t, repo, Attempt{Cycle: 1, Phase: phase.Author, Verdict: phase.Draft, Try: 1})
 
-	p := read(t, campaign, "r")
+	p := read(t, runs, "r")
 
 	if p.Standing != Parked {
 		t.Errorf("standing = %s, want %s", p.Standing, Parked)
@@ -241,13 +241,13 @@ func TestParkingBeatsAnyVerdictRecordedAfterIt(t *testing.T) {
 // An unreadable tree is reported rather than read as an empty position, which
 // would be a repository at the start of its first cycle.
 func TestAnUnreadableTreeIsAnError(t *testing.T) {
-	campaign := t.TempDir()
-	blocked := filepath.Join(campaign, "r")
+	runs := t.TempDir()
+	blocked := filepath.Join(runs, "r")
 	if err := os.WriteFile(blocked, []byte("not a directory"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := Read(campaign, "r"); err == nil {
+	if _, err := Read(runs, "r"); err == nil {
 		t.Fatal("a file where a repository should be read as a position")
 	}
 }
@@ -306,14 +306,14 @@ func record(t *testing.T, repoDir string, a Attempt) {
 // the position has to know already — otherwise a crank reads "ready" and opens
 // a seventh authoring cycle.
 func TestTheCeilingParksBeforeTheHandoffIsWritten(t *testing.T) {
-	campaign := t.TempDir()
-	repo := filepath.Join(campaign, "r")
+	runs := t.TempDir()
+	repo := filepath.Join(runs, "r")
 	writeArtifact(t, filepath.Join(repo, "index", "index.json"), "{}")
 	writeArtifact(t, filepath.Join(repo, strconv.Itoa(phase.AuthoringCeiling), "author", "scenario.draft.yaml"), "name: r\n")
 	record(t, repo, Attempt{Cycle: phase.AuthoringCeiling, Phase: phase.Author, Verdict: phase.NoAnchor, Try: 1,
 		Table: "nothing in this repository carries the question"})
 
-	p := read(t, campaign, "r")
+	p := read(t, runs, "r")
 
 	if p.Standing != Parked || p.Awaiting != phase.Handoff {
 		t.Errorf("standing = %s awaiting %s, want it parked at the handoff", p.Standing, p.Awaiting)
@@ -344,8 +344,8 @@ func TestACycleThatWroteEverythingAwaitsNothing(t *testing.T) {
 // A repository directory holds things that are not cycles, and this walk does
 // not rule on them.
 func TestWhatIsNotACycleDirectoryIsNotACycle(t *testing.T) {
-	campaign := t.TempDir()
-	repo := filepath.Join(campaign, "r")
+	runs := t.TempDir()
+	repo := filepath.Join(runs, "r")
 	writeArtifact(t, filepath.Join(repo, "index", "index.json"), "{}")
 	// A file named like a cycle, which is what the directory check is for: a
 	// name that parses as a number is not a cycle unless it is a directory.
@@ -353,7 +353,7 @@ func TestWhatIsNotACycleDirectoryIsNotACycle(t *testing.T) {
 	writeArtifact(t, filepath.Join(repo, "notes.md"), "# by hand\n")
 	writeArtifact(t, filepath.Join(repo, "2", "author", "scenario.draft.yaml"), "name: r\n")
 
-	if p := read(t, campaign, "r"); p.Cycle != 2 {
+	if p := read(t, runs, "r"); p.Cycle != 2 {
 		t.Errorf("cycle = %d, want the one numbered directory", p.Cycle)
 	}
 }
@@ -362,15 +362,15 @@ func TestWhatIsNotACycleDirectoryIsNotACycle(t *testing.T) {
 // died leaves its directory behind, so the check has to be for the artifact the
 // phase owed and not for the directory it ran in.
 func TestAPhaseDirectoryWithoutItsArtifactIsNotAFinishedPhase(t *testing.T) {
-	campaign := t.TempDir()
-	repo := filepath.Join(campaign, "r")
+	runs := t.TempDir()
+	repo := filepath.Join(runs, "r")
 	writeArtifact(t, filepath.Join(repo, "index", "index.json"), "{}")
 	// What an agent that started and died leaves: the directory, and something
 	// in it that is not what it owed.
 	writeArtifact(t, filepath.Join(repo, "1", "author", "notes.txt"), "half a thought\n")
 	record(t, repo, Attempt{Cycle: 1, Phase: phase.Author, Verdict: phase.Draft, Try: 1})
 
-	p := read(t, campaign, "r")
+	p := read(t, runs, "r")
 
 	if p.Standing != Missing {
 		t.Errorf("standing = %s (%s), want %s: the phase wrote no scenario", p.Standing, p.Because, Missing)
@@ -408,14 +408,14 @@ func TestAnAttemptWithNoVerdictSaysHowItEnded(t *testing.T) {
 		{"what it wrote is not a verdict", Refused, "the verdict names another phase", "", Unusable, "another phase"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			campaign := t.TempDir()
-			repo := filepath.Join(campaign, "r")
+			runs := t.TempDir()
+			repo := filepath.Join(runs, "r")
 			writeArtifact(t, filepath.Join(repo, "index", "index.json"), "{}")
 			writeArtifact(t, filepath.Join(repo, "1", "author", "scenario.draft.yaml"), "name: r\n")
 			record(t, repo, Attempt{Cycle: 1, Phase: phase.Author, Try: 1,
 				Outcome: tc.outcome, Table: tc.table, Log: tc.log})
 
-			p := read(t, campaign, "r")
+			p := read(t, runs, "r")
 
 			if p.Standing != tc.want {
 				t.Errorf("standing = %s (%s), want %s", p.Standing, p.Because, tc.want)

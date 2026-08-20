@@ -79,12 +79,12 @@ is still out of the allowlist: a bench that only fails to destroy the operator's
 login by accident of another design decision is one refactor from destroying it.
 
 `claude setup-token` mints a one-year token for non-interactive use, and it is
-consumed through that same variable. It is held in reserve for a campaign that
+consumed through that same variable. It is held in reserve for a run that
 outlives an access token, not used as the default door.
 
 The provisioned credential deliberately carries no refresh token: a run that
 cannot refresh cannot rotate the operator's login, so no number of unattended
-cells can invalidate the host seat by succeeding. The cost is that a campaign
+cells can invalidate the host seat by succeeding. The cost is that a run
 outliving the access token re-provisions rather than running on.
 
 ## Telling an arm its wall

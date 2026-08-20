@@ -1,6 +1,7 @@
 package budget_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,7 +45,7 @@ func TestSpendIsEveryBenchRunInTheTree(t *testing.T) {
 }
 
 // A mini-bench and a validation are unscored and unpaid by law. Counting them
-// would refuse a campaign for the runs it does in order to avoid spending.
+// would refuse a repository for the runs it does in order to avoid spending.
 func TestUnpaidPhasesAreNotSpend(t *testing.T) {
 	camp := t.TempDir()
 	paidRun(t, filepath.Join(camp, "mastodon", "1", "minibench", "cell-0", "sense"))
@@ -111,7 +112,7 @@ func TestSpendIsTheSameAfterARestartAndIsNeverDoubleCounted(t *testing.T) {
 		t.Fatal(err)
 	}
 	// A restart is a second Read with nothing in between, which is exactly what
-	// a resumed campaign does.
+	// a resumed loop does.
 	after, err := budget.Read(camp)
 	if err != nil {
 		t.Fatal(err)
@@ -131,14 +132,14 @@ func TestSpendIsTheSameAfterARestartAndIsNeverDoubleCounted(t *testing.T) {
 }
 
 // The ceiling is checked before the first run as well as after the hundredth,
-// so a campaign with nothing on disk is a spend of zero rather than a failure.
-func TestACampaignThatHasRunNothingHasSpentNothing(t *testing.T) {
+// so a repository with nothing on disk is a spend of zero rather than a failure.
+func TestARepositoryThatHasRunNothingHasSpentNothing(t *testing.T) {
 	s, err := budget.Read(filepath.Join(t.TempDir(), "never-started"))
 	if err != nil {
-		t.Fatalf("an unstarted campaign was an error: %v", err)
+		t.Fatalf("an unstarted repository was an error: %v", err)
 	}
 	if s.Runs() != 0 {
-		t.Errorf("an unstarted campaign has spent %d", s.Runs())
+		t.Errorf("an unstarted repository has spent %d", s.Runs())
 	}
 	if s.String() != "0 paid runs" {
 		t.Errorf("summary reads %q", s.String())
@@ -147,6 +148,19 @@ func TestACampaignThatHasRunNothingHasSpentNothing(t *testing.T) {
 
 // It refuses rather than warns: a ceiling that warns is passed at the moment
 // someone believes the next run will work.
+// A refusal has to be tellable from a broken read: one is the instrument
+// working and the answer to the question that was asked, the other is a caller
+// that pointed at nothing.
+func TestARefusalIsIdentifiableAsOne(t *testing.T) {
+	s := budget.Spend{Recorded: []string{"a", "b"}}
+
+	err := budget.Ceiling(s, 2)
+
+	if !errors.Is(err, budget.ErrCeiling) {
+		t.Errorf("the refusal is %v, which no caller can tell from a failed read", err)
+	}
+}
+
 func TestTheCeilingRefusesAtItsLimitRatherThanAboveIt(t *testing.T) {
 	camp := t.TempDir()
 	for _, arm := range []string{"sense", "untreated"} {
@@ -168,7 +182,7 @@ func TestTheCeilingRefusesAtItsLimitRatherThanAboveIt(t *testing.T) {
 	}
 }
 
-func TestAnUnreadableCampaignTreeIsAnErrorRatherThanAZero(t *testing.T) {
+func TestAnUnreadableTreeIsAnErrorRatherThanAZero(t *testing.T) {
 	camp := t.TempDir()
 	locked := filepath.Join(camp, "bench")
 	if err := os.MkdirAll(locked, 0o755); err != nil {
@@ -180,6 +194,6 @@ func TestAnUnreadableCampaignTreeIsAnErrorRatherThanAZero(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chmod(locked, 0o755) })
 
 	if _, err := budget.Read(camp); err == nil {
-		t.Fatal("a campaign tree that could not be read reported a spend of zero")
+		t.Fatal("a tree that could not be read reported a spend of zero")
 	}
 }

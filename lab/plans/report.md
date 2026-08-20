@@ -78,7 +78,7 @@ diagnosis, what the numbers say and what it would take.
 
 ## Done when
 
-- Every arm the campaign declares appears in the report.
+- Every arm the repository's bench declares appears in the report.
 - Every claim is quoted output.
 - The discriminator delta is stated per run, not pooled, and compared to +0.50 in writing.
 - An arm that never routed is reported as a finding, in our own words, and not dressed as a model

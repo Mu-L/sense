@@ -42,7 +42,7 @@ for the baseline it is the win condition.
 3. **What the sense arm did with its tools.**
 
 4. **What it cited but was never returned, and where it fell back.** Scope the mine to THIS
-   validation cell; a campaign-wide root would blend in cells this scenario already replaced.
+   validation cell; a repository-wide root would blend in cells this scenario already replaced.
 
 5. **How the BASELINE assembled its answer** — the route, not the number.
 

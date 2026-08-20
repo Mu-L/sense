@@ -19,9 +19,8 @@ const banner = "Position is authoritative in the run tree. This page is a view o
 func Render(p Position) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "%s\n\n", banner)
-	fmt.Fprintf(&b, "campaign %s\n\n", p.Campaign)
+	fmt.Fprintf(&b, "run trees under %s\n\n", p.Root)
 	renderRepos(&b, p)
-	renderSpend(&b, p)
 	renderCells(&b, p)
 	renderResume(&b, p)
 	return b.String()
@@ -34,22 +33,21 @@ func renderRepos(b *strings.Builder, p Position) {
 		return
 	}
 	for _, r := range p.Repos {
-		state := fmt.Sprintf("cycle %d of %d, %d left before the ceiling", r.Cycle, phase.AuthoringCeiling, r.ToCeiling())
-		if r.Parked {
-			state = "PARKED at the ceiling, waiting for a human to re-enter it deliberately"
-		}
-		fmt.Fprintf(b, "  %-20s %s\n", r.Name, state)
+		fmt.Fprintf(b, "  %-20s cycle %d of %d, %d left before the ceiling\n",
+			r.Repo, r.Cycle, phase.AuthoringCeiling, r.ToCeiling())
+		// The standing in the words the position gives it, uppercased because
+		// the ones that are not READY are the lines a resuming session is here
+		// for: a park, a PAY nothing will spend, an agent that misbehaved and
+		// an agent that died all used to be invisible on this page.
+		fmt.Fprintf(b, "  %-20s %s: %s\n", "", strings.ToUpper(string(r.Standing)), r.Because)
 		fmt.Fprintf(b, "  %-20s reached %s, awaiting %s\n", "", orNone(r.Reached), orNone(r.Awaiting))
+		fmt.Fprintf(b, "  %-20s %s against a ceiling of %d, over this repository's lifetime\n",
+			"", r.Spend, p.Ceiling)
 		if len(r.Banked) > 0 {
 			fmt.Fprintf(b, "  %-20s banked on cycle %v\n", "", r.Banked)
 		}
 	}
 	b.WriteString("\n")
-}
-
-func renderSpend(b *strings.Builder, p Position) {
-	b.WriteString("SPEND\n")
-	fmt.Fprintf(b, "  %s against a ceiling of %d, per campaign over its lifetime\n\n", p.Spend, p.Ceiling)
 }
 
 // renderCells shows the uncomfortable rows first and never folds them into a
@@ -93,7 +91,7 @@ func renderResume(b *strings.Builder, p Position) {
 }
 
 // orNone names a phase, or says plainly that there is not one. An empty column
-// reads as a rendering bug rather than as a fact about the campaign.
+// reads as a rendering bug rather than as a fact about the repository.
 func orNone(name phase.Name) string {
 	if name == "" {
 		return "none"

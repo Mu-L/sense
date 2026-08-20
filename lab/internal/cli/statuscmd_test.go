@@ -15,7 +15,7 @@ func runStatus(t *testing.T, args ...string) (int, string, string) {
 	return code, stdout.String(), stderr.String()
 }
 
-func TestStatusReportsACampaignFromItsRunTree(t *testing.T) {
+func TestStatusReportsEveryRepositoryFromItsRunTree(t *testing.T) {
 	camp := t.TempDir()
 	at := filepath.Join(camp, "mastodon", "1", "author")
 	if err := os.MkdirAll(at, 0o755); err != nil {
@@ -25,26 +25,28 @@ func TestStatusReportsACampaignFromItsRunTree(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	code, stdout, stderr := runStatus(t, "-campaign", camp)
+	code, stdout, stderr := runStatus(t, "-runs", camp)
 	if code != exitOK {
 		t.Fatalf("exit %d: %s", code, stderr)
 	}
-	for _, want := range []string{"authoritative", "mastodon", "LOOP POSITION", "SPEND", "RESUME"} {
+	for _, want := range []string{"authoritative", "mastodon", "LOOP POSITION", "ceiling of 40", "RESUME"} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("the page does not carry %q:\n%s", want, stdout)
 		}
 	}
 }
 
-// A status with no campaign would have to guess which tree it is reporting on,
-// and a page about the wrong campaign is worse than no page.
-func TestStatusRefusesWithoutACampaign(t *testing.T) {
-	code, _, stderr := runStatus(t)
-	if code != exitUsage {
-		t.Errorf("exit %d, want a usage error", code)
+// Where the run trees live is not a decision anybody makes per invocation, so
+// the command answers without being told. A root that is not there yet reports
+// an empty page rather than an error: asking before anything has run is a fair
+// question with a short answer.
+func TestStatusReportsTheDefaultRootWithoutBeingTold(t *testing.T) {
+	code, stdout, stderr := runStatus(t)
+	if code != exitOK {
+		t.Fatalf("exit %d: %s", code, stderr)
 	}
-	if !strings.Contains(stderr, "-campaign") {
-		t.Errorf("the refusal does not name the missing flag: %q", stderr)
+	if !strings.Contains(stdout, filepath.Join("runs", "repos")) {
+		t.Errorf("the page does not name the root it reported on:\n%s", stdout)
 	}
 }
 
@@ -59,7 +61,7 @@ func TestStatusReportsAnUnreadableTreeAsAnError(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(locked, 0o755) })
 
-	code, _, stderr := runStatus(t, "-campaign", camp)
+	code, _, stderr := runStatus(t, "-runs", camp)
 	if code != exitError {
 		t.Errorf("exit %d, want an error", code)
 	}
@@ -69,7 +71,7 @@ func TestStatusReportsAnUnreadableTreeAsAnError(t *testing.T) {
 }
 
 func TestStatusRejectsAnUnknownFlag(t *testing.T) {
-	if code, _, _ := runStatus(t, "-campaign", t.TempDir(), "-watch"); code != exitUsage {
+	if code, _, _ := runStatus(t, "-runs", t.TempDir(), "-watch"); code != exitUsage {
 		t.Errorf("exit %d, want a usage error: there is no watch mode", code)
 	}
 }
@@ -89,5 +91,14 @@ func TestNothingInTheLabParsesTheRenderedPage(t *testing.T) {
 					f.path)
 			}
 		}
+	}
+}
+
+// The page and the refusal read one constant. A page stating a ceiling that
+// nothing enforces is a number in front of a person that nobody is holding, so
+// there is no flag to move it.
+func TestTheCeilingOnThePageIsTheOneProbeRefusesAt(t *testing.T) {
+	if code, _, stderr := runStatus(t, "-runs", t.TempDir(), "-ceiling", "7"); code != exitUsage {
+		t.Errorf("exit %d, want a usage error: the ceiling is not a flag (%s)", code, stderr)
 	}
 }

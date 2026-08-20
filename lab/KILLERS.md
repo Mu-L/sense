@@ -9,7 +9,7 @@ ledger entry — name the check that would kill it and RUN it.** Run, not consid
 
 | killer | the question | precedent |
 |---|---|---|
-| **confound** | does X co-vary with campaign, size, model or date? cross-tab it | a "declared-family law" was the VERTICAL split; chatwoot scored 0.09 and redmine 0.77 running the same prompt |
+| **confound** | does X co-vary with repository, size, model or date? cross-tab it | a "declared-family law" was the VERTICAL split; chatwoot scored 0.09 and redmine 0.77 running the same prompt |
 | **per-unit** | does the aggregate hold per row? | castability separated the repositories cleanly and predicted the OPPOSITE per row |
 | **arithmetic** | is it mechanically possible, or mechanically necessary? | `delta = sense − base` and `sense ≤ 1.00`, so `+0.50` REQUIRES `base ≤ 0.50`: ten of twenty paid cells were dead before they ran |
 | **negative space** | what did I NOT search? | `\.Permission = ` misses `\.Permission, err = `: a finding reported as "written in exactly ONE place" was wrong |

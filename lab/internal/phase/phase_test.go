@@ -223,7 +223,7 @@ func TestNoVerdictNamesAPhase(t *testing.T) {
 	}
 }
 
-// A verdict with nowhere to go is a phase that stalls a campaign at three in the
+// A verdict with nowhere to go is a phase that stalls the loop at three in the
 // morning, and it is only discoverable by emitting it.
 func TestEveryVerdictOfEveryPhaseRoutesSomewhereDeclared(t *testing.T) {
 	for _, p := range phase.Graph {

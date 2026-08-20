@@ -298,7 +298,7 @@ func TestAStatusThatCannotBeReadIsAFailure(t *testing.T) {
 }
 
 func TestWriteMakesThePhaseDirectoryAndLeavesReadableJSON(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "campaign", "jellyfin", "index", "index.json")
+	path := filepath.Join(t.TempDir(), "runs", "jellyfin", "index", "index.json")
 
 	if err := Write(path, scanned(t, realStatus)); err != nil {
 		t.Fatal(err)

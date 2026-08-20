@@ -26,8 +26,8 @@ func planCatalog(t *testing.T) string {
 		"executors/isolated-home.json": `{"id":"isolated-home","preserves_auth":["api_key"],
 		  "isolates_global_config":true}`,
 		"executors/local.json": `{"id":"local","preserves_auth":["api_key"],"isolates_global_config":false}`,
-		"campaigns/c/campaign.json": `{"key":"c","judge":"judge","subjects":["untreated","sense"],
-		  "repos":["r1"],"arms":[{"role":"headline","model":"m1","runs":2}]}`,
+		"benches/r1.json": `{"repo":"r1","judge":"judge","subjects":["untreated","sense"],
+		  "arms":[{"role":"headline","model":"m1","runs":2}]}`,
 	} {
 		full := filepath.Join(dir, path)
 		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
@@ -41,14 +41,14 @@ func planCatalog(t *testing.T) string {
 }
 
 func TestPlanPrintsWhatWouldRun(t *testing.T) {
-	code, stdout, stderr := dispatch(t, "plan", "-config", planCatalog(t), "-campaign", "c")
+	code, stdout, stderr := dispatch(t, "plan", "-config", planCatalog(t), "-repo", "r1")
 
 	if code != 0 {
 		t.Fatalf("exit = %d (stderr: %s)", code, stderr)
 	}
 	for _, want := range []string{
-		"campaign c",
-		"judge    judge (pinned, not an arm)",
+		"repo  r1",
+		"judge judge (pinned, not an arm)",
 		"WILL RUN: 1 cells, 4 sessions", // one repo, one arm, two subjects
 		"headline     r1 / untreated / tool / m1 / isolated-home / api_key x2",
 		"headline     r1 / sense / tool / m1 / isolated-home / api_key x2",
@@ -72,7 +72,7 @@ func TestPlanPrintsEveryRejectionWithItsReason(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	code, stdout, _ := dispatch(t, "plan", "-config", dir, "-campaign", "c")
+	code, stdout, _ := dispatch(t, "plan", "-config", dir, "-repo", "r1")
 
 	// Its own code: a caller must not proceed on a partial matrix, but "your
 	// config is broken" and "part of your matrix cannot run" are opposite
@@ -122,10 +122,10 @@ func TestADeliberatelyBrokenCombinationPlansNothingForThatArm(t *testing.T) {
 	write("models/m1.json", `{"id":"m1","provider":"acme","aliases":[],
 	  "available_under":["api_key"],"agents":["lonely"]}`)
 
-	code, stdout, _ := dispatch(t, "plan", "-config", dir, "-campaign", "c")
+	code, stdout, _ := dispatch(t, "plan", "-config", dir, "-repo", "r1")
 
 	if code == 0 {
-		t.Error("exit = 0 for a campaign nothing in which can run")
+		t.Error("exit = 0 for a bench nothing in which can run")
 	}
 	if !strings.Contains(stdout, "WILL RUN: 0 cells") {
 		t.Errorf("something was planned anyway:\n%s", stdout)
@@ -157,7 +157,7 @@ func TestOneRejectionCannotBeReachedThroughAValidCatalog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	code, stdout, stderr := dispatch(t, "plan", "-config", dir, "-campaign", "c")
+	code, stdout, stderr := dispatch(t, "plan", "-config", dir, "-repo", "r1")
 
 	if code == 0 {
 		t.Error("a model nothing can authenticate to was accepted")
@@ -170,7 +170,7 @@ func TestOneRejectionCannotBeReachedThroughAValidCatalog(t *testing.T) {
 	}
 }
 
-// Adding an arm is one line in the campaign and one model file. Nothing else:
+// Adding an arm is one line in the bench and one model file. Nothing else:
 // no dispatch to edit, no prefix matching to extend. That is the whole point of
 // the catalog, and it is what failed when a runner rewrote an arm's id into
 // something that did not exist.
@@ -183,8 +183,8 @@ func TestAddingAnArmIsOneFileAndOneLine(t *testing.T) {
 		0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "campaigns", "c", "campaign.json"),
-		[]byte(`{"key":"c","judge":"judge","subjects":["untreated","sense"],"repos":["r1"],
+	if err := os.WriteFile(filepath.Join(dir, "benches", "r1.json"),
+		[]byte(`{"repo":"r1","judge":"judge","subjects":["untreated","sense"],
 		  "arms":[{"role":"headline","model":"m1","runs":2},{"role":"confirmation","model":"m2","runs":2}]}`),
 		0o644); err != nil {
 		t.Fatal(err)
@@ -225,11 +225,11 @@ func TestAnArmOnANewToolAlsoNeedsEverySubjectToAllowThatTool(t *testing.T) {
 	  "headless_args":["-p"],"env":[],"supports_mcp":true,"auth_modes":["api_key"]}`)
 	write("models/m2.json", `{"id":"m2","provider":"acme","aliases":[],
 	  "available_under":["api_key"],"agents":["newtool"]}`)
-	write("campaigns/c/campaign.json", `{"key":"c","judge":"judge","subjects":["untreated","sense"],
-	  "repos":["r1"],"arms":[{"role":"headline","model":"m1","runs":2},
+	write("benches/r1.json", `{"repo":"r1","judge":"judge","subjects":["untreated","sense"],
+	  "arms":[{"role":"headline","model":"m1","runs":2},
 	  {"role":"confirmation","model":"m2","runs":2}]}`)
 
-	code, stdout, _ := dispatch(t, "plan", "-config", dir, "-campaign", "c")
+	code, stdout, _ := dispatch(t, "plan", "-config", dir, "-repo", "r1")
 
 	if code != 5 {
 		t.Errorf("exit = %d, want 5", code)
@@ -245,7 +245,7 @@ func TestAnArmOnANewToolAlsoNeedsEverySubjectToAllowThatTool(t *testing.T) {
 
 func planned(t *testing.T, dir string) string {
 	t.Helper()
-	code, stdout, stderr := dispatch(t, "plan", "-config", dir, "-campaign", "c")
+	code, stdout, stderr := dispatch(t, "plan", "-config", dir, "-repo", "r1")
 	if code != 0 {
 		t.Fatalf("plan exit = %d (stderr: %s)", code, stderr)
 	}
@@ -261,18 +261,18 @@ func TestPlanRejectsWhatItCannotRead(t *testing.T) {
 		want     string
 		wantCode int
 	}{
-		{"no campaign named", []string{"-config", dir}, "-campaign is required", 2},
-		{"an unknown flag", []string{"-config", dir, "-campaign", "c", "-arm", "x"},
+		{"no repository named", []string{"-config", dir}, "-repo is required", 2},
+		{"an unknown flag", []string{"-config", dir, "-repo", "r1", "-arm", "x"},
 			"flag provided but not defined", 2},
-		{"a campaign that does not exist", []string{"-config", dir, "-campaign", "nope"},
-			"read campaign", 1},
-		{"no config directory", []string{"-config", filepath.Join(t.TempDir(), "gone"), "-campaign", "c"},
+		{"a repository with no bench", []string{"-config", dir, "-repo", "nope"},
+			"read bench", 1},
+		{"no config directory", []string{"-config", filepath.Join(t.TempDir(), "gone"), "-repo", "r1"},
 			"no config directory", 1},
-		{"a campaign that is malformed rather than unsatisfiable", []string{
-			"-config", malformedCampaign(t), "-campaign", "c"},
+		{"a bench that is malformed rather than unsatisfiable", []string{
+			"-config", malformedBench(t), "-repo", "r1"},
 			"has 2 headline arms", 1},
-		{"a campaign naming a subject twice", []string{
-			"-config", duplicateSubject(t), "-campaign", "c"},
+		{"a bench naming a subject twice", []string{
+			"-config", duplicateSubject(t), "-repo", "r1"},
 			`names subject "untreated" twice; a duplicated arm is not a pair`, 1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -288,16 +288,14 @@ func TestPlanRejectsWhatItCannotRead(t *testing.T) {
 	}
 }
 
-// A campaign file whose key disagrees with its directory is ambiguous about
-// which campaign it is, and every later artifact is keyed on one of the two.
-// malformedCampaign is a config directory whose campaign cannot be read as a
-// campaign at all. That is a different answer from a campaign whose jobs cannot
-// run: one sends you to fix the campaign file, the other to fix the catalog.
-func malformedCampaign(t *testing.T) string {
+// malformedBench is a config directory whose bench cannot be read as a bench at
+// all. That is a different answer from a bench whose jobs cannot run: one sends
+// you to fix the bench file, the other to fix the catalog.
+func malformedBench(t *testing.T) string {
 	t.Helper()
 	dir := planCatalog(t)
-	if err := os.WriteFile(filepath.Join(dir, "campaigns", "c", "campaign.json"),
-		[]byte(`{"key":"c","judge":"judge","subjects":["untreated"],"repos":["r1"],
+	if err := os.WriteFile(filepath.Join(dir, "benches", "r1.json"),
+		[]byte(`{"repo":"r1","judge":"judge","subjects":["untreated"],
 		  "arms":[{"role":"headline","model":"m1","runs":2},{"role":"headline","model":"judge","runs":2}]}`),
 		0o644); err != nil {
 		t.Fatal(err)
@@ -310,43 +308,46 @@ func malformedCampaign(t *testing.T) string {
 func duplicateSubject(t *testing.T) string {
 	t.Helper()
 	dir := planCatalog(t)
-	if err := os.WriteFile(filepath.Join(dir, "campaigns", "c", "campaign.json"),
-		[]byte(`{"key":"c","judge":"judge","subjects":["untreated","untreated"],"repos":["r1"],
+	if err := os.WriteFile(filepath.Join(dir, "benches", "r1.json"),
+		[]byte(`{"repo":"r1","judge":"judge","subjects":["untreated","untreated"],
 		  "arms":[{"role":"headline","model":"m1","runs":2}]}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return dir
 }
 
-func TestACampaignKeyMustMatchItsDirectory(t *testing.T) {
+// A bench file that names a different repository than the one it is filed
+// under is ambiguous about which repository it measures, and every later
+// artifact is keyed on one of the two.
+func TestABenchMustNameTheRepositoryItIsFiledUnder(t *testing.T) {
 	dir := planCatalog(t)
-	if err := os.WriteFile(filepath.Join(dir, "campaigns", "c", "campaign.json"),
-		[]byte(`{"key":"other","judge":"judge","subjects":["untreated"],"repos":["r1"],
+	if err := os.WriteFile(filepath.Join(dir, "benches", "r1.json"),
+		[]byte(`{"repo":"other","judge":"judge","subjects":["untreated"],
 		  "arms":[{"role":"headline","model":"m1","runs":2}]}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	code, _, stderr := dispatch(t, "plan", "-config", dir, "-campaign", "c")
+	code, _, stderr := dispatch(t, "plan", "-config", dir, "-repo", "r1")
 
 	if code == 0 {
-		t.Error("a mismatched campaign key was accepted")
+		t.Error("a bench naming another repository was accepted")
 	}
-	if !strings.Contains(stderr, `declares key "other" but lives under "c"`) {
+	if !strings.Contains(stderr, `declares repo "other" but is the bench for "r1"`) {
 		t.Errorf("stderr = %q", stderr)
 	}
 }
 
-// A typo'd key in a campaign file is a setting that looks applied and is not,
-// for the same reason it is in the catalog.
-func TestAnUnknownFieldInACampaignIsRefused(t *testing.T) {
+// A typo'd key in a bench file is a setting that looks applied and is not, for
+// the same reason it is in the catalog.
+func TestAnUnknownFieldInABenchIsRefused(t *testing.T) {
 	dir := planCatalog(t)
-	if err := os.WriteFile(filepath.Join(dir, "campaigns", "c", "campaign.json"),
-		[]byte(`{"key":"c","judge":"judge","subjects":["untreated"],"repos":["r1"],"wall":"8m",
+	if err := os.WriteFile(filepath.Join(dir, "benches", "r1.json"),
+		[]byte(`{"repo":"r1","judge":"judge","subjects":["untreated"],"wall":"8m",
 		  "arms":[{"role":"headline","model":"m1","runs":2}]}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	code, _, stderr := dispatch(t, "plan", "-config", dir, "-campaign", "c")
+	code, _, stderr := dispatch(t, "plan", "-config", dir, "-repo", "r1")
 
 	if code == 0 || !strings.Contains(stderr, "unknown field") {
 		t.Errorf("exit = %d, stderr = %q", code, stderr)
@@ -366,7 +367,7 @@ func TestPlanHelpIsNotReportedAsAnError(t *testing.T) {
 // model file declares it" for a name that a model file does declare — a false
 // statement aimed at exactly the person who just wrote the id in the other
 // form, which is the confusion that cost an arm in the first place.
-func TestACampaignMayNameAModelByItsAlias(t *testing.T) {
+func TestABenchMayNameAModelByItsAlias(t *testing.T) {
 	dir := planCatalog(t)
 	write := func(path, body string) {
 		t.Helper()
@@ -380,14 +381,14 @@ func TestACampaignMayNameAModelByItsAlias(t *testing.T) {
 	}
 	write("models/long.json", `{"id":"provider/long-model:675b","provider":"acme",
 	  "aliases":["long-model:675b"],"available_under":["api_key"],"agents":["tool"]}`)
-	// The campaign names the SHORT form.
-	write("campaigns/c/campaign.json", `{"key":"c","judge":"judge","subjects":["untreated","sense"],
-	  "repos":["r1"],"arms":[{"role":"headline","model":"long-model:675b","runs":2}]}`)
+	// The bench names the SHORT form.
+	write("benches/r1.json", `{"repo":"r1","judge":"judge","subjects":["untreated","sense"],
+	  "arms":[{"role":"headline","model":"long-model:675b","runs":2}]}`)
 
-	code, stdout, stderr := dispatch(t, "plan", "-config", dir, "-campaign", "c")
+	code, stdout, stderr := dispatch(t, "plan", "-config", dir, "-repo", "r1")
 
 	if code != 0 {
-		t.Fatalf("a campaign naming a model by its alias did not plan: %s", stderr)
+		t.Fatalf("a bench naming a model by its alias did not plan: %s", stderr)
 	}
 	// And the plan shows the canonical id, so one plan names one form.
 	if !strings.Contains(stdout, "provider/long-model:675b") {
