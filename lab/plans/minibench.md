@@ -23,9 +23,9 @@ You do not re-author. A routed `REQUESTION` sends the credit table back to the a
 which owns the rewrite.
 
 **Both arms are guaranteed to be MEASUREMENTS.** Run validity is mechanical, not a judgment: the
-runner classifies every run, retries a void arm once and parks the void one, and the phase halts
-rather than reaching you if a pair is still incomplete. So the three verdicts below are always
-issuable, and none of them is a comment on arm health.
+binary runs the pair before it spawns you, checks it, and halts the phase rather than reaching you
+when what came back cannot be compared. So the three verdicts below are always issuable, and none
+of them is a comment on arm health.
 
 If you are ever handed a void arm anyway, that is a defect in the binary: **write it down and
 STOP.** Do not invent a fourth verdict, and do not average a harness artifact into a number.
@@ -35,9 +35,10 @@ for the baseline it is the win condition.
 
 ## Run
 
-1. **How many runs are you reading, and which are valid.** The cell may hold one pair or two: a
-   baseline that landed near the bar is re-run once before you are spawned. Print that first and
-   take the numbers from it.
+1. **How many runs are you reading, and which are valid.** The cell is the one your prompt names
+   on its `cell:` line, and it holds one pair. A phase directory may hold more than one cell,
+   because an interrupted attempt leaves its own behind, and the ones you were not handed are not
+   yours to read. Print which cell you are on first and take the numbers from it.
 
    **The number you rule on is the MEAN over VALID runs of that arm, never run 1 alone.**
    Within-arm spread on one cell is 0.077 to 0.250 of the group — one to three gold rows — so a

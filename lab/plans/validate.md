@@ -22,9 +22,9 @@ repository. You do not diagnose a paid loss; a separate phase owns that. You do 
 harness.
 
 **Both arms are guaranteed to be MEASUREMENTS.** Run validity is mechanical, not a judgment: the
-runner classifies every run, retries a void arm once and parks the void one, and this phase halts
-rather than reaching you if a pair is still incomplete. So `PAY` and `DO-NOT-PAY` are always
-issuable and neither is a comment on arm health.
+binary runs the pair before it spawns you, checks it, and halts the phase rather than reaching you
+when what came back cannot be compared. So `PAY` and `DO-NOT-PAY` are always issuable and neither
+is a comment on arm health.
 
 If you are ever handed a void arm anyway, that is a defect in the binary: **write it down and
 STOP.** Never spend on a pair you cannot read.
@@ -34,7 +34,10 @@ for the baseline it is the win condition.
 
 ## Run
 
-1. **The credit table, both arms, per gold item.** This is your one mechanical input.
+1. **The credit table, both arms, per gold item.** This is your one mechanical input. The cell is
+   the one your prompt names on its `cell:` line. A phase directory may hold more than one,
+   because an interrupted attempt leaves its own behind, and the ones you were not handed are not
+   yours to read. Print which cell you are on first and take the numbers from it.
 
 2. **Arm health, before believing any floored number.** Wall clock against the wall, exit code,
    whether the arm was cut off. A cut arm produces a false loss.

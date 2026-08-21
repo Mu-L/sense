@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -11,9 +12,38 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luuuc/sense/lab/internal/crank"
 	"github.com/luuuc/sense/lab/internal/isolate"
+	"github.com/luuuc/sense/lab/internal/phase"
 	"github.com/luuuc/sense/lab/internal/position"
+	"github.com/luuuc/sense/lab/internal/probe"
 )
+
+// soundPair and voidPair state what the two arms a phase reads came out as,
+// without running any. The later call wins, so a test that wants a void pair
+// states one after the world is built.
+func soundPair(t *testing.T) *[]crank.Cell { return statedPair(t, "") }
+
+func voidPair(t *testing.T, why string) *[]crank.Cell { return statedPair(t, why) }
+
+func statedPair(t *testing.T, unsound string) *[]crank.Cell {
+	t.Helper()
+	var ran []crank.Cell
+	was := phaseProbe
+	phaseProbe = func(_ context.Context, _ repoFlags, c crank.Cell) (crank.Pair, error) {
+		ran = append(ran, c)
+		dir := filepath.Join(c.Dir, cellName)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return crank.Pair{}, err
+		}
+		if unsound != "" {
+			return crank.Pair{Dir: dir, Note: unsound}, nil
+		}
+		return crank.Pair{Sound: true, Dir: dir}, nil
+	}
+	t.Cleanup(func() { phaseProbe = was })
+	return &ran
+}
 
 // phaseAgent stands in for the agent a phase is run by. It does what a phase
 // agent does and nothing else: it reads where its artifact and its verdict
@@ -80,6 +110,11 @@ func newCrankWorld(t *testing.T, env ...string) crankWorld {
 	linkPlans(t, a.config)
 	// A host that holds a seat, stated rather than logged in: CI has none.
 	hostHolding(t, aSeatWithNoise(time.Hour), nil)
+	// The pair the mini-bench reads, stated rather than run. It is driven end
+	// to end in TestThePairAPhaseReadsRunsBothArms; a crank test that ran one
+	// would spawn two agents against a real checkout to assert something about
+	// routing.
+	soundPair(t)
 	for _, name := range isolate.Credentials() {
 		t.Setenv(name, "")
 	}
@@ -546,4 +581,175 @@ func quoted(t *testing.T, env []string) string {
 		return "[]"
 	}
 	return string(b)
+}
+
+// The pair a phase reads, driven end to end: one call produces both arms,
+// isolated, where the phase that reads them will look. This is the step the
+// crank was missing, so it is asserted on the arms on disk rather than on the
+// call that made them.
+func TestThePairAPhaseReadsRunsBothArms(t *testing.T) {
+	w := newProbeWorld(t)
+	dir := filepath.Join(t.TempDir(), "minibench")
+
+	got, err := liveProbe(context.Background(), repoFlags{
+		config: w.config, runs: w.runs, senseBin: w.senseBin, agent: "fake", model: "fake-model",
+	}, crank.Cell{Repo: "probe-repo", Cycle: 1, Phase: phase.Minibench,
+		Dir: dir, Scenario: w.scenario, Checkout: w.checkout})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.Sound {
+		t.Errorf("the pair is not a measurement: %s", got.Note)
+	}
+	if want := filepath.Join(dir, cellName); got.Dir != want {
+		t.Errorf("the pair landed in %s, want %s", got.Dir, want)
+	}
+	// Two arms on disk, in one cell, with the cell's own record beside them.
+	for _, rel := range []string{"sense", "baseline", "cell-meta.json"} {
+		if _, err := os.Stat(filepath.Join(got.Dir, rel)); err != nil {
+			t.Errorf("the cell is missing %s: %v", rel, err)
+		}
+	}
+}
+
+// A second pair lands beside the first. Two arms are created fresh or not at
+// all, so a name that is already taken is not re-used: the case that matters is
+// a cell interrupted between its arms, which leaves a directory naming a burned
+// run and would wedge the phase there for good.
+func TestASecondPairLandsBesideTheFirst(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, cellName), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := freeCell(dir)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(dir, cellName+"-2"); got != want {
+		t.Errorf("the next pair would land in %s, want %s", got, want)
+	}
+}
+
+// A tree that holds every name there is says so rather than writing over one.
+func TestAPhaseFullOfPairsRefusesAnother(t *testing.T) {
+	dir := t.TempDir()
+	for n := 1; n <= 99; n++ {
+		if err := os.MkdirAll(filepath.Join(dir, attemptDir(cellName, n)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if _, err := freeCell(dir); err == nil {
+		t.Error("a phase holding 99 pairs was handed a hundredth")
+	}
+}
+
+// What a void pair is recorded as: the checks that refused it, named. A record
+// saying only that the pair was void would send whoever reads it back to the
+// transcripts to find out which check fired.
+func TestAVoidPairIsRecordedWithTheChecksThatRefusedIt(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		report probe.Report
+		want   string
+	}{
+		{"a route the sense arm never got", probe.Report{SenseMissing: []string{".mcp.json"}}, ".mcp.json"},
+		{"the baseline reached one", probe.Report{BaselineReached: []string{"CLAUDE.md"}}, "CLAUDE.md"},
+		{"memory survived", probe.Report{MemoryReached: []string{"~/.claude"}}, "~/.claude"},
+		{"Sense in the baseline", probe.Report{BaselineUsed: []string{"sense_graph"}}, "sense_graph"},
+		{"the arms differ", probe.Report{Differences: []string{"budget"}}, "budget"},
+		{"the sense arm never used Sense", probe.Report{}, "never used Sense"},
+		{"no frames", probe.Report{}, "no MCP frames"},
+		{"the baseline left a capture", probe.Report{BaselineCaptured: true}, "left a capture"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := notSound(tc.report); !strings.Contains(got, tc.want) {
+				t.Errorf("notSound = %q, want it to name %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// The mini-bench judge is spawned on a pair, and on nothing else. A void pair
+// stops the loop with the reason recorded, which is the shape a binary defect
+// has to have: the plan promises its verdicts are always issuable, and they are
+// not issuable on arms that cannot be compared.
+func TestAVoidPairStopsTheLoopBeforeTheJudge(t *testing.T) {
+	w := newCrankWorld(t)
+	voidPair(t, "the baseline arm reached the sense server")
+
+	code, stdout, stderr := w.run(t, "-until")
+
+	if code != exitUnusable {
+		t.Fatalf("exit %d, want the loop stopped on a pair nobody may rule on: %s%s", code, stdout, stderr)
+	}
+	if !strings.Contains(stdout, "the baseline arm reached the sense server") {
+		t.Errorf("stdout = %q, want the check that refused the pair", stdout)
+	}
+	if _, err := os.Stat(filepath.Join(w.phaseDir("minibench"), "verdict.json")); err == nil {
+		t.Error("a judge ruled on a pair that is not a measurement")
+	}
+}
+
+// Where the pair lands: under the phase that reads it, in this cycle, beside
+// the environment and session of the attempt that read it.
+func TestThePairLandsUnderThePhaseThatReadsIt(t *testing.T) {
+	w := newCrankWorld(t)
+	ran := soundPair(t)
+
+	if code, stdout, stderr := w.run(t, "-until"); code != exitWaiting {
+		t.Fatalf("exit %d: %s%s", code, stdout, stderr)
+	}
+
+	// Two, not one: a cycle to the pay call passes both phases that judge a
+	// pair, and each reads the artifact the phase before it wrote.
+	if len(*ran) != 2 {
+		t.Fatalf("ran %d pairs over a whole cycle, want one per phase that reads one", len(*ran))
+	}
+	for i, want := range []struct{ dir, scenario string }{
+		{w.phaseDir("minibench"), filepath.Join(w.phaseDir("author"), "scenario.draft.yaml")},
+		{w.phaseDir("validate"), filepath.Join(w.phaseDir("expand"), "scenario.yaml")},
+	} {
+		if got := (*ran)[i]; got.Dir != want.dir {
+			t.Errorf("pair %d landed under %s, want %s", i+1, got.Dir, want.dir)
+		}
+		if got := (*ran)[i].Scenario; got != want.scenario {
+			t.Errorf("pair %d ran against %s, want %s", i+1, got, want.scenario)
+		}
+	}
+}
+
+// A cell that cannot be set up is reported rather than ruled on: the scenario
+// the phase before it was supposed to write is not there, or is not a scenario.
+func TestAPairThatCannotBeSetUpIsReported(t *testing.T) {
+	w := newProbeWorld(t)
+
+	_, err := liveProbe(context.Background(), repoFlags{
+		config: w.config, runs: w.runs, senseBin: w.senseBin, agent: "fake", model: "fake-model",
+	}, crank.Cell{Repo: "probe-repo", Cycle: 1, Phase: phase.Minibench,
+		Dir: t.TempDir(), Scenario: filepath.Join(t.TempDir(), "never-written.yaml"), Checkout: w.checkout})
+
+	if err == nil {
+		t.Error("a pair was reported against a scenario that is not there")
+	}
+}
+
+// A pair whose arms could not be given Sense is not a measurement, and the
+// binary says which check refused it instead of handing the judge two arms that
+// cannot be compared.
+func TestAPairThatCouldNotBeGivenSenseIsNotAMeasurement(t *testing.T) {
+	w := newProbeWorld(t)
+
+	got, err := liveProbe(context.Background(), repoFlags{
+		config: w.config, runs: w.runs, agent: "fake", model: "fake-model",
+		senseBin: filepath.Join(t.TempDir(), "no-such-sense"),
+	}, crank.Cell{Repo: "probe-repo", Cycle: 1, Phase: phase.Minibench,
+		Dir: t.TempDir(), Scenario: w.scenario, Checkout: w.checkout})
+
+	if err == nil && got.Sound {
+		t.Error("a pair whose sense arm never had Sense was reported as a measurement")
+	}
 }

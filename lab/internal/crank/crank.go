@@ -25,6 +25,9 @@ type Job struct {
 	Checkout string
 	// Prompt is the plan, with the facts of this attempt in front of it.
 	Prompt string
+	// Cell is where the pair this phase reads landed, for a phase that reads
+	// one. Empty for every phase whose input is an artifact.
+	Cell string
 	// Wall is how long the agent gets, read from the plan's own header.
 	Wall time.Duration
 	// Try is which attempt at this phase, in this cycle, this is. It is here so
@@ -47,6 +50,45 @@ type Ran struct {
 // other things that reach a process; the crank never imports one.
 type Spawner func(ctx context.Context, j Job) (Ran, error)
 
+// Cell is the two-arm pair a phase reads, for a phase that reads one.
+//
+// It carries where the pair belongs and what to run it against, and nothing a
+// prober could decide with. Which directory inside Dir the arms land in is the
+// prober's: a pair is created fresh or not at all, so the name has to be chosen
+// against what is already on disk, and that is a question only the side that
+// reaches the disk can answer.
+type Cell struct {
+	Repo  string
+	Cycle int
+	Phase phase.Name
+	// Dir is the phase directory the pair belongs under.
+	Dir string
+	// Scenario is the file the pair is run against, derived from the phase the
+	// graph says wrote it.
+	Scenario string
+	// Checkout is the repository under study, at its pin.
+	Checkout string
+}
+
+// Pair is what a prober reports: whether the two arms are a measurement.
+//
+// Not a measurement is not an error. The arms ran, they cost what they cost,
+// and what came back cannot be compared — which is a result to record and stop
+// on, not a broken invocation.
+type Pair struct {
+	Sound bool
+	// Dir is where the arms landed, sound or not.
+	Dir string
+	// Note is why it is not a measurement, in a sentence, and it is what the
+	// attempt record carries.
+	Note string
+}
+
+// Prober runs one cell. Like [Spawner] the real one lives at the edge: this
+// package decides that a pair is owed and never reaches a process to produce
+// one.
+type Prober func(ctx context.Context, c Cell) (Pair, error)
+
 // Crank is the wiring, assembled once. It is a value rather than parameters
 // because [Crank.Advance] takes a repository and a context and nothing else:
 // the moment a phase needs something the others do not, it belongs in that
@@ -59,6 +101,9 @@ type Crank struct {
 	// Checkout is the repository under study, at its pin.
 	Checkout string
 	Spawn    Spawner
+	// Probe runs the pair a phase reads, for the phases that read one. A crank
+	// assembled without it can still turn every phase that reads an artifact.
+	Probe Prober
 }
 
 // Result is what one turn of the crank did.
@@ -92,6 +137,10 @@ func (c Crank) Advance(ctx context.Context, repo string) (Result, error) {
 	// and does not run it. The pain this cycle is aimed at is authoring, and an
 	// unattended crank that can reach a paid cell is a different product with a
 	// different risk.
+	//
+	// The mini-bench pair is not that cell. It is unscored and unpaid by law —
+	// budget counts what is under the bench phase — and it is the gate that
+	// exists to avoid reaching one, so the crank runs it. See probes.
 	if _, spends := spendCommand(before, repo); before.Standing != position.Ready || spends {
 		if spends {
 			r.After.Standing = position.Waiting
@@ -107,6 +156,27 @@ func (c Crank) Advance(ctx context.Context, repo string) (Result, error) {
 	j := c.job(before, repo, p, c.try(repo, before.Cycle, p.Phase))
 	r.Ran = j.Phase
 
+	pair, err := c.pair(ctx, j, p)
+	if err != nil {
+		return r, err
+	}
+	// The prompt is composed after the pair, because where the pair landed is
+	// one of the facts it carries. A judge left to infer that from the artifact
+	// path it was given would be guessing at a directory name.
+	j.Cell = pair.Dir
+	j.Prompt = prompt(before, j, p)
+	if !pair.Sound {
+		// The arms ran and what came back cannot be compared. The judge is not
+		// spawned on a pair it may not read, and the refusal is recorded rather
+		// than returned: an unrecorded stop leaves the position exactly as it
+		// was found, and the next turn runs another pair, at whatever two arms
+		// cost.
+		if err := c.refuse(before, j, p, pair.Dir, pair.Note); err != nil {
+			return r, err
+		}
+		return c.settled(r, repo)
+	}
+
 	ran, err := c.Spawn(ctx, j)
 	if err != nil {
 		return r, fmt.Errorf("run %s for %s: %w", j.Phase, repo, err)
@@ -114,6 +184,13 @@ func (c Crank) Advance(ctx context.Context, repo string) (Result, error) {
 	if err := c.record(before, j, p, ran); err != nil {
 		return r, err
 	}
+	return c.settled(r, repo)
+}
+
+// settled is the position after the turn, and the sentence a caller prints. It
+// is read back from disk rather than reasoned about: what the turn did is
+// whatever it left behind.
+func (c Crank) settled(r Result, repo string) (Result, error) {
 	after, err := position.Read(c.Runs, repo)
 	if err != nil {
 		return r, err
@@ -121,6 +198,58 @@ func (c Crank) Advance(ctx context.Context, repo string) (Result, error) {
 	r.After = after
 	r.Note = note(after, repo)
 	return r, nil
+}
+
+// pair runs the cell this phase reads, for a phase that reads one.
+//
+// A phase whose input is an artifact is dispatched as it always has been. A
+// phase whose input is a two-arm pair is dispatched only after the binary has
+// produced one: the mini-bench plan reads a cell, and a crank that spawned that
+// judge without producing one handed it an empty directory to rule on. Measured
+// on mastodon cycle 1 — the judge wrote no verdict, correctly, and the
+// repository parked on a defect in here.
+func (c Crank) pair(ctx context.Context, j Job, p plans.Plan) (Pair, error) {
+	if !probes[j.Phase] {
+		return Pair{Sound: true}, nil
+	}
+	if c.Probe == nil {
+		return Pair{}, fmt.Errorf("%s reads a two-arm cell and this crank was assembled without a prober; "+
+			"dispatching it would hand the judge an empty directory to rule on", j.Phase)
+	}
+	scenario, err := c.reads(j, p)
+	if err != nil {
+		return Pair{}, err
+	}
+	got, err := c.Probe(ctx, Cell{Repo: j.Repo, Cycle: j.Cycle, Phase: j.Phase, Dir: j.Dir,
+		Scenario: scenario, Checkout: c.Checkout})
+	if err != nil {
+		return Pair{}, fmt.Errorf("run the pair %s reads for %s: %w", j.Phase, j.Repo, err)
+	}
+	return got, nil
+}
+
+// reads is the file this phase reads, where the graph says it was written.
+//
+// Derived rather than named here: a path to another phase's artifact written
+// out in Go is a path that keeps pointing at the old name after somebody
+// renames the artifact in the graph.
+func (c Crank) reads(j Job, p plans.Plan) (string, error) {
+	for _, g := range phase.Graph {
+		if g.Writes == p.Reads {
+			return filepath.Join(c.Runs, j.Repo, strconv.Itoa(j.Cycle), string(g.Name), p.Reads), nil
+		}
+	}
+	return "", fmt.Errorf("%s reads %s and no phase in the graph writes it", j.Phase, p.Reads)
+}
+
+// refuse records an attempt that produced no verdict because what it was owed
+// was not one. It is the record a misbehaving agent leaves, for the same
+// reason: the loop stops where it is, and a person reads why.
+func (c Crank) refuse(at position.Position, j Job, p plans.Plan, log, why string) error {
+	return position.Record(filepath.Join(c.Runs, j.Repo), position.Attempt{
+		Cycle: j.Cycle, Phase: j.Phase, Try: j.Try, Anchor: at.Last.Anchor,
+		Plan: p.Path, Log: log, Outcome: position.Refused, Table: why,
+	})
 }
 
 // note is what a caller prints when the crank stops, and it carries the
@@ -165,8 +294,7 @@ func (c Crank) record(at position.Position, j Job, p plans.Plan, ran Ran) error 
 	if err != nil {
 		// The phase said something that is not a verdict for this phase. It is
 		// recorded as refused, with the reason, and the loop stops there.
-		a.Outcome, a.Table = position.Refused, err.Error()
-		return position.Record(filepath.Join(c.Runs, j.Repo), a)
+		return c.refuse(at, j, p, ran.Log, err.Error())
 	}
 
 	a.Verdict, a.Table = v.Verdict, v.Table
@@ -188,10 +316,10 @@ func (c Crank) record(at position.Position, j Job, p plans.Plan, ran Ran) error 
 
 // job is the phase to dispatch, assembled from the position and the plan.
 func (c Crank) job(at position.Position, repo string, p plans.Plan, try int) Job {
-	dir := filepath.Join(c.Runs, repo, strconv.Itoa(at.Cycle), string(p.Phase))
 	return Job{
-		Repo: repo, Cycle: at.Cycle, Phase: p.Phase, Dir: dir, Try: try,
-		Checkout: c.Checkout, Wall: p.Wall, Prompt: prompt(at, repo, dir, p),
+		Repo: repo, Cycle: at.Cycle, Phase: p.Phase, Try: try,
+		Dir:      filepath.Join(c.Runs, repo, strconv.Itoa(at.Cycle), string(p.Phase)),
+		Checkout: c.Checkout, Wall: p.Wall,
 	}
 }
 
@@ -217,10 +345,17 @@ func (c Crank) try(repo string, cycle int, name phase.Name) int {
 //
 // Every rejection, oldest first, because reading only the latest is how six
 // attempts oscillated between two failures without landing in between.
-func prompt(at position.Position, repo, dir string, p plans.Plan) string {
+func prompt(at position.Position, j Job, p plans.Plan) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "repository: %s\ncycle: %d of %d\nphase: %s\nartifact: %s\nverdict: %s\n",
-		repo, at.Cycle, phase.AuthoringCeiling, p.Phase, filepath.Join(dir, p.Writes), filepath.Join(dir, VerdictFile))
+		j.Repo, j.Cycle, phase.AuthoringCeiling, p.Phase,
+		filepath.Join(j.Dir, p.Writes), filepath.Join(j.Dir, VerdictFile))
+	if j.Cell != "" {
+		// Where the pair is, for a phase that reads one. A fact about this
+		// attempt, like every other line here: what to do with the arms is the
+		// plan's, and this says nothing about it.
+		fmt.Fprintf(&b, "cell: %s\n", j.Cell)
+	}
 	if at.Last.Anchor != "" {
 		fmt.Fprintf(&b, "anchor: %s\n", at.Last.Anchor)
 	}
@@ -231,6 +366,18 @@ func prompt(at position.Position, repo, dir string, p plans.Plan) string {
 	b.Write(p.Body)
 	return b.String()
 }
+
+// probes is every phase whose input is a two-arm pair rather than an artifact,
+// which the binary runs before the phase's agent is spawned.
+//
+// Two phases judge a pair: the mini-bench rules on the draft's discriminator
+// step, validate rules on the full seven-step scenario. Both were measured
+// spawning onto an empty directory — validate on mastodon cycle 3, which
+// refused, correctly, and named this table. It is a table rather than a
+// comparison for the same reason spending is: what a phase reads is a property
+// of the phase, and a caller reading `if j.Phase == phase.Minibench` in the
+// middle of Advance learns nothing about why.
+var probes = map[phase.Name]bool{phase.Minibench: true, phase.Validate: true}
 
 // spending is every phase that costs money, and the crank runs none of them.
 var spending = map[phase.Name]bool{phase.Bench: true, phase.Report: true, phase.Harvest: true, phase.Board: true}

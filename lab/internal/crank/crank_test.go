@@ -82,9 +82,38 @@ func admitted(t *testing.T) (dir, repo string) {
 	return dir, repo
 }
 
+// pair stands in for the two-arm cell a phase reads. It does what a prober
+// does: it produces a directory where the arms would be, and says whether what
+// came back can be compared.
+type pair struct {
+	// unsound is why the arms are not a measurement, when a test says they are
+	// not.
+	unsound string
+	// cells is what it was asked for, so a test can read what the prober would
+	// have been told rather than what the crank meant to tell it.
+	cells []Cell
+}
+
+func (p *pair) probe(_ context.Context, c Cell) (Pair, error) {
+	p.cells = append(p.cells, c)
+	dir := filepath.Join(c.Dir, "cell")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return Pair{}, err
+	}
+	if p.unsound != "" {
+		return Pair{Dir: dir, Note: p.unsound}, nil
+	}
+	return Pair{Sound: true, Dir: dir}, nil
+}
+
 func cranked(t *testing.T, dir string, a *agent) Crank {
 	t.Helper()
-	return Crank{Runs: dir, Plans: declared(t), Checkout: t.TempDir(), Spawn: a.spawn}
+	return crankedOn(t, dir, a, &pair{})
+}
+
+func crankedOn(t *testing.T, dir string, a *agent, p *pair) Crank {
+	t.Helper()
+	return Crank{Runs: dir, Plans: declared(t), Checkout: t.TempDir(), Spawn: a.spawn, Probe: p.probe}
 }
 
 func advance(t *testing.T, c Crank, repo string) Result {
@@ -731,5 +760,274 @@ func TestAnUnreadableRecordSetCountsAsNoEarlierTries(t *testing.T) {
 
 	if got := cranked(t, dir, &agent{}).try(repo, 1, phase.Author); got != 1 {
 		t.Errorf("try = %d, want the first", got)
+	}
+}
+
+// The defect this exists to close: the mini-bench plan reads a two-arm cell,
+// and the crank used to spawn its judge with nothing but an empty directory to
+// rule on. The pair is run first, against the draft the graph says the author
+// wrote.
+func TestTheMiniBenchIsSpawnedOnAPairTheBinaryRan(t *testing.T) {
+	dir, repo := admitted(t)
+	reach(t, dir, repo, 1, phase.Minibench)
+	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Minibench, Repo: repo, Cycle: 1,
+		Verdict: phase.Proceed}}
+	p := &pair{}
+
+	r := advance(t, crankedOn(t, dir, a, p), repo)
+
+	if len(p.cells) != 1 {
+		t.Fatalf("ran %d pairs, want the one the phase reads", len(p.cells))
+	}
+	if want := filepath.Join(dir, repo, "1", "author", "scenario.draft.yaml"); p.cells[0].Scenario != want {
+		t.Errorf("ran the pair against %s, want the draft the graph says was written (%s)",
+			p.cells[0].Scenario, want)
+	}
+	if want := filepath.Join(dir, repo, "1", "minibench"); p.cells[0].Dir != want {
+		t.Errorf("the pair landed under %s, want the phase that reads it (%s)", p.cells[0].Dir, want)
+	}
+	if len(a.jobs) != 1 {
+		t.Fatalf("dispatched %d judges, want the one the pair was run for", len(a.jobs))
+	}
+	if r.After.Awaiting != phase.Expand {
+		t.Errorf("awaiting %s (%s), want the phase the verdict routes to", r.After.Awaiting, r.After.Because)
+	}
+}
+
+// Validate rules on a pair too, and on the FULL scenario the expansion wrote
+// rather than the draft. Asserted because the table that says which phases read
+// a pair held only the mini-bench, and mastodon reached cycle 3 before validate
+// was spawned onto an empty directory and refused to write a verdict.
+func TestValidateIsSpawnedOnAPairTheBinaryRan(t *testing.T) {
+	dir, repo := admitted(t)
+	reach(t, dir, repo, 1, phase.Validate)
+	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Validate, Repo: repo, Cycle: 1,
+		Verdict: phase.Pay}}
+	p := &pair{}
+
+	r := advance(t, crankedOn(t, dir, a, p), repo)
+
+	if len(p.cells) != 1 {
+		t.Fatalf("ran %d pairs, want the one the phase reads", len(p.cells))
+	}
+	if want := filepath.Join(dir, repo, "1", "expand", "scenario.yaml"); p.cells[0].Scenario != want {
+		t.Errorf("ran the pair against %s, want the expanded scenario the graph says was written (%s)",
+			p.cells[0].Scenario, want)
+	}
+	if want := filepath.Join(dir, repo, "1", "validate"); p.cells[0].Dir != want {
+		t.Errorf("the pair landed under %s, want the phase that reads it (%s)", p.cells[0].Dir, want)
+	}
+	if len(a.jobs) != 1 {
+		t.Fatalf("dispatched %d judges, want the one the pair was run for", len(a.jobs))
+	}
+	if r.After.Awaiting != phase.Bench {
+		t.Errorf("awaiting %s (%s), want the phase the verdict routes to", r.After.Awaiting, r.After.Because)
+	}
+}
+
+// A phase that reads an artifact is dispatched the way it always was. Asserted
+// because the alternative reading of the change is a crank that runs a pair
+// before every phase, at two arms apiece.
+func TestAPhaseThatReadsAnArtifactRunsNoPair(t *testing.T) {
+	dir, repo := admitted(t)
+	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1,
+		Verdict: phase.Draft}}
+	p := &pair{}
+
+	advance(t, crankedOn(t, dir, a, p), repo)
+
+	if len(p.cells) != 0 {
+		t.Errorf("ran %d pairs for a phase that reads an artifact", len(p.cells))
+	}
+}
+
+// A pair that is not a measurement is not ruled on. The judge is never spawned,
+// the refusal is recorded with the reason, and the loop stops for a person: the
+// plan promises its three verdicts are always issuable, and a judge handed a
+// void pair is the one situation in which that promise is false.
+func TestAPairThatIsNotAMeasurementIsNeverRuledOn(t *testing.T) {
+	dir, repo := admitted(t)
+	reach(t, dir, repo, 1, phase.Minibench)
+	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Minibench, Repo: repo, Cycle: 1,
+		Verdict: phase.Proceed}}
+	p := &pair{unsound: "the baseline arm reached the sense server"}
+
+	r := advance(t, crankedOn(t, dir, a, p), repo)
+
+	if len(a.jobs) != 0 {
+		t.Errorf("the crank spawned a judge on a pair that may not be ruled on")
+	}
+	if r.After.Standing != position.Unusable {
+		t.Errorf("standing %s (%s), want the loop stopped for a person", r.After.Standing, r.After.Because)
+	}
+	recorded := attempts(t, dir, repo)
+	if len(recorded) != 1 {
+		t.Fatalf("recorded %d attempts, want the one that could not be ruled on", len(recorded))
+	}
+	if recorded[0].Outcome != position.Refused || !strings.Contains(recorded[0].Table, p.unsound) {
+		t.Errorf("recorded %s: %q, want the refusal and why", recorded[0].Outcome, recorded[0].Table)
+	}
+}
+
+// The turn after that one runs nothing at all. An unrecorded stop would leave
+// the position exactly as it was found, and the next turn would spend another
+// pair on it, forever.
+func TestAStopOnAVoidPairDoesNotSpendAgain(t *testing.T) {
+	dir, repo := admitted(t)
+	reach(t, dir, repo, 1, phase.Minibench)
+	a := &agent{}
+	p := &pair{unsound: "no MCP frames were captured"}
+	c := crankedOn(t, dir, a, p)
+
+	advance(t, c, repo)
+	advance(t, c, repo)
+
+	if len(p.cells) != 1 {
+		t.Errorf("ran %d pairs across two turns, want the one that already refused", len(p.cells))
+	}
+}
+
+// A crank assembled with no prober refuses to dispatch a phase that reads a
+// pair, rather than dispatching it onto an empty directory. This is the failure
+// that reached mastodon, so it fails loudly here.
+func TestACrankWithNoProberRefusesToDispatchTheMiniBench(t *testing.T) {
+	dir, repo := admitted(t)
+	reach(t, dir, repo, 1, phase.Minibench)
+	c := cranked(t, dir, &agent{})
+	c.Probe = nil
+
+	_, err := c.Advance(context.Background(), repo)
+
+	if err == nil || !strings.Contains(err.Error(), "two-arm cell") {
+		t.Errorf("err = %v, want it to say the phase reads a pair nothing here can run", err)
+	}
+}
+
+// The path the pair runs against comes from the graph. A plan reading an
+// artifact no phase writes is a declaration nobody could satisfy, and it is
+// reported as that rather than as a missing file.
+func TestAPairForAnArtifactNoPhaseWritesIsRefused(t *testing.T) {
+	dir, repo := admitted(t)
+	reach(t, dir, repo, 1, phase.Minibench)
+	c := cranked(t, dir, &agent{})
+	c.Plans = withReads(t, c.Plans, phase.Minibench, "nothing-writes-this.yaml")
+
+	_, err := c.Advance(context.Background(), repo)
+
+	if err == nil || !strings.Contains(err.Error(), "no phase in the graph writes it") {
+		t.Errorf("err = %v, want it to name the declaration nobody can satisfy", err)
+	}
+}
+
+// withReads changes one line of one declaration, which is what a person editing
+// a plan file does.
+func withReads(t *testing.T, loaded []plans.Plan, name phase.Name, reads string) []plans.Plan {
+	t.Helper()
+	out := append([]plans.Plan(nil), loaded...)
+	for i := range out {
+		if out[i].Phase == name {
+			out[i].Reads = reads
+			return out
+		}
+	}
+	t.Fatalf("no plan for %s", name)
+	return nil
+}
+
+// The judge is told where its pair is. It is a fact about the attempt, like
+// every other line of the prompt, and a judge left to infer a directory name
+// from the artifact path it was handed would be guessing at one.
+func TestTheJudgeIsToldWhereItsPairLanded(t *testing.T) {
+	dir, repo := admitted(t)
+	reach(t, dir, repo, 1, phase.Minibench)
+	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Minibench, Repo: repo, Cycle: 1,
+		Verdict: phase.Proceed}}
+
+	advance(t, crankedOn(t, dir, a, &pair{}), repo)
+
+	want := "cell: " + filepath.Join(dir, repo, "1", "minibench", "cell")
+	if !strings.Contains(a.jobs[0].Prompt, want) {
+		t.Errorf("prompt = %q, want it to carry %q", a.jobs[0].Prompt, want)
+	}
+}
+
+// A phase that reads an artifact is told about no cell, because there is none.
+// A line naming a directory that does not exist is a fact that is not one.
+func TestAPhaseThatReadsAnArtifactIsToldOfNoCell(t *testing.T) {
+	dir, repo := admitted(t)
+	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1,
+		Verdict: phase.Draft}}
+
+	advance(t, cranked(t, dir, a), repo)
+
+	if strings.Contains(a.jobs[0].Prompt, "cell:") {
+		t.Errorf("prompt = %q, want no cell named for a phase that reads an artifact", a.jobs[0].Prompt)
+	}
+}
+
+// A re-entry opens the next cycle, and the draft it was sent back to replace is
+// still there afterwards.
+//
+// Both halves are the same defect. The cycle is what the authoring ceiling is
+// counted in, and a re-entry that re-opened the cycle it came from made the
+// count stand still: measured on mastodon 2026-08-20, four authoring passes and
+// four mini-bench pairs were all recorded in cycle 1, each draft written over
+// the one before it.
+func TestAReEntryOpensTheNextCycle(t *testing.T) {
+	dir, repo := admitted(t)
+	c := cranked(t, dir, &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo,
+		Cycle: 1, Verdict: phase.Draft, Anchor: "BaseItem"}})
+	advance(t, c, repo)
+	c.Spawn = (&agent{artifact: true, verdict: &Verdict{Phase: phase.Minibench, Repo: repo, Cycle: 1,
+		Verdict: phase.Requestion, Table: "the baseline holds the discriminator"}}).spawn
+	advance(t, c, repo)
+
+	again := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 2,
+		Verdict: phase.Draft}}
+	c.Spawn = again.spawn
+	advance(t, c, repo)
+
+	if want := filepath.Join(dir, repo, "2", "author"); again.jobs[0].Dir != want {
+		t.Errorf("the re-entered author ran in %s, want the next cycle (%s)", again.jobs[0].Dir, want)
+	}
+	if again.jobs[0].Cycle != 2 {
+		t.Errorf("the re-entered author was told cycle %d, want 2", again.jobs[0].Cycle)
+	}
+	first := filepath.Join(dir, repo, "1", "author", "scenario.draft.yaml")
+	if _, err := os.Stat(first); err != nil {
+		t.Errorf("the draft the re-entry was sent back to replace is gone: %v", err)
+	}
+}
+
+// The ceiling bites, driven rather than constructed. Nothing here writes a
+// cycle directory: every one is opened by the phase that ran in it, which is
+// what makes this a test of the count rather than of a fixture that already
+// holds the answer.
+func TestTheSixthAuthoringCycleParksTheRepository(t *testing.T) {
+	dir, repo := admitted(t)
+	c := cranked(t, dir, &agent{})
+
+	var r Result
+	for cycle := 1; cycle <= phase.AuthoringCeiling; cycle++ {
+		c.Spawn = (&agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo,
+			Cycle: cycle, Verdict: phase.Draft}}).spawn
+		if r = advance(t, c, repo); r.Ran != phase.Author {
+			t.Fatalf("cycle %d ran %s (%s), want the author", cycle, r.Ran, r.After.Because)
+		}
+		c.Spawn = (&agent{artifact: true, verdict: &Verdict{Phase: phase.Minibench, Repo: repo,
+			Cycle: cycle, Verdict: phase.Requestion, Table: "the baseline holds the discriminator"}}).spawn
+		r = advance(t, c, repo)
+		if cycle < phase.AuthoringCeiling && r.After.Cycle != cycle+1 {
+			t.Fatalf("after cycle %d's re-entry the repository is in cycle %d, want %d",
+				cycle, r.After.Cycle, cycle+1)
+		}
+	}
+
+	if r.After.Standing != position.Parked {
+		t.Errorf("standing %s (%s), want the repository parked at the ceiling",
+			r.After.Standing, r.After.Because)
+	}
+	if r.After.Cycle != phase.AuthoringCeiling {
+		t.Errorf("parked at cycle %d, want the ceiling (%d)", r.After.Cycle, phase.AuthoringCeiling)
 	}
 }
