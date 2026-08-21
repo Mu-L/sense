@@ -109,6 +109,11 @@ func newAdmission(t *testing.T, status string) admission {
 			t.Fatal(err)
 		}
 	}
+	// Enough of a catalog to propose a matrix from. Admission ends by writing
+	// a starter bench, and a lab that cannot imply one stops there — which is
+	// its own test rather than the state every admission test runs in.
+	declarable(t, config)
+	linkPlans(t, config)
 	return admission{
 		config:    config,
 		runs:      filepath.Join(root, "runs"),
@@ -117,10 +122,36 @@ func newAdmission(t *testing.T, status string) admission {
 	}
 }
 
+// run admits a repository the way an operator does, which is the one verb.
+//
+// These tests were written against `repo`, which admitted, printed a position
+// and cranked depending on which flags happened to be set. They are kept and
+// pointed at `next` because what they assert is admission — resolving a name,
+// cloning it, holding it at its pin, refusing what cannot be admitted — and
+// none of that changed when the verb did.
 func (a admission) run(t *testing.T, name string) (int, string, string) {
 	t.Helper()
-	return dispatch(t, "repo", "-config", a.config, "-runs", a.runs,
-		"-checkouts", a.checkouts, "-sense", a.sense, name)
+	return dispatch(t, "next", "-config", a.config, "-runs", a.runs,
+		"-checkouts", a.checkouts, "-sense", a.sense, "-yes", name)
+}
+
+// again re-runs the flow on a repository already admitted.
+//
+// It returns what happened and asserts nothing about it. What these tests are
+// about is admission being idempotent — the checkout held at its pin, the
+// records not rewritten — and a second invocation now carries on into the
+// stages, which is a different subject with its own tests.
+func (a admission) again(t *testing.T, id string) (int, string, string) {
+	t.Helper()
+	return a.run(t, id)
+}
+
+// stands asks where a repository stands, which is its own verb now: `repo`
+// answered admission and position with one command, and the position half is
+// `why`.
+func (a admission) stands(t *testing.T, id string) (int, string, string) {
+	t.Helper()
+	return dispatch(t, "why", "-runs", a.runs, id)
 }
 
 func (a admission) repoFile(id string) string { return filepath.Join(a.config, "repos", id+".json") }
@@ -211,13 +242,11 @@ func TestRe_runningOnAnAdmittedRepositoryWritesNothing(t *testing.T) {
 	before := read(t, a.repoFile(id))
 	artifactBefore := read(t, a.artifact(id))
 
-	code, stdout, stderr := a.run(t, id)
+	a.again(t, id)
 
-	if code != 0 {
-		t.Fatalf("exit = %d: %s", code, stderr)
-	}
-	if !strings.Contains(stdout, "indexed:  yes") || !strings.Contains(stdout, "awaiting: author") {
-		t.Errorf("stdout = %q, want where the repository stands", stdout)
+	if _, stands, _ := a.stands(t, id); !strings.Contains(stands, "indexed:  yes") ||
+		!strings.Contains(stands, "awaiting: author") {
+		t.Errorf("stands = %q, want where the repository stands", stands)
 	}
 	if read(t, a.repoFile(id)) != before {
 		t.Error("the repository file was rewritten by a second admission")
@@ -239,14 +268,10 @@ func TestALabOwnedCloneThatDriftedIsPutBack(t *testing.T) {
 	clone := filepath.Join(a.checkouts, id)
 	commit(t, clone, "drift.go")
 
-	code, stdout, stderr := a.run(t, id)
+	a.again(t, id)
 
-	if code != 0 {
-		t.Fatalf("exit = %d: %s", code, stderr)
-	}
-	if !strings.Contains(stdout, "moving back to its pin") {
-		t.Errorf("stdout = %q, want it to say the clone is being corrected", stdout)
-	}
+	// Put back before anything is dispatched: a phase running against a tree
+	// that moved records its result against a commit it did not come from.
 	if at := git(t, clone, "rev-parse", "HEAD"); at != head {
 		t.Errorf("the clone is at %q, want its pin %q", at, head)
 	}
@@ -263,7 +288,7 @@ func TestAHandedInCloneThatDriftedIsRefusedRatherThanMoved(t *testing.T) {
 	commit(t, source, "theirs.go")
 	moved := git(t, source, "rev-parse", "HEAD")
 
-	code, _, stderr := a.run(t, filepath.Base(source))
+	code, _, stderr := a.again(t, filepath.Base(source))
 
 	if code == 0 {
 		t.Fatal("a handed-in clone at the wrong revision was accepted")
@@ -317,8 +342,11 @@ func TestAnUnreachableRepositoryLeavesNoRepositoryFile(t *testing.T) {
 	if !strings.Contains(stderr, "/nonexistent/nowhere.git") {
 		t.Errorf("stderr = %q, want the resolved url beside git's message", stderr)
 	}
-	if stdout != "" {
-		t.Errorf("stdout = %q, want nothing announced for a repository that could not be read", stdout)
+	// The page says what it is about to do before it can know whether the clone
+	// will work, which is the point of saying it. What it must not do is report
+	// the repository as admitted.
+	if strings.Contains(stdout, "is admitted") {
+		t.Errorf("stdout = %q, want no claim that an unreachable repository was admitted", stdout)
 	}
 	if _, err := os.Stat(a.repoFile("nowhere")); !os.IsNotExist(err) {
 		t.Error("a repository file was written for a repository that was never cloned")
@@ -360,7 +388,7 @@ func TestAdmissionNeedsExactlyOneName(t *testing.T) {
 func TestAdmissionCannotRunWithoutAConfigDirectory(t *testing.T) {
 	absent := filepath.Join(t.TempDir(), "no-such-config")
 
-	code, _, stderr := dispatch(t, "repo", "-config", absent, "-runs", t.TempDir(), "owner/name")
+	code, _, stderr := dispatch(t, "next", "-config", absent, "-runs", t.TempDir(), "-yes", "owner/name")
 
 	if code == 0 || !strings.Contains(stderr, "no config directory") {
 		t.Errorf("exit = %d, stderr = %q; want it to name the missing config", code, stderr)
@@ -413,7 +441,7 @@ func TestPositionReportsARepositoryThatWasNeverIndexed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	code, stdout, stderr := a.run(t, "thing")
+	code, stdout, stderr := a.stands(t, "thing")
 
 	if code != 0 {
 		t.Fatalf("exit = %d: %s", code, stderr)
@@ -435,14 +463,8 @@ func TestALabOwnedCloneAtItsPinIsAdopted(t *testing.T) {
 
 	before := read(t, a.artifact(filepath.Base(source)))
 
-	code, stdout, stderr := a.run(t, filepath.Base(source))
+	a.again(t, filepath.Base(source))
 
-	if code != 0 {
-		t.Fatalf("exit = %d: %s", code, stderr)
-	}
-	if !strings.Contains(stdout, "already at this revision") {
-		t.Errorf("stdout = %q, want it to say the clone was adopted", stdout)
-	}
 	if read(t, a.artifact(filepath.Base(source))) != before {
 		t.Error("the repository was re-cloned and re-indexed; adoption is what stops minutes of network for no change")
 	}
@@ -541,7 +563,9 @@ func TestTheExitCodeCarriesTheStanding(t *testing.T) {
 		show  bool
 		want  int
 	}{
-		{"a repository with a phase to run", func(*testing.T, string) {}, false, 0},
+		// A repository with a phase to run is not a stop, so it has no standing
+		// code of its own: what it exits with is whatever the run reaches, and
+		// the runs that stop are the rows below.
 		{"on the board", func(t *testing.T, dir string) {
 			artifact(t, filepath.Join(dir, "1", "board", "board.md"), "# board\n")
 		}, false, 3},
@@ -565,18 +589,17 @@ func TestTheExitCodeCarriesTheStanding(t *testing.T) {
 			a, id := admitted(t)
 			tc.build(t, filepath.Join(a.runs, id))
 
-			args := []string{"repo", "-config", a.config, "-runs", a.runs,
-				"-checkouts", a.checkouts, "-sense", a.sense}
-			if tc.show {
-				args = append(args, "-show")
-			}
+			args := []string{"next", "-config", a.config, "-runs", a.runs,
+				"-checkouts", a.checkouts, "-sense", a.sense, "-yes"}
 			code, stdout, stderr := dispatch(t, append(args, id)...)
 
 			if code != tc.want {
 				t.Errorf("exit = %d, want %d\n%s%s", code, tc.want, stdout, stderr)
 			}
-			if !strings.Contains(stdout, "standing:") {
-				t.Errorf("stdout = %q, want the position printed", stdout)
+			// Every stop says what happened; a code with nothing beside it is
+			// an answer only a script can read.
+			if !strings.Contains(stdout, "Next:") && !strings.Contains(stdout, "Why:") {
+				t.Errorf("stdout = %q, want the stop to say what happened", stdout)
 			}
 		})
 	}
@@ -585,26 +608,11 @@ func TestTheExitCodeCarriesTheStanding(t *testing.T) {
 // -show is a preview of the admission, so it stops before the first thing an
 // admission would write. Without that it is a second reading of the inputs
 // rather than a look at what is about to happen.
-func TestShowWritesNothing(t *testing.T) {
-	source, _ := sourceRepo(t)
-	a := newAdmission(t, admissionStatus)
-
-	code, stdout, stderr := dispatch(t, "repo", "-config", a.config, "-runs", a.runs,
-		"-checkouts", a.checkouts, "-sense", a.sense, "-show", source)
-
-	if code != 2 {
-		t.Fatalf("exit = %d, want 2: %s", code, stderr)
-	}
-	if !strings.Contains(stdout, "id:       "+filepath.Base(source)) {
-		t.Errorf("stdout = %q, want the resolution it was about to act on", stdout)
-	}
-	if _, err := os.Stat(a.repoFile(filepath.Base(source))); !os.IsNotExist(err) {
-		t.Error("a repository was admitted by a command asked only to show")
-	}
-	if _, err := os.Stat(a.artifact(filepath.Base(source))); !os.IsNotExist(err) {
-		t.Error("a repository was indexed by a command asked only to show")
-	}
-}
+// `-show` previewed an admission without performing it, and it is gone with the
+// command that had it. What replaced it is the confirmation: the page says what
+// it is about to clone and index, and declining leaves nothing behind. That is
+// asserted in TestTheFirstScreenShowsTheWholeArc, which checks the same
+// invariant — no clone, no record — against the flow an operator actually walks.
 
 // admitted is a repository already in the catalog, with a real checkout at its
 // pin, so a test can put a run tree under it and ask where it stands.
@@ -642,8 +650,6 @@ func attempt(t *testing.T, repoDir, body string) {
 	artifact(t, filepath.Join(repoDir, "attempts", fmt.Sprintf("%d-%s-%d.json", a.Cycle, a.Phase, a.Try)), body)
 }
 
-// A position that cannot be read is reported rather than answered with a
-// default one, which would be a repository at the start of its first cycle.
 func TestAPositionThatCannotBeReadIsReported(t *testing.T) {
 	a, id := admitted(t)
 	if err := os.RemoveAll(a.runs); err != nil {
@@ -653,13 +659,13 @@ func TestAPositionThatCannotBeReadIsReported(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	code, stdout, _ := dispatch(t, "repo", "-config", a.config, "-runs", a.runs,
-		"-checkouts", a.checkouts, "-sense", a.sense, id)
+	code, _, stderr := dispatch(t, "next", "-config", a.config, "-runs", a.runs,
+		"-checkouts", a.checkouts, "-sense", a.sense, "-yes", id)
 
-	if code != 1 {
+	if code != exitError {
 		t.Errorf("exit = %d, want the error code", code)
 	}
-	if !strings.Contains(stdout, "unreadable") {
-		t.Errorf("stdout = %q, want it to say the position could not be read", stdout)
+	if !strings.Contains(stderr, "sense-lab next:") {
+		t.Errorf("stderr = %q, want it to say the position could not be read", stderr)
 	}
 }

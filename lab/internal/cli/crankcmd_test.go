@@ -123,8 +123,8 @@ func newCrankWorld(t *testing.T, env ...string) crankWorld {
 
 func (w crankWorld) run(t *testing.T, extra ...string) (int, string, string) {
 	t.Helper()
-	args := []string{"repo", "-config", w.config, "-runs", w.runs, "-checkouts", w.checkouts,
-		"-sense", w.sense, "-agent", "phase", "-model", "m1"}
+	args := []string{"next", "-config", w.config, "-runs", w.runs, "-checkouts", w.checkouts,
+		"-sense", w.sense, "-agent", "phase", "-model", "m1", "-yes"}
 	return dispatch(t, append(append(args, extra...), w.repo)...)
 }
 
@@ -140,7 +140,9 @@ func linkPlans(t *testing.T, config string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Symlink(shipped, filepath.Join(config, "plans")); err != nil {
+	// Idempotent: more than one world builder points a config at the plans, and
+	// linking twice is not a second decision.
+	if err := os.Symlink(shipped, filepath.Join(config, "plans")); err != nil && !os.IsExist(err) {
 		t.Fatal(err)
 	}
 }
@@ -161,11 +163,15 @@ func TestTheCrankRunsAPhaseAndTheLoopMoves(t *testing.T) {
 
 	code, stdout, stderr := w.run(t)
 
-	if code != exitOK {
+	// The flow runs to where the money starts, which is the waiting code: this
+	// world's stand-in agent walks every stage that does not spend.
+	if code != exitWaiting {
 		t.Fatalf("exit %d: %s%s", code, stdout, stderr)
 	}
-	if !strings.Contains(stdout, "awaiting: minibench") {
-		t.Errorf("stdout = %q, want the loop moved to the next phase", stdout)
+	// The loop moved past the question and reached the money, which is the far
+	// end of what a run that spends nothing can reach.
+	if !strings.Contains(stdout, "Question written.") || !strings.Contains(stdout, "sense-lab pay "+w.repo) {
+		t.Errorf("stdout = %q, want the loop moved through the stages", stdout)
 	}
 	if _, err := os.Stat(filepath.Join(w.phaseDir("author"), "scenario.draft.yaml")); err != nil {
 		t.Errorf("the phase's artifact is not there: %v", err)
@@ -178,7 +184,7 @@ func TestTheCrankRunsAPhaseAndTheLoopMoves(t *testing.T) {
 func TestAPhaseAgentIsHandedNoMoreThanARunArm(t *testing.T) {
 	w := newCrankWorld(t)
 
-	if code, stdout, stderr := w.run(t); code != exitOK {
+	if code, stdout, stderr := w.run(t); code != exitWaiting {
 		t.Fatalf("exit %d: %s%s", code, stdout, stderr)
 	}
 
@@ -202,13 +208,13 @@ func TestAPhaseAgentIsHandedNoMoreThanARunArm(t *testing.T) {
 func TestUntilCranksToThePayCallAndStops(t *testing.T) {
 	w := newCrankWorld(t)
 
-	code, stdout, stderr := w.run(t, "-until")
+	code, stdout, stderr := w.run(t)
 
 	if code != exitWaiting {
 		t.Fatalf("exit %d, want it waiting on a human: %s%s", code, stdout, stderr)
 	}
-	if !strings.Contains(stdout, "sense-lab probe") {
-		t.Errorf("stdout = %q, want the command to run by hand", stdout)
+	if !strings.Contains(stdout, "sense-lab pay "+w.repo) {
+		t.Errorf("stdout = %q, want the command that spends", stdout)
 	}
 	for _, phase := range []string{"author", "minibench", "expand", "preflight", "validate"} {
 		if _, err := os.Stat(filepath.Join(w.phaseDir(phase), "verdict.json")); err != nil {
@@ -225,7 +231,7 @@ func TestUntilCranksToThePayCallAndStops(t *testing.T) {
 func TestThePhaseAgentIsHandedItsPlan(t *testing.T) {
 	w := newCrankWorld(t)
 
-	if code, _, stderr := w.run(t); code != exitOK {
+	if code, _, stderr := w.run(t); code != exitWaiting {
 		t.Fatalf("exit %d: %s", code, stderr)
 	}
 
@@ -243,28 +249,32 @@ func TestThePhaseAgentIsHandedItsPlan(t *testing.T) {
 
 // Nothing is dispatched without something to dispatch it with, and the refusal
 // says which flags are missing rather than spawning nothing quietly.
-func TestNoPhaseRunsWithoutAnAgentAndAModel(t *testing.T) {
+// Nothing is dispatched until something says what a phase is run by. The
+// repository's own bench says it; a lab with no bench for this repository has
+// not decided, and a phase run on a driver nobody declared is the same class of
+// spend as a cell run on a matrix no file states.
+func TestNoPhaseRunsWithoutADriver(t *testing.T) {
 	w := newCrankWorld(t)
 
-	code, stdout, _ := dispatch(t, "repo", "-config", w.config, "-runs", w.runs,
-		"-checkouts", w.checkouts, "-sense", w.sense, w.repo)
+	code, stdout, stderr := dispatch(t, "next", "-config", w.config, "-runs", w.runs,
+		"-checkouts", w.checkouts, "-sense", w.sense, "-yes", w.repo)
 
-	if code != exitOK {
-		t.Fatalf("exit %d, want the position printed", code)
+	if code != exitError {
+		t.Fatalf("exit %d, want a refusal: %s%s", code, stdout, stderr)
 	}
-	if !strings.Contains(stdout, "awaiting: author") {
-		t.Errorf("stdout = %q, want the position", stdout)
+	if !strings.Contains(stderr, "is measured on") {
+		t.Errorf("stderr = %q, want it to name what is missing", stderr)
 	}
 	if _, err := os.Stat(w.phaseDir("author")); err == nil {
-		t.Error("a phase ran with no agent named")
+		t.Error("a phase ran with no driver declared")
 	}
 }
 
 func TestAnAgentTheCatalogDoesNotKnowIsRefused(t *testing.T) {
 	w := newCrankWorld(t)
 
-	code, _, stderr := dispatch(t, "repo", "-config", w.config, "-runs", w.runs,
-		"-checkouts", w.checkouts, "-sense", w.sense, "-agent", "nobody", "-model", "m1", w.repo)
+	code, _, stderr := dispatch(t, "next", "-config", w.config, "-runs", w.runs,
+		"-checkouts", w.checkouts, "-sense", w.sense, "-agent", "nobody", "-model", "m1", "-yes", w.repo)
 
 	if code != exitError {
 		t.Fatalf("exit %d, want an error", code)
@@ -304,19 +314,40 @@ func TestASecondAttemptLandsBesideTheFirst(t *testing.T) {
 	}
 }
 
-// A driver named by half is not a driver, and the refusal says so rather than
-// dispatching nothing quietly.
-func TestHalfADriverIsRefused(t *testing.T) {
-	w := newCrankWorld(t)
+// A model named on the command line with no tool beside it is not half a
+// driver: a model usually names exactly one tool, and the catalog is asked
+// rather than the operator.
+func TestAModelWithNoToolBesideItAsksTheCatalog(t *testing.T) {
+	w := newNextWorld(t)
 
-	code, _, stderr := dispatch(t, "repo", "-config", w.config, "-runs", w.runs,
-		"-checkouts", w.checkouts, "-sense", w.sense, "-agent", "phase", w.repo)
-
-	if code != exitError {
-		t.Fatalf("exit %d, want an error", code)
+	got, err := driver(nextFlags{config: w.config, runs: w.runs, model: "m1"}, catalogOf(t, w.config), w.repo)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(stderr, "-agent and -model") {
-		t.Errorf("stderr = %q, want it to name both flags", stderr)
+	if got.agent != "phase" {
+		t.Errorf("agent = %q, want the one tool m1 names", got.agent)
+	}
+}
+
+// A model several tools can drive IS a decision, and it is refused rather than
+// picked: an arm measured on a surface nobody intended is a result about the
+// wrong thing.
+func TestAModelSeveralToolsCanDriveIsADecisionAndIsRefused(t *testing.T) {
+	w := newNextWorld(t)
+	artifact(t, filepath.Join(w.config, "agents", "second", "agent.json"),
+		`{"id":"second","binary":"/bin/echo","setup_tool":"fake-cli","transcript_format":"assistant-events",`+
+			`"model_flag":"--model","config_dirs":[".second"],"headless_args":["-c"],"judge_args":["-c"],`+
+			`"env":[],"supports_mcp":true,"auth_modes":["subscription"]}`)
+	artifact(t, filepath.Join(w.config, "models", "m1.json"),
+		`{"id":"m1","provider":"acme","available_under":["subscription"],"agents":["phase","second"]}`)
+	declareDriver(t, w, `"driver":{"model":"m1"},`)
+
+	_, err := driver(nextFlags{config: w.config, runs: w.runs}, catalogOf(t, w.config), w.repo)
+	if err == nil {
+		t.Fatal("it picked a tool where the bench named none")
+	}
+	if !strings.Contains(err.Error(), "which one runs the stages is a decision") {
+		t.Errorf("the refusal does not say what to decide: %v", err)
 	}
 }
 
@@ -389,7 +420,7 @@ func TestALabOwnedRepositoryIsCrankedInItsOwnClone(t *testing.T) {
 	artifact(t, w.repoFile(w.repo), `{"id":"`+w.repo+`","url":"https://example.test/`+w.repo+
 		`.git","commit":"`+headOf(t, clone)+`","languages":["go"]}`)
 
-	if code, stdout, stderr := w.run(t); code != exitOK {
+	if code, stdout, stderr := w.run(t); code != exitWaiting {
 		t.Fatalf("exit %d: %s%s", code, stdout, stderr)
 	}
 
@@ -458,7 +489,7 @@ func TestNothingInTheRunPathReadsFromATerminal(t *testing.T) {
 func TestThePhaseAgentRunsInTheRepositoryUnderStudy(t *testing.T) {
 	w := newCrankWorld(t)
 
-	if code, stdout, stderr := w.run(t); code != exitOK {
+	if code, stdout, stderr := w.run(t); code != exitWaiting {
 		t.Fatalf("exit %d: %s%s", code, stdout, stderr)
 	}
 
@@ -681,7 +712,7 @@ func TestAVoidPairStopsTheLoopBeforeTheJudge(t *testing.T) {
 	w := newCrankWorld(t)
 	voidPair(t, "the baseline arm reached the sense server")
 
-	code, stdout, stderr := w.run(t, "-until")
+	code, stdout, stderr := w.run(t)
 
 	if code != exitUnusable {
 		t.Fatalf("exit %d, want the loop stopped on a pair nobody may rule on: %s%s", code, stdout, stderr)
@@ -700,7 +731,7 @@ func TestThePairLandsUnderThePhaseThatReadsIt(t *testing.T) {
 	w := newCrankWorld(t)
 	ran := soundPair(t)
 
-	if code, stdout, stderr := w.run(t, "-until"); code != exitWaiting {
+	if code, stdout, stderr := w.run(t); code != exitWaiting {
 		t.Fatalf("exit %d: %s%s", code, stdout, stderr)
 	}
 
@@ -751,5 +782,68 @@ func TestAPairThatCouldNotBeGivenSenseIsNotAMeasurement(t *testing.T) {
 
 	if err == nil && got.Sound {
 		t.Error("a pair whose sense arm never had Sense was reported as a measurement")
+	}
+}
+
+// A pair that ran and cannot be compared is handed back as a refusal with the
+// checks that refused it, not as an error.
+//
+// The arms ran and cost what they cost. Reporting that as a broken invocation
+// would send whoever reads it to the binary, when what happened is a result:
+// the two sessions differed in something other than Sense access, and the cell
+// may not be scored.
+func TestAPairThatRanAndCannotBeComparedIsARefusalNotAnError(t *testing.T) {
+	restore(t, &runPair, func(_ context.Context, _ probe.Spec) (probe.Report, error) {
+		return probe.Report{
+			BaselineReached: []string{"the baseline could reach the sense server"},
+			Differences:     []string{"the arms ran on different budgets"},
+			SenseUsed:       []string{"it called an MCP tool"},
+			Frames:          3,
+		}, nil
+	})
+	w := newProbeWorld(t)
+	dir := filepath.Join(t.TempDir(), "minibench")
+
+	got, err := liveProbe(context.Background(), repoFlags{
+		config: w.config, runs: w.runs, senseBin: w.senseBin, agent: "fake", model: "fake-model",
+	}, crank.Cell{Repo: "probe-repo", Cycle: 1, Phase: phase.Minibench,
+		Dir: dir, Scenario: w.scenario, Checkout: w.checkout})
+
+	if err != nil {
+		t.Fatalf("a pair that cannot be compared was reported as a broken invocation: %v", err)
+	}
+	if got.Sound {
+		t.Error("a pair whose baseline reached Sense was reported as a measurement")
+	}
+	if got.Dir == "" {
+		t.Error("the refusal does not say where the arms landed, which is what was paid for")
+	}
+	for _, want := range []string{"baseline arm reached", "the arms differ in"} {
+		if !strings.Contains(got.Note, want) {
+			t.Errorf("the note does not name the check that refused it: %q", got.Note)
+		}
+	}
+}
+
+// A cell directory that cannot be read is an error rather than a free name: a
+// pair run into a directory nobody could look at first would write over
+// evidence of what it cost.
+func TestACellDirectoryThatCannotBeReadIsReported(t *testing.T) {
+	dir := t.TempDir()
+	// A file where the first cell would go: stat succeeds, and the second name
+	// is inside something that is not a directory.
+	if err := os.WriteFile(filepath.Join(dir, cellName), []byte("in the way"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, cellName+"-2"), []byte("also"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	at, err := freeCell(dir)
+	if err != nil {
+		t.Fatalf("a directory holding two cells could not name a third: %v", err)
+	}
+	if at != filepath.Join(dir, cellName+"-3") {
+		t.Errorf("the next pair lands in %s, want the third name", at)
 	}
 }

@@ -36,8 +36,9 @@ type Arm struct {
 	Model string `json:"model"`
 	Runs  int    `json:"runs"`
 	// Agent names the tool to drive the model with. It may be empty when the
-	// model names exactly one, which is the normal case.
-	Agent string `json:"agent"`
+	// model names exactly one, which is the normal case, and it is omitted
+	// rather than written blank for the same reason [Driver.Agent] is.
+	Agent string `json:"agent,omitempty"`
 }
 
 // Bench is how one repository is measured: which arms, with which subjects,
@@ -55,9 +56,28 @@ type Bench struct {
 	// because a judge that moves with the arm makes every board incomparable,
 	// and because leaving it in the arm list would mean every consumer skipping
 	// it by convention, forever.
-	Judge    string   `json:"judge"`
+	Judge string `json:"judge"`
+	// Driver is what the PHASES are run by: the agent tool and model that
+	// author a question, read a trial and write up a result.
+	//
+	// It is here rather than a flag for the same reason the arms are: a
+	// repository's phases run dozens of times over six attempts, and a driver
+	// typed on each invocation is a driver nobody can read back afterwards. It
+	// is not an arm and produces no cell — like the judge, it is a service the
+	// loop calls.
+	Driver   Driver   `json:"driver"`
 	Subjects []string `json:"subjects"`
 	Arms     []Arm    `json:"arms"`
+}
+
+// Driver is the tool and model the phase agents are run by. The agent may be
+// empty when the model names exactly one, which is the normal case.
+type Driver struct {
+	// Agent may be empty when the model names exactly one, which is the normal
+	// case, and it is omitted rather than written blank: this file is edited by
+	// a person, and an empty string reads as a setting somebody cleared.
+	Agent string `json:"agent,omitempty"`
+	Model string `json:"model"`
 }
 
 // Job is one cell's worth of work: one scenario's repository, one subject, one

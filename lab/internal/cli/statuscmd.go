@@ -36,6 +36,6 @@ func statusCmd(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "sense-lab status: %v\n", err)
 		return exitError
 	}
-	_, _ = fmt.Fprint(stdout, status.Render(at))
+	_, _ = fmt.Fprint(stdout, status.Render(at, command))
 	return exitOK
 }

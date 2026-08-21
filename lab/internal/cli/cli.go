@@ -25,7 +25,8 @@ const usage = `sense-lab — the bench instrument for Sense
 Usage: sense-lab <command> [flags]
 
 Commands:
-  repo      Admit a repository, say where it stands, and run its next phase
+  next      Do the next thing for a repository, and say what comes after
+  why       The whole record behind a repository's position
   pay       Run the paid cells a repository's bench declares — the only command that spends
   catalog   Show the subjects, agents, models, repositories and executors in the config
   plan      Show what a repository's bench would run, and every rejection with its reason
@@ -35,6 +36,7 @@ Commands:
   rescore   Recompute every recorded score and name the cause of each difference
   status    Show where every repository stands, derived from its run tree
   gate      Read a pay decision on stdin and refuse it, or not
+  help      concepts — the words this instrument uses, and what each one means
   version   Print version
 `
 
@@ -48,10 +50,12 @@ const (
 	exitOK    = 0
 	exitError = 1
 	exitUsage = 2
-	// exitCannotFinish is its own code so a caller can tell a bankable result
-	// from a broken binary without parsing JSON: a run that hit its wall left a
-	// record on disk, a run that exited 1 may not have.
-	exitCannotFinish = 3
+
+	// What a READING command answers with: score, plan, gate. These share
+	// numbers with the standing codes below and do not collide, because no
+	// command answers with both — a caller reads an exit code with the command
+	// it ran in hand, and `score` never parks.
+	//
 	// exitBelowFloor is its own code for the same reason: a run that scored
 	// and came up short is a result, and a caller must be able to tell it from
 	// a typo'd path or an unreadable transcript.
@@ -69,7 +73,40 @@ const (
 	// so the number is neither a pass nor a failure. Reporting it as either
 	// would be the exact misreading the provisional mark exists to prevent.
 	exitProvisional = 6
+
+	// The standing codes. They carry where a repository stands, so a shell
+	// loop around `next` stops on a park, a PAY, a block or either refusal
+	// rather than spinning on any of them, and a park (the method failing here)
+	// is told from a PAY (the method working and waiting on a wallet).
+	exitFinished = 3
+	exitParked   = 4
+	exitWaiting  = 5
+	exitUnusable = 6
+	exitMissing  = 7
+	// exitBlocked: a phase reported that the loop cannot go on until a person
+	// changes something outside it. Its own code because the act it asks for is
+	// its own: not read a transcript, not re-run anything, but edit a file and
+	// come back.
+	exitBlocked = 9
 )
+
+// repoFlags is where a repository is admitted from and where the evidence of it
+// lands.
+type repoFlags struct {
+	config    string
+	runs      string
+	checkouts string
+	senseBin  string
+	agent     string
+	model     string
+	until     bool
+	name      string
+}
+
+// exitNotIndexed is a scan that produced no index. It is told apart from a
+// broken invocation because the artifact naming the shortfall is on disk and
+// worth printing, which is a different thing for a caller to say.
+const exitNotIndexed = 8
 
 // Run dispatches args to a subcommand and returns the process exit code.
 // args excludes the program name. Anything that is not a known command prints
@@ -80,14 +117,16 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 	switch args[0] {
-	case "repo":
-		// Admission clones and scans, both of them long, so it dies with the
-		// binary for the same reason a run does.
-		return admitSignals(args[1:], stdout, stderr)
 	case "plan":
 		return planCmd(args[1:], stdout, stderr)
 	case "probe":
 		return probeSignals(args[1:], stdout, stderr)
+	case "next":
+		// The whole flow in one verb. It clones, scans and spawns, so it dies
+		// with the binary like everything else that reaches a process.
+		return nextSignals(args[1:], os.Stdin, stdout, stderr)
+	case "why":
+		return whyRepo(args[1:], stdout, stderr)
 	case "pay":
 		// The one command that spends. It dies with the binary for the same
 		// reason a run does, and for one more: an interrupt that did not reach
@@ -115,8 +154,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintln(stdout, Version)
 		return exitOK
 	case "help", "-h", "--help":
-		_, _ = fmt.Fprint(stdout, usage)
-		return exitOK
+		return helpCmd(args[1:], stdout, stderr)
 	default:
 		_, _ = fmt.Fprintf(stderr, "unknown command: %s\n\n", args[0])
 		_, _ = fmt.Fprint(stderr, usage)

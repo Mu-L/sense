@@ -261,8 +261,8 @@ func (c Crank) refuse(at position.Position, j Job, p plans.Plan, log, why string
 func note(at position.Position, repo string) string {
 	line := fmt.Sprintf("%s is %s: %s", repo, at.Standing, at.Because)
 	if command, spends := spendCommand(at, repo); spends {
-		line += fmt.Sprintf("\n\n%s is where the spending starts. Run it by hand:\n\n    %s\n",
-			at.Awaiting, command)
+		line += fmt.Sprintf("\n\nThis is where the spending starts, and it is yours to start:\n\n    %s\n",
+			command)
 	}
 	return line
 }
@@ -379,19 +379,34 @@ func prompt(at position.Position, j Job, p plans.Plan) string {
 // middle of Advance learns nothing about why.
 var probes = map[phase.Name]bool{phase.Minibench: true, phase.Validate: true}
 
-// spending is every phase that costs money, and the crank runs none of them.
-var spending = map[phase.Name]bool{phase.Bench: true, phase.Report: true, phase.Harvest: true, phase.Board: true}
+// spending is the phase that costs money, and the crank does not run it.
+//
+// ONE phase, not four. It held bench, report, harvest and board, and only one
+// of them spends anything that cannot be got back: the bench phase pays for
+// agent sessions, in pairs, where an interruption burns the arm that finished.
+// The other three spend a model call reading an artifact that is already on
+// disk, and a bad one is re-run for the price of running it again.
+//
+// Treating all four alike is what made the flow go dark after the paid step.
+// The operator finished the one irreversible act and then met three more stops,
+// each printing `sense-lab <phase> (by hand)` — three commands this binary does
+// not have. What they were really asking for was that somebody open the plan
+// file and drive an agent through it themselves, which is the work the crank
+// exists to do.
+var spending = map[phase.Name]bool{phase.Bench: true}
 
-// spendCommand reports whether the next phase spends, and what to run by hand.
+// spendCommand reports whether the next phase spends, and the command that
+// spends it.
+//
+// The command is real and complete. The one this replaced printed a scenario
+// path that does not exist, because the file is written into the run tree and
+// the run tree is not committed, and four placeholders for values the crank was
+// holding at the moment it printed them.
 func spendCommand(at position.Position, repo string) (string, bool) {
 	if !spending[at.Awaiting] {
 		return "", false
 	}
-	if at.Awaiting != phase.Bench {
-		return fmt.Sprintf("sense-lab %s (by hand; see lab/plans/%s.md)", at.Awaiting, at.Awaiting), true
-	}
-	return fmt.Sprintf("sense-lab probe -repo %s -scenario lab/scenarios/%s/%s.yaml -out <cell> "+
-		"-agent <agent> -model <model> -checkout <clone> -sense ./bin/sense", repo, repo, repo), true
+	return fmt.Sprintf("sense-lab pay %s", repo), true
 }
 
 // planFor is the declared plan for a phase.

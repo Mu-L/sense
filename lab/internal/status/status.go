@@ -74,10 +74,11 @@ type Cell struct {
 // Resume is the exact next action, and it cannot go stale because it is derived.
 //
 // It names the phase, the plan file that says how to run it and the artifact it
-// owes. There is deliberately no command field: no verb drives the loop yet, and
-// a resume line naming one that does not exist is the stale-resume-file failure
-// wearing a different shape. With nowhere to put a command, printing a wrong one
-// is unrepresentable rather than merely avoided.
+// owes, and it still carries no command field. It used to have no command
+// because no verb drove the loop; now there is one, and it is not held here:
+// what moves a repository is a property of where it STANDS, so it is derived
+// from the standing by [position.Position.Next] and printed on the row. A
+// second copy on this struct would be the one that goes stale.
 //
 // The plan file is guaranteed to be there: every phase in the graph has one, and
 // that is checked mechanically rather than believed.
