@@ -9,12 +9,9 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
 // Version is set at build time via ldflags. The symbol is sense-lab's own,
@@ -29,9 +26,9 @@ Usage: sense-lab <command> [flags]
 
 Commands:
   repo      Admit a repository, say where it stands, and run its next phase
+  pay       Run the paid cells a repository's bench declares — the only command that spends
   catalog   Show the subjects, agents, models, repositories and executors in the config
   plan      Show what a repository's bench would run, and every rejection with its reason
-  run       Run one scenario against one repository
   probe     Run both arms of one cell and prove they differed only in Sense access
   score     Score a recorded run against a scenario's gold
   validate  Audit a scenario's gold and report what would be quarantined
@@ -89,18 +86,14 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return admitSignals(args[1:], stdout, stderr)
 	case "plan":
 		return planCmd(args[1:], stdout, stderr)
-	case "run":
-		// A run must die with the binary. Without this the cancel path the
-		// runner carefully distinguishes can never fire in production:
-		// interrupting a run would leave the agent running, unattended,
-		// unowned and still spending, with no record on disk — and because the
-		// session is in its own process group, a second Ctrl-C cannot reach it
-		// either.
-		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-		defer stop()
-		return runSession(ctx, args[1:], stdout, stderr)
 	case "probe":
 		return probeSignals(args[1:], stdout, stderr)
+	case "pay":
+		// The one command that spends. It dies with the binary for the same
+		// reason a run does, and for one more: an interrupt that did not reach
+		// the arms would leave a cell half run, with money spent on an arm
+		// nothing can ever pair.
+		return paySignals(args[1:], os.Stdin, stdout, stderr)
 	case "tee":
 		// Deliberately absent from the usage text. It is what a run's
 		// .mcp.json points at instead of the Sense server, not a verb a person
