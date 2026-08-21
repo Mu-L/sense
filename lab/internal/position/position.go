@@ -188,6 +188,26 @@ func (p *Position) route(cycleDir string, last Attempt) {
 			last.Phase, last.Verdict, phaseOf(last.Phase).Writes)
 		return
 	}
+	if phase.ReEntry(last.Phase, last.Verdict) && next == phase.Author {
+		// A re-entry is the next authoring cycle, and the cycle is what the
+		// ceiling is counted in. Without this the count never moves: every
+		// re-entry re-opened the cycle it came from, so the sixth one routed
+		// back to the author like the first, the ceiling could not bite, and
+		// each attempt wrote its draft over the one it was sent back to
+		// replace. Measured on mastodon 2026-08-20: four authoring passes, four
+		// mini-bench pairs, all of them recorded in cycle 1.
+		//
+		// Still derived rather than counted. The number comes from the tree on
+		// every read, and the new cycle's directory appears when its first
+		// phase writes into it, which is the same moment the tree starts saying
+		// so on its own.
+		p.Cycle++
+		p.Reached, p.Awaiting = walk(filepath.Join(filepath.Dir(cycleDir), strconv.Itoa(p.Cycle)))
+		p.Standing = Ready
+		p.Because = fmt.Sprintf("%s emitted %s, which routes to %s in cycle %d",
+			last.Phase, last.Verdict, next, p.Cycle)
+		return
+	}
 	// Nothing routes to Done here: the two phases that end the loop are the
 	// board and the handoff, and both are recognised from their artifact above
 	// before any verdict is read. A repository is finished because the board is

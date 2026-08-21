@@ -37,7 +37,12 @@ func TestPositionIsReadFromTheCommittedTree(t *testing.T) {
 		answers  int
 		because  string
 	}{
-		{"midcycle", 2, phase.Minibench, phase.Author, Ready, phase.Requestion, 2, "routes to author"},
+		// A re-entry is already in the next cycle: cycle 2's mini-bench sent
+		// work back, so this repository is in cycle 3 with nothing written in
+		// it yet. Reading it as still in cycle 2 is what let six re-entries
+		// share one cycle directory, each draft written over the one it was
+		// sent back to replace.
+		{"midcycle", 3, "", phase.Author, Ready, phase.Requestion, 2, "routes to author"},
 		{"parked", 6, phase.Author, phase.Done, Parked, phase.NoAnchor, 1, "handoff"},
 		{"atpay", 1, phase.Validate, phase.Bench, Waiting, phase.Pay, 0, "human"},
 		{"banked", 2, phase.Author, phase.Minibench, Ready, phase.Draft, 0, "routes to minibench"},
@@ -257,7 +262,7 @@ func TestAnUnreadableTreeIsAnError(t *testing.T) {
 func TestTheRenderedPageCarriesEveryRejection(t *testing.T) {
 	page := Render(read(t, fixture, "midcycle"))
 
-	for _, want := range []string{"repo:     midcycle", "cycle:    2 of 6", "reached:  minibench",
+	for _, want := range []string{"repo:     midcycle", "cycle:    3 of 6", "reached:  nothing yet",
 		"awaiting: author", "4 of 4", "no more discriminating"} {
 		if !strings.Contains(page, want) {
 			t.Errorf("page = %q, want it to carry %q", page, want)

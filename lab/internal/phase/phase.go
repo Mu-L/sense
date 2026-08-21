@@ -157,6 +157,15 @@ var reAuthor = map[step]bool{
 	{Validate, DoNotPay}:  true,
 }
 
+// ReEntry reports whether a verdict sends work back to authoring.
+//
+// It is the same table the routing reads, asked a different question: a caller
+// that has to know whether the repository has just started another authoring
+// cycle would otherwise compare the phase it routed to against Author, and get
+// the wrong answer for the one transition that reaches Author without being a
+// re-entry, which is the index at the very beginning.
+func ReEntry(from Name, v Verdict) bool { return reAuthor[step{from, v}] }
+
 // forward is every transition that is not a re-entry.
 //
 // Report's diagnosis goes to handoff rather than back to authoring, and that is

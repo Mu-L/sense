@@ -490,7 +490,9 @@ func TestTheLoopMovesOnFromAReEnteredPhase(t *testing.T) {
 		Verdict: phase.Requestion, Table: "the baseline cited 4 of 4 rows"}}).spawn
 	advance(t, c, repo)
 
-	again := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 1, Verdict: phase.Draft}}
+	// The re-entered author is cycle 2's: a verdict naming cycle 1 would be a
+	// verdict about the attempt this one was sent back to replace.
+	again := &agent{artifact: true, verdict: &Verdict{Phase: phase.Author, Repo: repo, Cycle: 2, Verdict: phase.Draft}}
 	c.Spawn = again.spawn
 	r := advance(t, c, repo)
 
@@ -498,7 +500,7 @@ func TestTheLoopMovesOnFromAReEnteredPhase(t *testing.T) {
 		t.Fatalf("awaiting %s (%s), want the phase after the re-entered author", r.After.Awaiting, r.After.Because)
 	}
 	// And one more turn goes to the mini-bench rather than back to the author.
-	last := &agent{artifact: true, verdict: &Verdict{Phase: phase.Minibench, Repo: repo, Cycle: 1,
+	last := &agent{artifact: true, verdict: &Verdict{Phase: phase.Minibench, Repo: repo, Cycle: 2,
 		Verdict: phase.Proceed}}
 	c.Spawn = last.spawn
 	if r := advance(t, c, repo); r.Ran != phase.Minibench {
