@@ -431,3 +431,43 @@ func TestAnAttemptWithNoVerdictSaysHowItEnded(t *testing.T) {
 		})
 	}
 }
+
+// A phase that reported the loop cannot go on stops it, and stays the awaited
+// phase so that editing what it named and running the same command again picks
+// it up where it was.
+func TestABlockedPhaseStopsTheLoopAndStaysTheAwaitedOne(t *testing.T) {
+	dir := t.TempDir()
+	tree := filepath.Join(dir, "blocked")
+	if err := os.MkdirAll(filepath.Join(tree, "index"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tree, "index", "index.json"), []byte(`{"symbols":1}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cycle := filepath.Join(tree, "1", string(phase.Preflight))
+	if err := os.MkdirAll(cycle, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cycle, "preflight.json"), []byte(`{"outcome":"blocked"}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := Record(tree, Attempt{Cycle: 1, Phase: phase.Preflight, Try: 1, Verdict: phase.Blocked,
+		Table:    "nothing declares what blocked is measured on: write lab/benches/blocked.json",
+		Artifact: filepath.Join(cycle, "preflight.json")}); err != nil {
+		t.Fatal(err)
+	}
+
+	at, err := Read(dir, "blocked")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if at.Standing != Blocked {
+		t.Errorf("standing = %q, want it blocked", at.Standing)
+	}
+	if at.Awaiting != phase.Preflight {
+		t.Errorf("awaiting %q, want the phase that stopped, so the same command picks it up", at.Awaiting)
+	}
+	if !strings.Contains(at.Because, "lab/benches/blocked.json") {
+		t.Errorf("because = %q, want it to name the file to write", at.Because)
+	}
+}

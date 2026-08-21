@@ -2,7 +2,7 @@
 phase: preflight
 reads: scenario.yaml
 writes: preflight.json
-emits: [AUTO]
+emits: [AUTO, BLOCKED]
 wall: 15m
 ---
 
@@ -27,8 +27,26 @@ scenario, any other repository.
 
 ## Decide
 
-Nothing is judged. Every rejection carries a named reason, because a rejection without one is a
-mystery someone will route around by guessing.
+Nothing about the SCENARIO is judged. Every rejection carries a named reason, because a rejection
+without one is a mystery someone will route around by guessing.
+
+**One thing is decided, and it is about the configuration: can this repository be benched at all.**
+
+- **`AUTO`** — the matrix expanded. Every job is either planned or rejected with its reason, and
+  what comes after this can run.
+- **`BLOCKED`** — nothing declares what this repository is measured on, or what does cannot run.
+  No bench file at all, a bench naming a subject the catalog does not hold, a bench whose every
+  arm is rejected: in each case the matrix is not a partial one, it is absent. Say so, name the
+  file to write, and stop.
+
+The distinction is not a nicety. A `BLOCKED` that reports itself as `AUTO` does not merely
+mislabel a state — it advances the loop into the phase that spends money, and the spend then
+happens against a matrix no file declares. Measured on mastodon cycle 3 on 2026-08-21: preflight
+found no `lab/benches/mastodon.json`, wrote sixty lines explaining why that is fatal, emitted the
+only verdict it had, and a paid cell ran on an agent and a model somebody typed from memory.
+
+**An empty matrix is not a clean matrix.** Both lists empty means nothing was declared, not that
+nothing was wrong, and the two must never report alike.
 
 **A cell that lost a subject rejects its survivor.** This is the hazard the phase exists for, and
 without it preflight CREATES the failure rather than preventing it: if one subject of a cell
@@ -49,7 +67,9 @@ Two recorded failures have this shape:
 
 ## Artifact
 
-`preflight.json`: every job that will run, and every rejection with its reason.
+`preflight.json`: every job that will run, and every rejection with its reason. On `BLOCKED` it
+carries what is absent and the path of the file that would declare it, because the operator's next
+act is to write that file.
 
 ## Done when
 
