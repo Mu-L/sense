@@ -252,6 +252,30 @@ func credentialRoute(a catalog.Agent) isolate.Route {
 	return r
 }
 
+// senseBinary is the Sense binary as something running in another directory can
+// reach it.
+//
+// Everything that reaches it runs somewhere else. `sense setup` runs in the
+// arm's own worktree, and the shadow PATH symlinks to it from the arm's own bin
+// directory, so a path relative to where the lab was invoked means a file
+// inside the worktree, which is not there. Measured on mastodon 2026-08-20:
+// `-sense ./bin/sense` produced "configure the subject: fork/exec
+// ./bin/sense: no such file or directory", and every phase environment before
+// that carried a bin/sense symlink pointing at a path that does not resolve.
+//
+// A bare name is left exactly as it is. It names a binary on PATH, and making
+// that absolute would turn a PATH lookup into a file in the current directory.
+func senseBinary(name string) (string, error) {
+	if !strings.ContainsRune(name, filepath.Separator) {
+		return name, nil
+	}
+	at, err := filepath.Abs(name)
+	if err != nil {
+		return "", fmt.Errorf("resolve the Sense binary %q: %w", name, err)
+	}
+	return at, nil
+}
+
 // keyInEnvironment reports whether the host authenticates by key instead.
 func keyInEnvironment() bool {
 	for _, name := range isolate.Credentials() {
@@ -283,6 +307,14 @@ func probeSpec(ctx context.Context, f probeFlags) (probe.Spec, probeJob, error) 
 		return probe.Spec{}, probeJob{}, err
 	}
 	set, err := scenario.LoadPath(f.scenario)
+	if err != nil {
+		return probe.Spec{}, probeJob{}, err
+	}
+
+	// The Sense binary as a subprocess running somewhere else can reach it. The
+	// arms do not run here, so a relative path is resolved before it is handed
+	// on rather than against whatever directory reaches it.
+	senseBin, err := senseBinary(f.senseBin)
 	if err != nil {
 		return probe.Spec{}, probeJob{}, err
 	}
@@ -335,7 +367,7 @@ func probeSpec(ctx context.Context, f probeFlags) (probe.Spec, probeJob, error) 
 		ConfigDirs: j.agent.ConfigDirs,
 		Credential: cred,
 		Route:      credentialRoute(j.agent),
-		SenseBin:   f.senseBin,
+		SenseBin:   senseBin,
 		LabBin:     labBin,
 		HostPath:   os.Getenv("PATH"),
 		Wall:       f.wall,

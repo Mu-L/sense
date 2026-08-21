@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -880,4 +881,63 @@ func TestAKeyThatMerelySharesAPrefixDoesNotSatisfyTheCheck(t *testing.T) {
 	if err := carriesThisModel(agent, catalog.Model{ID: "x", CredentialKey: "ollama-cloud"}); err == nil {
 		t.Fatal("a different provider whose name starts the same was accepted")
 	}
+}
+
+// The Sense binary is resolved before it is handed to anything that runs
+// somewhere else. `sense setup` runs in the arm's own worktree and the shadow
+// PATH symlinks to it from the arm's own bin, so a path relative to where the
+// lab was invoked names a file that is not there.
+func TestTheSenseBinaryIsResolvedBeforeItIsHandedOn(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		bin  string
+		want func(string) bool
+	}{
+		{"a path the caller typed", filepath.Join(".", "bin", "sense"), filepath.IsAbs},
+		{"a name on PATH", "sense", func(got string) bool { return got == "sense" }},
+		{"a path that is already absolute", filepath.Join(string(filepath.Separator), "opt", "sense"),
+			func(got string) bool { return got == filepath.Join(string(filepath.Separator), "opt", "sense") }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := senseBinary(tc.bin)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !tc.want(got) {
+				t.Errorf("senseBinary(%q) = %q", tc.bin, got)
+			}
+		})
+	}
+}
+
+// The arms are handed the resolved binary, read off the spec they will run
+// with rather than off the flag that was typed.
+func TestTheArmsAreHandedTheResolvedSenseBinary(t *testing.T) {
+	w := newProbeWorld(t)
+	rel, err := filepath.Rel(mustGetwd(t), w.senseBin)
+	if err != nil {
+		t.Skipf("no relative path to the stand-in binary: %v", err)
+	}
+
+	f, err := parseProbeFlags(w.args("-sense", rel)[1:], io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, _, err := probeSpec(context.Background(), f)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !filepath.IsAbs(s.SenseBin) {
+		t.Errorf("the arms would be handed %q, which nothing running in a worktree can reach", s.SenseBin)
+	}
+}
+
+func mustGetwd(t *testing.T) string {
+	t.Helper()
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return dir
 }
