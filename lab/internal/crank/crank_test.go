@@ -195,57 +195,97 @@ func TestEveryLeverRoutesTheWayTheGraphDeclares(t *testing.T) {
 	}
 }
 
-// The phases that spend are not run, and the list is written down here rather
-// than read from the one the crank uses. A test that asked the same map would
-// move an entry between its own branches when that map lost one, and pass.
-func TestNoPhaseThatSpendsIsEverRun(t *testing.T) {
-	for _, spends := range []phase.Name{phase.Bench, phase.Report, phase.Harvest, phase.Board} {
-		t.Run(string(spends), func(t *testing.T) {
+// The one phase that spends money is not run, and its name is written down here
+// rather than read from the map the crank uses. A test that asked the same map
+// would follow it wherever it went and pass.
+func TestThePhaseThatSpendsIsNeverRun(t *testing.T) {
+	dir, repo := admitted(t)
+	reach(t, dir, repo, 1, phase.Bench)
+	a := &agent{}
+
+	r := advance(t, cranked(t, dir, a), repo)
+
+	if len(a.jobs) != 0 {
+		t.Errorf("the crank dispatched the paid phase")
+	}
+	if r.After.Standing != position.Waiting {
+		t.Errorf("standing %s (%s), want it waiting on a human", r.After.Standing, r.After.Because)
+	}
+	if !strings.Contains(r.Note, "sense-lab pay "+repo) {
+		t.Errorf("note = %q, want the command that spends", r.Note)
+	}
+}
+
+// Judging a result is not spending. Report, harvest and board each spend a
+// model call on an artifact already on disk, and a bad one is re-run for the
+// price of running it again — so the crank drives them like every other
+// judgement phase.
+//
+// They used to stop the loop alongside the paid cell, each printing
+// `sense-lab <phase> (by hand)`, which named three commands this binary does not
+// have. The operator finished the one irreversible act and the flow went dark.
+func TestJudgingAResultIsNotSpendingAndIsDriven(t *testing.T) {
+	for _, judges := range []phase.Name{phase.Report, phase.Harvest, phase.Board} {
+		t.Run(string(judges), func(t *testing.T) {
 			dir, repo := admitted(t)
-			reach(t, dir, repo, 1, spends)
-			a := &agent{}
+			reach(t, dir, repo, 1, judges)
+			a := &agent{artifact: true, verdict: &Verdict{Phase: judges, Repo: repo, Cycle: 1,
+				Verdict: firstVerdictOf(t, judges)}}
 
 			r := advance(t, cranked(t, dir, a), repo)
 
-			if len(a.jobs) != 0 {
-				t.Errorf("the crank dispatched %s, which spends", spends)
+			if len(a.jobs) != 1 {
+				t.Fatalf("the crank dispatched %s %d times, want once", judges, len(a.jobs))
 			}
-			if r.After.Standing != position.Waiting {
-				t.Errorf("standing %s (%s), want it waiting on a human", r.After.Standing, r.After.Because)
+			if r.Ran != judges {
+				t.Errorf("it ran %q, want %s", r.Ran, judges)
 			}
-			if !strings.Contains(r.Note, "by hand") {
-				t.Errorf("note = %q, want it to say what to run", r.Note)
+			if strings.Contains(r.Note, "sense-lab pay") {
+				t.Errorf("%s reads as a phase that spends money: %q", judges, r.Note)
 			}
 		})
 	}
 }
 
-// The levers past the pay call are not driven by the crank at all, and it says
-// so rather than dispatching a phase that spends. The DoD FAIL lever is the one
-// this leaves untested end to end, and it is untested because it is unreachable
-// rather than because it was skipped.
-func TestALeverPulledByAPhaseThatSpendsIsNotDrivenAtAll(t *testing.T) {
-	for _, lever := range phase.Levers {
-		if !spending[lever.From] {
-			continue
-		}
-		t.Run(lever.Name, func(t *testing.T) {
-			dir, repo := admitted(t)
-			reach(t, dir, repo, 1, lever.From)
-			a := &agent{}
+// firstVerdictOf is a verdict the phase may emit, taken from the graph rather
+// than copied here: a phase whose enum changes must not leave this test
+// asserting against a word it no longer has.
+func firstVerdictOf(t *testing.T, name phase.Name) phase.Verdict {
+	t.Helper()
+	p, ok := phase.Lookup(name)
+	if !ok || len(p.Verdicts) == 0 {
+		t.Fatalf("the graph declares no verdict for %s", name)
+	}
+	return p.Verdicts[0]
+}
 
-			r := advance(t, cranked(t, dir, a), repo)
+// The DoD failure lever is driven end to end, which it could not be while every
+// phase past the pay call was held back.
+//
+// Its own test used to skip it, and said so: it was untested because it was
+// unreachable rather than because it was skipped. A harvest that fails its
+// checks sends the cell back to be read again rather than onto the board, and
+// that is a routing rule nothing exercised until the crank drove harvest.
+func TestTheDoDFailureLeverSendsAWinBackToBeReadAgain(t *testing.T) {
+	dir, repo := admitted(t)
+	reach(t, dir, repo, 1, phase.Harvest)
+	a := &agent{artifact: true, verdict: &Verdict{Phase: phase.Harvest, Repo: repo, Cycle: 1,
+		Verdict: phase.DoDFail, Table: "the citation check found two rows that do not resolve"}}
 
-			if len(a.jobs) != 0 {
-				t.Errorf("the crank dispatched %s, which spends", lever.From)
-			}
-			if r.After.Standing != position.Waiting {
-				t.Errorf("standing %s (%s), want it waiting on a human", r.After.Standing, r.After.Because)
-			}
-			if !strings.Contains(r.Note, "by hand") {
-				t.Errorf("note = %q, want it to say what to run", r.Note)
-			}
-		})
+	r := advance(t, cranked(t, dir, a), repo)
+
+	if len(a.jobs) != 1 {
+		t.Fatalf("the harvest was dispatched %d times, want once", len(a.jobs))
+	}
+	if r.After.Awaiting != phase.Report {
+		t.Errorf("awaiting %s (%s), want the cell read again rather than published",
+			r.After.Awaiting, r.After.Because)
+	}
+	if r.After.Standing != position.Ready {
+		t.Errorf("standing %s, want the loop to carry on", r.After.Standing)
+	}
+	if strings.Contains(r.Note, "sense-lab pay") {
+		t.Errorf("a failed harvest reads as a phase that spends money: %q", r.Note)
 	}
 }
 
@@ -300,8 +340,8 @@ func TestAPayPrintsTheCommandAndSpendsNothing(t *testing.T) {
 	if r.After.Standing != position.Waiting {
 		t.Errorf("standing %s, want it waiting on a human", r.After.Standing)
 	}
-	if !strings.Contains(r.Note, "sense-lab probe") {
-		t.Errorf("note = %q, want the command to run by hand", r.Note)
+	if !strings.Contains(r.Note, "sense-lab pay "+repo) {
+		t.Errorf("note = %q, want the command that spends", r.Note)
 	}
 	if r.After.Awaiting != before.Awaiting {
 		t.Errorf("awaiting moved from %s to %s; nothing should have", before.Awaiting, r.After.Awaiting)

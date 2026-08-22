@@ -299,7 +299,7 @@ func probeSpec(ctx context.Context, f probeFlags) (probe.Spec, probeJob, error) 
 	if err != nil {
 		return probe.Spec{}, probeJob{}, err
 	}
-	j, err := resolveJob(c, runFlags{repo: f.repo, agent: f.agent, model: f.model})
+	j, err := resolveJob(c, target{repo: f.repo, agent: f.agent, model: f.model})
 	if err != nil {
 		return probe.Spec{}, probeJob{}, err
 	}

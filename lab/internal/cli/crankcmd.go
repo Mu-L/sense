@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -14,7 +13,6 @@ import (
 	"github.com/luuuc/sense/lab/internal/crank"
 	"github.com/luuuc/sense/lab/internal/isolate"
 	"github.com/luuuc/sense/lab/internal/plans"
-	"github.com/luuuc/sense/lab/internal/position"
 	"github.com/luuuc/sense/lab/internal/probe"
 	"github.com/luuuc/sense/lab/internal/run"
 )
@@ -45,37 +43,6 @@ const cellName = "cell"
 // phase: it is how long a process takes to die.
 const phaseGrace = 30 * time.Second
 
-// turn runs the crank over one repository: one phase, or every phase until it
-// stops on its own.
-//
-// The loop is here rather than inside the crank. `-until` takes no argument and
-// means crank until it stops, so nothing in the dispatcher knows which of the
-// two it is in and no mode is threaded through it.
-func turn(ctx context.Context, f repoFlags, c *catalog.Catalog, id string, stdout, stderr io.Writer) int {
-	k, err := crankFor(f, c, id)
-	if err != nil {
-		_, _ = fmt.Fprintf(stderr, "sense-lab repo: %v\n", err)
-		return exitError
-	}
-	for {
-		r, err := k.Advance(ctx, id)
-		if err != nil {
-			_, _ = fmt.Fprintf(stderr, "sense-lab repo: %v\n", err)
-			return exitError
-		}
-		_, _ = fmt.Fprint(stdout, position.Render(r.After))
-		if r.Note != "" {
-			_, _ = fmt.Fprintf(stdout, "\n%s\n", r.Note)
-		}
-		if code, stop := stopOn[r.After.Standing]; stop {
-			return code
-		}
-		if !f.until {
-			return exitOK
-		}
-	}
-}
-
 // crankFor assembles the wiring once: the declared plans, the repository's
 // checkout, and the spawner. Everything a phase needs comes from here or from
 // its plan, never from Advance's arguments.
@@ -84,10 +51,11 @@ func crankFor(f repoFlags, c *catalog.Catalog, id string) (crank.Crank, error) {
 	if err != nil {
 		return crank.Crank{}, err
 	}
-	r, ok := c.Repos[id]
-	if !ok {
-		return crank.Crank{}, fmt.Errorf("no repository %q in the catalog", id)
-	}
+	// The repository is in the catalog: nothing reaches this that did not
+	// resolve one first, and holding the checkout at its pin has already read
+	// the same row. A third check here would be this file disagreeing with the
+	// two that own the question.
+	r := c.Repos[id]
 	checkout := r.Checkout
 	if checkout == "" {
 		checkout = filepath.Join(f.checkouts, id)
@@ -132,7 +100,7 @@ func liveProbe(ctx context.Context, f repoFlags, cell crank.Cell) (crank.Pair, e
 	if err != nil {
 		return crank.Pair{}, err
 	}
-	report, err := probe.Run(ctx, s)
+	report, err := runPair(ctx, s)
 	if err != nil {
 		return crank.Pair{}, err
 	}
@@ -201,10 +169,11 @@ func notSound(r probe.Report) string {
 // It lives here, at the edge, beside the other things that spawn. The crank
 // takes it as a value and never imports one, which is what the depguard rule on
 // the deciding packages holds in place.
+//
+// Both the tool and the model arrive set: the driver is resolved from the
+// repository's own bench before a crank is assembled, and a bench that declares
+// neither is refused there, where the file to edit can be named.
 func phaseSpawner(f repoFlags, c *catalog.Catalog) (crank.Spawner, error) {
-	if f.agent == "" || f.model == "" {
-		return nil, fmt.Errorf("-agent and -model say what a phase is run by; without them nothing can be dispatched")
-	}
 	a, m, err := resolveDriver(c, f.agent, f.model)
 	if err != nil {
 		return nil, err

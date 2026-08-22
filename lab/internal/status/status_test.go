@@ -267,7 +267,7 @@ func TestARootThatHasNotRunReportsAnEmptyPosition(t *testing.T) {
 	if len(p.Repos) != 0 || len(p.Cells) != 0 {
 		t.Errorf("an unstarted root reported %+v", p)
 	}
-	page := status.Render(p)
+	page := status.Render(p, nil)
 	for _, want := range []string{"nothing has run", "none", "nothing to resume"} {
 		if !strings.Contains(page, want) {
 			t.Errorf("the empty page does not say %q:\n%s", want, page)

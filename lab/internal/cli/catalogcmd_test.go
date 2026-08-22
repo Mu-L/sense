@@ -25,10 +25,7 @@ func TestNothingCanBePlannedWithoutAConfigDirectory(t *testing.T) {
 		args []string
 	}{
 		{"catalog", []string{"catalog", "-config", absent}},
-		{"run", []string{"run", "-config", absent,
-			"-scenario", scenarioFile(t, twoStepScenario), "-repo", "discourse",
-			"-checkout", t.TempDir(), "-out", filepath.Join(t.TempDir(), "r"),
-			"-agent", "claude-code", "-model", "claude-opus-5"}},
+		{"plan", []string{"plan", "-config", absent, "-repo", "discourse"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			code, stdout, stderr := dispatch(t, tc.args...)

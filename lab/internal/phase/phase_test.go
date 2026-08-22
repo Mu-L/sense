@@ -233,7 +233,10 @@ func TestEveryVerdictOfEveryPhaseRoutesSomewhereDeclared(t *testing.T) {
 				t.Errorf("%s emitting %q: %v", p.Name, v, err)
 				continue
 			}
-			if to == phase.Done {
+			// Done and Stopped are the two ends of the loop rather than
+			// phases: one is a repository that finished, the other is one that
+			// cannot go on until a person changes something.
+			if to == phase.Done || to == phase.Stopped {
 				continue
 			}
 			if _, ok := phase.Lookup(to); !ok {
@@ -291,5 +294,65 @@ func TestEmitsIsFalseForAVerdictThePhaseDoesNotDeclare(t *testing.T) {
 	}
 	if !p.Emits(phase.Auto) {
 		t.Error("the board cannot emit the only verdict it has")
+	}
+}
+
+// The artifact a phase writes is what another phase finds it by. A path spelled
+// out at a call site keeps pointing at the old name after somebody renames the
+// artifact here.
+func TestTheGraphSaysWhichPhaseWroteAnArtifact(t *testing.T) {
+	for _, p := range phase.Graph {
+		got, ok := phase.Wrote(p.Writes)
+		if !ok || got != p.Name {
+			t.Errorf("phase.Wrote(%q) = %s (%v), want %s", p.Writes, got, ok, p.Name)
+		}
+	}
+	if got, ok := phase.Wrote("nothing-writes-this.json"); ok {
+		t.Errorf("Wrote of an artifact no phase writes = %s", got)
+	}
+}
+
+// A re-entry is asked of the routing table rather than worked out from the
+// phase it routes to: the index reaches the author too, and it is not one.
+func TestAReEntryIsToldApartFromTheFirstArrivalAtAuthoring(t *testing.T) {
+	if !phase.ReEntry(phase.Minibench, phase.Requestion) {
+		t.Error("a re-questioned mini-bench does not read as a re-entry")
+	}
+	if !phase.ReEntry(phase.Validate, phase.DoNotPay) {
+		t.Error("a do-not-pay does not read as a re-entry")
+	}
+	if phase.ReEntry(phase.Index, phase.Auto) {
+		t.Error("the index reaching the author reads as a re-entry")
+	}
+	if phase.ReEntry(phase.Author, phase.Draft) {
+		t.Error("a draft moving forward reads as a re-entry")
+	}
+}
+
+// A check whose enum has one member is not a check. Preflight could only say
+// AUTO: it found no bench file, wrote sixty lines saying why that is fatal, and
+// the loop advanced to the phase that spends money against a matrix no file
+// declared.
+func TestPreflightCanRefuseAndRefusingStopsTheLoop(t *testing.T) {
+	p, ok := phase.Lookup(phase.Preflight)
+	if !ok {
+		t.Fatal("the graph has no preflight")
+	}
+	if len(p.Verdicts) < 2 {
+		t.Fatalf("preflight emits %v; a phase that can only agree cannot check anything", p.Verdicts)
+	}
+	if !p.Emits(phase.Blocked) {
+		t.Errorf("preflight emits %v and cannot refuse", p.Verdicts)
+	}
+
+	to, err := phase.Next(phase.Preflight, phase.Blocked, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if to != phase.Stopped {
+		t.Errorf("a blocked preflight routes to %q, want the loop to stop", to)
+	}
+	if to == phase.Author {
+		t.Error("a blocked preflight re-enters authoring; no wording of the question declares an arm")
 	}
 }

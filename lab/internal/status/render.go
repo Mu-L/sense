@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/luuuc/sense/lab/internal/phase"
+	"github.com/luuuc/sense/lab/internal/position"
 )
 
 // banner is the first thing on the page and it is not decoration. A regenerated
@@ -12,21 +13,24 @@ import (
 // someone treating this as the record.
 const banner = "Position is authoritative in the run tree. This page is a view of it and decides nothing."
 
-// Render turns a position into the page.
-//
 // It takes a struct and returns a string, and the only thing that consumes that
 // string is a printer. Nothing in this codebase reads it back.
-func Render(p Position) string {
+// Render turns a position into the page.
+//
+// command is handed in rather than known here: what moves a repository is a
+// property of where it stands, and which verb performs it belongs to the binary
+// that has the verbs. A nil one prints the rows without them.
+func Render(p Position, command func(position.Position) string) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "%s\n\n", banner)
 	fmt.Fprintf(&b, "run trees under %s\n\n", p.Root)
-	renderRepos(&b, p)
+	renderRepos(&b, p, command)
 	renderCells(&b, p)
 	renderResume(&b, p)
 	return b.String()
 }
 
-func renderRepos(b *strings.Builder, p Position) {
+func renderRepos(b *strings.Builder, p Position, command func(position.Position) string) {
 	b.WriteString("LOOP POSITION\n")
 	if len(p.Repos) == 0 {
 		b.WriteString("  nothing has run\n\n")
@@ -43,6 +47,16 @@ func renderRepos(b *strings.Builder, p Position) {
 		fmt.Fprintf(b, "  %-20s reached %s, awaiting %s\n", "", orNone(r.Reached), orNone(r.Awaiting))
 		fmt.Fprintf(b, "  %-20s %s against a ceiling of %d, over this repository's lifetime\n",
 			"", r.Spend, p.Ceiling)
+		// The command that moves this row, for the rows something moves. A
+		// page that says where every repository stands and not what to do
+		// about any of them makes the reader work out the verb — which is the
+		// question they opened it with.
+		if command == nil {
+			continue
+		}
+		if verb := command(r.Position); verb != "" {
+			fmt.Fprintf(b, "  %-20s %s\n", "", verb)
+		}
 		if len(r.Banked) > 0 {
 			fmt.Fprintf(b, "  %-20s banked on cycle %v\n", "", r.Banked)
 		}

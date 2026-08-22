@@ -59,6 +59,15 @@ const (
 // transition cannot mistake "finished" for "unset".
 const Done Name = "done"
 
+// Stopped is not a phase either. It is what the loop reaches when a phase
+// reports that something OUTSIDE the loop has to change before it can go on.
+//
+// It is told apart from [Done] because they are opposite outcomes, and from a
+// re-entry because there is nothing to try again: no wording of the question
+// fixes an undeclared arm. The phase that stopped stays the awaited one, so
+// editing the file and running the same command again picks it up.
+const Stopped Name = "stopped"
+
 // Verdict is what a phase emits. It is an enum per phase and never free text: a
 // phase that can return anything is a phase whose routing cannot be tested.
 type Verdict string
@@ -78,6 +87,15 @@ const (
 	Diagnosis    Verdict = "DIAGNOSIS"
 	WinConfirmed Verdict = "WIN CONFIRMED"
 	DoDFail      Verdict = "DoD FAIL"
+	// Blocked: the phase did its job and reports that the loop cannot go on
+	// until a person changes something it does not own.
+	//
+	// It exists because a check with one verdict is not a check. Preflight
+	// could only say AUTO, so it found no bench file for mastodon, wrote sixty
+	// lines explaining why that is fatal, emitted the only verdict it had, and
+	// the loop advanced to the phase that spends money against a matrix no file
+	// declared.
+	Blocked Verdict = "BLOCKED"
 )
 
 // AuthoringCeiling is how many authoring cycles a repository gets before it
@@ -116,13 +134,27 @@ var Graph = []Phase{
 	{Author, "slate.md", "scenario.draft.yaml", []Verdict{Draft, NoAnchor}},
 	{Minibench, "scenario.draft.yaml", "minibench.md", []Verdict{Proceed, Requestion, NoAnchor}},
 	{Expand, "minibench.md", "scenario.yaml", []Verdict{Auto, Requestion}},
-	{Preflight, "scenario.yaml", "preflight.json", []Verdict{Auto}},
+	{Preflight, "scenario.yaml", "preflight.json", []Verdict{Auto, Blocked}},
 	{Validate, "scenario.yaml", "pay-call.md", []Verdict{Pay, DoNotPay}},
 	{Bench, "scenario.yaml", "cells.json", []Verdict{Auto}},
 	{Report, "cells.json", "report.md", []Verdict{Win, Diagnosis}},
 	{Harvest, "report.md", "harvest.json", []Verdict{WinConfirmed, DoDFail}},
 	{Board, "harvest.json", "board.md", []Verdict{Auto}},
 	{Handoff, "attempts/", "handoff.md", []Verdict{Auto}},
+}
+
+// Wrote reports the phase the graph says writes an artifact.
+//
+// Derived rather than written out at a call site: a path to another phase's
+// artifact spelled in Go is a path that keeps pointing at the old name after
+// somebody renames the artifact here.
+func Wrote(artifact string) (Name, bool) {
+	for _, p := range Graph {
+		if p.Writes == artifact {
+			return p.Name, true
+		}
+	}
+	return "", false
 }
 
 // Lookup reports the declared phase named n.
@@ -187,6 +219,7 @@ var forward = map[step]Name{
 	{Harvest, DoDFail}:      Report,
 	{Board, Auto}:           Done,
 	{Handoff, Auto}:         Done,
+	{Preflight, Blocked}:    Stopped,
 }
 
 // Lever is one routed re-entry, named. The table exists because a done-means of

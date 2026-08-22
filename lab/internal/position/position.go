@@ -35,7 +35,59 @@ const (
 	// not there. An agent died. Diagnosed differently from Unusable, which is
 	// why it is not the same code.
 	Missing Standing = "missing"
+	// Blocked: a phase did its job and reported that the loop cannot go on
+	// until a person changes something the loop does not own — an undeclared
+	// arm, a bench file nobody wrote.
+	//
+	// Its own standing rather than Unusable, which means an agent misbehaved.
+	// Nothing misbehaved here: the check worked, and what it found is a fact
+	// about the configuration. Told apart because they send a reader to
+	// opposite places — one to a transcript, the other to a file to edit.
+	Blocked Standing = "blocked"
 )
+
+// Act is what moves a repository from where it stands. It is a KIND of act
+// rather than a command: which verb performs it is the command layer's to know,
+// and a package that decides positions would otherwise have to be edited every
+// time one is renamed.
+//
+// It is here rather than in that layer because there is one right answer per
+// standing and two copies of it would drift. Both the page a person meets at a
+// stop and the row on the campaign-wide status ask the same question, and a
+// status offering the paid step to a repository that is not at it is worse than
+// one offering nothing.
+type Act string
+
+const (
+	// Nothing: there is no act. A finished repository and a parked one get
+	// none on purpose — inventing one to fill the column is how a page starts
+	// suggesting work that does not exist.
+	Nothing Act = ""
+	// Spend: the method worked and the next act costs money.
+	Spend Act = "spend"
+	// Advance: something can be run, now or after a person fixes what a phase
+	// named.
+	Advance Act = "advance"
+	// Diagnose: nothing should be re-run until somebody has read what the last
+	// attempt left behind.
+	Diagnose Act = "diagnose"
+)
+
+// Next reports the kind of act that moves this repository.
+func (p Position) Next() Act {
+	switch p.Standing {
+	case Waiting:
+		return Spend
+	case Ready, Blocked:
+		return Advance
+	case Missing, Unusable:
+		return Diagnose
+	case Finished, Parked:
+		return Nothing
+	default:
+		return Nothing
+	}
+}
 
 // Position is where one repository stands.
 type Position struct {
@@ -186,6 +238,14 @@ func (p *Position) route(cycleDir string, last Attempt) {
 		p.Standing = Missing
 		p.Because = fmt.Sprintf("%s emitted %s and did not write %s; the verdict is usable and the phase did not finish",
 			last.Phase, last.Verdict, phaseOf(last.Phase).Writes)
+		return
+	}
+	if next == phase.Stopped {
+		// The phase reported that something outside the loop has to change.
+		// The awaited phase stays the one that stopped, so editing what it
+		// named and running the same command again picks it up where it was.
+		p.Standing, p.Awaiting = Blocked, last.Phase
+		p.Because = orText(last.Table, fmt.Sprintf("%s reported that the loop cannot go on", last.Phase))
 		return
 	}
 	if phase.ReEntry(last.Phase, last.Verdict) && next == phase.Author {

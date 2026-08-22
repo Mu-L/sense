@@ -9,6 +9,9 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/luuuc/sense/lab/internal/phase"
+	"github.com/luuuc/sense/lab/internal/position"
 )
 
 // Installing a signal handler and attaching the run to it are two different
@@ -20,6 +23,12 @@ import (
 // This drives the real binary rather than the cli package, because signalling
 // the test process would pollute handler state for every other test in it, and
 // the production path is the thing worth testing.
+//
+// It drives `pay`, which is where the hazard costs money. It used to drive
+// `run`, a command that spawned a single unisolated session and has been
+// deleted; what it proved about that command is true of every command that
+// spawns, and the paid cell is the one where an agent left running is spending
+// on an arm nobody will ever pair.
 func TestSIGTERMRecordsTheRunAndKillsTheAgentTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("builds and spawns the binary")
@@ -51,13 +60,26 @@ func TestSIGTERMRecordsTheRunAndKillsTheAgentTree(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	// A Sense stand-in that is not the agent. Handing the agent script to
+	// `-sense` would have the channel probe run it, and its grandchild would
+	// touch the marker before the arm this test interrupts had even started.
+	sense := filepath.Join(dir, "fake-sense")
+	if err := os.WriteFile(sense, []byte(senseStandInScript), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	head := initRepo(t, dir)
 	cfg := writeCatalog(t, dir, agent, head)
+	runs := payable(t, dir, cfg, scenario)
+	// A key the arms can be given. The stand-in agent never uses it; what it
+	// satisfies is the check that refuses a cell whose arms could not
+	// authenticate, which would otherwise be what this test exercised.
+	t.Setenv("ANTHROPIC_API_KEY", "a-test-key")
 
-	out := filepath.Join(dir, "run")
-	lab := exec.Command(bin, "run", "-config", cfg,
-		"-scenario", scenario, "-repo", "r1", "-checkout", dir, "-out", out,
-		"-agent", "tool", "-model", "m1", "-wall", "5m")
+	// Where the sense arm of the first cell lands, which is the session this
+	// interrupt has to reach.
+	out := filepath.Join(runs, "r1", "1", "bench", "cell", "sense", "session")
+	lab := exec.Command(bin, "pay", "-config", cfg, "-runs", runs,
+		"-checkouts", filepath.Dir(dir), "-sense", sense, "-wall", "5m", "-yes", "r1")
 	var labOut strings.Builder
 	lab.Stdout, lab.Stderr = &labOut, &labOut
 	if err := lab.Start(); err != nil {
@@ -115,6 +137,55 @@ func TestSIGTERMRecordsTheRunAndKillsTheAgentTree(t *testing.T) {
 	if p, err := os.ReadFile(filepath.Join(out, "prompt.txt")); err != nil || !strings.Contains(string(p), "go") {
 		t.Errorf("prompt.txt = %q, %v", p, err)
 	}
+
+	// 4. The cell says what it burned. An interrupted pair that left no record
+	//    naming the finished arm is how a later pass pairs one.
+	if _, err := os.Stat(filepath.Join(runs, "r1", "1", "bench", "cells.json")); err != nil {
+		t.Errorf("no record of what the interrupted cell spent: %v", err)
+	}
+}
+
+// payable puts r1 where the paid step is owed: indexed, its scenario written by
+// the stage that writes one, its rehearsal recorded as a PAY, and a bench
+// declaring what it is measured on.
+func payable(t *testing.T, dir, cfg, scenario string) string {
+	t.Helper()
+	runs := filepath.Join(dir, "runs")
+	write := func(at, body string) {
+		t.Helper()
+		if err := os.MkdirAll(filepath.Dir(at), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(at, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// The repository names its own checkout: the arms are taken from the tree
+	// this test made, not from a clone the lab would have to fetch.
+	write(filepath.Join(cfg, "repos", "r1.json"),
+		`{"id":"r1","url":"https://example.test/r1.git","commit":"`+headOf(t, dir)+
+			`","checkout":"`+dir+`","languages":["go"]}`)
+	write(filepath.Join(cfg, "subjects", "sense-main", "subject.json"),
+		`{"id":"sense-main","kind":"sense","needs_mcp":false,"executor":"isolated-home","agents":["tool"]}`)
+	write(filepath.Join(cfg, "benches", "r1.json"),
+		`{"repo":"r1","judge":"m1","driver":{"agent":"tool","model":"m1"},`+
+			`"subjects":["untreated","sense-main"],"arms":[{"role":"headline","model":"m1","runs":1}]}`)
+	write(filepath.Join(runs, "r1", "index", "index.json"), `{"files":1,"symbols":1}`)
+	for _, name := range []string{"scenario.yaml", "scenario.gold.yaml", "scenario.rubric.yaml"} {
+		b, err := os.ReadFile(filepath.Join(filepath.Dir(scenario), name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		write(filepath.Join(runs, "r1", "1", "expand", name), string(b))
+	}
+	write(filepath.Join(runs, "r1", "1", "validate", "pay-call.md"), "# Verdict\n\nPAY.\n")
+	if err := position.Record(filepath.Join(runs, "r1"), position.Attempt{
+		Cycle: 1, Phase: phase.Validate, Try: 1, Verdict: phase.Pay,
+		Table: "the rehearsal cleared the bar", Artifact: "written", VerdictDoc: "written",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	return runs
 }
 
 // writeCatalog writes the smallest config directory that can drive bin.
@@ -158,6 +229,40 @@ func writeCatalog(t *testing.T, dir, bin, pin string) string {
 		}
 	}
 	return cfg
+}
+
+// senseStandInScript answers what the paid step asks of the Sense binary and
+// spawns nothing of its own.
+const senseStandInScript = `#!/bin/sh
+set -e
+case "$1" in
+scan) mkdir -p "$3/.sense"; printf 'index' > "$3/.sense/index.db" ;;
+setup)
+  printf '{"mcpServers":{"sense":{"command":"%s","args":["mcp"]}}}' "$0" > .mcp.json
+  printf '# guidance\n' > CLAUDE.md
+  mkdir -p .claude/skills
+  printf '{"hooks":{}}' > .claude/settings.json
+  printf '# explore\n' > .claude/skills/sense-explore.md
+  ;;
+mcp)
+  while IFS= read -r line; do
+    case "$line" in
+      *'"tools/list"'*) printf '{"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"sense_graph"},{"name":"sense_blast"}]}}\n' ;;
+      *'"id"'*) printf '{"jsonrpc":"2.0","id":1,"result":{"symbols":[]}}\n' ;;
+    esac
+  done
+  ;;
+esac
+`
+
+// headOf is the commit the checkout sits at.
+func headOf(t *testing.T, dir string) string {
+	t.Helper()
+	out, err := exec.Command("git", "-C", dir, "rev-parse", "HEAD").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return strings.TrimSpace(string(out))
 }
 
 // waitFor polls until cond holds, so a test does not race a process it just
