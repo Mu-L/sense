@@ -30,7 +30,7 @@ thanks rather than merged. This is not a judgement of the work, only of scope.
 
 ## Dev setup
 
-Requires Go 1.25+.
+Requires Go 1.26+.
 
 ```bash
 git clone https://github.com/luuuc/sense.git

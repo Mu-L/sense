@@ -11,7 +11,7 @@
 # into internal/embed/bundle/ before `go build` so the embeds resolve.
 
 # Global build args (declared before any FROM so they're visible in every stage).
-ARG GO_VERSION=1.25
+ARG GO_VERSION=1.26
 ARG BASE_TAG=dev
 ARG VERSION=dev
 

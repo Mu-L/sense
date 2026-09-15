@@ -24,7 +24,7 @@ Sense is an MCP server that gives AI coding agents structural understanding of a
 curl -fsSL https://luuuc.github.io/sense/install.sh | sh
 ```
 
-Or download the binary for your OS from the [latest release](https://github.com/luuuc/sense/releases/latest) and move `sense` onto your `PATH`. With Go 1.25+: `go install github.com/luuuc/sense/cmd/sense@latest`.
+Or download the binary for your OS from the [latest release](https://github.com/luuuc/sense/releases/latest) and move `sense` onto your `PATH`. With Go 1.26+: `go install github.com/luuuc/sense/cmd/sense@latest`.
 
 ### How do I set it up on a project?
 
