@@ -1,6 +1,6 @@
 module github.com/luuuc/sense
 
-go 1.25.12
+go 1.26.0
 
 require (
 	github.com/fsnotify/fsnotify v1.10.1
@@ -21,7 +21,7 @@ require (
 	github.com/tree-sitter/tree-sitter-scala v0.26.2
 	github.com/tree-sitter/tree-sitter-typescript v0.23.2
 	github.com/yalue/onnxruntime_go v1.27.0
-	golang.org/x/sync v0.22.0
+	golang.org/x/sync v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.58.0
 )
