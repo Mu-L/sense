@@ -9,9 +9,14 @@ import (
 	"strings"
 )
 
-// readJSONFile reads a JSON file into a map. Returns an empty map if
-// the file does not exist. Returns an error (and backs up the file)
-// if the file exists but is not valid JSON.
+// readJSONFile reads a JSON file into a map. Returns an empty map if the file
+// does not exist, and an error if it exists but is not valid JSON.
+//
+// It writes nothing on that error. Every caller stops there without touching
+// the file, so the config the user needs to fix is still on disk, unchanged,
+// exactly where the error names it. An earlier version copied it to a .bak
+// beside itself, which protected nothing and left a second copy of a broken
+// config in the repo for the agent to read and for git to offer.
 func readJSONFile(path string) (map[string]any, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -27,9 +32,7 @@ func readJSONFile(path string) (map[string]any, error) {
 
 	var m map[string]any
 	if err := json.Unmarshal(data, &m); err != nil {
-		backup := path + ".bak"
-		_ = os.WriteFile(backup, data, 0o644)
-		return nil, fmt.Errorf("parse %s (backed up to %s): %w", path, backup, err)
+		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
 	return m, nil
 }
@@ -157,7 +160,7 @@ func mergePermissions(settings map[string]any, patterns []string) {
 // pruneJSONFile applies strip to the JSON object at path and writes the result
 // back, deleting the file when stripping emptied it: an empty .mcp.json is not
 // "gone". A missing file is a no-op. An unparseable file errors exactly as it
-// does on the setup path, backup and all.
+// does on the setup path, and is left untouched.
 func pruneJSONFile(path string, strip func(map[string]any) bool) (outcome, error) {
 	if _, err := os.Stat(path); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
