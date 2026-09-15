@@ -66,3 +66,8 @@ Use Sense conventions to understand project patterns before writing new code.
 func writeSkills(root string) (int, error) {
 	return writeTemplateFiles(root, "skills", skills)
 }
+
+// removeSkills deletes the skill files writeSkills wrote.
+func removeSkills(root string) (int, error) {
+	return removeTemplateFiles(root, "skills", skills)
+}

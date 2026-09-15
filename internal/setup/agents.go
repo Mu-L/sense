@@ -45,3 +45,8 @@ Load Sense tools:
 func writeAgents(root string) (int, error) {
 	return writeTemplateFiles(root, "agents", agents)
 }
+
+// removeAgents deletes the agent files writeAgents wrote.
+func removeAgents(root string) (int, error) {
+	return removeTemplateFiles(root, "agents", agents)
+}

@@ -26,7 +26,7 @@ Everything lives in [`internal/setup/`](internal/setup/).
 
 The set of tools Sense configures is a **registry**
 ([`internal/setup/registry.go`](internal/setup/registry.go)): a slice of `tool`
-values, each pairing a detector with a configurer.
+values, each pairing a detector with a configurer and its teardown.
 
 ```go
 type tool struct {
@@ -34,9 +34,15 @@ type tool struct {
     displayName string
     detect      func() DetectResult        // is this tool installed?
     configure   func(root string) (*ToolResult, error) // write its files
+    unconfigure func(root string) (*ToolResult, error) // remove them again
     currentEnv  []string                   // env vars that mean "running inside this tool now"
 }
 ```
+
+`configure` and `unconfigure` are a pair: whatever one writes, the other must be
+able to take back, because `sense setup --undo` has to leave a project as it
+found it. A registry entry missing either half fails
+`TestRegistryPairsConfigureWithUnconfigure`.
 
 `currentEnv` feeds `DetectCurrent`, which `sense scan` uses on first run to
 configure only the tool the user is currently inside. It is optional: a tool with
@@ -47,8 +53,8 @@ Every public entry point loops over that slice, so the registry is the only plac
 the tool list is enumerated:
 
 - `AllTools()` and `DetectAll()` iterate the registry.
-- `Detect(t)` and `configureTool(root, t)` call `lookup(t)`, then the matching
-  field.
+- `Detect(t)`, `configureTool(root, t)` and `unconfigureTool(root, t)` call
+  `lookup(t)`, then the matching field.
 - `ParseTools("a,b")` validates each name against the registry.
 - `Tool.DisplayName()` returns `lookup(t).displayName`.
 
@@ -168,7 +174,8 @@ registry, so this is the only constant you add.
 
 ### Step 3. Create the tool's file
 
-Create `internal/setup/aider.go` holding **the detector and the configurer**,
+Create `internal/setup/aider.go` holding **the detector, the configurer, and
+the teardown**,
 mirroring [`cursor.go`](internal/setup/cursor.go) (the smallest example) or
 [`claude.go`](internal/setup/claude.go) (the fullest):
 
@@ -221,7 +228,42 @@ func configureAider(root string) (*ToolResult, error) {
 
     return tr, nil
 }
+
+// unconfigureAider is the inverse: one teardown step per writer above, in the
+// same order. Each primitive reports an outcome (unchanged, stripped, deleted)
+// and tr.record turns it into the summary line, so a config that survived with
+// the user's entries in it is never reported as a file that was removed.
+func unconfigureAider(root string) (*ToolResult, error) {
+    tr := &ToolResult{Tool: ToolAider}
+
+    o, err := pruneJSONFile(filepath.Join(root, ".mcp.json"), stripMCPServers)
+    if err != nil {
+        return tr, fmt.Errorf("update .mcp.json: %w", err)   // tr, not nil: see below
+    }
+    tr.record(o, ".mcp.json")
+
+    o, err = removeMarkerSection(filepath.Join(root, "AGENTS.md"), markerStart, markerEnd)
+    if err != nil {
+        return tr, fmt.Errorf("update AGENTS.md: %w", err)
+    }
+    tr.record(o, "AGENTS.md")
+
+    return tr, nil
+}
 ```
+
+**Return `tr` on the error path, never `nil`.** A teardown that fails partway
+has already changed the project, and `Undo` prints what came back before it
+reports the error. Returning `nil` there tells the user their teardown failed
+without telling them how much of it happened.
+
+**Teardown removes what Sense wrote, never the file it wrote into.** A config
+Sense merged into is stripped with `pruneJSONFile` (which deletes the file only
+when Sense's entry was all that was in it); a guidance file loses its marker
+section with `removeMarkerSection`. Only a file Sense owns end to end, a skill
+or a plugin, is deleted outright, with `removeOwnedFile`. Teardown is idempotent
+too: running it on a project that was never set up removes nothing and errors
+not at all, so every step treats a missing file as success.
 
 **Reuse before you write.** If your tool's MCP schema matches `.mcp.json`, call
 `writeMCPJSON`. If it reads `AGENTS.md`, call `writeAgentsMD`. Only write a new
@@ -245,14 +287,14 @@ func registry() []tool {
     return []tool{
         {id: ToolClaudeCode, displayName: "Claude Code", detect: detectClaudeCode, configure: configureClaudeCode, currentEnv: []string{"CLAUDE_CODE"}},
         // ...
-        {id: ToolAider, displayName: "Aider", detect: detectAider, configure: configureAider, currentEnv: []string{"AIDER"}},
+        {id: ToolAider, displayName: "Aider", detect: detectAider, configure: configureAider, unconfigure: unconfigureAider, currentEnv: []string{"AIDER"}},
     }
 }
 ```
 
 That is the whole wiring. `AllTools`, `DetectAll`, `Detect`, `configureTool`,
-`ParseTools`, `DisplayName`, and `DetectCurrent` now all include Aider with no
-further edits. Set `currentEnv` to the env var(s) the tool sets in its own
+`unconfigureTool`, `ParseTools`, `DisplayName`, and `DetectCurrent` now all
+include Aider with no further edits. Set `currentEnv` to the env var(s) the tool sets in its own
 sessions (omit the field if it has none); that is what makes the
 "one file plus one registry line" promise literally true, including for
 `sense scan`'s current-tool first-run path.
@@ -273,10 +315,15 @@ Add these, mirroring the `Cursor` and `Opencode` cases:
 4. **MCP merge preserves other servers.** Pre-write the JSON config with a
    non-Sense server, run setup, assert both entries exist (see
    `TestMCPJSONPreservesExistingServers`).
-5. **Error paths.** Every `return nil, err` branch in your writers needs a test
-   that triggers it (make the target path a directory, or pre-write invalid
-   JSON). The existing `*Error` tests show the technique; you need these to clear
-   the coverage floor.
+5. **Teardown restores the project.** Run setup then `Undo`, and assert the
+   tree is back to what it was; with a user's own server and heading pre-written,
+   assert those survive (see `TestUndoRestoresVirginProject` and
+   `TestUndoPreservesUserContent` in
+   [`undo_test.go`](internal/setup/undo_test.go)).
+6. **Error paths.** Every `return nil, err` branch in your writers and your
+   teardown needs a test that triggers it (make the target path a directory,
+   pre-write invalid JSON, or chmod the parent read-only). The existing `*Error`
+   tests show the technique; you need these to clear the coverage floor.
 
 ```bash
 go test ./internal/setup/

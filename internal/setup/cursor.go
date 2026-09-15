@@ -101,3 +101,25 @@ func writeCursorMCPJSON(root string) (bool, error) {
 func writeCursorRules(root string) (bool, error) {
 	return writeMarkerFile(filepath.Join(root, ".cursorrules"), guidanceMarkdown)
 }
+
+// unconfigureCursor is the inverse of configureCursor: it strips Sense's
+// server from .cursor/mcp.json and its section from .cursorrules, leaving any
+// other server or rule the user wrote.
+func unconfigureCursor(root string) (*ToolResult, error) {
+	tr := &ToolResult{Tool: ToolCursor}
+
+	o, err := pruneJSONFile(filepath.Join(root, ".cursor", "mcp.json"), stripMCPServers)
+	if err != nil {
+		return tr, fmt.Errorf("update .cursor/mcp.json: %w", err)
+	}
+	tr.record(o, ".cursor/mcp.json")
+	removeDirIfEmpty(filepath.Join(root, ".cursor"))
+
+	o, err = removeMarkerSection(filepath.Join(root, ".cursorrules"), markerStart, markerEnd)
+	if err != nil {
+		return tr, fmt.Errorf("update .cursorrules: %w", err)
+	}
+	tr.record(o, ".cursorrules")
+
+	return tr, nil
+}

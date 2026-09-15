@@ -27,7 +27,17 @@ Configure AI tool integrations. Auto-detects installed tools (Claude Code, Curso
 sense setup                           # auto-detect and configure all
 sense setup --tools cursor            # configure Cursor only
 sense setup --tools claude-code,codex-cli
+sense setup --undo                    # remove Sense from this project
+sense setup --undo --tools cursor     # unwire Cursor, keep the index
 ```
+
+`--undo` removes what setup wrote and the `.sense/` index, and leaves the `sense`
+binary alone. Configs it merged into (`.mcp.json`, `.claude/settings.json`) keep
+your own entries and lose only Sense's; a file that held nothing but Sense's
+section is deleted. Narrowed with `--tools`, it unwires those tools and leaves
+the index in place. Stop any running `sense mcp` or `sense scan --watch` first,
+it refuses while an indexer holds the write lock. A later `sense scan` in the
+same project counts as a first run and sets the integration back up.
 
 ### `sense scan`
 

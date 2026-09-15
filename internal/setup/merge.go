@@ -153,3 +153,116 @@ func mergePermissions(settings map[string]any, patterns []string) {
 	perms["allow"] = allow
 	settings["permissions"] = perms
 }
+
+// pruneJSONFile applies strip to the JSON object at path and writes the result
+// back, deleting the file when stripping emptied it: an empty .mcp.json is not
+// "gone". A missing file is a no-op. An unparseable file errors exactly as it
+// does on the setup path, backup and all.
+func pruneJSONFile(path string, strip func(map[string]any) bool) (outcome, error) {
+	if _, err := os.Stat(path); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return outcomeUnchanged, nil
+		}
+		return outcomeUnchanged, err
+	}
+
+	existing, err := readJSONFile(path)
+	if err != nil {
+		return outcomeUnchanged, err
+	}
+	if !strip(existing) {
+		return outcomeUnchanged, nil
+	}
+
+	if len(existing) == 0 {
+		if err := removeFile(path); err != nil {
+			return outcomeUnchanged, err
+		}
+		return outcomeDeleted, nil
+	}
+	if err := writeJSONFile(path, existing); err != nil {
+		return outcomeUnchanged, err
+	}
+	return outcomeStripped, nil
+}
+
+// removeMCPServer deletes Sense's entry from the MCP-server map held under key
+// ("mcpServers" for Claude Code and Cursor, "mcp" for OpenCode), pruning the
+// map itself when Sense's was the only server declared.
+func removeMCPServer(m map[string]any, key string) bool {
+	servers, _ := m[key].(map[string]any)
+	if _, ok := servers["sense"]; !ok {
+		return false
+	}
+	delete(servers, "sense")
+	if len(servers) == 0 {
+		delete(m, key)
+	}
+	return true
+}
+
+// removeSenseHooks strips every Sense hook entry from every event in the
+// settings map, dropping events, and the hooks key, that it empties. It
+// walks all events rather than the list setup currently writes, so a hook an
+// older version installed (a retired PostToolUse, say) is torn down too.
+func removeSenseHooks(settings map[string]any) bool {
+	hooks, _ := settings["hooks"].(map[string]any)
+	changed := false
+
+	for event, entries := range hooks {
+		arr, ok := entries.([]any)
+		if !ok {
+			continue
+		}
+		kept := removeSenseEntries(arr)
+		if len(kept) == len(arr) {
+			continue
+		}
+		changed = true
+		if len(kept) == 0 {
+			delete(hooks, event)
+			continue
+		}
+		hooks[event] = kept
+	}
+
+	if len(hooks) == 0 {
+		delete(settings, "hooks")
+	}
+	return changed
+}
+
+// removeSensePermissions drops Sense's tool pattern from the allow list,
+// pruning the list and the permissions block when nothing else remains.
+func removeSensePermissions(settings map[string]any, patterns []string) bool {
+	perms, _ := settings["permissions"].(map[string]any)
+	allow, ok := perms["allow"].([]any)
+	if !ok {
+		return false
+	}
+
+	drop := map[string]bool{}
+	for _, p := range patterns {
+		drop[p] = true
+	}
+
+	kept := []any{}
+	for _, a := range allow {
+		if s, isStr := a.(string); isStr && drop[s] {
+			continue
+		}
+		kept = append(kept, a)
+	}
+	if len(kept) == len(allow) {
+		return false
+	}
+
+	perms["allow"] = kept
+	if len(kept) == 0 {
+		delete(perms, "allow")
+	}
+	if len(perms) == 0 {
+		delete(settings, "permissions")
+	}
+	return true
+}

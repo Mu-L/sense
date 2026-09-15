@@ -97,3 +97,46 @@ func writeMarkerFileWith(path, section, start, end string) (bool, error) {
 	}
 	return true, nil
 }
+
+// removeMarkerSection strips the marker-delimited Sense section from path and
+// rewrites the file, the inverse of writeMarkerFileWith. When Sense's section
+// was the file's only content the file is deleted rather than left empty: a
+// stray empty CLAUDE.md is not "gone". A missing file, or one carrying no
+// markers, is a no-op. Undoing what was never written is not an error.
+func removeMarkerSection(path, start, end string) (outcome, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return outcomeUnchanged, nil
+		}
+		return outcomeUnchanged, err
+	}
+
+	content := string(data)
+	startIdx := strings.Index(content, start)
+	if startIdx < 0 {
+		return outcomeUnchanged, nil
+	}
+
+	// An unterminated section means Sense wrote to the end of the file
+	// (writeMarkerFileWith's own repair path leaves that shape); drop the tail.
+	endIdx := strings.Index(content, end)
+	if endIdx < 0 {
+		content = content[:startIdx]
+	} else {
+		content = content[:startIdx] + content[endIdx+len(end):]
+	}
+
+	if strings.TrimSpace(content) == "" {
+		if err := removeFile(path); err != nil {
+			return outcomeUnchanged, err
+		}
+		return outcomeDeleted, nil
+	}
+
+	content = strings.TrimRight(content, "\n") + "\n"
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		return outcomeUnchanged, err
+	}
+	return outcomeStripped, nil
+}

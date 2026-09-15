@@ -30,3 +30,23 @@ func writeTemplateFiles(root, sub string, files []templateFile) (int, error) {
 	}
 	return written, nil
 }
+
+// removeTemplateFiles deletes the files writeTemplateFiles wrote into
+// .claude/<sub>/ and removes the directory when nothing of the user's is left
+// in it. Files already gone are not counted and not an error.
+func removeTemplateFiles(root, sub string, files []templateFile) (int, error) {
+	dir := filepath.Join(root, ".claude", sub)
+
+	removed := 0
+	for _, f := range files {
+		o, err := removeOwnedFile(filepath.Join(dir, f.filename))
+		if err != nil {
+			return removed, err
+		}
+		if o == outcomeDeleted {
+			removed++
+		}
+	}
+	removeDirIfEmpty(dir)
+	return removed, nil
+}

@@ -92,6 +92,14 @@ Set `watch: false` in `.sense/config.yml`.
 
 No. `.sense/` is local per checkout and gitignored by default. Rebuild it anywhere with `sense scan`. It is a derived artifact, not source.
 
+### How do I remove Sense from a project?
+
+`sense setup --undo`. It removes every file setup wrote, the `.sense/` index, and the `.gitignore` entry that pointed at it. Files it had merged into, your `.mcp.json`, your `.claude/settings.json`, your `CLAUDE.md`, keep everything you put there and lose only Sense's entries, which is the part you do not want to unpick by hand.
+
+It removes Sense from the *project*, not from your machine: the `sense` binary stays where you installed it (delete it with `rm $(which sense)`), and the shared embedding runtime in `~/.cache/sense` stays too, since every other project on the machine uses it. Stop any running `sense mcp` or `sense scan --watch` before you run it.
+
+If you run `sense scan` in that project again later, it counts as a first run and sets the integration back up for whichever tool you are in. That is the same first-run behaviour as a fresh install, and it is what you want if you are coming back; there is nothing to undo twice.
+
 ---
 
 ## What the AI gets (the four tools)

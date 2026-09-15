@@ -2,6 +2,9 @@ package cli
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -376,4 +379,96 @@ func TestDefaultIO(t *testing.T) {
 	if cio.Dir == "" {
 		t.Error("DefaultIO.Dir is empty")
 	}
+}
+
+// holdIndexLock writes a live lock file for dir, the shape freshen.IsWriterLocked
+// reads: the current pid, freshly stamped. It stands in for a running
+// `sense mcp` server without starting one.
+func holdIndexLock(t *testing.T, dir string) {
+	t.Helper()
+	senseDir := filepath.Join(dir, ".sense")
+	if err := os.MkdirAll(senseDir, 0o755); err != nil {
+		t.Fatalf("mkdir .sense: %v", err)
+	}
+	pid := strconv.Itoa(os.Getpid()) + "\n"
+	if err := os.WriteFile(filepath.Join(senseDir, "index.lock"), []byte(pid), 0o644); err != nil {
+		t.Fatalf("write lock: %v", err)
+	}
+}
+
+func TestRunSetupUndo(t *testing.T) {
+	cio, stdout, _ := newTestIO()
+	cio.Dir = t.TempDir()
+
+	if code := RunSetup([]string{"--tools", "claude-code"}, cio); code != ExitSuccess {
+		t.Fatalf("setup: exit code = %d", code)
+	}
+	if code := RunSetup([]string{"--undo"}, cio); code != ExitSuccess {
+		t.Fatalf("undo: exit code = %d", code)
+	}
+
+	if _, err := os.Stat(filepath.Join(cio.Dir, "CLAUDE.md")); !os.IsNotExist(err) {
+		t.Error("CLAUDE.md survived --undo")
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "Removing Claude Code integration") {
+		t.Errorf("stdout missing the teardown summary, got:\n%s", out)
+	}
+}
+
+func TestRunSetupUndoRefusesWhileIndexing(t *testing.T) {
+	cio, _, stderr := newTestIO()
+	cio.Dir = t.TempDir()
+	holdIndexLock(t, cio.Dir)
+
+	if code := RunSetup([]string{"--undo"}, cio); code != ExitGeneralError {
+		t.Fatalf("exit code = %d, want %d", code, ExitGeneralError)
+	}
+	got := stderr.String()
+	for _, want := range []string{"an indexer is running", "Stop it first"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("stderr missing %q, got: %q", want, got)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(cio.Dir, ".sense")); err != nil {
+		t.Error("refused undo must leave the index alone")
+	}
+}
+
+// A narrowed undo never touches the index, so a held lock does not block it.
+func TestRunSetupUndoWithToolsIgnoresLock(t *testing.T) {
+	cio, _, _ := newTestIO()
+	cio.Dir = t.TempDir()
+	holdIndexLock(t, cio.Dir)
+
+	if code := RunSetup([]string{"--undo", "--tools", "cursor"}, cio); code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d", code, ExitSuccess)
+	}
+}
+
+func TestRunSetupUndoErrors(t *testing.T) {
+	t.Run("bad tools", func(t *testing.T) {
+		cio, _, stderr := newTestIO()
+		cio.Dir = t.TempDir()
+		if code := RunSetup([]string{"--undo", "--tools", "invalid-tool"}, cio); code != ExitGeneralError {
+			t.Fatalf("exit code = %d, want %d", code, ExitGeneralError)
+		}
+		if !strings.Contains(stderr.String(), "sense setup:") {
+			t.Errorf("stderr missing the error, got: %q", stderr.String())
+		}
+	})
+
+	t.Run("unparseable config", func(t *testing.T) {
+		cio, _, stderr := newTestIO()
+		cio.Dir = t.TempDir()
+		if err := os.WriteFile(filepath.Join(cio.Dir, ".mcp.json"), []byte("{not json"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if code := RunSetup([]string{"--undo"}, cio); code != ExitGeneralError {
+			t.Fatalf("exit code = %d, want %d", code, ExitGeneralError)
+		}
+		if !strings.Contains(stderr.String(), "sense setup --undo:") {
+			t.Errorf("stderr missing the error, got: %q", stderr.String())
+		}
+	})
 }

@@ -103,3 +103,31 @@ func writeCodexConfigTOML(root string) (bool, error) {
 func writeAgentsMD(root string) (bool, error) {
 	return writeMarkerFile(filepath.Join(root, "AGENTS.md"), guidanceMarkdown)
 }
+
+// unconfigureCodexCLI is the inverse of configureCodexCLI. A hand-written
+// [mcp_servers.sense] table outside Sense's markers is left alone, exactly as
+// writeCodexConfigTOML declines to touch it: Sense removes what Sense wrote.
+func unconfigureCodexCLI(root string) (*ToolResult, error) {
+	tr := &ToolResult{Tool: ToolCodexCLI}
+
+	o, err := removeMarkerSection(filepath.Join(root, ".codex", "config.toml"), tomlMarkerStart, tomlMarkerEnd)
+	if err != nil {
+		return tr, fmt.Errorf("update .codex/config.toml: %w", err)
+	}
+	tr.record(o, ".codex/config.toml")
+	removeDirIfEmpty(filepath.Join(root, ".codex"))
+
+	o, err = pruneJSONFile(filepath.Join(root, ".mcp.json"), stripMCPServers)
+	if err != nil {
+		return tr, fmt.Errorf("update .mcp.json: %w", err)
+	}
+	tr.record(o, ".mcp.json")
+
+	o, err = removeMarkerSection(filepath.Join(root, "AGENTS.md"), markerStart, markerEnd)
+	if err != nil {
+		return tr, fmt.Errorf("update AGENTS.md: %w", err)
+	}
+	tr.record(o, "AGENTS.md")
+
+	return tr, nil
+}

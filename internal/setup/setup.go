@@ -41,6 +41,16 @@ type ToolResult struct {
 // Result summarises what setup wrote across all tools.
 type Result struct {
 	Tools []ToolResult
+
+	// Project lists teardown items belonging to no single tool: the .sense
+	// index directory and the .gitignore entry. Undo populates it; Run
+	// leaves it empty, since setup writes neither.
+	Project []string
+
+	// Notes carries guidance printed after the summary (the machine-wide
+	// cache Undo deliberately spares, a hand-written config.yml that went
+	// with the index).
+	Notes []string
 }
 
 // Run detects installed AI tools and writes integration files into root.

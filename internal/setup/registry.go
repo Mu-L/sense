@@ -21,6 +21,13 @@ type tool struct {
 	// twice produces the same result (JSON is deep-merged, Markdown uses
 	// marker comments, skills/agents are overwritten).
 	configure func(root string) (*ToolResult, error)
+	// unconfigure removes every integration file configure wrote, returning
+	// the relative paths actually torn down. It is the exact inverse: files
+	// Sense owns are deleted, configs Sense merged into keep the user's
+	// entries and lose only Sense's. It must be idempotent too. Running it
+	// on a project that was never set up removes nothing and errors not at
+	// all.
+	unconfigure func(root string) (*ToolResult, error)
 	// currentEnv lists env vars whose presence means the user is running inside
 	// this tool right now. DetectCurrent uses it to pick the active tool for
 	// scan first-run. Leave empty when the tool exposes no live-session signal
@@ -39,10 +46,10 @@ type tool struct {
 // init-order questions. Do not "optimize" it into a package var.
 func registry() []tool {
 	return []tool{
-		{id: ToolClaudeCode, displayName: "Claude Code", detect: detectClaudeCode, configure: configureClaudeCode, currentEnv: []string{"CLAUDE_CODE"}},
-		{id: ToolCursor, displayName: "Cursor", detect: detectCursor, configure: configureCursor, currentEnv: cursorSessionEnvs},
-		{id: ToolCodexCLI, displayName: "Codex CLI", detect: detectCodexCLI, configure: configureCodexCLI},
-		{id: ToolOpencode, displayName: "Opencode", detect: detectOpencode, configure: configureOpencode, currentEnv: []string{"OPENCODE"}},
+		{id: ToolClaudeCode, displayName: "Claude Code", detect: detectClaudeCode, configure: configureClaudeCode, unconfigure: unconfigureClaudeCode, currentEnv: []string{"CLAUDE_CODE"}},
+		{id: ToolCursor, displayName: "Cursor", detect: detectCursor, configure: configureCursor, unconfigure: unconfigureCursor, currentEnv: cursorSessionEnvs},
+		{id: ToolCodexCLI, displayName: "Codex CLI", detect: detectCodexCLI, configure: configureCodexCLI, unconfigure: unconfigureCodexCLI},
+		{id: ToolOpencode, displayName: "Opencode", detect: detectOpencode, configure: configureOpencode, unconfigure: unconfigureOpencode, currentEnv: []string{"OPENCODE"}},
 	}
 }
 
@@ -86,6 +93,14 @@ func Detect(t Tool) DetectResult {
 func configureTool(root string, t Tool) (*ToolResult, error) {
 	if e, ok := lookup(t); ok {
 		return e.configure(root)
+	}
+	return nil, fmt.Errorf("unknown tool: %s", t)
+}
+
+// unconfigureTool removes the integration files for a single tool.
+func unconfigureTool(root string, t Tool) (*ToolResult, error) {
+	if e, ok := lookup(t); ok {
+		return e.unconfigure(root)
 	}
 	return nil, fmt.Errorf("unknown tool: %s", t)
 }
