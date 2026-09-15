@@ -95,7 +95,7 @@ cosign verify-blob \
 
 Artifacts also carry [build provenance attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations): `gh attestation verify sense_<version>_<os>_<arch>.tar.gz --owner luuuc`.
 
-### With Go (1.25+)
+### With Go (1.26+)
 
 ```bash
 go install github.com/luuuc/sense/cmd/sense@latest
