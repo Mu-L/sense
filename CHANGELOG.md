@@ -1,6 +1,16 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.15.0] - 2026-09-15
+
+### Bug Fixes
+
+- keep the embedding runtime under ~/.sense/cache
+- stop copying a config that fails to parse
+
+### Features
+
+- add setup --undo to remove Sense from a project
 ## [1.14.2] - 2026-08-18
 
 ### Bug Fixes
@@ -347,6 +357,11 @@ All notable changes to Sense.
 
 ### Features
 
+- write OpenCode adoption plugin steering models to Sense tools
+- add Codex and OpenCode/Ollama harness runners
+- score gold-target recall alongside fairness
+- add model-sweep, variance, and session runners
+- add Rails-vertical scenarios and pin their commits
 - lead report with split mention/cited/billed axes
 
 ### Refactoring
@@ -357,11 +372,6 @@ All notable changes to Sense.
 ### Features
 
 - register Sense MCP with Codex via .codex/config.toml
-- write OpenCode adoption plugin steering models to Sense tools
-- add Codex and OpenCode/Ollama harness runners
-- score gold-target recall alongside fairness
-- add model-sweep, variance, and session runners
-- add Rails-vertical scenarios and pin their commits
 ## [1.1.0] - 2026-06-10
 
 ### Features
@@ -642,6 +652,7 @@ All notable changes to Sense.
 
 ### Features
 
+- add verification hints and ref field to graph/blast responses
 - add affected_symbols, affected_files, and graph_edges_traversed to blast response
 - add EdgeReferences edge kind
 - emit references edges for constants and variables
@@ -660,7 +671,6 @@ All notable changes to Sense.
 
 ### Features
 
-- add verification hints and ref field to graph/blast responses
 - replace deny/advise with nudge responses for non-blocking UX
 - inject summary.md into SessionStart output
 - generate deep-explore subagent via sense setup
