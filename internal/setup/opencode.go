@@ -184,3 +184,68 @@ func writeOpencodeSkills(root string) (int, error) {
 	}
 	return written, nil
 }
+
+// unconfigureOpencode is the inverse of configureOpencode: Sense's server
+// leaves opencode.json, its section leaves AGENTS.md, and the skill tree and
+// adoption plugin Sense owns are deleted.
+func unconfigureOpencode(root string) (*ToolResult, error) {
+	tr := &ToolResult{Tool: ToolOpencode}
+
+	o, err := pruneJSONFile(filepath.Join(root, "opencode.json"), stripOpencodeMCP)
+	if err != nil {
+		return tr, fmt.Errorf("update opencode.json: %w", err)
+	}
+	tr.record(o, "opencode.json")
+
+	o, err = removeMarkerSection(filepath.Join(root, "AGENTS.md"), markerStart, markerEnd)
+	if err != nil {
+		return tr, fmt.Errorf("update AGENTS.md: %w", err)
+	}
+	tr.record(o, "AGENTS.md")
+
+	n, err := removeOpencodeSkills(root)
+	if err != nil {
+		return tr, fmt.Errorf("remove .opencode/skills: %w", err)
+	}
+	if n > 0 {
+		tr.Files = append(tr.Files, fmt.Sprintf("%d skill files in .opencode/skills/", n))
+	}
+
+	pluginDir := filepath.Join(root, ".opencode", "plugin")
+	o, err = removeOwnedFile(filepath.Join(pluginDir, "sense.js"))
+	if err != nil {
+		return tr, fmt.Errorf("remove .opencode/plugin: %w", err)
+	}
+	tr.record(o, ".opencode/plugin/sense.js")
+	removeDirIfEmpty(pluginDir)
+	removeDirIfEmpty(filepath.Join(root, ".opencode"))
+
+	return tr, nil
+}
+
+// stripOpencodeMCP removes Sense from OpenCode's "mcp" map, the same shape as
+// the other tools' "mcpServers", under OpenCode's own key.
+func stripOpencodeMCP(m map[string]any) bool {
+	return removeMCPServer(m, "mcp")
+}
+
+// removeOpencodeSkills deletes the per-skill SKILL.md tree writeOpencodeSkills
+// wrote, taking each skill's own directory with it.
+func removeOpencodeSkills(root string) (int, error) {
+	dir := filepath.Join(root, ".opencode", "skills")
+
+	removed := 0
+	for _, s := range skills {
+		skillDir := filepath.Join(dir, strings.TrimSuffix(s.filename, ".md"))
+		o, err := removeOwnedFile(filepath.Join(skillDir, "SKILL.md"))
+		if err != nil {
+			return removed, err
+		}
+		if o == outcomeDeleted {
+			removed++
+		}
+		removeDirIfEmpty(skillDir)
+	}
+	removeDirIfEmpty(dir)
+	return removed, nil
+}

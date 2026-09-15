@@ -25,7 +25,7 @@ Usage: sense [command] [args]
 
 Commands:
   scan          Build or refresh the index
-  setup         Configure AI tool integrations (Claude Code, Cursor, Codex CLI)
+  setup         Configure AI tool integrations (--undo to remove them)
   search        Hybrid semantic + keyword search
   graph         Symbol relationships — callers, callees, inheritance, tests
   blast         Blast radius for a symbol or diff

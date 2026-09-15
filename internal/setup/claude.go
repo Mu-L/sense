@@ -192,10 +192,75 @@ func writeClaudeSettings(root string) (bool, error) {
 	// the index fresh off the agent's critical path. Strip any Sense entry
 	// an earlier setup wrote so re-running setup migrates old configs.
 	removeRetiredHook(existing, "PostToolUse")
-	mergePermissions(existing, []string{"mcp__sense__*"})
+	mergePermissions(existing, []string{claudePermissionPattern})
 
 	if err := writeJSONFile(path, existing); err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+// claudePermissionPattern is the allow-list entry that lets Claude Code call
+// Sense's MCP tools without prompting. Named so the writer and the teardown
+// below agree on one string rather than two literals that can drift.
+const claudePermissionPattern = "mcp__sense__*"
+
+// unconfigureClaudeCode is the inverse of configureClaudeCode: it strips
+// Sense's MCP entry, hooks and permission from the configs it shares with the
+// user, removes the CLAUDE.md guidance section, and deletes the skill and
+// agent files Sense owns outright.
+func unconfigureClaudeCode(root string) (*ToolResult, error) {
+	tr := &ToolResult{Tool: ToolClaudeCode}
+
+	o, err := pruneJSONFile(filepath.Join(root, ".mcp.json"), stripMCPServers)
+	if err != nil {
+		return tr, fmt.Errorf("update .mcp.json: %w", err)
+	}
+	tr.record(o, ".mcp.json")
+
+	o, err = pruneJSONFile(filepath.Join(root, ".claude", "settings.json"), stripClaudeSettings)
+	if err != nil {
+		return tr, fmt.Errorf("update .claude/settings.json: %w", err)
+	}
+	tr.record(o, ".claude/settings.json")
+
+	o, err = removeMarkerSection(filepath.Join(root, "CLAUDE.md"), markerStart, markerEnd)
+	if err != nil {
+		return tr, fmt.Errorf("update CLAUDE.md: %w", err)
+	}
+	tr.record(o, "CLAUDE.md")
+
+	n, err := removeSkills(root)
+	if err != nil {
+		return tr, fmt.Errorf("remove .claude/skills: %w", err)
+	}
+	if n > 0 {
+		tr.Files = append(tr.Files, fmt.Sprintf("%d skill files in .claude/skills/", n))
+	}
+
+	na, err := removeAgents(root)
+	if err != nil {
+		return tr, fmt.Errorf("remove .claude/agents: %w", err)
+	}
+	if na > 0 {
+		tr.Files = append(tr.Files, fmt.Sprintf("%d agent files in .claude/agents/", na))
+	}
+
+	removeDirIfEmpty(filepath.Join(root, ".claude"))
+	return tr, nil
+}
+
+// stripMCPServers removes Sense from the "mcpServers" map Claude Code and
+// Cursor both use. Shared with Cursor's teardown, as writeMCPJSON's shape is.
+func stripMCPServers(m map[string]any) bool {
+	return removeMCPServer(m, "mcpServers")
+}
+
+// stripClaudeSettings removes Sense's hooks and its tool permission, leaving
+// every other hook and permission the user configured. Both steps run: an
+// early return on the first would strand the second.
+func stripClaudeSettings(m map[string]any) bool {
+	hooksChanged := removeSenseHooks(m)
+	permsChanged := removeSensePermissions(m, []string{claudePermissionPattern})
+	return hooksChanged || permsChanged
 }

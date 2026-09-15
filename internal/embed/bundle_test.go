@@ -276,10 +276,65 @@ func TestORTCacheDirDefault(t *testing.T) {
 	if err != nil {
 		t.Skip("cannot get home dir")
 	}
-	want := filepath.Join(home, ".cache", "sense", "lib")
+	want := filepath.Join(home, ".sense", "cache", "lib")
 	if got != want {
 		t.Errorf("ortCacheDir default = %q, want %q", got, want)
 	}
+}
+
+// An upgrade moves the runtime rather than copying it: the directory older
+// versions extracted into goes away once the new one is in place.
+func TestRemoveLegacyCache(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("SENSE_CACHE_DIR", "")
+
+	legacy := filepath.Join(home, ".cache", "sense", "lib")
+	if err := os.MkdirAll(legacy, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(legacy, "libonnxruntime.dylib"), []byte("old"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	removeLegacyCache()
+
+	if _, err := os.Stat(filepath.Join(home, ".cache", "sense")); !os.IsNotExist(err) {
+		t.Errorf("legacy cache survived: %v", err)
+	}
+	// Nothing else under ~/.cache is Sense's to touch.
+	if _, err := os.Stat(filepath.Join(home, ".cache")); err != nil {
+		t.Errorf("~/.cache itself should be left alone: %v", err)
+	}
+}
+
+// A chosen SENSE_CACHE_DIR means the old default was never in use, so there is
+// nothing of the user's to sweep.
+func TestRemoveLegacyCacheSkippedWhenCacheDirSet(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("SENSE_CACHE_DIR", t.TempDir())
+
+	legacy := filepath.Join(home, ".cache", "sense")
+	if err := os.MkdirAll(legacy, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	removeLegacyCache()
+
+	if _, err := os.Stat(legacy); err != nil {
+		t.Errorf("legacy cache should be untouched when SENSE_CACHE_DIR is set: %v", err)
+	}
+}
+
+func TestRemoveLegacyCacheWithoutHome(t *testing.T) {
+	t.Setenv("SENSE_CACHE_DIR", "")
+	t.Setenv("HOME", "")
+	t.Setenv("USERPROFILE", "")
+
+	removeLegacyCache() // no home, nothing to find, and no panic
 }
 
 func TestORTCacheDirHomeDirFails(t *testing.T) {

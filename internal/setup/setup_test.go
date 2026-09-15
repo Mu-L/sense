@@ -1264,7 +1264,11 @@ func TestWriteClaudeSettingsWriteError(t *testing.T) {
 	}
 }
 
-func TestBackupOnInvalidJSON(t *testing.T) {
+// A config that will not parse stops setup and is left exactly as it was. No
+// copy is made: nothing overwrites the original, so there is nothing to
+// protect it from, and a second copy in the repo is one more file for the
+// agent to read and for git to offer.
+func TestInvalidJSONLeavesTheFileAloneAndWritesNoCopy(t *testing.T) {
 	root := t.TempDir()
 	path := filepath.Join(root, ".mcp.json")
 	if err := os.WriteFile(path, []byte("not json{{{"), 0o644); err != nil {
@@ -1275,9 +1279,41 @@ func TestBackupOnInvalidJSON(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for invalid JSON")
 	}
+	if !strings.Contains(err.Error(), ".mcp.json") {
+		t.Errorf("error should name the file to fix, got: %v", err)
+	}
 
-	backup := path + ".bak"
-	if _, err := os.Stat(backup); err != nil {
-		t.Errorf("expected backup file: %v", err)
+	original, readErr := os.ReadFile(path)
+	if readErr != nil || string(original) != "not json{{{" {
+		t.Errorf("original = %q (err %v), want it untouched", original, readErr)
+	}
+
+	entries, readErr := os.ReadDir(root)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	for _, e := range entries {
+		if strings.HasSuffix(e.Name(), ".bak") {
+			t.Errorf("setup left a copy behind: %s", e.Name())
+		}
+	}
+}
+
+// A config that strips down to something worth keeping, in a file that will
+// not take the rewrite.
+func TestPruneJSONFileReportsWriteErrors(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root: file permissions are not enforced")
+	}
+	root := t.TempDir()
+	path := filepath.Join(root, ".mcp.json")
+	if err := os.WriteFile(path, []byte(`{"mcpServers":{"sense":{},"other":{}}}`), 0o444); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(path, 0o644) })
+
+	o, err := pruneJSONFile(path, stripMCPServers)
+	if err == nil || o != outcomeUnchanged {
+		t.Errorf("outcome=%v err=%v, want unchanged and an error", o, err)
 	}
 }
