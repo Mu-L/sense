@@ -1281,3 +1281,22 @@ func TestBackupOnInvalidJSON(t *testing.T) {
 		t.Errorf("expected backup file: %v", err)
 	}
 }
+
+// A config that strips down to something worth keeping, in a file that will
+// not take the rewrite.
+func TestPruneJSONFileReportsWriteErrors(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root: file permissions are not enforced")
+	}
+	root := t.TempDir()
+	path := filepath.Join(root, ".mcp.json")
+	if err := os.WriteFile(path, []byte(`{"mcpServers":{"sense":{},"other":{}}}`), 0o444); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(path, 0o644) })
+
+	o, err := pruneJSONFile(path, stripMCPServers)
+	if err == nil || o != outcomeUnchanged {
+		t.Errorf("outcome=%v err=%v, want unchanged and an error", o, err)
+	}
+}

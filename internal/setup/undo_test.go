@@ -793,3 +793,136 @@ func TestUndoSummaryDistinguishesStrippedFromDeleted(t *testing.T) {
 		t.Errorf("a deleted file should be reported plainly, got:\n%s", got)
 	}
 }
+
+// breakFile makes one teardown step fail, without touching the others.
+func unparseable(rel string) func(*testing.T, string) {
+	return func(t *testing.T, root string) { writeFile(t, root, rel, "{not json") }
+}
+
+func unreadable(rel string) func(*testing.T, string) {
+	return func(t *testing.T, root string) {
+		chmodForTest(t, filepath.Join(root, rel), 0o000)
+	}
+}
+
+func readOnlyDir(rel string) func(*testing.T, string) {
+	return func(t *testing.T, root string) {
+		chmodForTest(t, filepath.Join(root, rel), 0o555)
+	}
+}
+
+// chmodForTest changes a mode for the length of a test and puts back the one
+// it found, so a file left readable-only does not come back executable.
+func chmodForTest(t *testing.T, path string, mode os.FileMode) {
+	t.Helper()
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	original := info.Mode().Perm()
+	if err := os.Chmod(path, mode); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(path, original) })
+}
+
+// Every teardown step touches a file it does not own, and every one of them can
+// fail. Each case breaks exactly one step and asserts the error names the file
+// it tripped on, so a step that swallowed its own failure shows up here as a
+// teardown that wrongly reported success.
+func TestUnconfigureStepFailures(t *testing.T) {
+	cases := []struct {
+		name      string
+		tool      Tool
+		breakStep func(*testing.T, string)
+		want      string
+	}{
+		{"claude mcp json", ToolClaudeCode, unparseable(".mcp.json"), "update .mcp.json"},
+		{"claude settings", ToolClaudeCode, unparseable(".claude/settings.json"), "update .claude/settings.json"},
+		{"claude guidance", ToolClaudeCode, unreadable("CLAUDE.md"), "update CLAUDE.md"},
+		{"claude skills", ToolClaudeCode, readOnlyDir(".claude/skills"), "remove .claude/skills"},
+		{"claude agents", ToolClaudeCode, readOnlyDir(".claude/agents"), "remove .claude/agents"},
+
+		{"cursor mcp json", ToolCursor, unparseable(".cursor/mcp.json"), "update .cursor/mcp.json"},
+		{"cursor rules", ToolCursor, unreadable(".cursorrules"), "update .cursorrules"},
+
+		{"codex toml", ToolCodexCLI, unreadable(".codex/config.toml"), "update .codex/config.toml"},
+		{"codex mcp json", ToolCodexCLI, unparseable(".mcp.json"), "update .mcp.json"},
+		{"codex agents md", ToolCodexCLI, unreadable("AGENTS.md"), "update AGENTS.md"},
+
+		{"opencode json", ToolOpencode, unparseable("opencode.json"), "update opencode.json"},
+		{"opencode agents md", ToolOpencode, unreadable("AGENTS.md"), "update AGENTS.md"},
+		{"opencode skills", ToolOpencode, readOnlyDir(".opencode/skills/sense-explore"), "remove .opencode/skills"},
+		{"opencode plugin", ToolOpencode, readOnlyDir(".opencode/plugin"), "remove .opencode/plugin"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if os.Geteuid() == 0 {
+				t.Skip("running as root: permissions are not enforced")
+			}
+			root := t.TempDir()
+			if _, err := Run(root, io.Discard, &Options{Tools: []Tool{tc.tool}}); err != nil {
+				t.Fatalf("Run: %v", err)
+			}
+			tc.breakStep(t, root)
+
+			tr, err := unconfigureTool(root, tc.tool)
+			if err == nil {
+				t.Fatal("expected the broken step to fail the teardown")
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("error = %q, want it to name %q", err, tc.want)
+			}
+			if tr == nil {
+				t.Error("a failed teardown must still return what it removed")
+			}
+		})
+	}
+}
+
+// Stat succeeds and the removal still fails: a file in a directory that will
+// not give it up.
+func TestRemoveOwnedFileReportsRemovalErrors(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root: directory permissions are not enforced")
+	}
+	root := t.TempDir()
+	writeFile(t, root, "sub/skill.md", "x")
+	chmodForTest(t, filepath.Join(root, "sub"), 0o555)
+
+	o, err := removeOwnedFile(filepath.Join(root, "sub", "skill.md"))
+	if err == nil || o != outcomeUnchanged {
+		t.Errorf("outcome=%v err=%v, want unchanged and an error", o, err)
+	}
+}
+
+func TestPruneJSONFileReportsStatErrors(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root: directory permissions are not enforced")
+	}
+	root := t.TempDir()
+	writeFile(t, root, "sub/.mcp.json", "{}")
+	chmodForTest(t, filepath.Join(root, "sub"), 0o000)
+
+	o, err := pruneJSONFile(filepath.Join(root, "sub", ".mcp.json"), stripMCPServers)
+	if err == nil || o != outcomeUnchanged {
+		t.Errorf("outcome=%v err=%v, want unchanged and an error", o, err)
+	}
+}
+
+// Readable but not writable: the section comes out in memory and the rewrite
+// fails, which must surface rather than look like a clean strip.
+func TestRemoveMarkerSectionReportsWriteErrors(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root: file permissions are not enforced")
+	}
+	root := t.TempDir()
+	writeFile(t, root, "CLAUDE.md", "mine\n\n"+markerStart+"\nsense\n"+markerEnd+"\n")
+	chmodForTest(t, filepath.Join(root, "CLAUDE.md"), 0o444)
+
+	o, err := removeMarkerSection(filepath.Join(root, "CLAUDE.md"), markerStart, markerEnd)
+	if err == nil || o != outcomeUnchanged {
+		t.Errorf("outcome=%v err=%v, want unchanged and an error", o, err)
+	}
+}

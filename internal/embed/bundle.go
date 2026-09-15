@@ -38,10 +38,10 @@ func NewBundledEmbedder(intraOpThreads int) (*ONNXEmbedder, error) {
 // ensureORTLib extracts the bundled ONNX Runtime shared library to the
 // per-user cache directory, keyed by the binary version. It is thin wiring
 // over extractLib: resolve the cache dir, extract, and sweep away the
-// directory older versions used. The bug-prone logic
-// (atomic write, version invalidation) lives in extractLib, which takes its
-// bytes and directory as parameters so it can be tested without the bundled
-// library or the real cache location.
+// directory older versions used. The bug-prone logic (atomic write, version
+// invalidation) lives in extractLib, which takes its bytes and directory as
+// parameters so it can be tested without the bundled library or the real
+// cache location.
 func ensureORTLib() (string, error) {
 	cacheDir, err := ortCacheDir()
 	if err != nil {
