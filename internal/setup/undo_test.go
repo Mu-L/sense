@@ -272,7 +272,7 @@ func TestUndoNotesSharedCache(t *testing.T) {
 	if _, err := Undo(root, &buf, nil); err != nil {
 		t.Fatalf("Undo: %v", err)
 	}
-	if !strings.Contains(buf.String(), "~/.cache/sense") {
+	if !strings.Contains(buf.String(), "~/.sense/cache") {
 		t.Errorf("expected the shared cache note, got:\n%s", buf.String())
 	}
 }

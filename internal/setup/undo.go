@@ -19,9 +19,9 @@ import (
 
 // cacheDirNote names the machine-wide embedding runtime cache. It is left in
 // place on purpose: every project on the machine shares it, so removing it to
-// undo one project's setup would force a re-download for all the others.
+// undo one project's setup would force a re-extract for all the others.
 // The path is embed's (see internal/embed/bundle.go, ortCacheDir).
-const cacheDirNote = "the shared embedding runtime in ~/.cache/sense (or $SENSE_CACHE_DIR) is left in place, every project on this machine shares it"
+const cacheDirNote = "the shared embedding runtime in ~/.sense/cache (or $SENSE_CACHE_DIR) is left in place, every project on this machine shares it"
 
 // Undo removes every file `sense setup` wrote into root, plus the .sense index
 // directory and the .gitignore entry `sense scan` added. It never deletes a
