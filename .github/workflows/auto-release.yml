@@ -33,7 +33,7 @@ jobs:
       # plain `run:` steps below. orhun/git-cliff-action only runs git-cliff
       # inside its own sandbox, so bare `git-cliff` calls would not resolve.
       - name: Install git-cliff
-        uses: taiki-e/install-action@9534c84618278caac52cb373bb164ed464dbd8af # v2.87.11
+        uses: taiki-e/install-action@4076c08d76dba979c11a7285295b0716c1d67908 # v2.87.15
         with:
           tool: git-cliff
 
