@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.15.1] - 2026-09-22
+
+### Maintenance
+
+- bump the all-others group with 2 updates
 ## [1.15.0] - 2026-09-15
 
 ### Bug Fixes
@@ -11,6 +16,14 @@ All notable changes to Sense.
 ### Features
 
 - add setup --undo to remove Sense from a project
+
+### Maintenance
+
+- bump modernc.org/sqlite in the all-others group
+- bump github.com/mark3labs/mcp-go from 0.58.0 to 1.0.0
+- bump modernc.org/sqlite in the all-others group
+- bump golang.org/x/sync in the all-others group
+- track Go 1.26 across release image, bench image, and docs
 ## [1.14.2] - 2026-08-18
 
 ### Bug Fixes
@@ -21,6 +34,10 @@ All notable changes to Sense.
 ### Bug Fixes
 
 - floor the derived baseline wall, and catch an arm that never ran
+
+### Maintenance
+
+- bump the all-others group with 2 updates
 ## [1.14.0] - 2026-08-13
 
 ### Bug Fixes
@@ -35,11 +52,21 @@ All notable changes to Sense.
 ### Bug Fixes
 
 - the codex survey turn passed a flag resume does not have
+
+### Maintenance
+
+- bump modernc.org/sqlite in the all-others group
+- bump modernc.org/sqlite in the all-others group
+- ignore improvement-loop screen cells
 ## [1.13.5] - 2026-07-30
 
 ### Enhancements
 
 - index holder relationships, so php has a composition graph (#240)
+
+### Maintenance
+
+- make a new edge kind impossible to ignore (#239)
 ## [1.13.4] - 2026-07-30
 
 ### Enhancements
@@ -50,11 +77,19 @@ All notable changes to Sense.
 ### Enhancements
 
 - emit the index caveat for PHP files (#237)
+
+### Maintenance
+
+- bump the all-others group with 2 updates (#235)
 ## [1.13.2] - 2026-07-22
 
 ### Bug Fixes
 
 - push metrics snapshot with GITHUB_TOKEN not the read-scoped PAT (#232)
+
+### Maintenance
+
+- clear qlty security findings (deps, toolchain, workflow token)
 ## [1.13.1] - 2026-07-22
 
 ### Bug Fixes
@@ -66,6 +101,10 @@ All notable changes to Sense.
 
 - purify and page the retention ring
 - page retained_via_interfaces instead of truncating it
+
+### Maintenance
+
+- bump the all-others group with 2 updates
 ## [1.12.4] - 2026-07-19
 
 ### Enhancements
@@ -90,6 +129,10 @@ All notable changes to Sense.
 - resolve Konekt Concord model proxies to their models
 - fold member callers when the direct set is dwarfed
 - resolve aliased concord proxy imports and pin naming-pair edges
+
+### Maintenance
+
+- extract member-caller collection below the complexity gate
 ## [1.12.0] - 2026-07-17
 
 ### Features
@@ -100,6 +143,13 @@ All notable changes to Sense.
 - give PHP targets a leaf lane and inherited-method dispatch
 - exclude Laravel synthetic plumbing from dead-code and search
 - rank Laravel bases and detect PHP test style
+
+### Maintenance
+
+- snapshot release downloads and traffic daily
+- run snapshot at 13:00 UTC
+- merge paginated releases into one snapshot row
+- skip traffic rows on 403 instead of writing nulls
 ## [1.11.29] - 2026-07-16
 
 ### Bug Fixes
@@ -123,6 +173,10 @@ All notable changes to Sense.
 - council pass-1 amendments for retained-row evidence
 - disclose enrichment trims with a priced retained_trimmed flag
 
+### Maintenance
+
+- add enhance commit type to cliff parsers
+
 ### Refactoring
 
 - drop shedRetainedField's unused return
@@ -136,6 +190,10 @@ All notable changes to Sense.
 - render the retained group with may-retain accounting isolation
 - route retention and composition questions in the guidance surfaces
 - price the blast budget at the wire and shed duplication first
+
+### Maintenance
+
+- gitignore scenario .bak backups and _invalid run dirs
 ## [1.11.26] - 2026-07-14
 
 ### Bug Fixes
@@ -156,6 +214,10 @@ All notable changes to Sense.
 - remove the 500K satisfaction budget — big Go repos get their interface edges
 - stamp satisfy_unbudgeted and advise a plain scan on pre-fix Go indexes
 
+### Maintenance
+
+- keep admission-backtest results local-only
+
 ### Refactoring
 
 - prune satisfaction candidates via rarest-method buckets
@@ -164,6 +226,10 @@ All notable changes to Sense.
 ### Bug Fixes
 
 - emit composition edges for Go struct fields
+
+### Maintenance
+
+- bump the all-others group with 2 updates
 ## [1.11.23] - 2026-07-13
 
 ### Bug Fixes
@@ -210,6 +276,10 @@ All notable changes to Sense.
 
 - resolve Django reverse-related-manager accessors
 - span enumerated indirect callers across files
+
+### Maintenance
+
+- align smell thresholds with the CI-enforced complexity gates
 ## [1.11.15] - 2026-07-06
 
 ### Bug Fixes
@@ -217,6 +287,10 @@ All notable changes to Sense.
 - capture Django to= targets and manager-chain model deps
 - rank production callers above test files at the cap
 ## [1.11.14] - 2026-07-05
+
+### Maintenance
+
+- commit qlty analysis config
 
 ### Refactoring
 
@@ -276,6 +350,11 @@ All notable changes to Sense.
 ### Bug Fixes
 
 - resolve celery task dispatch to the task function
+
+### Maintenance
+
+- bump github.com/mark3labs/mcp-go in the all-others group
+- scope intake to the three open lanes
 ## [1.11.4] - 2026-06-29
 
 ### Bug Fixes
@@ -296,6 +375,10 @@ All notable changes to Sense.
 ### Bug Fixes
 
 - de-noise and re-rank sense_conventions output
+
+### Maintenance
+
+- bump the all-others group with 2 updates
 ## [1.11.0] - 2026-06-22
 
 ### Features
@@ -306,11 +389,20 @@ All notable changes to Sense.
 ### Features
 
 - right-size sense_blast output with area-stratified enumeration
+
+### Maintenance
+
+- Add 'What Sense believes' section
 ## [1.9.0] - 2026-06-19
 
 ### Features
 
 - add completeness verdict and per-result relation to sense_blast/sense_graph
+
+### Maintenance
+
+- skip bench-scoped commits in changelog and release bumps
+- ignore built binary, add opencode stall guard, refresh fixtures
 ## [1.8.0] - 2026-06-18
 
 ### Features
@@ -364,6 +456,10 @@ All notable changes to Sense.
 - add Rails-vertical scenarios and pin their commits
 - lead report with split mention/cited/billed axes
 
+### Maintenance
+
+- ignore bench coverage DB and scenario .bak backups
+
 ### Refactoring
 
 - rework scenarios to grep-hostile relational seams
@@ -377,6 +473,10 @@ All notable changes to Sense.
 ### Features
 
 - add code-intel MCP benchmark leaderboard page
+
+### Maintenance
+
+- bump the all-others group with 2 updates
 ## [1.0.1] - 2026-06-07
 
 ### Bug Fixes
@@ -388,6 +488,10 @@ All notable changes to Sense.
 
 - Sense 1.0, first stable release
 ## [0.99.2] - 2026-06-06
+
+### Maintenance
+
+- relicense to MIT
 
 ### Refactoring
 
@@ -404,6 +508,24 @@ All notable changes to Sense.
 
 - make example ordering deterministic
 - disambiguate repeated representative labels
+
+### Maintenance
+
+- gate gofmt/goimports via golangci-lint v2 formatters
+- gate goal 5 with depguard + hermetic unit tests
+- gate complexity with gocyclo/gocognit + inline ledger
+- unify make ci with remote CI and gate coverage
+- assert ledger burndown and document the quality gates
+- harden hermetic netns and fix gate comments
+- ratchet complexity ledger cap to 43 after retiring mcpserver entries
+- ratchet complexity ledger cap to 33 after retiring scan-pipeline entries
+- ratchet complexity ledger cap to 28 after retiring storage/query entries
+- ratchet complexity ledger cap to 23 after retiring conventions entries
+- ratchet complexity ledger cap to 22
+- ratchet complexity ledger cap to 16
+- ratchet complexity ledger cap to 2
+- sync codecov ignore list with the gate's exclusion philosophy
+- invert the gate to deny-by-default over the whole tree
 
 ### Refactoring
 
@@ -457,6 +579,10 @@ All notable changes to Sense.
 - add background freshening service with single-writer lock
 - host embedded watcher and read-repair stale files on query
 - report watching and pending embeddings in sense status
+
+### Maintenance
+
+- bump modernc.org/sqlite in the all-others group
 
 ### Refactoring
 
@@ -595,6 +721,11 @@ All notable changes to Sense.
 - emit PEP 257 docstring
 - emit /// and /** */ as docstring
 
+### Maintenance
+
+- bump github.com/mark3labs/mcp-go in the all-others group
+- bump github.com/mark3labs/mcp-go in the all-others group
+
 ### Refactoring
 
 - tighten docstring extractors to hit coverage floor
@@ -608,6 +739,10 @@ All notable changes to Sense.
 - annotate graph/blast/dead with language-specific index caveats
 - dockerize the harness with per-tool images
 - judge CLI fallback, path-resolved grounding, serena onboarding overhead
+
+### Maintenance
+
+- regenerate results against dockerized pipeline
 ## [0.84.3] - 2026-05-15
 
 ### Bug Fixes
@@ -640,6 +775,12 @@ All notable changes to Sense.
 - per-repo MAX_BUDGET_USD tiers + honest cost defaults
 - build .mcpb bundles per platform
 
+### Maintenance
+
+- stop tracking python bytecode caches
+- add judge variance baseline tool
+- commit benchmark result artifacts (5 tools × 6 scenarios)
+
 ### Refactoring
 
 - consolidate harness — promote bench2/ to bench/
@@ -648,6 +789,10 @@ All notable changes to Sense.
 ### Bug Fixes
 
 - relax second-scan timing threshold for CI
+
+### Maintenance
+
+- bump the all-others group with 3 updates
 ## [0.84.0] - 2026-05-12
 
 ### Features
@@ -728,6 +873,10 @@ All notable changes to Sense.
 
 - add Opencode as a first-class AI tool target
 
+### Maintenance
+
+- ignore opencode.json dev artifact
+
 ### Refactoring
 
 - extract processBatch and embedController from Run()
@@ -785,6 +934,10 @@ All notable changes to Sense.
 - add KeySymbolEntry to conventions and status wire types
 - wire key symbols into conventions and status handlers
 
+### Maintenance
+
+- bump the all-others group with 2 updates
+
 ### Refactoring
 
 - collapse tiered defaults into single DefaultParams()
@@ -808,6 +961,10 @@ All notable changes to Sense.
 - strip sense_metrics from MCP responses and cap next_steps
 - per-edge-kind decay with lowered floor for structural edges
 - resolve callers through interface dispatch
+
+### Maintenance
+
+- expand golangci-lint configuration
 
 ### Refactoring
 
@@ -869,6 +1026,11 @@ All notable changes to Sense.
 - add design pattern, framework idiom, and architecture layer detection
 - add interface awareness, test-ref exclusion, and confidence annotation
 - generate cold-start codebase summary at scan time
+
+### Maintenance
+
+- regenerate ground truths with fixed generator
+- replace Sense-sourced semantic-search ground truth
 
 ### Performance
 
@@ -940,6 +1102,11 @@ All notable changes to Sense.
 
 - add multi-edge BFS with confidence decay and result cap
 - expose grouped blast results in CLI and MCP
+
+### Maintenance
+
+- remove accidentally tracked .doc pitch file
+- remove accidentally tracked .doc pitch file
 ## [0.36.0] - 2026-04-28
 
 ### Features
@@ -984,6 +1151,11 @@ All notable changes to Sense.
 - improve scorer with Go package normalization and cache tokens
 - restructure runner with persistent workspaces
 - add suffix and containment resolution tiers with structured MCP responses
+
+### Maintenance
+
+- remove .mcp.json from tracking and update .gitignore
+- bump the all-others group across 1 directory with 3 updates
 
 ### Refactoring
 
@@ -1065,6 +1237,11 @@ All notable changes to Sense.
 - add AI tool config generator
 - add Claude Code lifecycle hooks
 - run setup on first scan and add --init flag
+## [0.23.3] - 2026-04-24
+
+### Maintenance
+
+- add issue and PR templates
 ## [0.23.2] - 2026-04-24
 
 ### Features
@@ -1134,6 +1311,10 @@ All notable changes to Sense.
 - add --file and --language flags for symbol disambiguation
 - add HNSW index persistence and parallel ONNX embedding
 - add cross-directory test association for Rails mirror trees
+
+### Maintenance
+
+- configure sense MCP server
 ## [0.22.3] - 2026-04-22
 
 ### Features
@@ -1312,6 +1493,10 @@ All notable changes to Sense.
 - check context cancellation between BFS hops
 - add stdio MCP server with graph, blast, and status tools
 
+### Maintenance
+
+- add stdout hygiene CI check, MCP integration test, and README update
+
 ### Refactoring
 
 - export helpers for MCP server reuse
@@ -1323,6 +1508,10 @@ All notable changes to Sense.
 - add shared MCP-schema marshalling layer
 - add sense graph and sense blast with three-tier lookup
 - wire graph and blast into the main dispatcher
+
+### Maintenance
+
+- skip blast E2E under -short
 ## [0.3.0] - 2026-04-19
 
 ### Features
