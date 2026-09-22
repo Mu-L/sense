@@ -31,7 +31,9 @@ commit_parsers = [
     { message = "^[Bb]ench", skip = true },
     { message = "^docs", skip = true },
     { message = "^test", skip = true },
-    { message = "^chore", skip = true },
+    # Dependency bumps ship inside the binary, so chore earns a patch release
+    # and a changelog entry; the minor segment stays reserved for feat.
+    { message = "^chore", group = "Maintenance" },
     { message = "^ci", skip = true },
     { message = "^build", skip = true },
     { message = "^Merge", skip = true },
