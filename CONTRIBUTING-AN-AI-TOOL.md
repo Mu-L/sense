@@ -169,8 +169,11 @@ const (
 )
 ```
 
-`ParseTools`, the `--tools` help text, and the error message all derive from the
-registry, so this is the only constant you add.
+`ParseTools` and its error message derive from the registry, so this is the only
+constant you add. The `sense setup --help` text is the one hand-kept list: add
+your tool's display name to `setupHelp` in
+[`internal/cli/setup.go`](internal/cli/setup.go).
+`TestSetupHelpListsEveryTool` fails until you do.
 
 ### Step 3. Create the tool's file
 
@@ -350,6 +353,8 @@ to opt into. Cover every writer branch, including the error returns.
 | Cursor | `.cursor/mcp.json` (`mcpServers`) | `.cursorrules` | none |
 | Codex CLI | `.codex/config.toml` (`[mcp_servers.sense]`; Codex ignores `.mcp.json`) | `AGENTS.md` | also writes `.mcp.json` for shared-repo consistency |
 | OpenCode | `opencode.json` (`mcp` key, `{type, command, enabled}`) | `AGENTS.md` | skills as `.opencode/skills/<name>/SKILL.md` |
+| Windsurf | none in the project (global `mcp_config.json` only; setup prints a note) | `AGENTS.md` | none |
+| Cline | none in the project (global MCP settings only; setup prints a note) | `AGENTS.md` | none |
 
 ---
 

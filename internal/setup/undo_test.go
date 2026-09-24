@@ -854,6 +854,10 @@ func TestUnconfigureStepFailures(t *testing.T) {
 		{"opencode agents md", ToolOpencode, unreadable("AGENTS.md"), "update AGENTS.md"},
 		{"opencode skills", ToolOpencode, readOnlyDir(".opencode/skills/sense-explore"), "remove .opencode/skills"},
 		{"opencode plugin", ToolOpencode, readOnlyDir(".opencode/plugin"), "remove .opencode/plugin"},
+
+		{"windsurf agents md", ToolWindsurf, unreadable("AGENTS.md"), "update AGENTS.md"},
+
+		{"cline agents md", ToolCline, unreadable("AGENTS.md"), "update AGENTS.md"},
 	}
 
 	for _, tc := range cases {

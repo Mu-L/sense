@@ -115,12 +115,14 @@ Parses your code with tree-sitter, extracts symbols and relationships, embeds ev
 cd /path/to/project && sense setup
 ```
 
-Auto-detects installed AI tools (Claude Code, Cursor, Codex CLI, and OpenCode) and writes each one's integration configs:
+Auto-detects installed AI tools (Claude Code, Cursor, Codex CLI, OpenCode, Windsurf, and Cline) and writes each one's integration configs:
 
 - **`.mcp.json`** / **`.cursor/mcp.json`** / **`.codex/config.toml`** / **`opencode.json`**, the MCP server entry for the detected tool (or any MCP client)
 - **`CLAUDE.md`** / **`.cursorrules`** / **`AGENTS.md`**, routing guidance with a tool substitution table, written from a single shared source
 - **`.claude/settings.json`**, lifecycle hooks that nudge Claude toward Sense tools
 - **`.claude/skills/`** and **`.opencode/skills/`**, workflow skills for exploration, impact analysis, and conventions
+
+Windsurf and Cline read MCP servers only from their global settings, so for those two `sense setup` writes `AGENTS.md` and prints the one entry to add by hand.
 
 No manual setup. Run `sense setup` and your AI has structural understanding.
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -12,10 +13,10 @@ import (
 
 func TestDetectAllReturnsAllTools(t *testing.T) {
 	results := DetectAll()
-	if len(results) != 4 {
-		t.Fatalf("DetectAll returned %d results, want 4", len(results))
+	if len(results) != 6 {
+		t.Fatalf("DetectAll returned %d results, want 6", len(results))
 	}
-	want := []Tool{ToolClaudeCode, ToolCursor, ToolCodexCLI, ToolOpencode}
+	want := []Tool{ToolClaudeCode, ToolCursor, ToolCodexCLI, ToolOpencode, ToolWindsurf, ToolCline}
 	for i, r := range results {
 		if r.Tool != want[i] {
 			t.Errorf("result[%d].Tool = %s, want %s", i, r.Tool, want[i])
@@ -32,6 +33,8 @@ func TestToolDisplayName(t *testing.T) {
 		{ToolCursor, "Cursor"},
 		{ToolCodexCLI, "Codex CLI"},
 		{ToolOpencode, "Opencode"},
+		{ToolWindsurf, "Windsurf"},
+		{ToolCline, "Cline"},
 		{Tool("other"), "other"},
 	}
 	for _, tc := range cases {
@@ -86,6 +89,8 @@ func TestParseTools(t *testing.T) {
 		{"cursor", []Tool{ToolCursor}, false},
 		{"codex-cli", []Tool{ToolCodexCLI}, false},
 		{"opencode", []Tool{ToolOpencode}, false},
+		{"windsurf", []Tool{ToolWindsurf}, false},
+		{"cline", []Tool{ToolCline}, false},
 		{"claude-code,cursor", []Tool{ToolClaudeCode, ToolCursor}, false},
 		{"claude-code, cursor, codex-cli", []Tool{ToolClaudeCode, ToolCursor, ToolCodexCLI}, false},
 		{"unknown", nil, true},
@@ -144,11 +149,9 @@ func TestHasCursorEnvNone(t *testing.T) {
 
 func TestAllToolsOrder(t *testing.T) {
 	tools := AllTools()
-	if len(tools) != 4 {
-		t.Fatalf("AllTools() len = %d, want 4", len(tools))
-	}
-	if tools[0] != ToolClaudeCode || tools[1] != ToolCursor || tools[2] != ToolCodexCLI || tools[3] != ToolOpencode {
-		t.Errorf("AllTools() = %v, want [claude-code cursor codex-cli opencode]", tools)
+	want := []Tool{ToolClaudeCode, ToolCursor, ToolCodexCLI, ToolOpencode, ToolWindsurf, ToolCline}
+	if !slices.Equal(tools, want) {
+		t.Errorf("AllTools() = %v, want %v", tools, want)
 	}
 }
 
