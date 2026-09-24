@@ -516,3 +516,18 @@ func TestDeadCodeHintsCountMismatch(t *testing.T) {
 }
 
 func intPtr(v int) *int { return &v }
+
+func TestGraphHintsCalleesDirectionMakesNoCallerClaim(t *testing.T) {
+	// A callees query never fetches callers, so an empty called_by says
+	// nothing about them; "no callers found" there is asserted, not observed.
+	resp := mcpio.GraphResponse{
+		Symbol: mcpio.GraphSymbol{
+			Name:      "Load",
+			Qualified: "pkg.Load",
+			File:      "internal/pkg/load.go",
+		},
+	}
+	if hints := graphHints(resp, model.DirectionCallees); hints != nil {
+		t.Fatalf("direction callees: want nil hints, got %+v", hints)
+	}
+}
