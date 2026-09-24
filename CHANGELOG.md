@@ -1,6 +1,12 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.16.0] - 2026-09-24
+
+### Features
+
+- auto-detect Windsurf and Cline
+- list Windsurf and Cline in setup help
 ## [1.15.2] - 2026-09-24
 
 ### Bug Fixes
