@@ -21,7 +21,7 @@ The CLI commands below mirror some of these capabilities for manual use, but the
 
 ### `sense setup`
 
-Configure AI tool integrations. Auto-detects installed tools (Claude Code, Cursor, Codex CLI) and writes integration files.
+Configure AI tool integrations. Auto-detects installed tools (Claude Code, Cursor, Codex CLI, Opencode, Windsurf, Cline) and writes integration files.
 
 ```bash
 sense setup                           # auto-detect and configure all

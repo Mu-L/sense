@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/luuuc/sense/internal/search"
+	"github.com/luuuc/sense/internal/setup"
 )
 
 // newTestIO returns an IO with byte buffer sinks and Dir="." so a
@@ -299,6 +300,16 @@ func TestRunSetupHelp(t *testing.T) {
 			if !strings.Contains(got, want) {
 				t.Errorf("%s: help missing %q\ngot:\n%s", flag, want, got)
 			}
+		}
+	}
+}
+
+// The help text lists the supported tools by hand, so it must name every
+// tool in the setup registry or a newly added tool stays invisible in --help.
+func TestSetupHelpListsEveryTool(t *testing.T) {
+	for _, tool := range setup.AllTools() {
+		if !strings.Contains(setupHelp, tool.DisplayName()) {
+			t.Errorf("setup help does not mention %s", tool.DisplayName())
 		}
 	}
 }

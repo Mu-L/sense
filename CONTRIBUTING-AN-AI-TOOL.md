@@ -169,8 +169,11 @@ const (
 )
 ```
 
-`ParseTools`, the `--tools` help text, and the error message all derive from the
-registry, so this is the only constant you add.
+`ParseTools` and its error message derive from the registry, so this is the only
+constant you add. The `sense setup --help` text is the one hand-kept list: add
+your tool's display name to `setupHelp` in
+[`internal/cli/setup.go`](internal/cli/setup.go).
+`TestSetupHelpListsEveryTool` fails until you do.
 
 ### Step 3. Create the tool's file
 
