@@ -50,7 +50,8 @@ const defaultMinConfidence = 0.5
 //     confidence threshold: at each BFS hop the edge confidence is
 //     multiplied into the running product, and traversal stops when
 //     the product drops below this value.
-//   - IncludeTests false ⇒ AffectedTests stays empty; callers opt in.
+//   - IncludeTests false ⇒ AffectedTests stays empty and callers living
+//     in test files are dropped from the caller sets; callers opt in.
 type Options struct {
 	MaxHops       int
 	MinConfidence float64
@@ -349,6 +350,8 @@ func Compute(ctx context.Context, db *sql.DB, symbolIDs []int64, opts Options) (
 		seedSet[id] = struct{}{}
 	}
 	directIDs, indirectIDs := state.partition(seedSet)
+	directIDs = dropTestFileIDs(ctx, db, directIDs, opts.IncludeTests)
+	indirectIDs = dropTestFileIDs(ctx, db, indirectIDs, opts.IncludeTests)
 	totalAffectedCount := len(directIDs) + len(indirectIDs)
 	// Snapshot the uncapped affected set so reverse-composition dependents the BFS
 	// pruned by confidence (surfaced below from the edge table) can be reconciled
@@ -558,7 +561,9 @@ func (s *bfsState) loadEdgeTableGroups(ctx context.Context, db *sql.DB, subject 
 	if err != nil {
 		return nil, retentionOutcome{}, fmt.Errorf("blast: reverse composition: %w", err)
 	}
-	viaComposition, err := s.loadReverseComposition(ctx, db, composerIDs, seedSet, excludeGrouped, isSelf, opts.MaxResults)
+	// Only the composition group drops test-file composers; retention is left
+	// on the full composer set and keeps its own test-file satisfier rule.
+	viaComposition, err := s.loadReverseComposition(ctx, db, dropTestFileIDs(ctx, db, composerIDs, opts.IncludeTests), seedSet, excludeGrouped, isSelf, opts.MaxResults)
 	if err != nil {
 		return nil, retentionOutcome{}, fmt.Errorf("blast: reverse composition: %w", err)
 	}
@@ -832,6 +837,25 @@ func (s *bfsState) partition(seedSet map[int64]struct{}) (direct, indirect []int
 		}
 	}
 	return direct, indirect
+}
+
+// dropTestFileIDs removes symbols that live in test files when tests are not
+// wanted. Callers and composers pass through it before anything counts or
+// caps them, so total_affected, direct_callers_by_area and the enumeration
+// all agree. Test callers were otherwise served as direct callers (django
+// QuerySet: 32 of 60 rows).
+func dropTestFileIDs(ctx context.Context, db *sql.DB, ids []int64, includeTests bool) []int64 {
+	if includeTests {
+		return ids
+	}
+	flags := testFileFlags(ctx, db, ids)
+	out := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		if !flags[id] {
+			out = append(out, id)
+		}
+	}
+	return out
 }
 
 // capResults trims the caller sets to maxResults total, keeping production

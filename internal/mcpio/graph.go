@@ -266,7 +266,7 @@ func BuildGraphResponse(ctx context.Context, sc *model.SymbolContext, files File
 		resp.TestCallerSummary = buildTestCallerSummary(testCallers)
 	}
 
-	resp.VerifyHint = graphVerifyHint(resp)
+	resp.VerifyHint = graphVerifyHint(resp, req.Direction)
 	resp.IndexCaveat = graphIndexCaveat(resp)
 	resp.ViewEdges = viewEdgesSignal(sc.File.Path, anyViewTemplate(inboundEdgeFiles(sc.Inbound, files)))
 
@@ -749,8 +749,10 @@ func inboundEdgeFiles(inbound []model.EdgeRef, files FileLookup) []string {
 	return out
 }
 
-func graphVerifyHint(resp GraphResponse) string {
-	if len(resp.Edges.CalledBy) > 0 {
+// graphVerifyHint flags a function or constant with outgoing calls and no
+// callers. A callees query never fetches callers, so it makes no such claim.
+func graphVerifyHint(resp GraphResponse, direction model.Direction) string {
+	if len(resp.Edges.CalledBy) > 0 || direction == model.DirectionCallees {
 		return ""
 	}
 	kind := resp.Symbol.Kind

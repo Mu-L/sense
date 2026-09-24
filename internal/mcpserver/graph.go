@@ -432,7 +432,9 @@ func graphHints(resp mcpio.GraphResponse, direction model.Direction) []mcpio.Nex
 		}
 	case shownCallers == 0 && resp.LowConfidenceHidden > 0:
 		hints = append(hints, lowConfidenceHint(resp, direction))
-	case shownCallers == 0 && !isTestFile(resp.Symbol.File):
+	case shownCallers == 0 && direction != model.DirectionCallees && !isTestFile(resp.Symbol.File):
+		// A callees query never fetches callers, so an empty called_by there
+		// is not evidence of "no callers".
 		hints = append(hints, mcpio.NextStep{
 			Tool:   "sense_search",
 			Args:   map[string]any{"query": resp.Symbol.Name},

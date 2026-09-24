@@ -1000,15 +1000,20 @@ func sumAreas(m map[string]int) int {
 }
 
 // countUniqueBlastFiles counts the distinct files across the enumerated
-// direct callers and affected tests, plus any extra paths supplied. The
-// extra paths carry the files of callers collapsed by the seen-dedup, so
+// direct callers, the affected_* edge-kind groups and affected tests, plus
+// any extra paths supplied. The edge-kind groups count because a radius made
+// only of subclasses would otherwise report 0 files beside the files it
+// names (vscode Action2: 74 subclass files, affected_files 0). The extra
+// paths carry the files of callers collapsed by the seen-dedup, so
 // affected_files reports the same magnitude whether or not a caller was
 // already returned earlier this session.
 func countUniqueBlastFiles(resp BlastResponse, extra ...string) int {
 	seen := map[string]struct{}{}
-	for _, c := range resp.DirectCallers {
-		if c.File != "" {
-			seen[c.File] = struct{}{}
+	for _, group := range [][]BlastCaller{resp.DirectCallers, resp.AffectedSubclasses, resp.AffectedViaComposition, resp.AffectedViaIncludes} {
+		for _, c := range group {
+			if c.File != "" {
+				seen[c.File] = struct{}{}
+			}
 		}
 	}
 	for _, t := range resp.AffectedTests {

@@ -208,7 +208,11 @@ func oracleDigest(t *testing.T, calls []labeledCall) (string, []string) {
 // hint reason lost its em-dash (project no-em-dash rule) - both are the only
 // response changes. Every surviving hint (blast no-test-coverage, graph
 // zero-caller search, not_found search) is otherwise unchanged. digest moved.
-const oracleGolden = "d6c4a95cbcc3d3dddb34cec2440e6e6b94c30a34a81c9c1f84d77ebf2c2b5b5b"
+// A callees query never fetches callers, so it no longer claims zero of them:
+// graph/handlerequest/callees lost its verify_hint and its "no callers found"
+// next_steps entry (the fixture's HandleRequest is called by main.main, so
+// both claims were false). Edges are unchanged. digest moved.
+const oracleGolden = "1cd6196510a343cb961dfe8589093164c7897c05198f889bd3c643d8a8a991f7"
 
 func TestMCPServerResponseOracle(t *testing.T) {
 	got, content := oracleDigest(t, collectOracleCalls(t))

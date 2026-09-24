@@ -861,6 +861,27 @@ func TestGraphVerifyHintFunctionZeroCallers(t *testing.T) {
 	}
 }
 
+// A callees query never fetches callers, so it must not claim zero callers.
+func TestGraphVerifyHintNotEmittedForCalleesDirection(t *testing.T) {
+	sc := &model.SymbolContext{
+		Symbol: model.Symbol{
+			Name: "helper", Qualified: "helper",
+			Kind: model.KindFunction, FileID: 1, LineStart: 10, LineEnd: 20,
+		},
+		File: model.File{Path: "lib/utils.go"},
+		Outbound: []model.EdgeRef{
+			{Edge: model.Edge{Kind: model.EdgeCalls, Confidence: 1.0}, Target: model.Symbol{Qualified: "fmt.Println"}},
+		},
+	}
+	files := func(int64) (string, bool) { return "", false }
+
+	resp := BuildGraphResponse(context.Background(), sc, files, BuildGraphRequest{Direction: model.DirectionCallees})
+
+	if resp.VerifyHint != "" {
+		t.Errorf("VerifyHint = %q, want empty on a callees query", resp.VerifyHint)
+	}
+}
+
 func TestGraphVerifyHintNotEmittedWithCallers(t *testing.T) {
 	sc := &model.SymbolContext{
 		Symbol: model.Symbol{

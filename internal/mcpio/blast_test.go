@@ -1183,6 +1183,30 @@ func TestBuildBlastResponseAffectedSymbolsAndFiles(t *testing.T) {
 	}
 }
 
+// A radius made only of subclasses, composers and includers still names
+// files; affected_files must count them rather than report 0 beside them.
+func TestBuildBlastResponseAffectedFilesCountsEdgeKindGroups(t *testing.T) {
+	r := blast.Result{
+		Symbol:                 model.Symbol{ID: 0, Qualified: "Action2"},
+		Risk:                   blast.RiskLow,
+		AffectedSubclasses:     []model.Symbol{{ID: 1, Qualified: "SubA", FileID: 10}, {ID: 2, Qualified: "SubB", FileID: 11}},
+		AffectedViaComposition: []model.Symbol{{ID: 3, Qualified: "Holder", FileID: 12}},
+		AffectedViaIncludes:    []model.Symbol{{ID: 4, Qualified: "Includer", FileID: 10}},
+		TotalAffected:          4,
+	}
+	files := func(id int64) (string, bool) {
+		m := map[int64]string{10: "src/a.ts", 11: "src/b.ts", 12: "src/c.ts"}
+		p, ok := m[id]
+		return p, ok
+	}
+
+	resp := BuildBlastResponse(context.Background(), r, files, nil)
+
+	if resp.AffectedFiles != 3 {
+		t.Errorf("AffectedFiles = %d, want 3 (src/a.ts, src/b.ts, src/c.ts)", resp.AffectedFiles)
+	}
+}
+
 func TestBuildDiffBlastResponseAffectedSymbolsAndFiles(t *testing.T) {
 	results := []blast.Result{
 		{
