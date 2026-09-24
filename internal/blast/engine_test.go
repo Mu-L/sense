@@ -374,8 +374,9 @@ func TestTarget(t *testing.T) {
 }
 
 // TestComputeExcludeTestsDropsTestCallers proves IncludeTests false keeps
-// test-file callers out of the caller sets and the count, not only out of
-// AffectedTests: django QuerySet served 32 test rows of 60 with the flag off.
+// test-file callers and composers out of the result and the count, not only
+// out of AffectedTests: django QuerySet served 32 test rows of 60 with the
+// flag off.
 func TestComputeExcludeTestsDropsTestCallers(t *testing.T) {
 	root := t.TempDir()
 	writeFile(t, filepath.Join(root, "widget.go"), `package widget
@@ -383,10 +384,16 @@ func TestComputeExcludeTestsDropsTestCallers(t *testing.T) {
 func Target() int { return 42 }
 
 func Use() int { return Target() }
+
+type Widget struct{ n int }
+
+type Holder struct{ w Widget }
 `)
 	writeFile(t, filepath.Join(root, "widget_test.go"), `package widget
 
 import "testing"
+
+type fakeHolder struct{ w Widget }
 
 func TestTarget(t *testing.T) {
 	_ = Target()
@@ -439,6 +446,31 @@ func TestTarget(t *testing.T) {
 	}
 	if total != 1 {
 		t.Errorf("IncludeTests false: TotalAffected = %d, want 1", total)
+	}
+
+	widgetID := idOf(t, adapter, "widget.Widget")
+	composers := func(includeTests bool) map[string]bool {
+		res, err := blast.Compute(ctx, db, []int64{widgetID}, blast.Options{MaxHops: 1, IncludeTests: includeTests})
+		if err != nil {
+			t.Fatalf("Compute: %v", err)
+		}
+		names := map[string]bool{}
+		for _, group := range [][]model.Symbol{res.DirectCallers, res.AffectedViaComposition} {
+			for _, c := range group {
+				names[c.Qualified] = true
+			}
+		}
+		return names
+	}
+	if with := composers(true); !with["widget.fakeHolder"] || !with["widget.Holder"] {
+		t.Fatalf("IncludeTests true: composers = %v, want widget.Holder and widget.fakeHolder", with)
+	}
+	without = composers(false)
+	if without["widget.fakeHolder"] {
+		t.Errorf("IncludeTests false: composers = %v, want no test-file composer", without)
+	}
+	if !without["widget.Holder"] {
+		t.Errorf("IncludeTests false: composers = %v, want widget.Holder kept", without)
 	}
 }
 
