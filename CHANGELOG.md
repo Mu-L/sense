@@ -1,6 +1,14 @@
 # Changelog
 
 All notable changes to Sense.
+## [1.15.2] - 2026-09-24
+
+### Bug Fixes
+
+- count edge-kind group files in affected_files
+- drop test-file callers when include_tests is false
+- stop claiming zero callers on a callees query
+- drop test-file composers when include_tests is false
 ## [1.15.1] - 2026-09-22
 
 ### Maintenance
