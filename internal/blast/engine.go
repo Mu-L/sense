@@ -50,7 +50,8 @@ const defaultMinConfidence = 0.5
 //     confidence threshold: at each BFS hop the edge confidence is
 //     multiplied into the running product, and traversal stops when
 //     the product drops below this value.
-//   - IncludeTests false ⇒ AffectedTests stays empty; callers opt in.
+//   - IncludeTests false ⇒ AffectedTests stays empty and callers living
+//     in test files are dropped from the caller sets; callers opt in.
 type Options struct {
 	MaxHops       int
 	MinConfidence float64
@@ -349,6 +350,7 @@ func Compute(ctx context.Context, db *sql.DB, symbolIDs []int64, opts Options) (
 		seedSet[id] = struct{}{}
 	}
 	directIDs, indirectIDs := state.partition(seedSet)
+	directIDs, indirectIDs = dropTestCallers(ctx, db, directIDs, indirectIDs, opts.IncludeTests)
 	totalAffectedCount := len(directIDs) + len(indirectIDs)
 	// Snapshot the uncapped affected set so reverse-composition dependents the BFS
 	// pruned by confidence (surfaced below from the edge table) can be reconciled
@@ -832,6 +834,27 @@ func (s *bfsState) partition(seedSet map[int64]struct{}) (direct, indirect []int
 		}
 	}
 	return direct, indirect
+}
+
+// dropTestCallers removes callers that live in test files when tests are
+// not wanted, before anything counts or caps the sets, so total_affected,
+// direct_callers_by_area and the enumeration all agree. Test callers are
+// otherwise served as direct callers (django QuerySet: 32 of 60 rows).
+func dropTestCallers(ctx context.Context, db *sql.DB, directIDs, indirectIDs []int64, includeTests bool) ([]int64, []int64) {
+	if includeTests {
+		return directIDs, indirectIDs
+	}
+	flags := testFileFlags(ctx, db, append(append(make([]int64, 0, len(directIDs)+len(indirectIDs)), directIDs...), indirectIDs...))
+	keep := func(ids []int64) []int64 {
+		out := ids[:0:0]
+		for _, id := range ids {
+			if !flags[id] {
+				out = append(out, id)
+			}
+		}
+		return out
+	}
+	return keep(directIDs), keep(indirectIDs)
 }
 
 // capResults trims the caller sets to maxResults total, keeping production

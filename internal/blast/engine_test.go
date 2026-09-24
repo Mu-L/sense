@@ -373,6 +373,75 @@ func TestTarget(t *testing.T) {
 	}
 }
 
+// TestComputeExcludeTestsDropsTestCallers proves IncludeTests false keeps
+// test-file callers out of the caller sets and the count, not only out of
+// AffectedTests: django QuerySet served 32 test rows of 60 with the flag off.
+func TestComputeExcludeTestsDropsTestCallers(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "widget.go"), `package widget
+
+func Target() int { return 42 }
+
+func Use() int { return Target() }
+`)
+	writeFile(t, filepath.Join(root, "widget_test.go"), `package widget
+
+import "testing"
+
+func TestTarget(t *testing.T) {
+	_ = Target()
+}
+`)
+
+	ctx := context.Background()
+	if _, err := scan.Run(ctx, scan.Options{
+		Root:     root,
+		Output:   &bytes.Buffer{},
+		Warnings: io.Discard,
+	}); err != nil {
+		t.Fatalf("scan.Run: %v", err)
+	}
+	dbPath := filepath.Join(root, ".sense", "index.db")
+	adapter, err := sqlite.Open(ctx, dbPath)
+	if err != nil {
+		t.Fatalf("sqlite.Open: %v", err)
+	}
+	t.Cleanup(func() { _ = adapter.Close() })
+	db, err := sql.Open("sqlite", "file:"+dbPath)
+	if err != nil {
+		t.Fatalf("sql.Open: %v", err)
+	}
+	t.Cleanup(func() { _ = db.Close() })
+
+	targetID := idOf(t, adapter, "widget.Target")
+	callers := func(includeTests bool) (map[string]bool, int) {
+		res, err := blast.Compute(ctx, db, []int64{targetID}, blast.Options{MaxHops: 1, IncludeTests: includeTests})
+		if err != nil {
+			t.Fatalf("Compute: %v", err)
+		}
+		names := map[string]bool{}
+		for _, c := range res.DirectCallers {
+			names[c.Qualified] = true
+		}
+		return names, res.TotalAffected
+	}
+
+	with, _ := callers(true)
+	if !with["widget.TestTarget"] || !with["widget.Use"] {
+		t.Fatalf("IncludeTests true: callers = %v, want widget.Use and widget.TestTarget", with)
+	}
+	without, total := callers(false)
+	if without["widget.TestTarget"] {
+		t.Errorf("IncludeTests false: callers = %v, want no test-file caller", without)
+	}
+	if !without["widget.Use"] {
+		t.Errorf("IncludeTests false: callers = %v, want widget.Use kept", without)
+	}
+	if total != 1 {
+		t.Errorf("IncludeTests false: TotalAffected = %d, want 1", total)
+	}
+}
+
 // TestComputeWalksComposesEdges verifies that the BFS traverses
 // composes edges (Rails associations like has_many/belongs_to), not
 // just calls edges.
