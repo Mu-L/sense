@@ -50,6 +50,8 @@ func registry() []tool {
 		{id: ToolCursor, displayName: "Cursor", detect: detectCursor, configure: configureCursor, unconfigure: unconfigureCursor, currentEnv: cursorSessionEnvs},
 		{id: ToolCodexCLI, displayName: "Codex CLI", detect: detectCodexCLI, configure: configureCodexCLI, unconfigure: unconfigureCodexCLI},
 		{id: ToolOpencode, displayName: "Opencode", detect: detectOpencode, configure: configureOpencode, unconfigure: unconfigureOpencode, currentEnv: []string{"OPENCODE"}},
+		{id: ToolWindsurf, displayName: "Windsurf", detect: detectWindsurf, configure: configureWindsurf, unconfigure: unconfigureWindsurf},
+		{id: ToolCline, displayName: "Cline", detect: detectCline, configure: configureCline, unconfigure: unconfigureCline},
 	}
 }
 

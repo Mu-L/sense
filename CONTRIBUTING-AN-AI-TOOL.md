@@ -350,6 +350,8 @@ to opt into. Cover every writer branch, including the error returns.
 | Cursor | `.cursor/mcp.json` (`mcpServers`) | `.cursorrules` | none |
 | Codex CLI | `.codex/config.toml` (`[mcp_servers.sense]`; Codex ignores `.mcp.json`) | `AGENTS.md` | also writes `.mcp.json` for shared-repo consistency |
 | OpenCode | `opencode.json` (`mcp` key, `{type, command, enabled}`) | `AGENTS.md` | skills as `.opencode/skills/<name>/SKILL.md` |
+| Windsurf | none in the project (global `mcp_config.json` only; setup prints a note) | `AGENTS.md` | none |
+| Cline | none in the project (global MCP settings only; setup prints a note) | `AGENTS.md` | none |
 
 ---
 

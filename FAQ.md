@@ -54,7 +54,7 @@ Rarely. The first `sense scan` already runs setup. Run `sense setup` explicitly 
 
 ### Which AI tools does it auto-detect?
 
-Claude Code, Cursor, and Codex CLI. Opencode is also supported. Any MCP-compatible client (Windsurf, Cline, others) works too, but you wire those up manually with the generated `.mcp.json`.
+Claude Code, Cursor, Codex CLI, Opencode, Windsurf, and Cline. Windsurf and Cline read MCP servers only from their global settings, so `sense setup` writes their `AGENTS.md` guidance and prints the server entry for you to add. Any other MCP-compatible client works too, wired up by hand with `sense mcp` as the command.
 
 ### Do I need to re-run setup after upgrading?
 

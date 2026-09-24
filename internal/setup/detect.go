@@ -17,6 +17,8 @@ const (
 	ToolCursor     Tool = "cursor"
 	ToolCodexCLI   Tool = "codex-cli"
 	ToolOpencode   Tool = "opencode"
+	ToolWindsurf   Tool = "windsurf"
+	ToolCline      Tool = "cline"
 )
 
 // DetectResult holds whether a tool was found and what evidence was seen.
